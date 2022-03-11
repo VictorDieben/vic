@@ -29,26 +29,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -164,10 +164,19 @@
     <ClInclude Include="EventQueue.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Graph.h" />
+    <ClInclude Include="graph\algorithms.h" />
+    <ClInclude Include="graph\graph.h" />
+    <ClInclude Include="graph\iterators.h" />
+    <ClInclude Include="memory\garbage_collector.h" />
+    <ClInclude Include="memory\refcounter.h" />
+    <ClInclude Include="memory\tree.h" />
+    <ClInclude Include="utils.h" />
     <ClInclude Include="kinematics\kinematics.h" />
     <ClInclude Include="linalg\add.h" />
-    <ClInclude Include="linalg\cross.h" />
+    <ClInclude Include="linalg\algorithms\lu_decomposition.h" />
+    <ClInclude Include="linalg\tools.h" />
     <ClInclude Include="linalg\determinant.h" />
+    <ClInclude Include="linalg\matrices.h" />
     <ClInclude Include="linalg\matrix_view.h" />
     <ClInclude Include="linalg\transpose.h" />
     <ClInclude Include="linalg\inverse.h" />

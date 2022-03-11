@@ -48,13 +48,13 @@ TEST(TestEntitySystem, Filter)
 	{
 		auto ent = system.NewEntity();
 
-		system.Add<Name>(ent, { std::to_string(i), int(i) });
+		ent.Add<Name>({ std::to_string(i), int(i) });
 
 		if (i % 3 == 0)
-			system.Add<Fizz>(ent, {});
+			ent.Add<Fizz>({});
 
 		if (i % 5 == 0)
-			system.Add<Buzz>(ent, {});
+			ent.Add<Buzz>({});
 	}
 
 	// now filter out all objects with both the Fizz and Buzz component

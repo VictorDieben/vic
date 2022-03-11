@@ -17,7 +17,6 @@ struct Entity
 		: mId(id)
 		, mSystem(system) {}
 
-public:
 	// cast to EntityId
 	operator EntityId() const { return mId; }
 	EntityId Id() const { return mId; }
@@ -137,10 +136,11 @@ public:
 		auto it2End = ComponentSystem<T2>::end();
 		while (true)
 		{
-			if (it1->first == it2->first)
-				result.push_back(it1->first);
 			if (it1 == it1End || it2 == it2End)
 				break;
+
+			if (it1->first == it2->first)
+				result.push_back(it1->first);
 
 			if (it1->first < it2->first)
 				it1 = std::next(it1);
