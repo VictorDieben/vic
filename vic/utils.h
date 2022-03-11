@@ -37,7 +37,7 @@ class Counted
 public:
     Counted() { mCount++; }
     Counted(const Counted<T>& other) { mCount++; }
-    Counted(Counted<T>&& other) noexcept { mCounted++; }
+    Counted(Counted<T>&& other) noexcept { mCount++; }
     ~Counted() { mCount--; }
 
 private:
@@ -91,17 +91,17 @@ TOut FromBase(const std::vector<TIn>& values, const TBase base)
     TOut ret{ 0 };
     for (const auto& value : values)
     {
-        ret = ret + (tmp * val);
+        ret = ret + (tmp * value);
         tmp = tmp * base;
     }
     return ret;
 }
 
 template <typename T>
-std::vector<std::vector<T>> InitializeEmpty(const T value, std::size_t size1, std::size_t size2)
+std::vector<std::vector<T>> InitializeEmpty(const T value, const std::size_t size1, const std::size_t size2)
 {
     std::vector<std::vector<T>> result;
-    for (std::size_t i = 0; i < size1; ++size1)
+    for (std::size_t i = 0; i < size1; ++i)
     {
         std::vector<T> newvec(size2, value);
         result.push_back(newvec);
@@ -110,7 +110,7 @@ std::vector<std::vector<T>> InitializeEmpty(const T value, std::size_t size1, st
 }
 
 template <typename T>
-std::vector<std::vector<T>> InitializeEmpty(std::size_t size1, std::size_t size2)
+std::vector<std::vector<T>> InitializeEmpty(const std::size_t size1, const std::size_t size2)
 {
     return InitializeEmpty(T{}, size1, size2);
 }

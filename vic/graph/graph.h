@@ -22,6 +22,7 @@ namespace vic
 namespace graph
 {
 
+using Uint = unsigned int;
 using Uint128 = uint64_t; // TODO(vicdie): enable in vs
 using Uint256 = uint64_t;
 using Uint512 = uint64_t;
@@ -73,6 +74,8 @@ struct Edge
 
     const EdgeIdType Id() const { return mId; }
     EdgeDataType& Data() { return mData; }
+    VertexIdType Source() const { return mSource;  }
+    VertexIdType Sink() const { return mSink; }
 
     VertexIdType mSource{};
     VertexIdType mSink{};
@@ -88,7 +91,7 @@ public:
 
     using VertexType = TVertex;
     using EdgeType = TEdge;
-    using VertexIdType = typename TVertex::VerteIdType;
+    using VertexIdType = typename TVertex::VertexIdType;
     using EdgeIdType = typename TEdge::EdgeIdType;
 
     BaseGraph() = default;
@@ -100,12 +103,23 @@ public:
         return mVertices.back();
     }
 
+    VertexType& AddVertex(const typename VertexType::VertexDataType& data)
+    {
+        mVertices.emplace_back(mVertexIdCounter);
+        mVertices.back().mData = data;
+        mVertexIdCounter++;
+        return mVertices.back();
+    }
+
     EdgeType& AddEdge(VertexIdType source, VertexIdType sink)
     {
         mEdges.emplace_back(source, sink, mEdgeIdCounter);
         mEdgeIdCounter++;
         return mEdges.back();
     }
+    VertexType& GetVertex(const VertexIdType id) { return mVertices.at(id); }// id is also index
+    EdgeType& GetEdge(const EdgeIdType id) { return mEdges.at(id); }// id is also index
+
     std::size_t GetNumVertices() const { return mVertices.size(); }
     std::size_t GetNumEdges() const { return mEdges.size(); }
 
@@ -169,17 +183,17 @@ public:
     using VertexType = typename TGraph::VertexType;
     using VertexIdType = typename TGraph::VertexIdType;
     using EdgeType = typename TGraph::EdgeType;
-    using EdgeIdType = template TGraph::EdgeIdType;
+    using EdgeIdType = typename TGraph::EdgeIdType;
 
     TensorGraph(TGraph& graph) : mGraph(graph) {}
 
     GraphType& GetGraph() { return mGraph; }
-    void SetDimensions(uint dims) { mDimensions = dims; }
-    uint GetDimensions() const { return mDimensions; }
+    void SetDimensions(Uint dims) { mDimensions = dims; }
+    Uint GetDimensions() const { return mDimensions; }
     void NumTensorVertices() const { return 0; }
 
 private:
-    uint mDimensions{ 1 };
+    Uint mDimensions{ 1 };
     GraphType& mGraph;
 };
 

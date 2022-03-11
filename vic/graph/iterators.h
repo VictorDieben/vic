@@ -1,16 +1,106 @@
 #pragma once
 
 #include "graph.h"
-
+#include <vector>
 
 namespace vic
 {
 namespace graph
 {
 
+// wrapper for begin and end iterators
+template <typename TIter>
+class Iterable
+{
+public:
+	Iterable(TIter begin, TIter end)
+		: mBegin(begin)
+		, mEnd(end) {}
+	template <typename T>
+	Iterable(T iterable)
+		: mBegin(iterable.begin())
+		, mEnd(iterable.end()) {}
+	auto begin() { return  mBegin; }
+	auto end() { return mEnd; }
+private:
+	TIter mBegin;
+	TIter mEnd;
+};
+
+// iterate over all vertices
+template <typename TGraph>
+class VertexIterator
+{
+public:
+	VertexIterator(TGraph& graph)
+		: mGraph(graph) {} 
+	// TODO: true iterator
+	auto begin() { return mGraph.Vertices().begin(); }
+	auto end() { return  mGraph.Vertices().end(); }
+private:
+	TGraph& mGraph;
+};
+
+
+// iterate over all vertices
+template <typename TGraph>
+class EdgeIterator
+{
+public:
+	EdgeIterator(TGraph& graph)
+		: mGraph(graph) {}
+	auto begin() { return  mGraph.Edges().begin(); }
+	auto end() { return mGraph.Edges().end(); }
+private:
+	TGraph& mGraph;
+};
+
+
 // iterate over all out edges of a certain vertex
 template <typename TGraph, bool directed = false>
-class OutIterator {};
+class OutIterator
+{
+public:
+	OutIterator(TGraph& graph)
+		: mGraph(graph) {}
+
+	using EdgeIdType = TGraph::EdgeIdType;
+	using VertexIdType = TGraph::VertexIdType;
+
+	void Update() {
+		mOutEdges.clear();
+		mOutVertices.clear();
+		mOutEdges.resize(mGraph.GetNumVertices());
+		mOutVertices.resize(mGraph.GetNumVertices());
+
+		for (const auto& edge : EdgeIterator(mGraph))
+		{
+			mOutEdges[edge.Source()].emplace_back(edge.Id());
+			mOutVertices[edge.Source()].emplace_back(edge.Sink());
+			if constexpr (!directed)
+			{
+				mOutEdges[edge.Sink()].emplace_back(edge.Id());
+				mOutVertices[edge.Sink()].emplace_back(edge.Source());
+			}
+		}
+	}
+
+	// TODO(vicdie): maybe we don't want to return a reference to the vector itself
+	const std::vector<EdgeIdType>& OutEdges(const VertexIdType id) const 
+	{
+		return mOutEdges.at(id);
+	}
+
+	const std::vector<VertexIdType>& OutVertices(const VertexIdType id) const
+	{
+		return mOutVertices.at(id);
+	}
+
+private:
+	TGraph& mGraph;
+	std::vector<std::vector<EdgeIdType>> mOutEdges{};
+	std::vector<std::vector<VertexIdType>> mOutVertices{};
+};
 
 // iterate over all out edges, for tensor vertices
 template <typename TGraph, bool directed = false>

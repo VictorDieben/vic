@@ -55,6 +55,8 @@ TEST(TestLinalg, TestZeros)
     for (std::size_t i = 0; i < 4; ++i)
         for (std::size_t j = 0; j < 4; ++j)
             EXPECT_DOUBLE_EQ(zeros4x4.Get(i, j), 0.);
+    EXPECT_DEATH(zeros4x4.Get(4, 0), "");
+    EXPECT_DEATH(zeros4x4.Get(0, 4), "");
 }
 
 TEST(TestLinalg, TestIdentity)
@@ -70,6 +72,9 @@ TEST(TestLinalg, TestIdentity)
     for (std::size_t i = 0; i < 4; ++i)
         for (std::size_t j = 0; j < 4; ++j)
             EXPECT_DOUBLE_EQ(identity4.Get(i, j), i == j ? 1. : 0.);
+
+    EXPECT_DEATH(identity4.Get(4, 0), "");
+    EXPECT_DEATH(identity4.Get(0, 4), "");
 }
 
 TEST(TestLinalg, TestMatrix)
@@ -79,6 +84,9 @@ TEST(TestLinalg, TestMatrix)
     for (std::size_t i = 0; i < 3; ++i)
         for (std::size_t j = 0; j < 3; ++j)
             EXPECT_DOUBLE_EQ(mat3.Get(i, j), double(RowColToIndex<3>(i, j)));
+
+    EXPECT_DEATH(mat3.Get(3, 0), "");
+    EXPECT_DEATH(mat3.Get(0, 3), "");
 
     // initialize matrix from other types, make sure it is constexpr
     constexpr auto mat1 = Matrix<double, 4, 4>(Identity<double, 4>{});
@@ -126,7 +134,6 @@ TEST(TestLinalg, TestDiagonal)
                 EXPECT_DOUBLE_EQ(diag3.Get(i, j), 0.);
 }
 
-
 TEST(TestLinalg, TestAddMatrix)
 {
     constexpr double value = 1.0;
@@ -155,7 +162,6 @@ TEST(TestLinalg, TestAddConstant)
         for (std::size_t j = 0; j < 4; ++j)
             EXPECT_DOUBLE_EQ(res1.Get(i, j), i == j ? 2. : 0.);
 }
-
 
 TEST(TestLinalg, TestMatmulScalar)
 {
