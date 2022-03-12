@@ -2,6 +2,7 @@
 
 // This file implements the matrix multiplication for all different types of matrices
 #include "vic/linalg/matrices.h"
+#include "vic/linalg/matrices_dynamic.h"
 #include "vic/linalg/traits.h"
 
 namespace vic
@@ -25,12 +26,17 @@ constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2)
     else if constexpr(!isFloat1 && isFloat2)
         return MatmulScalar(mat1, mat2);
 
+    else if constexpr(ConceptConstexprMatrix<TMat1> && ConceptConstexprMatrix<TMat2>)
+    {
+        static_assert(mat1.GetColumns() == mat2.GetRows());
+        return MatmulStatic(mat1, mat2);
+    }
+
     else
     {
         // if we are not multiplying with values, check shape
-        static_assert(TMat1::GetColumns() == TMat2::GetRows());
-        auto res = MatmulGeneral(mat1, mat2);
-        return res;
+        static_assert(mat1.GetColumns() == mat2.GetRows());
+        return MatmulDynamic(mat1, mat2);
     }
 }
 
@@ -68,16 +74,31 @@ constexpr auto MatmulScalar(const TMat& mat, const TFloat& scalar)
     }
 }
 
-// multiplication of any 2 matrices for which no useful overload exists
+// multiplication of any 2 matrices of constant size
+template <typename TMat1, typename TMat2, class TRet = decltype(typename TMat1::DataType() * typename TMat2::DataType())>
+requires ConceptConstexprMatrix<TMat1> && ConceptConstexprMatrix<TMat2>
+constexpr auto MatmulStatic(const TMat1& mat1, const TMat2& mat2)
+{
+    static_assert(mat1.GetColumns() == mat2.GetRows());
+    Matrix<TRet, mat1.GetRows(), mat2.GetColumns()> result{};
+    for(std::size_t i = 0; i < mat1.GetRows(); ++i)
+        for(std::size_t j = 0; j < mat2.GetColumns(); ++j)
+            for(std::size_t k = 0; k < mat1.GetColumns(); ++k)
+                result.At(i, j) += (mat1.Get(i, k) * mat2.Get(k, j));
+    return result;
+}
+
+// multiplication of any 2 matrices where size is not known
 template <typename TMat1, typename TMat2, class TRet = decltype(typename TMat1::DataType() * typename TMat2::DataType())>
 requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
-constexpr auto MatmulGeneral(const TMat1& mat1, const TMat2& mat2)
+constexpr auto MatmulDynamic(const TMat1& mat1, const TMat2& mat2)
 {
-    static_assert(TMat1::GetColumns() == TMat2::GetRows());
-    Matrix<TRet, TMat1::GetRows(), TMat2::GetColumns()> result{};
-    for(std::size_t i = 0; i < TMat1::GetRows(); ++i)
-        for(std::size_t j = 0; j < TMat2::GetColumns(); ++j)
-            for(std::size_t k = 0; k < TMat1::GetColumns(); ++k)
+    // TODO(vicdie): MatmulGeneral() will need to be specialized for constexpr and non-constexpr matrices
+    static_assert(mat1.GetColumns() == mat2.GetRows());
+    Matrix<TRet, mat1.GetRows(), mat2.GetColumns()> result{};
+    for(std::size_t i = 0; i < mat1.GetRows(); ++i)
+        for(std::size_t j = 0; j < mat2.GetColumns(); ++j)
+            for(std::size_t k = 0; k < mat1.GetColumns(); ++k)
                 result.At(i, j) += (mat1.Get(i, k) * mat2.Get(k, j));
     return result;
 }

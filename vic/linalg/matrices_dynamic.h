@@ -12,7 +12,7 @@ namespace linalg
 {
 
 // standard constant size matrix (row mayor)
-template <typename T, std::size_t rows, std::size_t columns>
+template <typename T>
 class MatrixDynamic
 {
 public:
@@ -22,7 +22,7 @@ public:
         : mRows(rows)
         , mColumns(cols)
     {
-        Initialize()
+        Initialize();
     }
     explicit MatrixDynamic(const std::size_t rows, const std::size_t cols, const std::vector<T>& data)
         : mData(data)
@@ -34,7 +34,7 @@ public:
 
     template <typename TMat>
     requires ConceptMatrix<TMat>
-    constexpr explicit Matrix(const TMat& matrix)
+    constexpr explicit MatrixDynamic(const TMat& matrix)
     {
         mRows = matrix.GetRows();
         mColumns = matrix.GetColumns();
@@ -49,14 +49,14 @@ public:
 
     constexpr T Get(const std::size_t i, const std::size_t j) const
     {
-        assert(((i < mRows) && (j < mColumns)));
-        return mData[RowColToIndex(i, j, mColumns)];
+        assert(((i < GetRows()) && (j < GetColumns())));
+        return mData[RowColToIndex(i, j, GetColumns())];
     }
 
     constexpr T& At(const std::size_t i, const std::size_t j)
     {
-        assert(((i < mRows) && (j < mColumns)));
-        return mData[RowColToIndex(i, j, columns)];
+        assert(((i < GetRows()) && (j < GetColumns())));
+        return mData[RowColToIndex(i, j, GetColumns())];
     }
 
 private:

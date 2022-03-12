@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <type_traits>
 
 // This file specifies the requirements for what a matrix/vector constitutes
@@ -8,6 +9,26 @@ namespace vic
 {
 namespace linalg
 {
+
+// This helper only compiles if template argument is constexpr std::size_t
+template <std::size_t>
+using ConstexprSizeHelper = void;
+
+template <typename T>
+concept ConceptConstexprRows = requires
+{
+    T::GetRows();
+    requires std::is_same_v<std::size_t, decltype(T::GetRows())>;
+    typename ConstexprSizeHelper<T::GetRows()>;
+};
+
+template <typename T>
+concept ConceptConstexprColumns = requires
+{
+    T::GetColumns();
+    requires std::is_same_v<std::size_t, decltype(T::GetColumns())>;
+    typename ConstexprSizeHelper<T::GetColumns()>;
+};
 
 template <typename T>
 concept ConceptMatrix = requires(T mat)
@@ -18,6 +39,10 @@ concept ConceptMatrix = requires(T mat)
     mat.GetColumns();
     mat.Get(std::size_t(0), std::size_t(0));
 };
+
+// TODO(vicdie): implement, check that GetRows() and GetColumns() are constexpr
+template <typename T>
+concept ConceptConstexprMatrix = ConceptMatrix<T> && ConceptConstexprRows<T> && ConceptConstexprColumns<T>;
 
 template <typename T>
 concept ConceptVector = ConceptMatrix<T> && requires(T mat)
@@ -34,10 +59,6 @@ struct IsSquare
 // TODO(vicdie): fix this, IsSquare should not be needed
 template <typename T>
 concept ConceptSquareMatrix = ConceptMatrix<T> && IsSquare<T>::value;
-
-// TODO(vicdie): implement, check that GetRows() and GetColumns() are constexpr
-template <typename T>
-concept ConceptConstexprMatrix = ConceptMatrix<T> && false;
 
 template <typename T>
 using Base = std::remove_const_t<std::decay_t<T>>;

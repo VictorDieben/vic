@@ -16,7 +16,8 @@ constexpr Base<typename TMatrix::DataType> Determinant(const TMatrix& matrix)
     {
         return Base<typename TMatrix::DataType>{1};
     }
-    else if constexpr(std::is_same_v<TMatrix, Diagonal<TMatrix::DataType, TMatrix::GetRows(), TMatrix::GetColumns()>> && (TMatrix::GetRows() == TMatrix::GetColumns()))
+    else if constexpr(std::is_same_v<TMatrix, Diagonal<TMatrix::DataType, TMatrix::GetRows(), TMatrix::GetColumns()>> && //
+                      (TMatrix::GetRows() == TMatrix::GetColumns()))
     {
         return DeterminantDiagonal(matrix);
     }
