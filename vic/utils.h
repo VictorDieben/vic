@@ -78,8 +78,8 @@ std::vector<TOut>& ToBase(std::vector<TOut>& buffer, const TIn value, const TBas
     buffer.clear();
     while(val)
     {
-        buffer.emplace_back(value % base);
-        value /= base;
+        buffer.emplace_back(val % base);
+        val /= base;
     }
     if(buffer.size() < size)
         buffer.resize(size); // appends T{0}'s to the end of the list
@@ -107,7 +107,7 @@ TOut FromBase(const std::vector<TIn>& values, const TBase base)
         ret = ret + (tmp * value);
         tmp = tmp * base;
     }
-    return ret;
+    return TOut{ret};
 }
 
 template <typename T>
