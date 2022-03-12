@@ -57,7 +57,7 @@ public:
             mPolicyMatrix[id][id] = id;
         }
 
-        // set value of the diagonal
+        // set value of the direct edges
         for(const auto& edge : EdgeIterator(mGraph))
         {
             mCostMatrix[edge.Source()][edge.Sink()] = mEdgeCostFunctor(edge.Id());
@@ -140,7 +140,7 @@ template <typename TGraph, typename TEdgeCostFunctor, typename THeuristicFunctor
 class AStar
 {
 public:
-    using GraphType = typename TGraph::GraphType;
+    using GraphType = TGraph;
     using VertexIdType = typename GraphType::VertexIdType;
     using EdgeIdType = typename GraphType::EdgeIdType;
 

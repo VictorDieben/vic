@@ -94,9 +94,17 @@ public:
     }
 
     // TODO(vicdie): maybe we don't want to return a reference to the vector itself
-    const std::vector<EdgeIdType>& OutEdges(const VertexIdType id) const { return mOutEdges.at(id); }
+    const std::vector<EdgeIdType>& OutEdges(const VertexIdType id) const
+    {
+        assert(mGraph.GetNumVertices() == mOutEdges.size());
+        return mOutEdges.at(id);
+    }
 
-    const std::vector<VertexIdType>& OutVertices(const VertexIdType id) const { return mOutVertices.at(id); }
+    const std::vector<VertexIdType>& OutVertices(const VertexIdType id) const
+    {
+        assert(mGraph.GetNumVertices() == mOutVertices.size());
+        return mOutVertices.at(id);
+    }
 
 private:
     TGraph& mGraph;

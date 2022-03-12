@@ -41,8 +41,8 @@ TEST(TestLinalg, TestMatmul)
     constexpr const auto res4 = Matmul(mat1, mat2);
     ExpectMatrixEqual(res4, Matrix<double, 2, 2>({19, 22, 43, 50}));
 
-    constexpr const auto diag1 = Diagonal<double, 2, 2>(mat1);
-    constexpr const auto diag2 = Diagonal<double, 2, 2>(mat2);
+    constexpr const auto diag1 = Diagonal<double, 2, 2>{mat1};
+    constexpr const auto diag2 = Diagonal<double, 2, 2>{mat2};
     constexpr const auto res5 = Matmul(diag1, diag2);
     ExpectMatrixEqual(res5, Matrix<double, 2, 2>({5, 0, 0, 32}));
 
@@ -103,6 +103,12 @@ TEST(TestLinalg, TestMatmulMixed)
     // TODO(vicdie): the two mat2x5 matrices should be static size
 
     ExpectMatrixEqual(mat2x5_1, mat2x5_2); // TODO(vicdie): just zeros now
+
+    // check that if the inbetween dimension is variable, but the two outside edges are static,
+    // the resulting shape is still static
+    const MatrixRowConst<double, 3> rowconst3x100(100);
+    const MatrixColConst<double, 5> colconst100x5(100);
+    const Matrix<double, 3, 5> static3x5 = Matmul(rowconst3x100, colconst100x5);
 }
 
 } // namespace linalg
