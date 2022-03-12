@@ -4,4 +4,8 @@
 
 using namespace vic;
 
-TEST(TestUtils, Startup) { }
+TEST(TestUtils, Startup)
+{
+    constexpr auto res = Pow<2>(3);
+    EXPECT_EQ(res, 9);
+}

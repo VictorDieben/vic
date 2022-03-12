@@ -59,12 +59,13 @@ TRet Power(const TBase base, const TExp exp)
 }
 
 // constexpr integer exponent
-template <std::size_t exp, typename TRet, typename TBase>
+template <std::size_t exp, typename TBase, typename TRet = TBase>
 constexpr TRet Pow(const TBase base)
 {
     if constexpr(exp == 0)
         return 1;
-    return base * Pow<exp - 1>(base);
+    else
+        return base * Pow<exp - 1>(base);
 }
 
 // base conversion (e.g. decimals to hex)

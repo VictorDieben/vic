@@ -16,6 +16,7 @@
       <Filter>linalg</Filter>
     </ClCompile>
     <ClCompile Include="linalg\TestMatmul.cpp" />
+    <ClCompile Include="TestUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

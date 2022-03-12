@@ -67,6 +67,7 @@
     <ClCompile Include="TestGraph.cpp" />
     <ClCompile Include="TestKinematics.cpp" />
     <ClCompile Include="TestLinprog.cpp" />
+    <ClCompile Include="TestUtils.cpp" />
     <ClCompile Include="TestUtpNetwork.cpp" />
   </ItemGroup>
   <ItemGroup>
