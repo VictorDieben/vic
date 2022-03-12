@@ -14,5 +14,5 @@ TEST(TestUtils, TestTimer)
 {
     CTimer timer;
     timer.Reset();
-    std::chrono::duration interval = timer.GetTime();
+    // std::chrono::duration interval = timer.GetTime();
 }
