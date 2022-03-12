@@ -167,6 +167,7 @@
     <ClInclude Include="graph\algorithms.h" />
     <ClInclude Include="graph\graph.h" />
     <ClInclude Include="graph\iterators.h" />
+    <ClInclude Include="linalg\matrices_dynamic.h" />
     <ClInclude Include="memory\garbage_collector.h" />
     <ClInclude Include="memory\refcounter.h" />
     <ClInclude Include="memory\tree.h" />

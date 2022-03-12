@@ -102,6 +102,9 @@
     <ClInclude Include="memory\garbage_collector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="linalg\matrices_dynamic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

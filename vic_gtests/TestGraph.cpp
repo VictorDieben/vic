@@ -1,8 +1,8 @@
 #include "pch.h"
 
+#include "vic/graph/algorithms.h"
 #include "vic/graph/graph.h"
 #include "vic/graph/iterators.h"
-#include "vic/graph/algorithms.h"
 
 using namespace vic;
 
@@ -10,12 +10,12 @@ TEST(TestGraph, Startup)
 {
 	using namespace vic::graph;
 	using Vertex = vic::graph::Vertex<>;
-	using Edge = vic::graph::Edge<Vertex::VertexIdType>; 
+	using Edge = vic::graph::Edge<Vertex::VertexIdType>;
 	using TestGraph = vic::graph::BaseGraph<Vertex, Edge>;
 
 	TestGraph graph;
 
-	for (int i = 0; i < 5; ++i)
+	for(int i = 0; i < 5; ++i)
 		graph.AddVertex();
 
 	EXPECT_EQ(graph.GetVertex(0).Id(), 0);
@@ -23,7 +23,7 @@ TEST(TestGraph, Startup)
 
 	// iterate over all vertices
 	size_t sum = 0;
-	for (const auto& vertex : VertexIterator(graph))
+	for(const auto& vertex : VertexIterator(graph))
 		sum += vertex.mId;
 
 	EXPECT_EQ(sum, 0 + 1 + 2 + 3 + 4);
@@ -39,7 +39,7 @@ TEST(TestGraph, Startup)
 
 	// iterate over all edges
 	sum = 0;
-	for (const auto& edge : EdgeIterator(graph))
+	for(const auto& edge : EdgeIterator(graph))
 		sum += edge.mId;
 
 	EXPECT_EQ(sum, 0 + 1 + 2 + 3);
@@ -48,10 +48,10 @@ TEST(TestGraph, Startup)
 	OutIterator<TestGraph, true> outIterator(graph); // valid untill vertices/edges change in graph
 
 	std::vector<Vertex::VertexIdType> outVertices;
-	for (const auto& edgeId : outIterator.OutEdges(1))
+	for(const auto& edgeId : outIterator.OutEdges(1))
 	{
 		const auto& edge = graph.GetEdge(edgeId);
-		outVertices.push_back(edge.Sink()); 
+		outVertices.push_back(edge.Sink());
 		sum += edge.mSink;
 	}
 
@@ -60,7 +60,7 @@ TEST(TestGraph, Startup)
 
 	// test dijkstra solver
 	const auto costLambda = [](const auto& edge) { return 1.; }; // every edge costs 1
-	algorithms::Dijkstra dijkstra{ graph, costLambda };
+	algorithms::Dijkstra dijkstra{graph, costLambda};
 	auto path = dijkstra.Calculate(0, 2);
 
 	ASSERT_EQ(path.size(), 3);
@@ -69,7 +69,7 @@ TEST(TestGraph, Startup)
 	EXPECT_EQ(path.at(2), 2);
 }
 
-auto ConstructGridGraph( const std::size_t nx, const std::size_t ny)
+auto ConstructGridGraph(const std::size_t nx, const std::size_t ny)
 {
 	using namespace vic::graph;
 	struct VertexData
@@ -85,20 +85,22 @@ auto ConstructGridGraph( const std::size_t nx, const std::size_t ny)
 	TestGraph graph;
 
 	// construct vertices
-	for (std::size_t j = 0; j < ny; ++j)
-		for (std::size_t i = 0; i < nx; ++i)
+	for(std::size_t j = 0; j < ny; ++j)
+		for(std::size_t i = 0; i < nx; ++i)
 			graph.AddVertex({double(i), double(j)});
 
-	const auto indexLambda = [&](const std::size_t i, const std::size_t j) { return uint16_t(i + (j * nx));  };
+	const auto indexLambda = [&](const std::size_t i, const std::size_t j) {
+		return uint16_t(i + (j * nx));
+	};
 
 	// construct horizontal edges
-	for (std::size_t i = 0; i < nx-1; ++i)
-		for (std::size_t j = 0; j < ny; ++j)
-			graph.AddEdge(indexLambda(i, j), indexLambda(i+1, j) );
+	for(std::size_t i = 0; i < nx - 1; ++i)
+		for(std::size_t j = 0; j < ny; ++j)
+			graph.AddEdge(indexLambda(i, j), indexLambda(i + 1, j));
 
 	// construct vertical edges
-	for (std::size_t i = 0; i < nx  ; ++i)
-		for (std::size_t j = 0; j < ny - 1; ++j)
+	for(std::size_t i = 0; i < nx; ++i)
+		for(std::size_t j = 0; j < ny - 1; ++j)
 			graph.AddEdge(indexLambda(i, j), indexLambda(i, j + 1));
 	return graph;
 }
@@ -110,21 +112,22 @@ TEST(TestGraph, TestFloydWarshall)
 	const std::size_t nx = 3, ny = 5;
 	auto graph = ConstructGridGraph(nx, ny);
 
-	ASSERT_EQ(graph.GetNumVertices(), nx*ny);
-	ASSERT_EQ(graph.GetNumEdges(), (nx * (ny-1)) + ((nx-1) * ny));
+	ASSERT_EQ(graph.GetNumVertices(), nx * ny);
+	ASSERT_EQ(graph.GetNumEdges(), (nx * (ny - 1)) + ((nx - 1) * ny));
 
 	// test dijkstra solver
 	const auto costLambda = [](const auto& edge) { return 1.; };
-	algorithms::FloydWarshall floydWarshall{ graph, costLambda };
+	algorithms::FloydWarshall floydWarshall{graph, costLambda};
 	floydWarshall.Update(); // perform calculation
 
 	const auto n = graph.GetNumVertices();
 
-	for (const auto& v1 : VertexIterator(graph))
+	for(const auto& v1 : VertexIterator(graph))
 	{
-		for (const auto& v2 : VertexIterator(graph))
+		for(const auto& v2 : VertexIterator(graph))
 		{
-			const auto expected = std::abs(v1.mData.x - v2.mData.x) + std::abs(v1.mData.y - v2.mData.y);
+			const auto expected =
+				std::abs(v1.mData.x - v2.mData.x) + std::abs(v1.mData.y - v2.mData.y);
 			const auto fw = floydWarshall.Get(v1.Id(), v2.Id());
 			EXPECT_NEAR(fw, expected, 0.0001);
 		}
@@ -137,18 +140,18 @@ TEST(TestGraph, TestDijkstra)
 	auto graph = ConstructGridGraph(11, 11);
 
 	ASSERT_EQ(graph.GetNumVertices(), 11 * 11);
-	ASSERT_EQ(graph.GetNumEdges(), 11*10 + 10*11);
+	ASSERT_EQ(graph.GetNumEdges(), 11 * 10 + 10 * 11);
 
 	// test dijkstra solver
 	const auto costLambda = [](const auto& edge) { return 1.; }; // every edge costs 1
-	algorithms::Dijkstra dijkstra{ graph, costLambda };
+	algorithms::Dijkstra dijkstra{graph, costLambda};
 
-	algorithms::FloydWarshall floydWarshall{ graph, costLambda };
+	algorithms::FloydWarshall floydWarshall{graph, costLambda};
 	floydWarshall.Update(); // perform calculation
 
-	for (const auto& v1 : VertexIterator(graph))
+	for(const auto& v1 : VertexIterator(graph))
 	{
-		for (const auto& v2 : VertexIterator(graph))
+		for(const auto& v2 : VertexIterator(graph))
 		{
 			//const auto cost_dijkstra = dijkstra.Calculate(v1.Id(), v2.Id());
 			//const auto cost_fw = floydWarshall.Get(v1.Id(), v2.Id());
@@ -156,8 +159,6 @@ TEST(TestGraph, TestDijkstra)
 		}
 	}
 }
-
-
 
 TEST(TestGraph, TestAStar)
 {
@@ -169,7 +170,7 @@ TEST(TestGraph, TestAStar)
 
 	// test dijkstra solver
 	const auto costLambda = [](const auto& edge) { return 1.; }; // every edge costs 1
-	algorithms::Dijkstra dijkstra{ graph, costLambda };
+	algorithms::Dijkstra dijkstra{graph, costLambda};
 	auto path = dijkstra.Calculate(0, (11 * 11) - 1);
 
 	ASSERT_EQ(path.size(), 11 + 10);

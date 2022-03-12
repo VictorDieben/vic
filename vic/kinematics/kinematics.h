@@ -19,8 +19,5 @@ using Screw = Matrix<DataType, 6, 1>;
 using Twist = Matrix<DataType, 6, 1>;
 using Wrench = Matrix<DataType, 6, 1>;
 
-
-
-
-}
-}
+} // namespace kinematics
+} // namespace vic

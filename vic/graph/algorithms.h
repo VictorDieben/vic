@@ -1,15 +1,14 @@
 #pragma once
 
 #include <array>
-#include <vector>
 #include <limits>
+#include <vector>
 
 #include "vic/graph/graph.h"
 #include "vic/graph/iterators.h"
 #include "vic/utils.h"
 
 // TODO(vicdie): make subfolder for algorithms?
-
 
 namespace vic
 {
@@ -20,7 +19,7 @@ namespace algorithms
 
 // Calculate the matrix of shortest distances and shortest paths
 // Can be used by other algorithms for policy.
-template <typename TGraph, typename TEdgeCostFunctor, bool directed = false >
+template <typename TGraph, typename TEdgeCostFunctor, bool directed = false>
 class FloydWarshall
 {
 public:
@@ -28,7 +27,8 @@ public:
 
     FloydWarshall(TGraph& graph, TEdgeCostFunctor functor)
         : mGraph(graph)
-        , mEdgeCostFunctor(functor) {}
+        , mEdgeCostFunctor(functor)
+    { }
 
 private:
     TGraph& mGraph;
@@ -50,7 +50,7 @@ public:
         mPolicyMatrix = InitializeEmpty<VertexIdType>(n, n);
 
         // vertex to itself is zero
-        for (const auto& vertex : VertexIterator(mGraph))
+        for(const auto& vertex : VertexIterator(mGraph))
         {
             const auto id = vertex.Id();
             mCostMatrix[id][id] = 0.;
@@ -58,11 +58,11 @@ public:
         }
 
         // set value of the diagonal
-        for (const auto& edge : EdgeIterator(mGraph))
+        for(const auto& edge : EdgeIterator(mGraph))
         {
             mCostMatrix[edge.Source()][edge.Sink()] = mEdgeCostFunctor(edge.Id());
             mPolicyMatrix[edge.Source()][edge.Sink()] = edge.Source();
-            if constexpr (!directed)
+            if constexpr(!directed)
             {
                 mCostMatrix[edge.Sink()][edge.Source()] = mEdgeCostFunctor(edge.Id());
                 mPolicyMatrix[edge.Sink()][edge.Source()] = edge.Sink();
@@ -70,14 +70,14 @@ public:
         }
 
         // perform calculation
-        for (const auto& vk : VertexIterator(mGraph))
+        for(const auto& vk : VertexIterator(mGraph))
         {
-            for (const auto& vi : VertexIterator(mGraph))
+            for(const auto& vi : VertexIterator(mGraph))
             {
-                for (const auto& vj : VertexIterator(mGraph))
+                for(const auto& vj : VertexIterator(mGraph))
                 {
                     const double sum_ik_kj = mCostMatrix[vi.Id()][vk.Id()] + mCostMatrix[vk.Id()][vj.Id()];
-                    if (mCostMatrix[vi.Id()][vj.Id()] > sum_ik_kj)
+                    if(mCostMatrix[vi.Id()][vj.Id()] > sum_ik_kj)
                     {
                         mCostMatrix[vi.Id()][vj.Id()] = sum_ik_kj;
                         mPolicyMatrix[vi.Id()][vj.Id()] = mPolicyMatrix[vi.Id()][vk.Id()];
@@ -87,17 +87,10 @@ public:
         }
     }
 
-    CostType Get(const VertexIdType source, const VertexIdType sink)
-    {
-        return mCostMatrix[source][sink]; 
-    }
+    CostType Get(const VertexIdType source, const VertexIdType sink) const { return mCostMatrix[source][sink]; }
 
-    VertexIdType Policy(const VertexIdType source, const VertexIdType sink)
-    {
-        return mPolicyMatrix[source][sink]; 
-    }
+    VertexIdType Policy(const VertexIdType source, const VertexIdType sink) const { return mPolicyMatrix[source][sink]; }
 };
-
 
 // example of simple dijkstras algorithm
 template <typename TGraph, typename TEdgeCostFunctor>
@@ -111,7 +104,7 @@ public:
     Dijkstra(TGraph& graph, TEdgeCostFunctor functor)
         : mGraph(graph)
         , mEdgeCostFunctor(functor)
-        , mOutIterator(graph) 
+        , mOutIterator(graph)
     {
         Update();
     }
@@ -154,7 +147,8 @@ public:
     AStar(TGraph& graph, TEdgeCostFunctor edgeCost, THeuristicFunctor heuristic)
         : mGraph(graph)
         , mEdgeCostFunctor(edgeCost)
-        , mHeuristicFunctor(heuristic) {}
+        , mHeuristicFunctor(heuristic)
+    { }
 
     void Update()
     {
@@ -166,13 +160,13 @@ public:
         // todo
         return {};
     }
+
 private:
     TGraph& mGraph;
     TEdgeCostFunctor mEdgeCostFunctor; // defines the exact cost of going over a certain edge
     THeuristicFunctor mHeuristicFunctor; // defines the expected cost of going from a to b
 };
 
-
-}
-}
-}
+} // namespace algorithms
+} // namespace graph
+} // namespace vic
