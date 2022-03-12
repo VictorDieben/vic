@@ -1,7 +1,8 @@
 #pragma once
 
 // This file implements the matrix multiplication for all different types of matrices
-
+#include "vic/linalg/matrices.h"
+#include "vic/linalg/traits.h"
 
 namespace vic
 {
@@ -36,6 +37,7 @@ constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2)
 
 // multiplication of two equal matrix types
 template <typename TMat, typename TFloat, class TRet = decltype(typename TMat::DataType()* TFloat())>
+requires ConceptMatrix<TMat>
 constexpr auto MatmulScalar(const TMat& mat, const TFloat& scalar)
 {
 	using T = typename TMat::DataType;
@@ -70,6 +72,7 @@ constexpr auto MatmulScalar(const TMat& mat, const TFloat& scalar)
 
 // multiplication of any 2 matrices for which no useful overload exists
 template <typename TMat1, typename TMat2, class TRet = decltype(typename TMat1::DataType()* typename TMat2::DataType())>
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto MatmulGeneral(const TMat1& mat1, const TMat2& mat2)
 {
 	static_assert(TMat1::GetColumns() == TMat2::GetRows());

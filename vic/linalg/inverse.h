@@ -8,7 +8,8 @@ namespace vic
 namespace linalg
 {
 
-template <typename TMatrix, std::enable_if_t<((IsMatrix<TMatrix>::value&& IsSquare<TMatrix>::value)), bool> = true>
+template <typename TMatrix>
+requires ConceptMatrix<TMatrix>
 constexpr auto Inverse(const TMatrix& matrix)
 {
 	// TODO(vicdie): if is:

@@ -9,6 +9,7 @@ namespace linalg
 
 
 template <typename TMatrix>
+	requires ConceptMatrix<TMatrix>
 constexpr auto AddConstant(const TMatrix& matrix, const typename TMatrix::DataType& value)
 {
 	Matrix<TMatrix::DataType, TMatrix::Rows, TMatrix::Columns> result;
@@ -18,7 +19,8 @@ constexpr auto AddConstant(const TMatrix& matrix, const typename TMatrix::DataTy
 	return result;
 }
 
-template <typename TMat1, typename TMat2, std::enable_if_t<((IsMatrix<TMat1>::value&& IsMatrix<TMat2>::value)), bool> = true>
+template <typename TMat1, typename TMat2>
+	requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto AddGeneral(const TMat1& mat1, const TMat2& mat2)
 {
 	Matrix<double, TMat1::Rows, TMat1::Columns> result;

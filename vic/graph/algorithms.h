@@ -42,14 +42,14 @@ private:
 public:
     void Update()
     {
-        // TODO(vicdie): use matrix class
+        // TODO(vicdie): use Matrix from vic::linalg
         // initialize
         const auto n = mGraph.GetNumVertices();
         constexpr CostType maxval = std::numeric_limits<CostType>::max() / 4.;
         mCostMatrix = InitializeEmpty<CostType>(maxval, n, n);
         mPolicyMatrix = InitializeEmpty<VertexIdType>(n, n);
 
-        // vertex to vertex is zero
+        // vertex to itself is zero
         for (const auto& vertex : VertexIterator(mGraph))
         {
             const auto id = vertex.Id();

@@ -9,6 +9,7 @@ namespace linalg
 {
 
 template <typename TMatrix>
+	requires ConceptMatrix<TMatrix>
 constexpr auto Transpose(const TMatrix& matrix)
 {
 	if constexpr (std::is_same_v<TMatrix, Identity<TMatrix::DataType, TMatrix::Rows>>)
@@ -27,6 +28,7 @@ constexpr auto Transpose(const TMatrix& matrix)
 }
 
 template <typename TMatrix>
+	requires ConceptMatrix<TMatrix>
 constexpr auto TransposeGeneral(const TMatrix& matrix)
 {
 	Matrix<TMatrix::DataType, TMatrix::GetColumns(), TMatrix::GetRows()> transpose;

@@ -100,12 +100,10 @@ private:
 // put several matrices along the diagonal
 // This object can be nested, e.g. diag(diag(a, b), diag(c, d))
 template <typename TMat1, typename TMat2>
+    requires ConceptSquareMatrix<TMat1> && ConceptSquareMatrix<TMat2> && HasSameType<TMat1, TMat2>::value
 class ViewBlockDiagonal
 {
 public:
-    static_assert(std::is_same_v<TMat1::DataType, TMat2::DataType>);
-    static_assert(IsSquare<TMat1>::value);
-    static_assert(IsSquare<TMat2>::value);
 
     ViewBlockDiagonal(const TMat1& mat1, const TMat2& mat2)
         : mMatrix1(mat1)
@@ -141,10 +139,10 @@ private:
 
 // TODO(vicdie): submatrix
 template <typename TMat, std::size_t rowStart, std::size_t rows, std::size_t colStart, std::size_t cols>
+    requires ConceptMatrix<TMat> // && (rowStart + rows <= TMat::Rows()) && (colStart + cols <= TMat::GetColumns())
 class ViewSubMatrix
 {
 public:
-
     ViewSubMatrix(const TMat& mat)
         : mMatrix(mat) {}
 
@@ -156,6 +154,7 @@ public:
 
     constexpr DataType Get(const std::size_t i, const std::size_t j) const
     {
+        return mMatrix.Get(i+ rowStart, j + colStart);
     }
 private:
     const TMat& mMatrix;

@@ -10,14 +10,34 @@ namespace linalg
 {
 
 
-template <typename T>
-using Base = std::remove_const_t<std::decay_t<T>>;
+template<typename T>
+concept ConceptMatrix = requires(T mat)
+{
+	// TODO(vicdie): check that these statements have the correct return type
+	T::DataType;
+	mat.GetRows();
+	mat.GetColumns();
+	mat.Get(std::size_t(0), std::size_t(0));
+};
+
+
+template<typename T>
+concept ConceptVector = ConceptMatrix<T> && (T::Columns == 1);
+
 
 template <typename TMat>
 struct IsSquare
 {
 	constexpr static bool value = (TMat::Rows == TMat::Columns);
 };
+
+// TODO(vicdie): fix this, IsSquare should not be needed
+template <typename T>
+concept ConceptSquareMatrix = ConceptMatrix<T> && IsSquare<T>::value;
+
+template <typename T>
+using Base = std::remove_const_t<std::decay_t<T>>;
+
 
 template <typename TMat>
 struct IsDiagonal
@@ -31,24 +51,12 @@ struct HasSameType
 	constexpr static bool value = std::is_same_v<T1::DataType, T2::DataType>;
 };
 
-//template <typename T1, typename T2>
-//struct HasSameShape
-//{
-//	constexpr static bool value = false; // default value
-//};
-//template <typename T1, typename T2,
-//	typename = std::enable_if_t< (IsMatrix<T1>::value&& IsMatrix<T2>::value)>::value >
-//	struct HasSameShape
-//{
-//	constexpr static bool value = ((T1::Rows == T2::Rows) && (T1::Columns == T2::Columns));
-//};
-
-
-template <typename T>
-struct HasGet
+template <typename T1, typename T2>
+struct HasSameShape
 {
-	constexpr static bool value = true; // todo
+	constexpr static bool value = (T1::GetRows() == T2::GetRows()) && (T1::GetColumns() == T2::GetColumns());
 };
+
 
 template <typename T>
 struct IsFloatOrIntegral
@@ -56,16 +64,6 @@ struct IsFloatOrIntegral
 	constexpr static bool value = (std::is_integral_v<T> || std::is_floating_point_v<T>);
 };
 
-// check if T has:
-// - a data type,
-// - a number of rows,
-// - a number of columns
-// - a Get(i,j) member
-template <typename T>
-struct IsMatrix
-{
-	constexpr static bool value = !IsFloatOrIntegral<std::decay_t<T>>::value;
-};
 
 
 template <typename TMatrix>
@@ -78,7 +76,7 @@ constexpr bool IsPositiveDefinite(const TMatrix& matrix)
 template <typename TMatrix>
 constexpr bool IsTotallyPositive(const TMatrix& matrix)
 {
-	if constexpr (!IsSquare(matrix))
+	if constexpr (! ConceptSquareMatrix<TMatrix>)
 	{
 		return false;
 	}

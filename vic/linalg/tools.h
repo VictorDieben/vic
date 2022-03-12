@@ -54,6 +54,7 @@ public:
 
 // trace is sum of all diagonal elements
 template <typename TMat>
+    requires ConceptSquareMatrix<TMat>
 constexpr auto Trace(const TMat& matrix)
 {
     static_assert(IsSquare<TMat>::value);
@@ -65,13 +66,15 @@ constexpr auto Trace(const TMat& matrix)
 
 // 2d cross product
 template <typename T>
-constexpr auto Cross(const Vector2<T>& vec1, const Vector2<T>& vec2)
+    requires ConceptVector<T> && (T::GetRows() == 2)
+constexpr auto Cross(const T& vec1, const T& vec2)
 {
     return (vec1.Get(0, 0) * vec2.Get(1, 0)) - (vec1.Get(1, 0) * vec2.Get(0, 0));
 }
 
 // 3d cross product
 template <typename T>
+    requires ConceptVector<T> && (T::GetRows() == 3)
 constexpr auto Cross(const Vector3<T>& vec1, const Vector3<T>& vec2)
 {
     const double ax = vec1.Get(0, 0), ay = vec1.Get(1, 0), az = vec1.Get(1, 0);
@@ -83,6 +86,7 @@ constexpr auto Cross(const Vector3<T>& vec1, const Vector3<T>& vec2)
 
 // dot product between two vectors
 template <typename TMat1, typename TMat2>
+    requires ConceptVector<TMat1> && ConceptVector<TMat2> && HasSameShape<TMat1, TMat2>::value
 constexpr auto Dot(const TMat1& mat1, const TMat2& mat2)
 {
     static_assert(TMat1::Columns == 1 && TMat2::Columns == 1 && TMat1::Rows == TMat2::Rows);

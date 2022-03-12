@@ -36,7 +36,8 @@ public:
     constexpr explicit Matrix(const std::array<T, rows* columns>& data)
         : mData(data) { }
 
-    template <typename TMat, std::enable_if_t<IsMatrix<TMat>::value, bool> = true >
+    template <typename TMat>
+    requires ConceptMatrix<TMat>
     constexpr explicit Matrix(const TMat& matrix)
     {
         for (std::size_t i = 0; i < rows; ++i)
@@ -133,7 +134,8 @@ public:
         for (std::size_t i = 0; i < Min(rows, columns); ++i)
             mData[i] = value;
     }
-    template <typename TMat, std::enable_if_t<IsMatrix<TMat>::value, bool> = true >
+    template <typename TMat>
+    requires ConceptMatrix<TMat>
     constexpr explicit Diagonal(const TMat& matrix)
     {
         for (std::size_t i = 0; i < Min(rows, columns); ++i)

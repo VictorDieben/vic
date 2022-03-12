@@ -6,6 +6,8 @@
 
 #include "vic/linalg/tools.h"
 
+#include <utility>
+
 namespace vic
 {
 namespace linalg
@@ -26,29 +28,68 @@ TEST(TestLinalg, HappyFlow)
     EXPECT_FALSE((HasSameType<Diagonal<float, 4, 4>, Diagonal<double, 4, 4>>::value));
     EXPECT_FALSE((HasSameType<Matrix<float, 4, 4>, Identity<double, 4>>::value));
     EXPECT_FALSE((HasSameType<Matrix<float, 4, 4>, Diagonal<double, 4, 4>>::value));
-
-    // Verify IsMatrix
-    EXPECT_TRUE((IsMatrix<Matrix<double, 4, 4>>::value));
-    EXPECT_TRUE((IsMatrix<Identity<double, 4>>::value));
-    EXPECT_TRUE((IsMatrix<Diagonal<double, 4, 4>>::value));
-    EXPECT_TRUE((IsMatrix<Zeros<double, 4, 4>>::value));
-
-    EXPECT_FALSE((IsMatrix<float>::value));
-    EXPECT_FALSE((IsMatrix<double>::value));
-    EXPECT_FALSE((IsMatrix<int>::value));
-    EXPECT_FALSE((IsMatrix<float&>::value));
-    EXPECT_FALSE((IsMatrix<const float&>::value));
-    EXPECT_FALSE((IsMatrix<const float>::value));
-
-    //auto MatTimesIdentity = Matmul(mat1, identity1);
-    //EXPECT_TRUE((std::is_same_v<decltype(MatTimesIdentity), Matrix<double, 4, 4>>));
-
-    //auto MatTimesDiagonal = Matmul(mat1, diagonal1);
-    //EXPECT_TRUE((std::is_same_v<decltype(MatTimesDiagonal), Matrix<double, 4, 4>>));
-
-    //auto identityTimesIdentity = Matmul(identity1, identity1);
-    //EXPECT_TRUE((std::is_same_v<decltype(identityTimesIdentity), Identity<double, 4>>));
 }
+
+TEST(TestLinalg, TestConcepts)
+{
+    using mat = Matrix<float, 1, 1>;
+    using identity = Identity<float, 1>;
+    using diag = Diagonal<float, 1, 1>;
+    using zeros = Zeros<float, 1, 1>;
+
+    // base types
+    EXPECT_TRUE((ConceptMatrix<mat>));
+    EXPECT_TRUE((ConceptMatrix<identity>));
+    EXPECT_TRUE((ConceptMatrix<diag>));
+    EXPECT_TRUE((ConceptMatrix<zeros>));
+
+    // view transpose
+    EXPECT_TRUE((ConceptMatrix<ViewTranspose<mat>>));
+    EXPECT_TRUE((ConceptMatrix<ViewTranspose<identity>>));
+    EXPECT_TRUE((ConceptMatrix<ViewTranspose<diag>>));
+    EXPECT_TRUE((ConceptMatrix<ViewTranspose<zeros>>));
+
+    // view rowstack
+    EXPECT_TRUE((ConceptMatrix< ViewRowStack<mat, identity>>));
+    EXPECT_TRUE((ConceptMatrix< ViewRowStack<mat, diag>>));
+    EXPECT_TRUE((ConceptMatrix< ViewRowStack<mat, zeros>>));
+    EXPECT_TRUE((ConceptMatrix< ViewRowStack<identity, diag>>));
+    EXPECT_TRUE((ConceptMatrix< ViewRowStack<identity, zeros>>));
+    EXPECT_TRUE((ConceptMatrix< ViewRowStack<diag, zeros>>));
+
+    // view block diagonal
+    EXPECT_TRUE((ConceptMatrix< ViewBlockDiagonal<mat, identity>>));
+    EXPECT_TRUE((ConceptMatrix< ViewBlockDiagonal<mat, diag>>));
+    EXPECT_TRUE((ConceptMatrix< ViewBlockDiagonal<mat, zeros>>));
+    EXPECT_TRUE((ConceptMatrix< ViewBlockDiagonal<identity, zeros>>));
+    EXPECT_TRUE((ConceptMatrix< ViewBlockDiagonal<diag, zeros>>));
+
+    // view submatrix
+    EXPECT_TRUE((ConceptMatrix<ViewSubMatrix<mat, 0, 1, 0, 1>>));
+    EXPECT_TRUE((ConceptMatrix<ViewSubMatrix<identity, 0, 1, 0, 1>>));
+    EXPECT_TRUE((ConceptMatrix<ViewSubMatrix<diag, 0, 1, 0, 1>>));
+    EXPECT_TRUE((ConceptMatrix<ViewSubMatrix<zeros, 0, 1, 0, 1>>));
+
+    EXPECT_FALSE(ConceptMatrix<float>);
+    EXPECT_FALSE(ConceptMatrix<double>);
+    EXPECT_FALSE(ConceptMatrix<int>);
+    EXPECT_FALSE((ConceptMatrix<std::pair<int, float>>));
+
+    // square matrices
+    EXPECT_TRUE((ConceptSquareMatrix<Matrix<float, 1, 1>>));
+    EXPECT_TRUE((ConceptSquareMatrix<Matrix<float, 2, 2>>));
+    EXPECT_FALSE((ConceptSquareMatrix<Matrix<float, 1, 2>>));
+    EXPECT_FALSE((ConceptSquareMatrix<Matrix<float, 2, 1>>));
+
+    // vector
+    EXPECT_TRUE((ConceptVector<Matrix<float, 1, 1>>));
+    EXPECT_TRUE((ConceptVector<Matrix<float, 2, 1>>));
+    EXPECT_TRUE((ConceptVector<Matrix<float, 3, 1>>));
+    EXPECT_TRUE((ConceptVector<Matrix<float, 10, 1>>));
+    EXPECT_FALSE((ConceptVector<Matrix<float, 1, 2>>));
+    EXPECT_FALSE((ConceptVector<Matrix<float, 12, 124>>));
+}
+
 TEST(TestLinalg, TestZeros)
 {
     constexpr Zeros<double, 4, 4> zeros4x4{};
@@ -258,6 +299,7 @@ TEST(TestLinalg, TestInverseTranspose)
     constexpr Matrix<double, 3, 3> transposeMatrix3Answer({ 1, 4, 7, 2, 5, 8, 3, 6, 9 });
     ExpectMatrixEqual(transposeMat3, transposeMatrix3Answer);
 }
+
 
 TEST(TestLinalg, TestBracket3)
 {

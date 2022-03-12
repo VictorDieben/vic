@@ -114,7 +114,7 @@ TEST(TestGraph, TestFloydWarshall)
 	ASSERT_EQ(graph.GetNumEdges(), (nx * (ny-1)) + ((nx-1) * ny));
 
 	// test dijkstra solver
-	const auto costLambda = [](const auto& edge) { return 1.; }; // every edge costs 1
+	const auto costLambda = [](const auto& edge) { return 1.; };
 	algorithms::FloydWarshall floydWarshall{ graph, costLambda };
 	floydWarshall.Update(); // perform calculation
 
@@ -142,7 +142,35 @@ TEST(TestGraph, TestDijkstra)
 	// test dijkstra solver
 	const auto costLambda = [](const auto& edge) { return 1.; }; // every edge costs 1
 	algorithms::Dijkstra dijkstra{ graph, costLambda };
-	auto path = dijkstra.Calculate(0, (11*11)-1);
 
-	ASSERT_EQ(path.size(), 11+10);
+	algorithms::FloydWarshall floydWarshall{ graph, costLambda };
+	floydWarshall.Update(); // perform calculation
+
+	for (const auto& v1 : VertexIterator(graph))
+	{
+		for (const auto& v2 : VertexIterator(graph))
+		{
+			//const auto cost_dijkstra = dijkstra.Calculate(v1.Id(), v2.Id());
+			//const auto cost_fw = floydWarshall.Get(v1.Id(), v2.Id());
+			//EXPECT_NEAR(cost_dijkstra, cost_fw, 0.0001);
+		}
+	}
+}
+
+
+
+TEST(TestGraph, TestAStar)
+{
+	using namespace vic::graph;
+	auto graph = ConstructGridGraph(11, 11);
+
+	ASSERT_EQ(graph.GetNumVertices(), 11 * 11);
+	ASSERT_EQ(graph.GetNumEdges(), 11 * 10 + 10 * 11);
+
+	// test dijkstra solver
+	const auto costLambda = [](const auto& edge) { return 1.; }; // every edge costs 1
+	algorithms::Dijkstra dijkstra{ graph, costLambda };
+	auto path = dijkstra.Calculate(0, (11 * 11) - 1);
+
+	ASSERT_EQ(path.size(), 11 + 10);
 }

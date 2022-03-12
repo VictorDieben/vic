@@ -8,7 +8,8 @@ namespace vic
 namespace linalg
 {
 
-template <typename TMatrix, std::enable_if_t<((IsMatrix<TMatrix>::value&& IsSquare<TMatrix>::value)), bool> = true>
+template <typename TMatrix>
+	requires ConceptMatrix<TMatrix>
 constexpr Base<typename TMatrix::DataType> Determinant(const TMatrix& matrix)
 {
 	if constexpr (std::is_same_v<TMatrix, Identity<TMatrix::DataType, TMatrix::Rows>>)
@@ -26,7 +27,8 @@ constexpr Base<typename TMatrix::DataType> Determinant(const TMatrix& matrix)
 	}
 }
 
-template <typename TMatrix, std::enable_if_t<((IsMatrix<TMatrix>::value&& IsSquare<TMatrix>::value)), bool> = true>
+template <typename TMatrix>
+	requires ConceptMatrix<TMatrix>
 constexpr Base<typename TMatrix::DataType> DeterminantDiagonal(const TMatrix& matrix)
 {
 	Base<typename TMatrix::DataType> val{ 1 };
@@ -36,7 +38,8 @@ constexpr Base<typename TMatrix::DataType> DeterminantDiagonal(const TMatrix& ma
 }
 
 
-template <typename TMatrix, std::enable_if_t<((IsMatrix<TMatrix>::value&& IsSquare<TMatrix>::value)), bool> = true>
+template <typename TMatrix>
+	requires ConceptSquareMatrix<TMatrix>
 constexpr Base<typename TMatrix::DataType> DeterminantGeneral(const TMatrix& matrix)
 {
 	return std::decay_t<typename TMatrix::DataType>{1};
