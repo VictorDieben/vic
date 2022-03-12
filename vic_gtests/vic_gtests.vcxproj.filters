@@ -15,10 +15,12 @@
     <ClCompile Include="linalg\TestViews.cpp">
       <Filter>linalg</Filter>
     </ClCompile>
+    <ClCompile Include="linalg\TestMatmul.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="test_base.h" />
+    <ClInclude Include="linalg\TestTraits.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="linalg">

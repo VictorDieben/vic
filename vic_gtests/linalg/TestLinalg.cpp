@@ -31,88 +31,6 @@ TEST(TestLinalg, HappyFlow)
     EXPECT_FALSE((HasSameType<Matrix<float, 4, 4>, Diagonal<double, 4, 4>>::value));
 }
 
-TEST(TestLinalg, TestConceptRows)
-{
-    struct s1
-    {
-        constexpr static std::size_t GetRows() { return 1; }
-    };
-
-    struct s2
-    {
-        static std::size_t GetRows() { return 1; }
-    };
-
-    struct s3
-    {
-        std::size_t GetRows() const { return 1; }
-    };
-
-    EXPECT_TRUE(ConceptConstexprRows<s1>);
-    EXPECT_FALSE(ConceptConstexprRows<s2>);
-    EXPECT_FALSE(ConceptConstexprRows<s3>);
-}
-
-TEST(TestLinalg, TestConcepts)
-{
-    using mat = Matrix<float, 1, 1>;
-    using identity = Identity<float, 1>;
-    using diag = Diagonal<float, 1, 1>;
-    using zeros = Zeros<float, 1, 1>;
-
-    // base types
-    EXPECT_TRUE((ConceptMatrix<mat>));
-    EXPECT_TRUE((ConceptMatrix<identity>));
-    EXPECT_TRUE((ConceptMatrix<diag>));
-    EXPECT_TRUE((ConceptMatrix<zeros>));
-
-    // view transpose
-    EXPECT_TRUE((ConceptMatrix<ViewTranspose<mat>>));
-    EXPECT_TRUE((ConceptMatrix<ViewTranspose<identity>>));
-    EXPECT_TRUE((ConceptMatrix<ViewTranspose<diag>>));
-    EXPECT_TRUE((ConceptMatrix<ViewTranspose<zeros>>));
-
-    // view rowstack
-    EXPECT_TRUE((ConceptMatrix<ViewRowStack<mat, identity>>));
-    EXPECT_TRUE((ConceptMatrix<ViewRowStack<mat, diag>>));
-    EXPECT_TRUE((ConceptMatrix<ViewRowStack<mat, zeros>>));
-    EXPECT_TRUE((ConceptMatrix<ViewRowStack<identity, diag>>));
-    EXPECT_TRUE((ConceptMatrix<ViewRowStack<identity, zeros>>));
-    EXPECT_TRUE((ConceptMatrix<ViewRowStack<diag, zeros>>));
-
-    // view block diagonal
-    EXPECT_TRUE((ConceptMatrix<ViewBlockDiagonal<mat, identity>>));
-    EXPECT_TRUE((ConceptMatrix<ViewBlockDiagonal<mat, diag>>));
-    EXPECT_TRUE((ConceptMatrix<ViewBlockDiagonal<mat, zeros>>));
-    EXPECT_TRUE((ConceptMatrix<ViewBlockDiagonal<identity, zeros>>));
-    EXPECT_TRUE((ConceptMatrix<ViewBlockDiagonal<diag, zeros>>));
-
-    // view submatrix
-    EXPECT_TRUE((ConceptMatrix<ViewSubMatrix<mat, 0, 1, 0, 1>>));
-    EXPECT_TRUE((ConceptMatrix<ViewSubMatrix<identity, 0, 1, 0, 1>>));
-    EXPECT_TRUE((ConceptMatrix<ViewSubMatrix<diag, 0, 1, 0, 1>>));
-    EXPECT_TRUE((ConceptMatrix<ViewSubMatrix<zeros, 0, 1, 0, 1>>));
-
-    EXPECT_FALSE(ConceptMatrix<float>);
-    EXPECT_FALSE(ConceptMatrix<double>);
-    EXPECT_FALSE(ConceptMatrix<int>);
-    EXPECT_FALSE((ConceptMatrix<std::pair<int, float>>));
-
-    // square matrices
-    EXPECT_TRUE((ConceptSquareMatrix<Matrix<float, 1, 1>>));
-    EXPECT_TRUE((ConceptSquareMatrix<Matrix<float, 2, 2>>));
-    EXPECT_FALSE((ConceptSquareMatrix<Matrix<float, 1, 2>>));
-    EXPECT_FALSE((ConceptSquareMatrix<Matrix<float, 2, 1>>));
-
-    // vector
-    EXPECT_TRUE((ConceptVector<Matrix<float, 1, 1>>));
-    EXPECT_TRUE((ConceptVector<Matrix<float, 2, 1>>));
-    EXPECT_TRUE((ConceptVector<Matrix<float, 3, 1>>));
-    EXPECT_TRUE((ConceptVector<Matrix<float, 10, 1>>));
-    EXPECT_FALSE((ConceptVector<Matrix<float, 1, 2>>));
-    EXPECT_FALSE((ConceptVector<Matrix<float, 12, 124>>));
-}
-
 TEST(TestLinalg, TestZeros)
 {
     constexpr Zeros<double, 4, 4> zeros4x4{};
@@ -121,23 +39,6 @@ TEST(TestLinalg, TestZeros)
             EXPECT_DOUBLE_EQ(zeros4x4.Get(i, j), 0.);
     EXPECT_DEATH(zeros4x4.Get(4, 0), "");
     EXPECT_DEATH(zeros4x4.Get(0, 4), "");
-}
-
-TEST(TestLinalg, TestDynamicMatrices)
-{
-    // initialize
-    const MatrixDynamic<double> dyn1{2, 3};
-    const MatrixDynamic<double> dyn2{3, 4};
-    const MatrixDynamic<double> dyn3{4, 5};
-
-    // evaluate
-
-    // multiply
-    // const auto matmul1 = Matmul(dyn1, dyn2);
-    // ASSERT_TRUE((matmul1.GetRows() == 2 && matmul2.GetColumns() == 4));
-
-    // const auto matmul2 = Matmul(dyn2, dyn3);
-    //ASSERT_TRUE(matmul2.GetRows() == 3 && matmul2.GetColumns() == 5);
 }
 
 TEST(TestLinalg, TestIdentity)
@@ -241,55 +142,6 @@ TEST(TestLinalg, TestAddConstant)
     for(std::size_t i = 0; i < 4; ++i)
         for(std::size_t j = 0; j < 4; ++j)
             EXPECT_DOUBLE_EQ(res1.Get(i, j), i == j ? 2. : 0.);
-}
-
-TEST(TestLinalg, TestMatmulScalar)
-{
-    constexpr Diagonal<double, 2, 2> diag2 = Matmul(Identity<double, 2>{}, 2.);
-    EXPECT_DOUBLE_EQ(diag2.Get(0, 0), 2.);
-    EXPECT_DOUBLE_EQ(diag2.Get(1, 1), 2.);
-    EXPECT_DOUBLE_EQ(diag2.Get(0, 1), 0.);
-    EXPECT_DOUBLE_EQ(diag2.Get(1, 0), 0.);
-}
-
-TEST(TestLinalg, TestMatmul)
-{
-    EXPECT_DOUBLE_EQ(6., Matmul(2., 3.));
-
-    constexpr const auto res1 = Matmul(Identity<double, 3>{}, Identity<double, 3>{});
-    ExpectMatrixEqual(res1, Identity<double, 3>{});
-
-    constexpr const auto diag = Diagonal<double, 3, 3>({1, 2, 3});
-    constexpr const auto res2 = Matmul(diag, Identity<double, 3>{});
-    constexpr const auto res3 = Matmul(Identity<double, 3>{}, diag);
-    ExpectMatrixEqual(res2, diag);
-    ExpectMatrixEqual(res3, diag);
-
-    constexpr const auto mat1 = Matrix<double, 2, 2>({1, 2, 3, 4});
-    constexpr const auto mat2 = Matrix<double, 2, 2>({5, 6, 7, 8});
-    constexpr const auto res4 = Matmul(mat1, mat2);
-    ExpectMatrixEqual(res4, Matrix<double, 2, 2>({19, 22, 43, 50}));
-
-    constexpr const auto diag1 = Diagonal<double, 2, 2>(mat1);
-    constexpr const auto diag2 = Diagonal<double, 2, 2>(mat2);
-    constexpr const auto res5 = Matmul(diag1, diag2);
-    ExpectMatrixEqual(res5, Matrix<double, 2, 2>({5, 0, 0, 32}));
-
-    constexpr const auto res6 = Matmul(diag1, mat2);
-    ExpectMatrixEqual(res6, Matrix<double, 2, 2>({5, 6, 28, 32}));
-    constexpr const auto res7 = Matmul(mat1, diag2);
-    ExpectMatrixEqual(res7, Matrix<double, 2, 2>({5, 16, 15, 32}));
-
-    constexpr const auto scalar1 = Matmul(mat1, 2.0);
-    ExpectMatrixEqual(scalar1, Matrix<double, 2, 2>({2, 4, 6, 8}));
-    constexpr const auto scalar2 = Matmul(3., mat2);
-    ExpectMatrixEqual(scalar2, Matrix<double, 2, 2>({15, 18, 21, 24}));
-
-    // verify types
-    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Identity<double, 1>{}, Identity<double, 1>{}))::DataType>));
-    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Identity<double, 1>{}, Identity<float, 1>{}))::DataType>));
-    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Identity<double, 1>{}, Identity<int, 1>{}))::DataType>));
-    EXPECT_TRUE((std::is_same_v<int, decltype(Matmul(Identity<int, 1>{}, Identity<int, 1>{}))::DataType>));
 }
 
 TEST(TestLinalg, TestDeterminant)

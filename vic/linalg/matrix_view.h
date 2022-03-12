@@ -157,5 +157,6 @@ public:
 private:
     const TMat& mMatrix;
 };
+
 } // namespace linalg
 } // namespace vic
