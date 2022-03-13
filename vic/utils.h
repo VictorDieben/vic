@@ -28,25 +28,24 @@ private:
     std::chrono::time_point<ClockType> mStart;
 };
 
-//// example:
-//// struct SomeCountedClass : public Counted<SomeCountedClass> {};
-//// SomeCountedClass::GetCount();
-//template <typename T>
-//class Counted
-//{
-//public:
-//    Counted() { mCount++; }
-//    Counted(const Counted<T>& other) { mCount++; }
-//    Counted(Counted<T>&& other) noexcept { mCount++; }
-//    ~Counted() { mCount--; }
-//
-//private:
-//    static inline std::size_t mCount{0};
-//};
+// example:
+// struct SomeCountedClass : public Counted<SomeCountedClass> {};
+// SomeCountedClass::GetCount();
+template <typename T>
+class Counted
+{
+public:
+    Counted() { mCount++; }
+    Counted(const Counted<T>& other) { mCount++; }
+    Counted(Counted<T>&& other) noexcept { mCount++; }
+    ~Counted() { mCount--; }
+    static std::size_t GetCount() { return mCount; }
+
+private:
+    static inline std::size_t mCount{0};
+};
 
 // Integer exponent
-// TODO(vicdie): there are far more efficient algorithms for this,
-// let the compiler figure it out by just nesting the template
 template <typename TRet, typename TBase, typename TExp>
 TRet Power(const TBase base, const TExp exp)
 {
@@ -68,43 +67,43 @@ constexpr TRet Pow(const TBase base)
         return base * Pow<exp - 1>(base);
 }
 
-// base conversion (e.g. decimals to hex)
+// base conversion (e.g. normal representation to hex)
 // TODO(vicdie): make a version that works on a range of iterators
-template <typename TBase, typename TIn, typename TOut>
-std::vector<TOut>& ToBase(std::vector<TOut>& buffer, const TIn value, const TBase base)
+template <typename TVec, typename TValue, typename TBase>
+void ToBase(const TValue value, const TBase base, std::vector<TVec>& buffer)
 {
     const std::size_t size = buffer.size();
-    TIn val = value; // mutable copy
+    TValue val = value; // mutable copy
     buffer.clear();
     while(val)
     {
-        buffer.emplace_back(val % base);
+        buffer.emplace_back(TBase{val % base});
         val /= base;
     }
-    if(buffer.size() < size)
-        buffer.resize(size); // appends T{0}'s to the end of the list
-    return buffer;
+    //if(buffer.size() < size)
+    //    buffer.resize(size); // appends T{0}'s to the end of the list
 }
 
-template <typename TBase, typename TIn, typename TOut>
-std::vector<TOut> ToBase(const TIn value, const TBase base)
+template <typename TReturn, typename TValue, typename TBase>
+std::vector<TReturn> ToBase(const TValue value, const TBase base)
 {
-    std::vector<TOut> result; // TODO(vicdie): initialize to good value
-    ToBase<TBase, TIn, TOut>(result, value, base);
+    std::vector<TReturn> result; // TODO(vicdie): initialize to good value
+    ToBase(value, base, result);
     return result;
 }
 
 // convert a list of numbers in a certain base back to normal representation
 // TODO(vicdie): make a version that works with an iterator range instead of vector
-template <typename TBase, typename TIn, typename TOut>
-TOut FromBase(const std::vector<TIn>& values, const TBase base)
+template <typename TOut, typename TVec, typename TBase>
+TOut FromBase(const std::vector<TVec>& values, const TBase base)
 {
     // TODO(vicdie): assert no value in values is larger than base?
     uint64_t tmp = 1;
     TOut ret{0};
     for(const auto& value : values)
     {
-        ret = ret + (tmp * value);
+        assert(value < base);
+        ret = ret + TOut{tmp} * value;
         tmp = tmp * base;
     }
     return TOut{ret};
