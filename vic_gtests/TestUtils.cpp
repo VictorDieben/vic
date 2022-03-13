@@ -34,8 +34,8 @@ TEST(TestUtils, TestTimer)
     timer.Reset();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     const double interval_ms = timer.GetTime<double, std::milli>().count();
-    EXPECT_LT(9., interval_ms);
-    EXPECT_LT(interval_ms, 50.); // large upper bound, we don't know when thread returns
+    EXPECT_LT(9.99, interval_ms);
+    EXPECT_LT(interval_ms, 50.); // large upper bound, we don't know when sleep returns
 }
 
 TEST(TestUtils, TestCounted)
@@ -81,11 +81,11 @@ TEST(TestUtils, TestFromBase)
 
     // make sure we trigger an assert if we try to convert a number that is too big.
     // (e.g. the value 10 in base 10 is no longer 1 digit)
-    ASSERT_DEATH(FromBase<uint64_t>(std::vector<int>{2}, baseTwo), "");
-    ASSERT_DEATH(FromBase<uint64_t>(std::vector<int>{3}, 3), "");
-    ASSERT_DEATH(FromBase<uint64_t>(std::vector<int>{4}, 4), "");
-    ASSERT_DEATH(FromBase<uint64_t>(std::vector<int>{5}, 5), "");
-    ASSERT_DEATH(FromBase<uint64_t>(std::vector<int>{6}, 6), "");
+    ASSERT_DEATH(FromBase<uint64_t>(std::vector<int>{2}, 2), "");
+    ASSERT_DEATH(FromBase<uint64_t>(std::vector<int>{0, 3}, 3), "");
+    ASSERT_DEATH(FromBase<uint64_t>(std::vector<int>{4, 0}, 4), "");
+    ASSERT_DEATH(FromBase<uint64_t>(std::vector<int>{0, 5, 0}, 5), "");
+    ASSERT_DEATH(FromBase<uint64_t>(std::vector<int>{-1}, 2), "");
 }
 
 TEST(TestUtils, TestToFromBase)

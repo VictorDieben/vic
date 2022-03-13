@@ -102,7 +102,7 @@ TOut FromBase(const std::vector<TVec>& values, const TBase base)
     TOut ret{0};
     for(const auto& value : values)
     {
-        assert(value < base);
+        assert(0 <= value && value < base);
         ret = ret + TOut{tmp} * value;
         tmp = tmp * base;
     }

@@ -1,6 +1,8 @@
 #pragma once
 
-// This file implements the variable size matrices
+// This file implements the variable size matrices.
+// if memory or computational resources are limited,
+// do not include this file. It is not needed for fixed size computations.
 #include "vic/linalg/matrices.h"
 #include "vic/linalg/traits.h"
 

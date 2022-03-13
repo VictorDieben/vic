@@ -1,12 +1,14 @@
 #include "../pch.h"
 #include "../test_base.h"
 
+#include "vic/linalg/inverse.h"
 #include "vic/linalg/matrices.h"
 #include "vic/linalg/matrices_dynamic.h"
 #include "vic/linalg/traits.h"
 
 #include "vic/linalg/tools.h"
 
+#include <random>
 #include <utility>
 
 namespace vic
@@ -78,6 +80,8 @@ TEST(TestLinalg, TestMatrix)
 
 TEST(TestLinalg, TestDiagonal)
 {
+    EXPECT_TRUE((ConceptSquareMatrix<Diagonal<double, 4, 4>>));
+
     // test default constructor (all 0)
     constexpr const Diagonal<double, 4, 4> zeros4{};
     for(std::size_t i = 0; i < 4; ++i)
@@ -189,6 +193,35 @@ TEST(TestLinalg, TestInverseTranspose)
     constexpr auto transposeMat3 = Transpose(matrix3);
     constexpr Matrix<double, 3, 3> transposeMatrix3Answer({1, 4, 7, 2, 5, 8, 3, 6, 9});
     ExpectMatrixEqual(transposeMat3, transposeMatrix3Answer);
+}
+
+TEST(TestLinalg, TestInverse)
+{
+    constexpr auto diag1 = Diagonal<double, 3, 3>({1, 2, 3});
+    constexpr auto diagInv1 = InverseDiagonal(diag1);
+    auto diagInv2 = InverseStatic(diag1);
+    ExpectMatrixEqual(diagInv1, diagInv2);
+}
+
+TEST(TestLinalg, TestInverseRandom)
+{
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> dist(0.01, 100.);
+    constexpr auto identity = Identity<double, 10>{};
+
+    // test a bunch of random matrices
+    for(std::size_t i = 0; i < 1000; ++i)
+    {
+        Matrix<double, 10, 10> matrix{};
+        for(std::size_t r = 0; r < 10; ++r)
+            for(std::size_t c = 0; c < 10; ++c)
+                matrix.At(r, c) = dist(g);
+
+        const auto inverse = InverseStatic(matrix);
+        const auto result = Matmul(inverse, matrix);
+
+        ExpectMatrixEqual(result, identity, 1E-6); // A^-1 * A == I
+    }
 }
 
 TEST(TestLinalg, TestBracket3)
