@@ -2,6 +2,8 @@
 
 #include "linalg.h"
 #include "traits.h"
+#include "vic/linalg/matrix_view.h"
+#include <algorithm>
 
 namespace vic
 {
@@ -64,22 +66,27 @@ constexpr auto InverseGeneral(const TMat& mat)
 }
 
 template <typename TMat>
-// requires ConceptSquareMatrix<TMat>
+requires ConceptSquareMatrix<TMat>
 constexpr auto InverseStatic(const TMat& mat)
 {
+    // TODO(vicdie): several algorithms, selector, estimator for how good it is
+
     using T = typename TMat::DataType;
     constexpr std::size_t n = mat.GetRows();
-    const auto twoI = Matmul(2., Identity<T, n>{});
+    constexpr auto twoI = DiagonalConstant<T, n>(2.);
 
     auto V = Matrix<T, n, n>(Matmul(1E-10, Transpose(mat)));
 
     // Hotelling-Bodewig algorithm: V_n+1 = V_n * (2*I - A*V_n)
-    for(std::size_t i = 0; i < 100; ++i)
+    std::size_t i = 0;
+    for(; i < 100; ++i)
     {
-        const auto tmp1 = Matmul(-1., Matmul(mat, V));
-        const auto tmp2 = Add(twoI, tmp1);
-        const auto tmp3 = Matmul(V, tmp2);
-        V = Matrix<T, n, n>{tmp3};
+        const auto tmp = Matmul(mat, V);
+        V = Matmul(V, Add(twoI, ViewNegative(tmp)));
+
+        const double q = InverseQualtiy(mat, V);
+        if(q < 1E-8)
+            break;
     }
     return V;
 }
@@ -91,6 +98,22 @@ constexpr auto InverseDynamic(const TMat& mat)
     // TODO(vicdie): maybe implement this function in a different file,
     // so we do not need to compile it if we don't want it
     return Zeros<double, 1, 1>{};
+}
+
+template <typename TMat1, typename TMat2>
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+constexpr auto InverseQualtiy(const TMat1& matrix, const TMat2& inverse)
+{
+    // A * A^-1 == I,
+    // check how well this inverse approaches Identity
+    constexpr auto identity = Identity<double, matrix.GetRows()>{};
+    const auto res = Matmul(matrix, inverse);
+    double absSum = 0.;
+    for(std::size_t i = 0; i < res.GetRows(); ++i)
+        for(std::size_t j = 0; j < res.GetRows(); ++j)
+            absSum += std::abs(res.Get(i, j) - identity.Get(i, j));
+
+    return absSum / double(res.GetRows() * res.GetRows());
 }
 
 } // namespace linalg

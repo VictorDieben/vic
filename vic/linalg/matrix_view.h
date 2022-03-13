@@ -35,6 +35,25 @@ private:
     const TMatrix& mMatrix;
 };
 
+template <typename TMatrix>
+requires ConceptMatrix<TMatrix>
+class ViewNegative
+{
+public:
+    ViewNegative(const TMatrix& matrix)
+        : mMatrix(matrix)
+    { }
+
+    using DataType = typename TMatrix::DataType;
+    constexpr static std::size_t GetRows() { return TMatrix::GetRows(); }
+    constexpr static std::size_t GetColumns() { return TMatrix::GetColumns(); }
+
+    constexpr DataType Get(const std::size_t i, const std::size_t j) const { return -1.0 * mMatrix.Get(i, j); }
+
+private:
+    const TMatrix& mMatrix;
+};
+
 template <typename TMat1, typename TMat2>
 requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && HasSameType<TMat1, TMat2>::value //
     class ViewRowStack

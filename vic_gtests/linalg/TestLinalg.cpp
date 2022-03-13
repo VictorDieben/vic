@@ -8,6 +8,8 @@
 
 #include "vic/linalg/tools.h"
 
+#include <memory>
+
 #include <random>
 #include <utility>
 
@@ -205,16 +207,27 @@ TEST(TestLinalg, TestInverse)
 
 TEST(TestLinalg, TestInverseRandom)
 {
+    // NOTE: these numbers are inside gtest context, including construction of random matrix etc.
+    // Not representative of actual performance
+
+    // 50x50; 100 iters;    766 [ms]
+    // 75x75; 100 iters;    2.7 [s]
+    // 100x100; 100 iters;  6.8 [s]
+    // 500x500; 1 iter;     12.5 [s]
+    // 600x600; 1 iter;     16.5 [s]
+
     std::default_random_engine g;
     std::uniform_real_distribution<double> dist(0.01, 100.);
-    constexpr auto identity = Identity<double, 10>{};
+
+    constexpr std::size_t n = 25;
+    constexpr auto identity = Identity<double, n>{};
 
     // test a bunch of random matrices
-    for(std::size_t i = 0; i < 1000; ++i)
+    for(std::size_t i = 0; i < 100; ++i)
     {
-        Matrix<double, 10, 10> matrix{};
-        for(std::size_t r = 0; r < 10; ++r)
-            for(std::size_t c = 0; c < 10; ++c)
+        Matrix<double, n, n> matrix{};
+        for(std::size_t r = 0; r < n; ++r)
+            for(std::size_t c = 0; c < n; ++c)
                 matrix.At(r, c) = dist(g);
 
         const auto inverse = InverseStatic(matrix);

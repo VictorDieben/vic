@@ -130,6 +130,30 @@ public:
     }
 };
 
+template <typename T, std::size_t size>
+class DiagonalConstant
+{
+public:
+    constexpr DiagonalConstant() = default;
+    constexpr DiagonalConstant(const T value)
+        : mValue(value)
+    { }
+
+    constexpr static std::size_t GetRows() { return size; }
+    constexpr static std::size_t GetColumns() { return size; }
+
+    using DataType = T;
+
+    constexpr T Get(const std::size_t i, const std::size_t j) const
+    {
+        assert(((i < GetRows()) && (j < GetColumns())));
+        return i == j ? mValue : T{0};
+    }
+
+private:
+    const T mValue{0.};
+};
+
 // diagonal matrix, only has values where i==j.
 // does not have to be square
 template <typename T, std::size_t rows, std::size_t columns>
