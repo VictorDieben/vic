@@ -77,7 +77,7 @@ void ToBase(const TValue value, const TBase base, std::vector<TVec>& buffer)
     buffer.clear();
     while(val)
     {
-        buffer.emplace_back(TBase{val % base});
+        buffer.emplace_back(static_cast<TVec>(TBase{val % base}));
         val /= base;
     }
     //if(buffer.size() < size)

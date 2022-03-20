@@ -70,22 +70,36 @@ requires ConceptSquareMatrix<TMat>
 constexpr auto InverseStatic(const TMat& mat)
 {
     // TODO(vicdie): several algorithms, selector, estimator for how good it is
+    return InverseHotellingBodewig(mat, 1E-10);
+}
+
+template <typename TMat>
+requires ConceptSquareMatrix<TMat>
+constexpr auto InverseHotellingBodewig(const TMat& mat, const typename TMat::DataType eps)
+{
+    // Hotelling-Bodewig algorithm: V_n+1 = V_n * (2*I - A*V_n)
 
     using T = typename TMat::DataType;
     constexpr std::size_t n = mat.GetRows();
+    constexpr auto identity = Identity<double, n>{};
     constexpr auto twoI = DiagonalConstant<T, n>(2.);
 
+    // TODO(vicdie): good initial guess
     auto V = Matrix<T, n, n>(Matmul(1E-10, Transpose(mat)));
 
-    // Hotelling-Bodewig algorithm: V_n+1 = V_n * (2*I - A*V_n)
+    // TODO(vicdie): choose decent max iterations
     std::size_t i = 0;
-    for(; i < 100; ++i)
+    for(; i < 1000; ++i)
     {
         const auto tmp = Matmul(mat, V);
         V = Matmul(V, Add(twoI, ViewNegative(tmp)));
 
-        const double q = InverseQualtiy(mat, V);
-        if(q < 1E-8)
+        // sum up the difference between tmp and I, break if it is small enough
+        double absSum = 0.;
+        for(std::size_t i = 0; i < n; ++i)
+            for(std::size_t j = 0; j < n; ++j)
+                absSum += std::fabs(tmp.Get(i, j) - identity.Get(i, j));
+        if(absSum < eps * n * n)
             break;
     }
     return V;

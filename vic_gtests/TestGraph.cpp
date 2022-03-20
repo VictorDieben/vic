@@ -3,6 +3,11 @@
 #include "vic/graph/algorithms.h"
 #include "vic/graph/graph.h"
 #include "vic/graph/iterators.h"
+#include "vic/graph/tensor_graph.h"
+
+#include <algorithm>
+#include <random>
+#include <ranges>
 
 using namespace vic;
 
@@ -75,14 +80,19 @@ TEST(TestGraph, Startup)
 auto ConstructGridGraph(const std::size_t nx, const std::size_t ny)
 {
     using namespace vic::graph;
-    struct VertexData
+    struct TestVertexData
     {
         using VertexIdType = uint16_t;
         double x;
         double y;
     };
-    using Vertex = vic::graph::Vertex<VertexData>;
-    using Edge = vic::graph::Edge<Vertex::VertexIdType>;
+    struct TestEdgeData
+    {
+        using VertexIdType = uint16_t;
+        using EdgeIdType = uint16_t;
+    };
+    using Vertex = vic::graph::Vertex<TestVertexData>;
+    using Edge = vic::graph::Edge<TestEdgeData>;
     using TestGraph = vic::graph::BaseGraph<Vertex, Edge>;
 
     TestGraph graph;
@@ -110,14 +120,15 @@ TEST(TestGraph, TestFloydWarshall)
 {
     using namespace vic::graph;
 
-    const std::size_t nx = 3, ny = 5;
+    const std::size_t nx = 25, ny = 25;
     auto graph = ConstructGridGraph(nx, ny);
+    using VertexIdType = decltype(graph)::VertexIdType;
+    using EdgeIdType = decltype(graph)::EdgeIdType;
 
     ASSERT_EQ(graph.GetNumVertices(), nx * ny);
     ASSERT_EQ(graph.GetNumEdges(), (nx * (ny - 1)) + ((nx - 1) * ny));
 
-    // test dijkstra solver
-    const auto costLambda = [](const auto& edge) { return 1.; };
+    const auto costLambda = [](const VertexIdType, const EdgeIdType, const VertexIdType) { return 1.; };
     algorithms::FloydWarshall floydWarshall{graph, costLambda};
     floydWarshall.Update(); // perform calculation
 
@@ -129,7 +140,7 @@ TEST(TestGraph, TestFloydWarshall)
         {
             const auto expected = std::abs(v1.mData.x - v2.mData.x) + std::abs(v1.mData.y - v2.mData.y);
             const auto fw = floydWarshall.Get(v1.Id(), v2.Id());
-            EXPECT_NEAR(fw, expected, 0.0001);
+            ASSERT_NEAR(fw, expected, 0.0001);
         }
     }
 
@@ -139,13 +150,24 @@ TEST(TestGraph, TestFloydWarshall)
 TEST(TestGraph, TestDijkstra)
 {
     using namespace vic::graph;
-    auto graph = ConstructGridGraph(11, 11);
 
-    ASSERT_EQ(graph.GetNumVertices(), 11 * 11);
-    ASSERT_EQ(graph.GetNumEdges(), 11 * 10 + 10 * 11);
+    constexpr std::size_t nx = 21, ny = 14;
+    auto graph = ConstructGridGraph(nx, ny);
+    using VertexIdType = decltype(graph)::VertexIdType;
+    using EdgeIdType = decltype(graph)::EdgeIdType;
+
+    ASSERT_EQ(graph.GetNumVertices(), nx * ny);
+    constexpr std::size_t expectedNrEdges = (nx * (ny - 1)) + ((nx - 1) * ny);
+    ASSERT_EQ(graph.GetNumEdges(), expectedNrEdges);
+
+    // setup a random edge cost functor
+    std::mt19937 rng(1234);
+    std::uniform_real_distribution dist(1., 2.);
+    std::array<double, expectedNrEdges> costs;
+    std::generate(costs.begin(), costs.end(), [&]() { return dist(rng); });
+    const auto costLambda = [&](VertexIdType, const EdgeIdType& id, VertexIdType) -> double { return costs.at(id); };
 
     // test dijkstra solver
-    const auto costLambda = [](const auto& edge) { return 1.; }; // every edge costs 1
     algorithms::Dijkstra dijkstra{graph, costLambda};
 
     algorithms::FloydWarshall floydWarshall{graph, costLambda};
@@ -155,9 +177,10 @@ TEST(TestGraph, TestDijkstra)
     {
         for(const auto& v2 : VertexIterator(graph))
         {
-            //const auto cost_dijkstra = dijkstra.Calculate(v1.Id(), v2.Id());
-            //const auto cost_fw = floydWarshall.Get(v1.Id(), v2.Id());
-            //EXPECT_NEAR(cost_dijkstra, cost_fw, 0.0001);
+            const auto path_dijkstra = dijkstra.Calculate(v1.Id(), v2.Id());
+            const auto cost_dijkstra = dijkstra.GetCost(path_dijkstra);
+            const auto cost_fw = floydWarshall.Get(v1.Id(), v2.Id());
+            ASSERT_NEAR(cost_dijkstra, cost_fw, 0.0001);
         }
     }
 }
@@ -165,28 +188,96 @@ TEST(TestGraph, TestDijkstra)
 TEST(TestGraph, TestAStar)
 {
     using namespace vic::graph;
-    auto graph = ConstructGridGraph(11, 11);
+    constexpr std::size_t nx = 16, ny = 15;
+    auto graph = ConstructGridGraph(nx, ny);
+    using CostType = double;
+    using VertexIdType = decltype(graph)::VertexIdType;
+    using EdgeIdType = decltype(graph)::EdgeIdType;
 
-    ASSERT_EQ(graph.GetNumVertices(), 11 * 11);
-    ASSERT_EQ(graph.GetNumEdges(), 11 * 10 + 10 * 11);
+    ASSERT_EQ(graph.GetNumVertices(), nx * ny);
+    constexpr std::size_t expectedNrEdges = (nx * (ny - 1)) + ((nx - 1) * ny);
+    ASSERT_EQ(graph.GetNumEdges(), expectedNrEdges);
 
-    const auto costLambda = [](const auto& edge) { return 1.; }; // every edge costs 1
+    // setup a random edge cost functor
+    std::mt19937 rng(1234);
+    std::uniform_real_distribution dist(1., 2.);
+    std::array<double, expectedNrEdges> costs;
+    std::generate(costs.begin(), costs.end(), [&]() { return dist(rng); });
+    const auto costLambda = [&](const VertexIdType&, const EdgeIdType& id, const VertexIdType&) -> CostType { return costs.at(id); };
 
     // construct a floydWarshall instance for heuristic.
     // this is a perfect heuristic (all precomputed)
     algorithms::FloydWarshall floydWarshall{graph, costLambda};
-    const auto heuristicLambda = [&](const auto& source, const auto& sink) { return floydWarshall.Get(source, sink); };
+    floydWarshall.Update();
+    const auto heuristicLambda = [&](const VertexIdType& source, const VertexIdType& sink) -> CostType { return floydWarshall.Get(source, sink); };
 
     // test AStar solver
     algorithms::AStar astar{graph, costLambda, heuristicLambda};
+    astar.Update();
 
     for(const auto& v1 : VertexIterator(graph))
     {
         for(const auto& v2 : VertexIterator(graph))
         {
-            //const auto cost_astar = astar.Calculate(v1.Id(), v2.Id());
-            //const auto cost_fw = floydWarshall.Get(v1.Id(), v2.Id());
-            //EXPECT_NEAR(cost_dijkstra, cost_fw, 0.0001);
+            const auto path_astar = astar.Calculate(v1.Id(), v2.Id());
+            const auto cost_astar = astar.GetCost(path_astar);
+            const auto cost_fw = floydWarshall.Get(v1.Id(), v2.Id());
+            ASSERT_NEAR(cost_astar, cost_fw, 1E-10);
+        }
+    }
+}
+
+TEST(TestGraph, TestTensorGraph)
+{
+
+    using namespace vic::graph;
+    constexpr std::size_t nx = 10, ny = 10;
+    auto graph = ConstructGridGraph(nx, ny);
+    using VertexIdType = decltype(graph)::VertexIdType;
+    using VertexType = decltype(graph)::VertexType;
+    using VertexIdType = decltype(graph)::VertexIdType;
+
+    auto tensorgraph = TensorGraph(graph);
+    using TensorVertexType = typename TensorVertex<VertexType>;
+
+    ASSERT_EQ(tensorgraph.NumTensorVertices(), nx * ny);
+
+    tensorgraph.SetDimensions(2);
+    ASSERT_EQ(tensorgraph.NumTensorVertices(), Pow<2>(nx * ny));
+
+    tensorgraph.SetDimensions(3);
+    ASSERT_EQ(tensorgraph.NumTensorVertices(), Pow<3>(nx * ny));
+
+    std::vector<VertexIdType> ids;
+    for(const auto& vert : VertexIterator(graph))
+        ids.push_back(vert.Id());
+
+    TensorVertex<VertexType> tensorBackConverted;
+
+    // convert all valid 3d tensor vertices to tensor ids, and then back.
+    // make sure the conversions are accurate
+    for(const VertexIdType& v1 : ids)
+    {
+        for(const VertexIdType& v2 : ids)
+        {
+            for(const VertexIdType& v3 : ids)
+            {
+                // create a tensor vertex [v1, v2, v3]
+                const auto verts = std::vector<VertexIdType>{{v1, v2, v3}};
+                TensorVertexType tvert{tensorgraph, verts};
+
+                // convert it to a tensor id
+                TensorVertexId tensor_id = tvert.ToId(tensorgraph);
+
+                // convert it back to a tensor vertex
+                tensorBackConverted.FromId(tensorgraph, tensor_id);
+
+                // compare the objects
+                const auto verts1 = tvert.GetVertices();
+                const auto verts2 = tensorBackConverted.GetVertices();
+                if(!(verts1 == verts2))
+                    ASSERT_TRUE(false);
+            }
         }
     }
 }

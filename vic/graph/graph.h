@@ -32,6 +32,7 @@ struct EmptyVertexDataType
 
 struct EmptyEdgeDataType
 {
+    using VertexIdType = uint16_t;
     using EdgeIdType = uint16_t;
 };
 
@@ -120,6 +121,18 @@ public:
     }
     VertexType& GetVertex(const VertexIdType id) { return mVertices.at(id); } // id is also index
     EdgeType& GetEdge(const EdgeIdType id) { return mEdges.at(id); } // id is also index
+    EdgeType* GetEdge(const VertexIdType source, const VertexIdType sink)
+    {
+        for(auto& edge : mEdges)
+        {
+            if(edge.Source() == source && edge.Sink() == sink)
+                return &edge;
+            // TODO(vicdie): check if graph is directed
+            if(edge.Source() == sink && edge.Sink() == source)
+                return &edge;
+        }
+        return nullptr;
+    }
 
     std::size_t GetNumVertices() const { return mVertices.size(); }
     std::size_t GetNumEdges() const { return mEdges.size(); }
@@ -134,71 +147,6 @@ private:
 
     VertexIdType mVertexIdCounter{0};
     EdgeIdType mEdgeIdCounter{0};
-};
-
-// A Tensor vertex is a vertex that represents the position of multiple agents
-// at the same time. In order to store it as compactly as possible, the list of
-// vertex ids (e.g. {1, 10, 50, 23}) is translated to a number with base equal
-// to the number of vertices in the graph.
-
-template <typename TVertex>
-class TensorVertex; // forward declare
-
-class TensorVertexId
-{
-public:
-    using TensorVertexIdType = Uint128;
-    TensorVertexId() = default;
-    TensorVertexId(const TensorVertexIdType id)
-        : mId(id)
-    { }
-
-private:
-    TensorVertexIdType mId{};
-};
-
-template <typename TVertex>
-class TensorVertex
-{
-public:
-    using VertexType = TVertex;
-    using VertexIdType = typename TVertex::VertexIdType;
-    using TensorVertexIdType = TensorVertexId; // TODO: fix
-
-    TensorVertex() = default;
-    TensorVertex(const TensorVertexId& id) { FromId(id); }
-
-    TensorVertexId ToId() const { return {}; }
-    void FromId(const TensorVertexId id)
-    {
-        // TODO: implement
-    }
-
-private:
-};
-
-template <typename TGraph>
-class TensorGraph
-{
-public:
-    using GraphType = TGraph;
-    using VertexType = typename TGraph::VertexType;
-    using VertexIdType = typename TGraph::VertexIdType;
-    using EdgeType = typename TGraph::EdgeType;
-    using EdgeIdType = typename TGraph::EdgeIdType;
-
-    TensorGraph(TGraph& graph)
-        : mGraph(graph)
-    { }
-
-    GraphType& GetGraph() { return mGraph; }
-    void SetDimensions(Uint dims) { mDimensions = dims; }
-    Uint GetDimensions() const { return mDimensions; }
-    void NumTensorVertices() const { return 0; }
-
-private:
-    Uint mDimensions{1};
-    GraphType& mGraph;
 };
 
 } // namespace graph

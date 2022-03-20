@@ -195,6 +195,8 @@ TEST(TestLinalg, TestInverseTranspose)
     constexpr auto transposeMat3 = Transpose(matrix3);
     constexpr Matrix<double, 3, 3> transposeMatrix3Answer({1, 4, 7, 2, 5, 8, 3, 6, 9});
     ExpectMatrixEqual(transposeMat3, transposeMatrix3Answer);
+
+    // TODO(vicdie): check that a matrix is rotation, and can be transposed instead of inversed
 }
 
 TEST(TestLinalg, TestInverse)
@@ -230,10 +232,10 @@ TEST(TestLinalg, TestInverseRandom)
             for(std::size_t c = 0; c < n; ++c)
                 matrix.At(r, c) = dist(g);
 
-        const auto inverse = InverseStatic(matrix);
+        const auto inverse = InverseHotellingBodewig(matrix, 1E-10);
         const auto result = Matmul(inverse, matrix);
 
-        ExpectMatrixEqual(result, identity, 1E-6); // A^-1 * A == I
+        ExpectMatrixEqual(result, identity, 1E-8); // A^-1 * A == I
     }
 }
 

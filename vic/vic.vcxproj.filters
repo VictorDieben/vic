@@ -105,6 +105,12 @@
     <ClInclude Include="linalg\matrices_dynamic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="graph\traits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="graph\tensor_graph.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">
