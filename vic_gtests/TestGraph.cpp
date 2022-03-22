@@ -229,7 +229,6 @@ TEST(TestGraph, TestAStar)
 
 TEST(TestGraph, TestTensorGraph)
 {
-
     using namespace vic::graph;
     constexpr std::size_t nx = 10, ny = 10;
     auto graph = ConstructGridGraph(nx, ny);
@@ -280,4 +279,125 @@ TEST(TestGraph, TestTensorGraph)
             }
         }
     }
+}
+
+TEST(TestGraph, TestTensorOutIter)
+{
+    using namespace vic::graph;
+    constexpr std::size_t nx = 3, ny = 3;
+
+    // 6, 7, 8
+    // 3, 4, 5
+    // 0, 1, 2
+
+    // setup graph
+    auto graph = ConstructGridGraph(nx, ny);
+    auto tensorgraph = TensorGraph(graph);
+    tensorgraph.SetDimensions(2);
+    using VertexType = decltype(graph)::VertexType;
+    using TensorVertexType = typename TensorVertex<VertexType>;
+
+    TensorOutIterator iter{tensorgraph};
+    iter.Update();
+
+    std::size_t count = 0;
+    const auto lambda = [&](const auto&) { count++; };
+
+    // verify center point in a 2d 3x3 grid
+    TensorVertexType tvert{tensorgraph, {4, 4}};
+    iter.ForeachOut(tvert.ToId(tensorgraph), lambda);
+    ASSERT_EQ(count, 25);
+
+    // verify corner + edge in 3x3 grid
+    tvert = TensorVertexType(tensorgraph, {0, 3});
+    count = 0;
+    iter.ForeachOut(tvert.ToId(tensorgraph), lambda);
+    ASSERT_EQ(count, 3 * 4);
+
+    // verify 2 opposing edges, in 3x3 grid
+    tvert = TensorVertexType(tensorgraph, {3, 5});
+    count = 0;
+    iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
+    ASSERT_EQ(count, (4 * 4) - 1);
+
+    // verify that an invalid start node has no outs
+    tvert = TensorVertexType(tensorgraph, {2, 2});
+    count = 0;
+    iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
+    ASSERT_EQ(count, 0);
+
+    // verify 2 same nodes, in 3x3 grid
+    tvert = TensorVertexType(tensorgraph, {4, 4});
+    count = 0;
+    iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
+    ASSERT_EQ(count, 0);
+
+    // verify 2 closeby edges
+    tvert = TensorVertexType(tensorgraph, {1, 3});
+    count = 0;
+    iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
+    ASSERT_EQ(count, (4 * 4) - 2);
+
+    // verify 3 directly connected vertices
+    tensorgraph.SetDimensions(3);
+    tvert = TensorVertexType(tensorgraph, {1, 4, 7});
+    count = 0;
+    iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
+    ASSERT_EQ(count, 3 * 3 * 3);
+}
+
+TEST(TestGraph, TestTensorAStar)
+{
+    using namespace vic::graph;
+    constexpr std::size_t nx = 3, ny = 3;
+
+    // setup graph
+    auto graph = ConstructGridGraph(nx, ny);
+    auto tensorgraph = TensorGraph(graph);
+    tensorgraph.SetDimensions(2);
+    using Graphtype = decltype(graph);
+    using VertexType = Graphtype::VertexType;
+    using VertexIdType = Graphtype::VertexIdType;
+    using EdgeIdType = Graphtype::EdgeIdType;
+    using TensorVertexType = typename TensorVertex<VertexType>;
+
+    // setup cost and heuristic
+    const auto costLambda = [&](VertexIdType, const EdgeIdType& id, VertexIdType) -> double { return 1.; };
+    algorithms::FloydWarshall floydWarshall{graph, costLambda};
+    floydWarshall.Update(); // perform calculation
+
+    const auto tensorCostLambda = [](const TensorVertexType& v1, const TensorVertexType& v2) -> double {
+        // for now, just assume the edge exists
+        return 1.;
+    };
+    const auto tensorHeuristicLambda = [&](const TensorVertexType& v1, const TensorVertexType& v2) -> double {
+        const auto& verts1 = v1.GetVertices();
+        const auto& verts2 = v2.GetVertices();
+        double maxVal = 0;
+        for(std::size_t i = 0; i < verts1.size(); ++i)
+            maxVal = std::max(maxVal, floydWarshall.Get(verts1.at(i), verts2.at(i)));
+        return maxVal;
+    };
+
+    // setup solver
+    TensorAStar tensorAStar(tensorgraph, tensorCostLambda, tensorHeuristicLambda);
+    tensorAStar.Update();
+
+    // calculate a few cases, check total duration
+    auto res = tensorAStar.Calculate(TensorVertexType(tensorgraph, {0, 2}).ToId(tensorgraph), //
+                                     TensorVertexType(tensorgraph, {8, 6}).ToId(tensorgraph));
+    ASSERT_EQ(res.size(), 5);
+
+    res = tensorAStar.Calculate(TensorVertexType(tensorgraph, {0, 2}).ToId(tensorgraph), //
+                                TensorVertexType(tensorgraph, {2, 0}).ToId(tensorgraph));
+    ASSERT_EQ(res.size(), 5);
+    
+
+    res = tensorAStar.Calculate(TensorVertexType(tensorgraph, {3, 8}).ToId(tensorgraph), //
+                                TensorVertexType(tensorgraph, {8, 3}).ToId(tensorgraph));
+    std::vector<TensorVertexType> vertices;
+    for(const TensorVertexId& item : res)
+        vertices.push_back(TensorVertexType(tensorgraph, item));
+    ASSERT_EQ(res.size(), 4);
+
 }

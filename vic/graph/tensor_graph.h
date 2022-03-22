@@ -47,7 +47,6 @@ public:
     template <typename TGraph>
     TensorVertexId FromVertexIds(const TGraph& graph, const std::vector<VertexIdType>& verts) const
     {
-        // TODO(vicdie): verify
         mVertices = verts;
     }
 
@@ -66,12 +65,15 @@ public:
 
     const std::vector<VertexIdType>& GetVertices() const { return mVertices; }
 
+    VertexIdType At(const std::size_t dim) const { return mVertices.at(dim); }
+    void Set(const std::size_t dim, const VertexIdType value) { mVertices[dim] = value; }
+
 private:
     std::vector<VertexIdType> mVertices{};
 };
 
 template <typename TGraph>
-requires ConceptGraph<TGraph>
+// requires ConceptGraph<TGraph>
 class TensorGraph
 {
 public:
@@ -100,15 +102,140 @@ private:
     GraphType& mGraph;
 };
 
+// iterate over all vertices.
+// This is a separate object, because a tensor graph will not be as trivial
+template <typename TTensorGraph>
+class TensorOutIterator
+{
+public:
+    using VertexType = typename TTensorGraph::VertexType;
+    using EdgeType = typename TTensorGraph::EdgeType;
+    using VertexIdType = typename TTensorGraph::VertexIdType;
+    using EdgeIdType = typename TTensorGraph::EdgeIdType;
+
+    using TensorVertexType = TensorVertex<VertexType>;
+
+    using TensorGraphType = typename TTensorGraph;
+    using GraphType = typename TTensorGraph::GraphType;
+
+private:
+    TTensorGraph& mGraph;
+    OutIterator<GraphType> mOutIterator;
+
+public:
+    TensorOutIterator(TTensorGraph& graph)
+        : mGraph(graph)
+        , mOutIterator(graph.GetGraph())
+    { }
+
+    void Update()
+    {
+        //
+        mOutIterator.Update();
+    }
+
+    template <typename TFunctor>
+    void ForeachOut(const TensorVertexId id, TFunctor functor) const
+    {
+        ForeachOut(TensorVertexType(mGraph, id), functor);
+    }
+
+    template <typename TFunctor>
+    void ForeachOut(const TensorVertexType& vert, TFunctor functor) const
+    {
+        TensorVertexType copy = vert;
+        ForeachOutRecursive(copy, functor, 0, mGraph.GetDimensions());
+    }
+    //
+    //
+    //
+    template <typename TFunctor>
+    void ForeachValidOut(const TensorVertexId id, TFunctor functor) const
+    {
+        ForeachValidOut(TensorVertexType(mGraph, id), functor);
+    }
+
+    template <typename TFunctor>
+    void ForeachValidOut(const TensorVertexType& vert, TFunctor functor) const
+    {
+        TensorVertexType copy = vert;
+        std::set<VertexIdType> occupiedVertices(copy.GetVertices().begin(), copy.GetVertices().end());
+        if(occupiedVertices.size() < copy.GetVertices().size())
+            return;
+        ForeachValidOutRecursive(copy, functor, 0, mGraph.GetDimensions(), occupiedVertices);
+    }
+
+private:
+    template <typename TFunctor>
+    void ForeachOutRecursive(TensorVertexType& vertex,
+                             TFunctor functor, //
+                             const std::size_t dim,
+                             const std::size_t dims) const
+    {
+        if(dim == dims)
+        {
+            functor(vertex);
+            return;
+        }
+        const VertexIdType vertexAtDim = vertex.At(dim);
+
+        // loop over case where this dimension is constant
+        ForeachOutRecursive(vertex, functor, dim + 1, dims);
+
+        // todo: loop over all out vertices for this dimension
+        const auto& outVerts = mOutIterator.OutVertices(vertex.At(dim));
+        for(const auto& outVert : outVerts)
+        {
+            vertex.Set(dim, outVert);
+            ForeachOutRecursive(vertex, functor, dim + 1, dims);
+        }
+        vertex.Set(dim, vertexAtDim);
+    }
+
+    template <typename TFunctor>
+    void ForeachValidOutRecursive(TensorVertexType& vertex,
+                                  TFunctor functor, //
+                                  const std::size_t dim,
+                                  const std::size_t dims,
+                                  std::set<VertexIdType>& occupiedVertices) const
+    {
+        if(dim == dims)
+        {
+            functor(vertex);
+            return;
+        }
+        const VertexIdType vertexAtDim = vertex.At(dim);
+
+        // loop over case where this dimension is constant
+        ForeachValidOutRecursive(vertex, functor, dim + 1, dims, occupiedVertices);
+
+        // loop over all out vertices for this dimension
+        const auto& outVerts = mOutIterator.OutVertices(vertex.At(dim));
+        for(const auto& outVert : outVerts)
+        {
+            if(occupiedVertices.insert(outVert).second)
+            {
+                vertex.Set(dim, outVert);
+                ForeachValidOutRecursive(vertex, functor, dim + 1, dims, occupiedVertices);
+                occupiedVertices.erase(outVert);
+            }
+        }
+        vertex.Set(dim, vertexAtDim);
+    }
+};
+
 // example of A* implementation
 template <typename TGraph, typename TEdgeCostFunctor, typename THeuristicFunctor>
-requires ConceptTensorGraph<TGraph>
+// requires ConceptTensorGraph<TGraph>
 class TensorAStar
 {
 public:
     using GraphType = TGraph;
+    using VertexType = typename GraphType::VertexType;
     using VertexIdType = typename GraphType::VertexIdType;
     using EdgeIdType = typename GraphType::EdgeIdType;
+
+    using TensorVertexType = TensorVertex<VertexType>;
 
     TensorAStar(TGraph& graph, TEdgeCostFunctor edgeCost, THeuristicFunctor heuristic)
         : mGraph(graph)
@@ -123,33 +250,37 @@ private:
     TGraph& mGraph;
     TEdgeCostFunctor mEdgeCostFunctor; // defines the exact cost of going over a certain edge
     THeuristicFunctor mHeuristicFunctor; // defines the expected cost of going from a to b
-    OutIterator<TGraph> mOutIterator;
+
+    TensorOutIterator<TGraph> mOutIterator;
 
     // find out what the return type of the lambda is
-    using CostType = decltype(mEdgeCostFunctor(VertexIdType{}, EdgeIdType{}, VertexIdType{}));
+    using CostType = decltype(mEdgeCostFunctor(TensorVertexType{}, TensorVertexType{}));
 
     struct ExploredObject
     {
-        VertexIdType vertex{};
-        CostType f{std::numeric_limits<CostType>::max()};
+        TensorVertexId vertex{};
+        CostType f{std::numeric_limits<CostType>::max()}; // default init to max value
         CostType g{std::numeric_limits<CostType>::max()};
     };
 
 public:
-    std::vector<VertexIdType> Calculate(const VertexIdType start, const VertexIdType target)
+    std::vector<TensorVertexId> Calculate(const TensorVertexId start, const TensorVertexId target)
     {
-        std::map<VertexIdType, ExploredObject> exploredSet;
-        std::vector<VertexIdType> heap;
-        std::set<VertexIdType> closedSet;
+        const TensorVertexType tensorTarget(mGraph, target);
+        std::map<TensorVertexId, ExploredObject> exploredSet;
+        std::vector<TensorVertexId> heap;
+        std::set<TensorVertexId> closedSet;
 
         heap.push_back(start);
         exploredSet[start] = {start, 0., 0.};
 
-        auto compareF = [&](const VertexIdType v1, const VertexIdType v2) {
+        auto compareF = [&](const TensorVertexId v1, const TensorVertexId v2) {
             return exploredSet[v1].f > exploredSet[v2].f; //
         };
 
-        VertexIdType current;
+        TensorVertexId current;
+        TensorVertexType currentTensorVertex;
+
         while(heap.size() > 0)
         {
             // pick the lowest value out of heap
@@ -163,29 +294,26 @@ public:
                 continue;
             closedSet.insert(current);
 
-            // iterate over neighbours, check with best value so far
-            for(const auto& [edgeId, otherVertexId] : mOutIterator.OutEdgeVertices(current))
-            {
-                const auto& edge = mGraph.GetEdge(edgeId);
-                const auto edgeCost = mEdgeCostFunctor(current, edgeId, otherVertexId);
+            currentTensorVertex.FromId(mGraph, current);
+
+            mOutIterator.ForeachValidOut(currentTensorVertex, [&](const TensorVertexType& out) {
+                const auto edgeCost = mEdgeCostFunctor(currentTensorVertex, out);
                 const auto newGScore = exploredSet[current].g + edgeCost;
 
-                auto& item = exploredSet[otherVertexId]; // adds item if it did not exist
+                const auto outId = out.ToId(mGraph);
+                auto& item = exploredSet[outId];
 
                 if(newGScore < item.g)
                 {
-                    const CostType hscore = mHeuristicFunctor(otherVertexId, target);
+                    const CostType hscore = mHeuristicFunctor(out, tensorTarget);
                     item = {current, newGScore + hscore, newGScore};
-
-                    // put the new vertex in the heap
-
-                    heap.push_back(otherVertexId);
+                    heap.push_back(outId);
                     std::push_heap(heap.begin(), heap.end(), compareF);
                 }
-            }
+            });
         }
 
-        std::vector<VertexIdType> path;
+        std::vector<TensorVertexId> path;
         path.push_back(current);
         while(true)
         {
