@@ -20,6 +20,10 @@ constexpr auto Inverse(const TMatrix& matrix)
     // - banded
     // - block
 
+    // TODO(vicdie): split Inverse() up into 2 parts:
+    // - preconditioner, initial guess, partly dependant on solver
+    // - solving algorithm, either iterative/LU-decomposition/something else
+
     if constexpr(std::is_same_v<TMatrix, Identity<TMatrix::DataType, TMatrix::GetRows()>>)
     {
         return Identity<TMatrix::DataType, TMatrix::GetRows()>{}; // inverse of identity is identity
@@ -78,7 +82,6 @@ requires ConceptSquareMatrix<TMat>
 constexpr auto InverseHotellingBodewig(const TMat& mat, const typename TMat::DataType eps)
 {
     // Hotelling-Bodewig algorithm: V_n+1 = V_n * (2*I - A*V_n)
-
     using T = typename TMat::DataType;
     constexpr std::size_t n = mat.GetRows();
     constexpr auto identity = Identity<double, n>{};
@@ -129,6 +132,33 @@ constexpr auto InverseQualtiy(const TMat1& matrix, const TMat2& inverse)
 
     return absSum / double(res.GetRows() * res.GetRows());
 }
+
+// todo: frobenius inner product
+template <typename TMat1, typename TMat2>
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+constexpr auto FrobeniusInnerProduct(const TMat1& mat1, const TMat2& mat2)
+{
+    // calculate tr(mat1.T * mat2)
+    //
+}
+
+// todo: frobenius inner product
+template <typename TMat>
+requires ConceptMatrix<TMat>
+constexpr auto FrobeniusInnerProduct(const TMat& mat)
+{
+    // calculate tr(A.T * A)
+    typename TMat::DataType sum = 0.;
+    constexpr const std::size_t n = mat.GetRows();
+    for(std::size_t i = 0; i < n; ++i)
+        for(std::size_t j = 0; j < n; ++j)
+            sum += (mat.at(i, j) * mat(j, i));
+    return sum;
+}
+
+// todo: pre-conditioners
+
+// todo:
 
 } // namespace linalg
 } // namespace vic

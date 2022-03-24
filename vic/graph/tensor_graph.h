@@ -264,7 +264,7 @@ private:
     };
 
 public:
-    std::vector<TensorVertexId> Calculate(const TensorVertexId start, const TensorVertexId target)
+    std::vector<TensorVertexId> Calculate(const TensorVertexId start, const TensorVertexId target) const
     {
         const TensorVertexType tensorTarget(mGraph, target);
         std::map<TensorVertexId, ExploredObject> exploredSet;
@@ -274,7 +274,7 @@ public:
         heap.push_back(start);
         exploredSet[start] = {start, 0., 0.};
 
-        auto compareF = [&](const TensorVertexId v1, const TensorVertexId v2) {
+        const auto compareF = [&](const TensorVertexId v1, const TensorVertexId v2) {
             return exploredSet[v1].f > exploredSet[v2].f; //
         };
 
@@ -301,7 +301,7 @@ public:
                 const auto newGScore = exploredSet[current].g + edgeCost;
 
                 const auto outId = out.ToId(mGraph);
-                auto& item = exploredSet[outId];
+                auto& item = exploredSet[outId]; // NOTE: also initializes to max if not there yet
 
                 if(newGScore < item.g)
                 {
@@ -327,7 +327,7 @@ public:
         return path;
     }
 
-    CostType GetCost(const std::vector<VertexIdType>& path)
+    CostType GetCost(const std::vector<TensorVertexId>& path)
     {
         CostType cost = 0.;
         int i = 0;
@@ -339,7 +339,7 @@ public:
             auto* edgePtr = mGraph.GetEdge(path.at(i), path.at(i + 1));
             if(edgePtr == nullptr)
                 break;
-            cost = cost + mEdgeCostFunctor(edgePtr->Source(), edgePtr->Id(), edgePtr->Sink());
+            // cost = cost + mEdgeCostFunctor(edgePtr->Source(), edgePtr->Id(), edgePtr->Sink());
             ++i;
         }
         return cost;

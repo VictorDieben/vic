@@ -11,13 +11,31 @@
 
 using namespace vic;
 
+namespace vic
+{
+namespace graph
+{
+
+struct TestVertexData
+{
+    using VertexIdType = uint16_t;
+    double x;
+    double y;
+};
+struct TestEdgeData
+{
+    using VertexIdType = uint16_t;
+    using EdgeIdType = uint16_t;
+};
+
+using TestVertex = Vertex<TestVertexData>;
+using TestEdge = Edge<TestEdgeData>;
+using TestVertexId = TestVertex::VertexIdType;
+using TestEdgeId = TestEdge::EdgeIdType;
+using TestGraph = BaseGraph<TestVertex, TestEdge>;
+
 TEST(TestGraph, Startup)
 {
-    using namespace vic::graph;
-    using Vertex = vic::graph::Vertex<>;
-    using Edge = vic::graph::Edge<Vertex::VertexIdType>;
-    using TestGraph = vic::graph::BaseGraph<Vertex, Edge>;
-
     TestGraph graph;
 
     for(int i = 0; i < 5; ++i)
@@ -50,11 +68,11 @@ TEST(TestGraph, Startup)
     EXPECT_EQ(sum, 0 + 1 + 2 + 3);
 
     // test out edges
-    OutIterator<TestGraph, true> outIterator(graph); // valid untill vertices/edges change in graph
+    OutIterator<TestGraph, true> outIterator(graph);
     outIterator.Update();
 
     sum = 0;
-    std::vector<Vertex::VertexIdType> outVertices;
+    std::vector<TestVertex::VertexIdType> outVertices;
     for(const auto& edgeId : outIterator.OutEdges(1))
     {
         const auto& edge = graph.GetEdge(edgeId);
@@ -77,24 +95,8 @@ TEST(TestGraph, Startup)
     EXPECT_EQ(outVertices.size(), 4);
 }
 
-auto ConstructGridGraph(const std::size_t nx, const std::size_t ny)
+TestGraph ConstructGridGraph(const std::size_t nx, const std::size_t ny)
 {
-    using namespace vic::graph;
-    struct TestVertexData
-    {
-        using VertexIdType = uint16_t;
-        double x;
-        double y;
-    };
-    struct TestEdgeData
-    {
-        using VertexIdType = uint16_t;
-        using EdgeIdType = uint16_t;
-    };
-    using Vertex = vic::graph::Vertex<TestVertexData>;
-    using Edge = vic::graph::Edge<TestEdgeData>;
-    using TestGraph = vic::graph::BaseGraph<Vertex, Edge>;
-
     TestGraph graph;
 
     // construct vertices
@@ -116,21 +118,31 @@ auto ConstructGridGraph(const std::size_t nx, const std::size_t ny)
     return graph;
 }
 
+auto ConstructStarGraph(const std::size_t arms)
+{
+    // star shaped graph, for tensor problem
+    TestGraph graph;
+    auto& centerVertex = graph.AddVertex({0, 0});
+    // add star points
+    for(std::size_t i = 0; i < arms; ++i)
+    {
+        auto& newVertex = graph.AddVertex();
+        graph.AddEdge(centerVertex.Id(), newVertex.Id());
+    }
+    return graph;
+}
+
 TEST(TestGraph, TestFloydWarshall)
 {
-    using namespace vic::graph;
-
     const std::size_t nx = 25, ny = 25;
-    auto graph = ConstructGridGraph(nx, ny);
-    using VertexIdType = decltype(graph)::VertexIdType;
-    using EdgeIdType = decltype(graph)::EdgeIdType;
+    TestGraph graph = ConstructGridGraph(nx, ny);
 
     ASSERT_EQ(graph.GetNumVertices(), nx * ny);
     ASSERT_EQ(graph.GetNumEdges(), (nx * (ny - 1)) + ((nx - 1) * ny));
 
-    const auto costLambda = [](const VertexIdType, const EdgeIdType, const VertexIdType) { return 1.; };
+    const auto costLambda = [](const TestVertexId, const TestEdgeId, const TestVertexId) { return 1.; };
     algorithms::FloydWarshall floydWarshall{graph, costLambda};
-    floydWarshall.Update(); // perform calculation
+    floydWarshall.Update();
 
     const auto n = graph.GetNumVertices();
 
@@ -143,18 +155,12 @@ TEST(TestGraph, TestFloydWarshall)
             ASSERT_NEAR(fw, expected, 0.0001);
         }
     }
-
-    // TODO(vicdie): check policy
 }
 
 TEST(TestGraph, TestDijkstra)
 {
-    using namespace vic::graph;
-
-    constexpr std::size_t nx = 21, ny = 14;
-    auto graph = ConstructGridGraph(nx, ny);
-    using VertexIdType = decltype(graph)::VertexIdType;
-    using EdgeIdType = decltype(graph)::EdgeIdType;
+    constexpr std::size_t nx = 13, ny = 14;
+    TestGraph graph = ConstructGridGraph(nx, ny);
 
     ASSERT_EQ(graph.GetNumVertices(), nx * ny);
     constexpr std::size_t expectedNrEdges = (nx * (ny - 1)) + ((nx - 1) * ny);
@@ -165,13 +171,13 @@ TEST(TestGraph, TestDijkstra)
     std::uniform_real_distribution dist(1., 2.);
     std::array<double, expectedNrEdges> costs;
     std::generate(costs.begin(), costs.end(), [&]() { return dist(rng); });
-    const auto costLambda = [&](VertexIdType, const EdgeIdType& id, VertexIdType) -> double { return costs.at(id); };
+    const auto costLambda = [&](TestVertexId, const TestEdgeId& id, TestVertexId) -> double { return costs.at(id); };
 
     // test dijkstra solver
     algorithms::Dijkstra dijkstra{graph, costLambda};
 
     algorithms::FloydWarshall floydWarshall{graph, costLambda};
-    floydWarshall.Update(); // perform calculation
+    floydWarshall.Update();
 
     for(const auto& v1 : VertexIterator(graph))
     {
@@ -187,12 +193,9 @@ TEST(TestGraph, TestDijkstra)
 
 TEST(TestGraph, TestAStar)
 {
-    using namespace vic::graph;
-    constexpr std::size_t nx = 16, ny = 15;
-    auto graph = ConstructGridGraph(nx, ny);
+    constexpr std::size_t nx = 13, ny = 14;
+    TestGraph graph = ConstructGridGraph(nx, ny);
     using CostType = double;
-    using VertexIdType = decltype(graph)::VertexIdType;
-    using EdgeIdType = decltype(graph)::EdgeIdType;
 
     ASSERT_EQ(graph.GetNumVertices(), nx * ny);
     constexpr std::size_t expectedNrEdges = (nx * (ny - 1)) + ((nx - 1) * ny);
@@ -203,13 +206,13 @@ TEST(TestGraph, TestAStar)
     std::uniform_real_distribution dist(1., 2.);
     std::array<double, expectedNrEdges> costs;
     std::generate(costs.begin(), costs.end(), [&]() { return dist(rng); });
-    const auto costLambda = [&](const VertexIdType&, const EdgeIdType& id, const VertexIdType&) -> CostType { return costs.at(id); };
+    const auto costLambda = [&](const TestVertexId&, const TestEdgeId& id, const TestVertexId&) -> CostType { return costs.at(id); };
 
     // construct a floydWarshall instance for heuristic.
     // this is a perfect heuristic (all precomputed)
     algorithms::FloydWarshall floydWarshall{graph, costLambda};
     floydWarshall.Update();
-    const auto heuristicLambda = [&](const VertexIdType& source, const VertexIdType& sink) -> CostType { return floydWarshall.Get(source, sink); };
+    const auto heuristicLambda = [&](const TestVertexId& source, const TestVertexId& sink) -> CostType { return floydWarshall.Get(source, sink); };
 
     // test AStar solver
     algorithms::AStar astar{graph, costLambda, heuristicLambda};
@@ -229,40 +232,37 @@ TEST(TestGraph, TestAStar)
 
 TEST(TestGraph, TestTensorGraph)
 {
-    using namespace vic::graph;
     constexpr std::size_t nx = 10, ny = 10;
-    auto graph = ConstructGridGraph(nx, ny);
-    using VertexIdType = decltype(graph)::VertexIdType;
-    using VertexType = decltype(graph)::VertexType;
-    using VertexIdType = decltype(graph)::VertexIdType;
+    constexpr std::size_t nVertices = nx * ny;
+    TestGraph graph = ConstructGridGraph(nx, ny);
 
-    auto tensorgraph = TensorGraph(graph);
-    using TensorVertexType = typename TensorVertex<VertexType>;
+    TensorGraph tensorgraph(graph);
+    using TensorVertexType = typename TensorVertex<TestVertex>;
 
-    ASSERT_EQ(tensorgraph.NumTensorVertices(), nx * ny);
+    ASSERT_EQ(tensorgraph.NumTensorVertices(), nVertices);
 
     tensorgraph.SetDimensions(2);
-    ASSERT_EQ(tensorgraph.NumTensorVertices(), Pow<2>(nx * ny));
+    ASSERT_EQ(tensorgraph.NumTensorVertices(), Pow<2>(nVertices));
 
     tensorgraph.SetDimensions(3);
-    ASSERT_EQ(tensorgraph.NumTensorVertices(), Pow<3>(nx * ny));
+    ASSERT_EQ(tensorgraph.NumTensorVertices(), Pow<3>(nVertices));
 
-    std::vector<VertexIdType> ids;
+    std::vector<TestVertexId> ids;
     for(const auto& vert : VertexIterator(graph))
         ids.push_back(vert.Id());
 
-    TensorVertex<VertexType> tensorBackConverted;
+    TensorVertex<TestVertex> tensorBackConverted;
 
     // convert all valid 3d tensor vertices to tensor ids, and then back.
     // make sure the conversions are accurate
-    for(const VertexIdType& v1 : ids)
+    for(const TestVertexId& v1 : ids)
     {
-        for(const VertexIdType& v2 : ids)
+        for(const TestVertexId& v2 : ids)
         {
-            for(const VertexIdType& v3 : ids)
+            for(const TestVertexId& v3 : ids)
             {
                 // create a tensor vertex [v1, v2, v3]
-                const auto verts = std::vector<VertexIdType>{{v1, v2, v3}};
+                const auto verts = std::vector<TestVertexId>{{v1, v2, v3}};
                 TensorVertexType tvert{tensorgraph, verts};
 
                 // convert it to a tensor id
@@ -283,7 +283,6 @@ TEST(TestGraph, TestTensorGraph)
 
 TEST(TestGraph, TestTensorOutIter)
 {
-    using namespace vic::graph;
     constexpr std::size_t nx = 3, ny = 3;
 
     // 6, 7, 8
@@ -291,11 +290,10 @@ TEST(TestGraph, TestTensorOutIter)
     // 0, 1, 2
 
     // setup graph
-    auto graph = ConstructGridGraph(nx, ny);
-    auto tensorgraph = TensorGraph(graph);
+    TestGraph graph = ConstructGridGraph(nx, ny);
+    TensorGraph tensorgraph(graph);
     tensorgraph.SetDimensions(2);
-    using VertexType = decltype(graph)::VertexType;
-    using TensorVertexType = typename TensorVertex<VertexType>;
+    using TensorVertexType = typename TensorVertex<TestVertex>;
 
     TensorOutIterator iter{tensorgraph};
     iter.Update();
@@ -326,7 +324,7 @@ TEST(TestGraph, TestTensorOutIter)
     iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
     ASSERT_EQ(count, 0);
 
-    // verify 2 same nodes, in 3x3 grid
+    // verify that a different invalid start node has no outs
     tvert = TensorVertexType(tensorgraph, {4, 4});
     count = 0;
     iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
@@ -348,23 +346,18 @@ TEST(TestGraph, TestTensorOutIter)
 
 TEST(TestGraph, TestTensorAStar)
 {
-    using namespace vic::graph;
-    constexpr std::size_t nx = 3, ny = 3;
-
     // setup graph
-    auto graph = ConstructGridGraph(nx, ny);
-    auto tensorgraph = TensorGraph(graph);
+    constexpr std::size_t nx = 3, ny = 3;
+    TestGraph graph = ConstructGridGraph(nx, ny);
+    TensorGraph<TestGraph> tensorgraph(graph);
     tensorgraph.SetDimensions(2);
-    using Graphtype = decltype(graph);
-    using VertexType = Graphtype::VertexType;
-    using VertexIdType = Graphtype::VertexIdType;
-    using EdgeIdType = Graphtype::EdgeIdType;
-    using TensorVertexType = typename TensorVertex<VertexType>;
+
+    using TensorVertexType = typename TensorVertex<TestVertex>;
 
     // setup cost and heuristic
-    const auto costLambda = [&](VertexIdType, const EdgeIdType& id, VertexIdType) -> double { return 1.; };
+    const auto costLambda = [&](TestVertexId, const TestEdgeId& id, TestVertexId) -> double { return 1.; };
     algorithms::FloydWarshall floydWarshall{graph, costLambda};
-    floydWarshall.Update(); // perform calculation
+    floydWarshall.Update();
 
     const auto tensorCostLambda = [](const TensorVertexType& v1, const TensorVertexType& v2) -> double {
         // for now, just assume the edge exists
@@ -391,13 +384,24 @@ TEST(TestGraph, TestTensorAStar)
     res = tensorAStar.Calculate(TensorVertexType(tensorgraph, {0, 2}).ToId(tensorgraph), //
                                 TensorVertexType(tensorgraph, {2, 0}).ToId(tensorgraph));
     ASSERT_EQ(res.size(), 5);
-    
 
     res = tensorAStar.Calculate(TensorVertexType(tensorgraph, {3, 8}).ToId(tensorgraph), //
                                 TensorVertexType(tensorgraph, {8, 3}).ToId(tensorgraph));
+    ASSERT_EQ(res.size(), 4);
+
+    res = tensorAStar.Calculate(TensorVertexType(tensorgraph, {0, 1}).ToId(tensorgraph), //
+                                TensorVertexType(tensorgraph, {0, 4}).ToId(tensorgraph));
+    ASSERT_EQ(res.size(), 2);
+
+    // test with 3 dimensions
+    tensorgraph.SetDimensions(3);
+    res = tensorAStar.Calculate(TensorVertexType(tensorgraph, {0, 1, 2}).ToId(tensorgraph), //
+                                TensorVertexType(tensorgraph, {6, 7, 8}).ToId(tensorgraph));
     std::vector<TensorVertexType> vertices;
     for(const TensorVertexId& item : res)
         vertices.push_back(TensorVertexType(tensorgraph, item));
-    ASSERT_EQ(res.size(), 4);
-
+    ASSERT_EQ(res.size(), 3);
 }
+
+} // namespace graph
+} // namespace vic
