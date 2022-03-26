@@ -66,11 +66,11 @@ public:
         for(const auto& edge : EdgeIterator(mGraph))
         {
             mCostMatrix[edge.Source()][edge.Sink()] = mEdgeCostFunctor(edge.Source(), edge.Id(), edge.Sink());
-            mPolicyMatrix[edge.Source()][edge.Sink()] = edge.Source();
+            mPolicyMatrix[edge.Source()][edge.Sink()] = edge.Sink();
             if constexpr(!directed)
             {
-                mCostMatrix[edge.Sink()][edge.Source()] = mEdgeCostFunctor(edge.Source(), edge.Id(), edge.Sink());
-                mPolicyMatrix[edge.Sink()][edge.Source()] = edge.Sink();
+                mCostMatrix[edge.Sink()][edge.Source()] = mEdgeCostFunctor(edge.Sink(), edge.Id(), edge.Source());
+                mPolicyMatrix[edge.Sink()][edge.Source()] = edge.Source();
             }
         }
 
@@ -99,6 +99,14 @@ public:
     CostType Get(const VertexIdType source, const VertexIdType sink) const { return mCostMatrix[source][sink]; }
 
     VertexIdType Policy(const VertexIdType source, const VertexIdType sink) const { return mPolicyMatrix[source][sink]; }
+
+    void PolicyPath(std::vector<VertexIdType>& path, const VertexIdType source, const VertexIdType sink)
+    {
+        path.clear();
+        path.push_back(source);
+        while(path.back() != sink)
+            path.push_back(mPolicyMatrix[path.back()][sink]);
+    }
 };
 
 // example of simple dijkstras algorithm

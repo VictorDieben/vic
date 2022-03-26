@@ -155,6 +155,15 @@ TEST(TestGraph, TestFloydWarshall)
             ASSERT_NEAR(fw, expected, 0.0001);
         }
     }
+
+    // policy
+    std::vector<TestVertexId> vec;
+
+    floydWarshall.PolicyPath(vec, 0, 24);
+    ASSERT_EQ(vec.size(), 25);
+
+    floydWarshall.PolicyPath(vec, 24, 0);
+    ASSERT_EQ(vec.size(), 25);
 }
 
 TEST(TestGraph, TestDijkstra)
@@ -298,50 +307,51 @@ TEST(TestGraph, TestTensorOutIter)
     TensorOutIterator iter{tensorgraph};
     iter.Update();
 
-    std::size_t count = 0;
-    const auto lambda = [&](const auto&) { count++; };
+    std::set<TensorVertexId> ids;
+    const auto lambda = [&](const TensorVertexType& vert) { ids.insert(vert.ToId(tensorgraph)); };
 
     // verify center point in a 2d 3x3 grid
     TensorVertexType tvert{tensorgraph, {4, 4}};
+    ids.clear();
     iter.ForeachOut(tvert.ToId(tensorgraph), lambda);
-    ASSERT_EQ(count, 25);
+    ASSERT_EQ(ids.size(), 5 * 5);
 
     // verify corner + edge in 3x3 grid
     tvert = TensorVertexType(tensorgraph, {0, 3});
-    count = 0;
+    ids.clear();
     iter.ForeachOut(tvert.ToId(tensorgraph), lambda);
-    ASSERT_EQ(count, 3 * 4);
+    ASSERT_EQ(ids.size(), 3 * 4);
 
     // verify 2 opposing edges, in 3x3 grid
     tvert = TensorVertexType(tensorgraph, {3, 5});
-    count = 0;
+    ids.clear();
     iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
-    ASSERT_EQ(count, (4 * 4) - 1);
+    ASSERT_EQ(ids.size(), (4 * 4) - 1);
 
     // verify that an invalid start node has no outs
     tvert = TensorVertexType(tensorgraph, {2, 2});
-    count = 0;
+    ids.clear();
     iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
-    ASSERT_EQ(count, 0);
+    ASSERT_EQ(ids.size(), 0);
 
     // verify that a different invalid start node has no outs
     tvert = TensorVertexType(tensorgraph, {4, 4});
-    count = 0;
+    ids.clear();
     iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
-    ASSERT_EQ(count, 0);
+    ASSERT_EQ(ids.size(), 0);
 
     // verify 2 closeby edges
     tvert = TensorVertexType(tensorgraph, {1, 3});
-    count = 0;
+    ids.clear();
     iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
-    ASSERT_EQ(count, (4 * 4) - 2);
+    ASSERT_EQ(ids.size(), (4 * 4) - 2);
 
     // verify 3 directly connected vertices
     tensorgraph.SetDimensions(3);
     tvert = TensorVertexType(tensorgraph, {1, 4, 7});
-    count = 0;
+    ids.clear();
     iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
-    ASSERT_EQ(count, 3 * 3 * 3);
+    ASSERT_EQ(ids.size(), 3 * 3 * 3);
 }
 
 TEST(TestGraph, TestTensorAStar)
