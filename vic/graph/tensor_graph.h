@@ -6,7 +6,10 @@
 
 #include <array>
 #include <ranges>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
+
 namespace vic
 {
 namespace graph
@@ -159,7 +162,7 @@ public:
     void ForeachValidOut(const TensorVertexType& vert, TFunctor functor) const
     {
         TensorVertexType copy = vert;
-        std::set<VertexIdType> occupiedVertices(copy.GetVertices().begin(), copy.GetVertices().end());
+        std::unordered_set<VertexIdType> occupiedVertices(copy.GetVertices().begin(), copy.GetVertices().end());
         if(occupiedVertices.size() < copy.GetVertices().size())
             return;
         ForeachValidOutRecursive(copy, functor, 0, mGraph.GetDimensions(), occupiedVertices);
@@ -197,7 +200,7 @@ private:
                                   TFunctor functor, //
                                   const std::size_t dim,
                                   const std::size_t dims,
-                                  std::set<VertexIdType>& occupiedVertices) const
+                                  std::unordered_set<VertexIdType>& occupiedVertices) const
     {
         if(dim == dims)
         {
@@ -255,6 +258,132 @@ private:
 
     // find out what the return type of the lambda is
     using CostType = decltype(mEdgeCostFunctor(TensorVertexType{}, TensorVertexType{}));
+    struct HeapObject
+    {
+        TensorVertexId vertex;
+        CostType f{std::numeric_limits<CostType>::max()};
+    };
+    struct ExploredObject
+    {
+        TensorVertexId vertex{};
+        CostType f{std::numeric_limits<CostType>::max()}; // default init to max value
+        CostType g{std::numeric_limits<CostType>::max()};
+    };
+
+public:
+    std::vector<TensorVertexId> Calculate(const TensorVertexId start, const TensorVertexId target) const
+    {
+        const TensorVertexType tensorTarget(mGraph, target);
+
+        // TODO(vicdie): unordered_map cleanup seems very slow
+        std::map<TensorVertexId, ExploredObject> exploredSet;
+
+        std::vector<HeapObject> heap;
+
+        heap.push_back({start, 0.});
+        exploredSet[start] = {start, 0., 0.};
+
+        const auto compareF = [&](const auto& item1, const auto& item2) {
+            return item1.f > item2.f; //
+        };
+
+        HeapObject current;
+        TensorVertexType currentTensorVertex;
+
+        while(heap.size() > 0)
+        {
+            // pick the lowest value out of heap
+            std::pop_heap(heap.begin(), heap.end(), compareF);
+            current = heap.back();
+            heap.pop_back();
+
+            if(current.vertex == target)
+                break;
+            if(exploredSet[current.vertex].f < current.f)
+                continue;
+
+            currentTensorVertex.FromId(mGraph, current.vertex);
+
+            mOutIterator.ForeachValidOut(currentTensorVertex, [&](const TensorVertexType& out) {
+                const auto edgeCost = mEdgeCostFunctor(currentTensorVertex, out);
+                const auto newGScore = exploredSet[current.vertex].g + edgeCost;
+
+                const auto outId = out.ToId(mGraph);
+                auto& item = exploredSet[outId]; // NOTE: also initializes to max if not there yet
+
+                if(newGScore < item.g)
+                {
+                    const CostType hscore = mHeuristicFunctor(out, tensorTarget);
+                    item = {current.vertex, newGScore + hscore, newGScore};
+                    heap.push_back({outId, newGScore + hscore});
+                    std::push_heap(heap.begin(), heap.end(), compareF);
+                }
+            });
+        }
+
+        std::vector<TensorVertexId> path;
+        path.push_back(current.vertex);
+        while(true)
+        {
+            if(path.back() == start)
+                break;
+            auto next = exploredSet[path.back()].vertex;
+            path.push_back(next);
+        }
+
+        std::reverse(path.begin(), path.end());
+        return path;
+    }
+
+    CostType GetCost(const std::vector<TensorVertexId>& path)
+    {
+        CostType cost = 0.;
+        int i = 0;
+        while(true)
+        {
+            if(i >= int(path.size()) - 1)
+                break;
+
+            auto* edgePtr = mGraph.GetEdge(path.at(i), path.at(i + 1));
+            if(edgePtr == nullptr)
+                break;
+            // cost = cost + mEdgeCostFunctor(edgePtr->Source(), edgePtr->Id(), edgePtr->Sink());
+            ++i;
+        }
+        return cost;
+    }
+};
+
+// example of M* implementation
+template <typename TGraph, typename TEdgeCostFunctor, typename THeuristicFunctor>
+class TensorMStar
+{
+public:
+    using GraphType = TGraph;
+    using VertexType = typename GraphType::VertexType;
+    using VertexIdType = typename GraphType::VertexIdType;
+    using EdgeIdType = typename GraphType::EdgeIdType;
+
+    using TensorVertexType = TensorVertex<VertexType>;
+
+    TensorMStar(TGraph& graph, TEdgeCostFunctor edgeCost, THeuristicFunctor heuristic)
+        : mGraph(graph)
+        , mEdgeCostFunctor(edgeCost)
+        , mHeuristicFunctor(heuristic)
+        , mOutIterator(graph)
+    { }
+
+    void Update() { mOutIterator.Update(); }
+
+private:
+    TGraph& mGraph;
+    TEdgeCostFunctor mEdgeCostFunctor; // defines the exact cost of going over a certain edge
+    THeuristicFunctor mHeuristicFunctor; // defines the expected cost of going from a to b
+
+    TensorOutIterator<TGraph> mOutIterator;
+
+    // find out what the return type of the lambda is
+    using CostType = decltype(mEdgeCostFunctor(TensorVertexType{}, TensorVertexType{}));
 
     struct ExploredObject
     {
@@ -267,9 +396,9 @@ public:
     std::vector<TensorVertexId> Calculate(const TensorVertexId start, const TensorVertexId target) const
     {
         const TensorVertexType tensorTarget(mGraph, target);
-        std::map<TensorVertexId, ExploredObject> exploredSet;
+        std::unordered_map<TensorVertexId, ExploredObject> exploredSet;
         std::vector<TensorVertexId> heap;
-        std::set<TensorVertexId> closedSet;
+        std::unordered_set<TensorVertexId> closedSet;
 
         heap.push_back(start);
         exploredSet[start] = {start, 0., 0.};
@@ -325,24 +454,6 @@ public:
 
         std::reverse(path.begin(), path.end());
         return path;
-    }
-
-    CostType GetCost(const std::vector<TensorVertexId>& path)
-    {
-        CostType cost = 0.;
-        int i = 0;
-        while(true)
-        {
-            if(i >= int(path.size()) - 1)
-                break;
-
-            auto* edgePtr = mGraph.GetEdge(path.at(i), path.at(i + 1));
-            if(edgePtr == nullptr)
-                break;
-            // cost = cost + mEdgeCostFunctor(edgePtr->Source(), edgePtr->Id(), edgePtr->Sink());
-            ++i;
-        }
-        return cost;
     }
 };
 

@@ -28,6 +28,20 @@ struct TestEdgeData
     using EdgeIdType = uint16_t;
 };
 
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
+{
+    os << "[";
+    for(auto it = vec.begin(); it < vec.end(); ++it)
+    {
+        os << *it;
+        if(it < std::prev(vec.end()))
+            os << ", ";
+    }
+    os << "]";
+    return os;
+}
+
 using TestVertex = Vertex<TestVertexData>;
 using TestEdge = Edge<TestEdgeData>;
 using TestVertexId = TestVertex::VertexIdType;
@@ -411,6 +425,74 @@ TEST(TestGraph, TestTensorAStar)
     for(const TensorVertexId& item : res)
         vertices.push_back(TensorVertexType(tensorgraph, item));
     ASSERT_EQ(res.size(), 3);
+}
+
+TEST(TestGraph, TestTensorAStarHighDim)
+{
+    // setup graph
+    TestGraph graph = ConstructGridGraph(10, 10);
+    TensorGraph<TestGraph> tensorgraph(graph);
+    using TensorVertexType = typename TensorVertex<TestVertex>;
+
+    // setup cost and heuristic
+    const auto costLambda = [&](TestVertexId, const TestEdgeId& id, TestVertexId) -> double { return 1.; };
+
+    algorithms::FloydWarshall floydWarshall{graph, costLambda};
+
+    const auto tensorCostLambda = [](const TensorVertexType& v1, const TensorVertexType& v2) -> double {
+        // for now, just assume the edge exists
+        return 1.;
+    };
+    const auto tensorHeuristicLambda = [&](const TensorVertexType& v1, const TensorVertexType& v2) -> double {
+        const auto& verts1 = v1.GetVertices();
+        const auto& verts2 = v2.GetVertices();
+        double maxVal = 0;
+        double cost = 0.;
+        for(std::size_t i = 0; i < verts1.size(); ++i)
+        {
+            const auto fw = floydWarshall.Get(verts1.at(i), verts2.at(i));
+            maxVal = std::max(maxVal, fw);
+            cost += fw;
+        }
+        return 2.001 * cost / double(verts1.size());
+    };
+
+    TensorAStar tensorAStar(tensorgraph, tensorCostLambda, tensorHeuristicLambda);
+
+    // setup solver
+    for(const auto dims : {6u})
+    {
+        tensorgraph.SetDimensions(dims);
+        floydWarshall.Update();
+        tensorAStar.Update();
+
+        std::vector<TestVertexId> start{};
+        std::vector<TestVertexId> end{};
+        for(std::size_t i = 0; i < dims; ++i)
+        {
+            start.push_back(TestVertexId(i));
+            end.push_back(TestVertexId(99 - i));
+        }
+
+        auto res = tensorAStar.Calculate(TensorVertexType(tensorgraph, start).ToId(tensorgraph), //
+                                         TensorVertexType(tensorgraph, end).ToId(tensorgraph));
+
+        std::vector<TensorVertexType> vertices;
+        for(const TensorVertexId& item : res)
+        {
+            vertices.push_back(TensorVertexType(tensorgraph, item));
+        }
+
+        for(const auto& vert : vertices)
+            std::cout << vert.GetVertices() << std::endl;
+
+        std::cout << "========" << std::endl;
+
+        int a = 1;
+        (void)a;
+    }
+
+    // ASSERT_TRUE(false);
 }
 
 } // namespace graph

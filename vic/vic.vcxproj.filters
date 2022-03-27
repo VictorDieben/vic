@@ -111,6 +111,12 @@
     <ClInclude Include="graph\tensor_graph.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="geometry\geometry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="geometry\algorithms\algorithms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">
