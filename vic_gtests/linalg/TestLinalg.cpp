@@ -1,12 +1,16 @@
 #include "../pch.h"
 #include "../test_base.h"
 
+#include "vic/linalg/inverse.h"
 #include "vic/linalg/matrices.h"
 #include "vic/linalg/matrices_dynamic.h"
 #include "vic/linalg/traits.h"
 
 #include "vic/linalg/tools.h"
 
+#include <memory>
+
+#include <random>
 #include <utility>
 
 namespace vic
@@ -78,6 +82,8 @@ TEST(TestLinalg, TestMatrix)
 
 TEST(TestLinalg, TestDiagonal)
 {
+    EXPECT_TRUE((ConceptSquareMatrix<Diagonal<double, 4, 4>>));
+
     // test default constructor (all 0)
     constexpr const Diagonal<double, 4, 4> zeros4{};
     for(std::size_t i = 0; i < 4; ++i)
@@ -189,6 +195,48 @@ TEST(TestLinalg, TestInverseTranspose)
     constexpr auto transposeMat3 = Transpose(matrix3);
     constexpr Matrix<double, 3, 3> transposeMatrix3Answer({1, 4, 7, 2, 5, 8, 3, 6, 9});
     ExpectMatrixEqual(transposeMat3, transposeMatrix3Answer);
+
+    // TODO(vicdie): check that a matrix is rotation, and can be transposed instead of inversed
+}
+
+TEST(TestLinalg, TestInverse)
+{
+    constexpr auto diag1 = Diagonal<double, 3, 3>({1, 2, 3});
+    constexpr auto diagInv1 = InverseDiagonal(diag1);
+    auto diagInv2 = InverseStatic(diag1);
+    ExpectMatrixEqual(diagInv1, diagInv2);
+}
+
+TEST(TestLinalg, TestInverseRandom)
+{
+    // NOTE: these numbers are inside gtest context, including construction of random matrix etc.
+    // Not representative of actual performance
+
+    // 50x50; 100 iters;    766 [ms]
+    // 75x75; 100 iters;    2.7 [s]
+    // 100x100; 100 iters;  6.8 [s]
+    // 500x500; 1 iter;     12.5 [s]
+    // 600x600; 1 iter;     16.5 [s]
+
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> dist(0.01, 100.);
+
+    constexpr std::size_t n = 25;
+    constexpr auto identity = Identity<double, n>{};
+
+    // test a bunch of random matrices
+    for(std::size_t i = 0; i < 100; ++i)
+    {
+        Matrix<double, n, n> matrix{};
+        for(std::size_t r = 0; r < n; ++r)
+            for(std::size_t c = 0; c < n; ++c)
+                matrix.At(r, c) = dist(g);
+
+        const auto inverse = InverseHotellingBodewig(matrix, 1E-10);
+        const auto result = Matmul(inverse, matrix);
+
+        ExpectMatrixEqual(result, identity, 1E-8); // A^-1 * A == I
+    }
 }
 
 TEST(TestLinalg, TestBracket3)

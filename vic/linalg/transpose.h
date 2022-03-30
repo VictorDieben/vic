@@ -23,7 +23,7 @@ constexpr auto Transpose(const TMatrix& matrix)
     }
     else
     {
-        return TransposeGeneral(matrix);
+        return TransposeGeneral<TMatrix>(matrix);
     }
 }
 

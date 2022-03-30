@@ -80,15 +80,18 @@ public:
         mOutVertices.clear();
         mOutEdges.resize(mGraph.GetNumVertices());
         mOutVertices.resize(mGraph.GetNumVertices());
+        mOutEdgeVertices.resize(mGraph.GetNumVertices());
 
         for(const auto& edge : EdgeIterator(mGraph))
         {
             mOutEdges[edge.Source()].emplace_back(edge.Id());
             mOutVertices[edge.Source()].emplace_back(edge.Sink());
+            mOutEdgeVertices[edge.Source()].emplace_back(edge.Id(), edge.Sink());
             if constexpr(!directed)
             {
                 mOutEdges[edge.Sink()].emplace_back(edge.Id());
                 mOutVertices[edge.Sink()].emplace_back(edge.Source());
+                mOutEdgeVertices[edge.Sink()].emplace_back(edge.Id(), edge.Source());
             }
         }
     }
@@ -106,23 +109,30 @@ public:
         return mOutVertices.at(id);
     }
 
+    const std::vector<std::pair<EdgeIdType, VertexIdType>>& OutEdgeVertices(const VertexIdType id) const
+    {
+        assert(mGraph.GetNumVertices() == mOutEdgeVertices.size());
+        return mOutEdgeVertices.at(id);
+    }
+
 private:
     TGraph& mGraph;
     std::vector<std::vector<EdgeIdType>> mOutEdges{};
     std::vector<std::vector<VertexIdType>> mOutVertices{};
+    std::vector<std::vector<std::pair<EdgeIdType, VertexIdType>>> mOutEdgeVertices{};
 };
 
-// iterate over all out edges, for tensor vertices
-template <typename TGraph, bool directed = false>
-class TensorOutIterator
-{ };
-
-// iterate over all out edges, for tensor vertices,
-// such that no two agents are at the same spot,
-// and the transition is valid
-template <typename TGraph, bool directed = false>
-class TensorUniqueOutIterator
-{ };
+//// iterate over all out edges, for tensor vertices
+//template <typename TGraph, bool directed = false>
+//class TensorOutIterator
+//{ };
+//
+//// iterate over all out edges, for tensor vertices,
+//// such that no two agents are at the same spot,
+//// and the transition is valid
+//template <typename TGraph, bool directed = false>
+//class TensorUniqueOutIterator
+//{ };
 
 } // namespace graph
 } // namespace vic

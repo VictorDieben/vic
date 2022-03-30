@@ -106,15 +106,15 @@ constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2)
         return mat1 * mat2;
 
     else if constexpr(isFloat1 && !isFloat2)
-        return MatmulScalar(mat2, mat1);
+        return MatmulScalar<TMat2, TMat1>(mat2, mat1);
 
     else if constexpr(!isFloat1 && isFloat2)
-        return MatmulScalar(mat1, mat2);
+        return MatmulScalar<TMat1, TMat2>(mat1, mat2);
 
     else if constexpr(ConceptConstexprMatrix<TMat1> && ConceptConstexprMatrix<TMat2>)
     {
         static_assert(mat1.GetColumns() == mat2.GetRows());
-        return MatmulStatic(mat1, mat2);
+        return MatmulStatic<TMat1, TMat2>(mat1, mat2);
     }
     else
     {
