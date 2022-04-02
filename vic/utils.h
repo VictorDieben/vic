@@ -47,7 +47,7 @@ private:
 
 // Integer exponent
 template <typename TRet, typename TBase, typename TExp>
-TRet Power(const TBase base, const TExp exp)
+constexpr TRet Power(const TBase base, const TExp exp)
 {
     TRet ret{1};
     for(TExp i = 0; i < exp; ++i)
@@ -80,8 +80,6 @@ void ToBase(const TValue value, const TBase base, std::vector<TVec>& buffer)
         buffer.emplace_back(static_cast<TVec>(TBase{val % base}));
         val /= base;
     }
-    //if(buffer.size() < size)
-    //    buffer.resize(size); // appends T{0}'s to the end of the list
 }
 
 template <typename TReturn, typename TValue, typename TBase>

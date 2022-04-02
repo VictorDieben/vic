@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 namespace vic
 {
 namespace memory
@@ -10,6 +12,9 @@ typename std::vector<T>::iterator insert_sorted(std::vector<T>& vec, const T& it
 {
     return vec.insert(std::upper_bound(vec.begin(), vec.end(), item, lambda), item);
 }
+
+template <typename T>
+class Tree;
 
 template <typename T>
 struct TreeNode
@@ -34,6 +39,8 @@ private:
     T mData{};
     NodeId mId{};
     NodeId mParentId{};
+
+    friend Tree<T>; // Tree has direct access to ids
 };
 
 // container for tree. Nodes will be sorted on Id,
@@ -51,8 +58,7 @@ public:
     {
         assert(mNodes.empty());
         TreeNodeType newNode{data, mIdCounter, mIdCounter};
-        const auto lambda = [](const auto& N1, const auto& N2) { return N1.Id() < N2.Id(); };
-        insert_sorted(mNodes, newNode, lambda);
+        mNodes.push_back(newNode);
         mIdCounter++;
         return mNodes.back();
     }
@@ -60,34 +66,63 @@ public:
     {
         assert(!mNodes.empty());
         TreeNodeType newNode{data, mIdCounter, parent};
-        const auto lambda = [](const auto& n1, const auto& n2) { return n1.Id() < n2.Id(); };
-        insert_sorted(mNodes, newNode, lambda);
+        mNodes.push_back(newNode);
         mIdCounter++;
         return mNodes.back();
     }
 
     bool Remove(const NodeId id)
     {
-        return true; // todo
+        // TODO(vicdie): also remove all children of this node
+        const auto it = std::find_if(mNodes.begin(),
+                                     mNodes.end(), //
+                                     [&](const auto& item) { return item.Id() == id; });
+
+        if(it != mNodes.end())
+        {
+            mNodes.erase(it);
+            return true;
+        }
+        return false;
+    }
+
+    TreeNodeType& Get(NodeId id)
+    {
+        return IsContinuous() ? mNodes.at(id) : mNodes.at(GetIndexBinarySearch(id)); //
     }
 
     TreeNodeType* TryGet(const NodeId id)
     {
         if(IsContinuous())
         {
-            return &mNodes.at(id);
+            return id < mNodes.size() ? &mNodes.at(id) : nullptr;
         }
         else
         {
-            // use binary search to find index
-
-            return nullptr;
+            auto idx = GetIndexBinarySearch(id);
+            return idx < mNodes.size() ? &mNodes.at(idx) : nullptr;
         }
     }
 
     bool IsContinuous() const { return mNodes.size() == mIdCounter; }
+    std::size_t Size() const { return mNodes.size(); }
+
+    void Relabel()
+    {
+        // give all nodes in this tree new ids,
+        // making sure that the order is still the same,
+        // but removing any gaps in ids.
+        // also reset the IdCounter
+    }
 
 private:
+    std::size_t GetIndexBinarySearch(NodeId id)
+    {
+        const auto pred = [](const auto& item, const NodeId id) { return item.Id() < id; };
+        const auto it = std::lower_bound(mNodes.begin(), mNodes.end(), id, pred);
+        return it - mNodes.begin();
+    }
+
     std::vector<TreeNodeType> mNodes{};
     NodeId mIdCounter{0};
 };
@@ -99,6 +134,9 @@ class DepthFirstIterator
 public:
     using NodeId = typename TTree::NodeId;
 
+    struct Iterator
+    { };
+
     DepthFirstIterator(TTree& tree)
         : mTree(tree)
     {
@@ -107,7 +145,7 @@ public:
 
     void Update()
     {
-        // Todo: construct the order vector
+        // Todo: build the order vector
     }
 
     auto begin() { return mDFOrder.begin(); }
