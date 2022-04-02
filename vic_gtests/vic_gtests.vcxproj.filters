@@ -18,6 +18,7 @@
     <ClCompile Include="linalg\TestMatmul.cpp" />
     <ClCompile Include="TestUtils.cpp" />
     <ClCompile Include="TestGeometry.cpp" />
+    <ClCompile Include="TestTree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
