@@ -71,22 +71,28 @@ public:
         return mNodes.back();
     }
 
-    bool Remove(const NodeId id)
+    void Remove(const NodeId id)
     {
-        // TODO(vicdie): also remove all children of this node
-        const auto it = std::find_if(mNodes.begin(),
-                                     mNodes.end(), //
-                                     [&](const auto& item) { return item.Id() == id; });
-
-        if(it != mNodes.end())
-        {
-            mNodes.erase(it);
-            return true;
-        }
-        return false;
+        for(int i = int(mNodes.size()) - 1; i >= 0; --i)
+            if(IsRelated(id, mNodes.at(i).Id()))
+                mNodes.erase(std::next(mNodes.begin(), i));
     }
 
-    TreeNodeType& Get(NodeId id)
+    bool IsRelated(const NodeId parent, const NodeId child) const
+    {
+        if(parent == child)
+            return true;
+        if(child < parent)
+            return false; // id of child is always larger than parent, these 2 are not related
+        return IsRelated(parent, Get(child).Parent());
+    }
+
+    TreeNodeType& Get(const NodeId id)
+    {
+        return IsContinuous() ? mNodes.at(id) : mNodes.at(GetIndexBinarySearch(id)); //
+    }
+
+    const TreeNodeType& Get(const NodeId id) const
     {
         return IsContinuous() ? mNodes.at(id) : mNodes.at(GetIndexBinarySearch(id)); //
     }
@@ -106,6 +112,7 @@ public:
 
     bool IsContinuous() const { return mNodes.size() == mIdCounter; }
     std::size_t Size() const { return mNodes.size(); }
+    TreeNodeType& Root() { return mNodes.at(0); }
 
     void Relabel()
     {
@@ -115,8 +122,11 @@ public:
         // also reset the IdCounter
     }
 
+    auto begin() { return mNodes.begin(); }
+    auto end() { return mNodes.end(); }
+
 private:
-    std::size_t GetIndexBinarySearch(NodeId id)
+    std::size_t GetIndexBinarySearch(NodeId id) const
     {
         const auto pred = [](const auto& item, const NodeId id) { return item.Id() < id; };
         const auto it = std::lower_bound(mNodes.begin(), mNodes.end(), id, pred);
@@ -133,9 +143,45 @@ class DepthFirstIterator
 {
 public:
     using NodeId = typename TTree::NodeId;
+    using NodeType = typename TTree::TreeNodeType;
 
     struct Iterator
-    { };
+    {
+        using iterator_category = std::random_access_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using value_type = NodeType;
+        using pointer = NodeType*;
+        using reference = NodeType&;
+
+        Iterator() = default;
+        Iterator(DepthFirstIterator<TTree>* iter, const std::size_t idx)
+            : mIterator(iter)
+            , mIdx(idx)
+        { }
+
+        reference operator*() const { return mIterator->mTree.Get(mIterator->mDFOrder.at(mIdx)); }
+        pointer operator->() { return &mIterator->mTree.Get(mIterator->mDFOrder.at(mIdx)); }
+        Iterator& operator++()
+        {
+            mIdx++;
+            return *this;
+        }
+        Iterator operator++(int)
+        {
+            Iterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+        friend bool operator==(const Iterator& a, const Iterator& b)
+        {
+            return a.mIterator && b.mIterator && (a.mIterator == b.mIterator) && a.mIdx == b.mIdx; //
+        };
+        friend bool operator!=(const Iterator& a, const Iterator& b) { return !operator==(a, b); };
+
+    private:
+        DepthFirstIterator<TTree>* mIterator{nullptr};
+        std::size_t mIdx{0};
+    };
 
     DepthFirstIterator(TTree& tree)
         : mTree(tree)
@@ -145,16 +191,30 @@ public:
 
     void Update()
     {
-        // Todo: build the order vector
+        mDFOrder.clear();
+        NodeId rootId = mTree.Root().Id();
+        mDFOrder.push_back(rootId);
+        for(auto it = std::next(mTree.begin()); it < mTree.end(); ++it)
+            if(it->Parent() == rootId)
+                UpdateRecursive(it->Id());
     }
 
-    auto begin() { return mDFOrder.begin(); }
-    auto end() { return mDFOrder.end(); }
+    auto begin() { return Iterator(this, 0); }
+    auto end() { return Iterator(this, mDFOrder.size()); }
 
 private:
     TTree& mTree;
-
     std::vector<NodeId> mDFOrder{};
+
+    void UpdateRecursive(const NodeId id)
+    {
+        // TODO(vicdie): more efficient algorithm
+        mDFOrder.push_back(id);
+        for(const auto& node : mTree)
+            if(node.Parent() == id)
+                UpdateRecursive(node.Id());
+    }
+    friend Iterator;
 };
 
 template <typename TTree>
@@ -179,7 +239,6 @@ public:
 
 private:
     TTree& mTree;
-
     std::vector<NodeId> mBFOrder{};
 };
 

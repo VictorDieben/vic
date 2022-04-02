@@ -45,13 +45,13 @@ TEST(TestTree, Setup)
     EXPECT_TRUE(tree.IsContinuous());
 
     // try to remove a node that does not exist
-    EXPECT_FALSE(tree.Remove(4));
+    tree.Remove(4);
 
     EXPECT_EQ(tree.Size(), 3);
     EXPECT_TRUE(tree.IsContinuous());
 
     // remove a node
-    EXPECT_TRUE(tree.Remove(1));
+    tree.Remove(1);
     EXPECT_EQ(tree.Size(), 2);
     EXPECT_FALSE(tree.IsContinuous());
 
@@ -62,9 +62,7 @@ TEST(TestTree, Setup)
 
 TEST(TestTree, DepthFirst)
 {
-    // Test the depth first iterator
-
-    // make tree, add nodes in breath first order
+    // Make tree, add nodes in breath first order
     Tree<TestSmallNode> tree;
     tree.NewRoot({0}); // 0
     tree.NewNode({1}, 0u); //   1
@@ -78,7 +76,7 @@ TEST(TestTree, DepthFirst)
 
     std::vector<decltype(tree)::NodeId> result;
     for(const auto& node : iterator)
-        result.push_back(node);
+        result.push_back(node.Id());
 
     const std::vector<decltype(tree)::NodeId> answer = {0, 1, 3, 4, 2, 5, 6};
     EXPECT_EQ(result, answer);
