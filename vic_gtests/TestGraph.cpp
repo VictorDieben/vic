@@ -456,7 +456,7 @@ TEST(TestGraph, TestTensorAStarHighDim)
     TensorAStar tensorAStar(tensorgraph, tensorCostLambda, tensorHeuristicLambda);
 
     // setup solver
-    for(const auto dims : {6u})
+    for(const auto dims : {5u})
     {
         tensorgraph.SetDimensions(dims);
         floydWarshall.Update();
@@ -483,12 +483,7 @@ TEST(TestGraph, TestTensorAStarHighDim)
             std::cout << vert.GetVertices() << std::endl;
 
         std::cout << "========" << std::endl;
-
-        int a = 1;
-        (void)a;
     }
-
-    // ASSERT_TRUE(false);
 }
 
 } // namespace graph

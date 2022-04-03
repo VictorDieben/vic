@@ -162,7 +162,6 @@
     <ClInclude Include="Emulator.h" />
     <ClInclude Include="EntitySystem.h" />
     <ClInclude Include="EventQueue.h" />
-    <ClInclude Include="framework.h" />
     <ClInclude Include="geometry\algorithms\algorithms.h" />
     <ClInclude Include="geometry\geometry.h" />
     <ClInclude Include="graph\algorithms.h" />
