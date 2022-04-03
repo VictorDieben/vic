@@ -2,10 +2,6 @@
 
 #include "vic/geometry/geometry.h"
 
-#include <algorithm>
-#include <random>
-#include <ranges>
-
 using namespace vic;
 
 namespace vic

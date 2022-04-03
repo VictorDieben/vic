@@ -2,9 +2,6 @@
 
 #include "test_base.h"
 #include "vic/utils.h"
-#include <limits>
-#include <random>
-#include <thread>
 
 using namespace vic;
 

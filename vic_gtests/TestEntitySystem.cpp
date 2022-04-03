@@ -2,8 +2,6 @@
 
 #include "vic/EntitySystem.h"
 
-#include <string>
-
 using namespace vic;
 
 TEST(TestEntitySystem, Startup)

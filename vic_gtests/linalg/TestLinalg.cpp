@@ -8,11 +8,6 @@
 
 #include "vic/linalg/tools.h"
 
-#include <memory>
-
-#include <random>
-#include <utility>
-
 namespace vic
 {
 namespace linalg

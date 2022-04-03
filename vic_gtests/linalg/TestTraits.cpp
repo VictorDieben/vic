@@ -7,8 +7,6 @@
 
 #include "vic/linalg/tools.h"
 
-#include <utility>
-
 namespace vic
 {
 namespace linalg

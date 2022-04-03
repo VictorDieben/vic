@@ -2,25 +2,24 @@
 #include "../pch.h"
 #include "../test_base.h"
 
-
 using namespace vic::linalg;
 
 TEST(TestViews, TestViewTranspose)
 {
-    constexpr Matrix<double, 3, 3> matrix({ 1,2,3,4,5,6,7,8,9 });
-    constexpr Matrix<double, 3, 3> answer({ 1, 4, 7, 2, 5, 8, 3, 6, 9 });
+    constexpr Matrix<double, 3, 3> matrix({1, 2, 3, 4, 5, 6, 7, 8, 9});
+    constexpr Matrix<double, 3, 3> answer({1, 4, 7, 2, 5, 8, 3, 6, 9});
 
     const auto transposeView = ViewTranspose(matrix);
     ExpectMatrixEqual(transposeView, answer);
 
     // test constructing a new matrix from a view
-    Matrix<double, 3, 3> matrixT{ transposeView };
+    Matrix<double, 3, 3> matrixT{transposeView};
     ExpectMatrixEqual(matrixT, answer);
 }
 
 TEST(TestViews, TestViewRowStack)
 {
-    constexpr Matrix<double, 3, 3> mat1({ 1,2,3,4,5,6,7,8,9 });
+    constexpr Matrix<double, 3, 3> mat1({1, 2, 3, 4, 5, 6, 7, 8, 9});
     constexpr Identity<double, 3> identity3{};
 
     const auto rowStackView = ViewRowStack(mat1, identity3);
@@ -40,8 +39,8 @@ TEST(TestViews, TestViewRowStack)
 
 TEST(TestViews, TestViewColumnStack)
 {
-    constexpr Diagonal<double, 3, 3> mat1({ 1, 2, 3 });
-    constexpr Diagonal<double, 3, 3> mat2({ 4, 5, 6 });
+    constexpr Diagonal<double, 3, 3> mat1({1, 2, 3});
+    constexpr Diagonal<double, 3, 3> mat2({4, 5, 6});
 
     const auto colStackView = ViewColumnStack(mat1, mat2);
     EXPECT_EQ(colStackView.GetRows(), 3u);
@@ -70,18 +69,17 @@ TEST(TestViews, TestViewRowColumnCombined)
     EXPECT_EQ(rowStack.GetRows(), 4u);
     EXPECT_EQ(rowStack.GetColumns(), 4u);
 
-    for (std::size_t i = 0; i < 4; ++i)
-        for (std::size_t j = 0; j < 4; ++j)
+    for(std::size_t i = 0; i < 4; ++i)
+        for(std::size_t j = 0; j < 4; ++j)
             EXPECT_DOUBLE_EQ(rowStack.Get(i, j), (i + j) % 2 == 0 ? 1. : 0);
 
-    Matrix<double, 4, 4> full{ rowStack };
+    Matrix<double, 4, 4> full{rowStack};
     ExpectMatrixEqual(full, rowStack);
 }
 
-
 TEST(TestViews, TestViewBlockDiagonal)
 {
-    constexpr Matrix<double, 2, 2> mat({ 1,2,3,4 });
+    constexpr Matrix<double, 2, 2> mat({1, 2, 3, 4});
     const ViewBlockDiagonal blockDiag(mat, mat);
 
     EXPECT_DOUBLE_EQ(blockDiag.Get(0, 0), 1.);
@@ -95,13 +93,13 @@ TEST(TestViews, TestViewBlockDiagonal)
     const Matrix<double, 4, 4> mat4(blockDiag);
     ExpectMatrixEqual(mat4, blockDiag);
 
-    // test nesting 
+    // test nesting
     const ViewBlockDiagonal blockDiag8(blockDiag, blockDiag);
     const Matrix<double, 8, 8> mat8(blockDiag8);
     ExpectMatrixEqual(mat8, blockDiag8);
 
     // test constructing some other combinations
-    ViewBlockDiagonal nestedBlockDiag(										//
-        ViewBlockDiagonal(Identity<double, 1>{}, Identity<double, 2>{}),	//
+    ViewBlockDiagonal nestedBlockDiag( //
+        ViewBlockDiagonal(Identity<double, 1>{}, Identity<double, 2>{}), //
         ViewBlockDiagonal(Identity<double, 3>{}, Identity<double, 4>{}));
 }
