@@ -2,7 +2,10 @@
 #include "../pch.h"
 #include "../test_base.h"
 
-using namespace vic::linalg;
+namespace vic
+{
+namespace linalg
+{
 
 TEST(TestViews, TestViewTranspose)
 {
@@ -103,3 +106,5 @@ TEST(TestViews, TestViewBlockDiagonal)
         ViewBlockDiagonal(Identity<double, 1>{}, Identity<double, 2>{}), //
         ViewBlockDiagonal(Identity<double, 3>{}, Identity<double, 4>{}));
 }
+} // namespace linalg
+} // namespace vic
