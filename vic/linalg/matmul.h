@@ -123,5 +123,12 @@ constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2)
     }
 }
 
+// TODO(vicdie): make a selector for proper algorithms
+template <typename TMat1, typename TMat2, typename... Types>
+constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2, const Types... others)
+{
+    return Matmul(Matmul(mat1, mat2), others...);
+}
+
 } // namespace linalg
 } // namespace vic

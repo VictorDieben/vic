@@ -109,5 +109,12 @@ TEST(TestLinalg, TestMatmulMixed)
     const Matrix<double, 3, 5> static3x5 = Matmul(rowconst3x100, colconst100x5);
 }
 
+TEST(TestLinalg, TestMultivariate)
+{
+    // test multivariate
+    constexpr auto ans3 = Matmul(Identity<double, 3>{}, Identity<double, 3>{}, Identity<double, 3>{});
+    constexpr auto ans4 = Matmul(Identity<double, 3>{}, Identity<double, 3>{}, Identity<double, 3>{}, Identity<double, 3>{});
+    constexpr auto ans5 = Matmul(Identity<double, 3>{}, Identity<double, 3>{}, Identity<double, 3>{}, Identity<double, 3>{}, Identity<double, 3>{});
+}
 } // namespace linalg
 } // namespace vic

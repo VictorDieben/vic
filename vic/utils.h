@@ -45,6 +45,15 @@ private:
     static inline std::size_t mCount{0};
 };
 
+// constexpr Abs
+template <typename T>
+constexpr T Abs(const T& val)
+{
+    if(val < 0.)
+        return -val;
+    return val;
+}
+
 // Integer exponent
 template <typename TRet, typename TBase, typename TExp>
 constexpr TRet Power(const TBase base, const TExp exp)
