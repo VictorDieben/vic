@@ -118,10 +118,7 @@ public:
 
     void Relabel()
     {
-        // give all nodes in this tree new ids,
-        // making sure that the order is still the same,
-        // but removing any gaps in ids.
-        // also reset the IdCounter
+        // Give all nodes in this tree new ids, making the tree continuous again.
         mIdCounter = 0;
         std::map<NodeId, NodeId> newIDs; // maps old to new id
         for(auto& node : mNodes)
@@ -218,7 +215,7 @@ private:
     std::vector<NodeId> mDFOrder{};
 
     using TreeIterator = decltype(mTree.begin());
-    void UpdateRecursive(const NodeId id, TreeIterator itStart)
+    void UpdateRecursive(const NodeId id, const TreeIterator itStart)
     {
         // children are always after their parent in the list, so pass itStart along
         mDFOrder.push_back(id);

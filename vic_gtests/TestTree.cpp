@@ -75,6 +75,7 @@ TEST(TestTree, DepthFirst)
 {
     // Make tree, add nodes in breath first order
     Tree<TestSmallNode> tree;
+    using NodeId = decltype(tree)::NodeId;
     tree.NewRoot({0}); // 0
     tree.NewNode({1}, 0u); //   1
     tree.NewNode({2}, 0u); //   2
@@ -85,11 +86,11 @@ TEST(TestTree, DepthFirst)
 
     DepthFirstIterator iterator(tree);
 
-    std::vector<decltype(tree)::NodeId> result;
+    std::vector<NodeId> result;
     for(const auto& node : iterator)
         result.push_back(node.Id());
 
-    const std::vector<decltype(tree)::NodeId> answer = {0, 1, 3, 4, 2, 5, 6};
+    const std::vector<NodeId> answer = {0, 1, 3, 4, 2, 5, 6};
     EXPECT_EQ(result, answer);
 }
 
