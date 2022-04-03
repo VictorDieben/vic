@@ -145,6 +145,18 @@ TEST(TestLinalg, TestAddConstant)
             EXPECT_DOUBLE_EQ(res1.Get(i, j), i == j ? 2. : 0.);
 }
 
+TEST(TestLinalg, TestAddMultivariate)
+{
+    constexpr auto I4 = Identity<double, 4>{};
+    constexpr auto add2 = Add(I4, I4);
+    constexpr auto add3 = Add(I4, I4, I4);
+    constexpr auto add4 = Add(I4, I4, I4, I4);
+    constexpr auto add5 = Add(I4, I4, I4, I4, I4);
+    constexpr auto add6 = Add(I4, I4, I4, I4, I4, I4);
+    constexpr auto add7 = Add(I4, I4, I4, I4, I4, I4, I4);
+    ExpectMatrixEqual(add7, DiagonalConstant<double, 4>{7});
+}
+
 TEST(TestLinalg, TestDeterminant)
 {
     constexpr auto identityDetD = Determinant(Identity<double, 100>{});

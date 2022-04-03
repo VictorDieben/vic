@@ -4,6 +4,7 @@
 #include "vic/linalg/matrices.h"
 #include "vic/linalg/matrices_dynamic.h"
 #include "vic/linalg/traits.h"
+#include "vic/utils.h"
 
 #include "vic/linalg/tools.h"
 
@@ -112,9 +113,13 @@ TEST(TestLinalg, TestMatmulMixed)
 TEST(TestLinalg, TestMultivariate)
 {
     // test multivariate
-    constexpr auto ans3 = Matmul(Identity<double, 3>{}, Identity<double, 3>{}, Identity<double, 3>{});
-    constexpr auto ans4 = Matmul(Identity<double, 3>{}, Identity<double, 3>{}, Identity<double, 3>{}, Identity<double, 3>{});
-    constexpr auto ans5 = Matmul(Identity<double, 3>{}, Identity<double, 3>{}, Identity<double, 3>{}, Identity<double, 3>{}, Identity<double, 3>{});
+    constexpr auto M = DiagonalConstant<double, 3>(2);
+    constexpr auto ans3 = Matmul(M, M, M);
+    constexpr auto ans4 = Matmul(M, M, M, M);
+    constexpr auto ans5 = Matmul(M, M, M, M, M);
+    constexpr auto ans6 = Matmul(M, M, M, M, M, M);
+    constexpr auto ans7 = Matmul(M, M, M, M, M, M, M);
+    ExpectMatrixEqual(ans7, DiagonalConstant<double, 3>(Pow<7>(2.)));
 }
 } // namespace linalg
 } // namespace vic

@@ -24,6 +24,8 @@ constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const double eps = 
 
 TEST(TestKinematics, EulerAngles)
 {
+    // TODO(vicdie): verify if the resulting matrix is as expected
+
     std::default_random_engine g;
     std::uniform_real_distribution<double> dist(-100., 100.);
 
