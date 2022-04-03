@@ -64,7 +64,7 @@ public:
     }
     TreeNodeType& NewNode(const T& data, const NodeId parent)
     {
-        assert(!mNodes.empty());
+        assert(TryGet(parent) != nullptr);
         TreeNodeType newNode{data, mIdCounter, parent};
         mNodes.push_back(newNode);
         mIdCounter++;
@@ -111,6 +111,8 @@ public:
     }
 
     bool IsContinuous() const { return mNodes.size() == mIdCounter; }
+    bool IsEmpty() const { return mNodes.empty(); }
+
     std::size_t Size() const { return mNodes.size(); }
     TreeNodeType& Root() { return mNodes.at(0); }
 
@@ -120,6 +122,16 @@ public:
         // making sure that the order is still the same,
         // but removing any gaps in ids.
         // also reset the IdCounter
+        mIdCounter = 0;
+        std::map<NodeId, NodeId> newIDs; // maps old to new id
+        for(auto& node : mNodes)
+        {
+            newIDs[node.Id()] = mIdCounter;
+            node.mId = mIdCounter;
+            mIdCounter++;
+        }
+        for(auto& node : mNodes)
+            node.mParentId = newIDs[node.mParentId];
     }
 
     auto begin() { return mNodes.begin(); }
@@ -192,11 +204,10 @@ public:
     void Update()
     {
         mDFOrder.clear();
+        if(mTree.IsEmpty())
+            return;
         NodeId rootId = mTree.Root().Id();
-        mDFOrder.push_back(rootId);
-        for(auto it = std::next(mTree.begin()); it < mTree.end(); ++it)
-            if(it->Parent() == rootId)
-                UpdateRecursive(it->Id());
+        UpdateRecursive(rootId, std::next(mTree.begin()));
     }
 
     auto begin() { return Iterator(this, 0); }
@@ -206,13 +217,14 @@ private:
     TTree& mTree;
     std::vector<NodeId> mDFOrder{};
 
-    void UpdateRecursive(const NodeId id)
+    using TreeIterator = decltype(mTree.begin());
+    void UpdateRecursive(const NodeId id, TreeIterator itStart)
     {
-        // TODO(vicdie): more efficient algorithm
+        // children are always after their parent in the list, so pass itStart along
         mDFOrder.push_back(id);
-        for(const auto& node : mTree)
-            if(node.Parent() == id)
-                UpdateRecursive(node.Id());
+        for(TreeIterator it = itStart; it < mTree.end(); ++it)
+            if(it->Parent() == id)
+                UpdateRecursive(it->Id(), std::next(it));
     }
     friend Iterator;
 };

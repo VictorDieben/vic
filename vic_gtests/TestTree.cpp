@@ -41,6 +41,7 @@ TEST(TestTree, Setup)
     auto& node2_2 = tree.Get(node2.Id());
     EXPECT_EQ(&node2, &node2_2);
 
+    EXPECT_EQ(tree.TryGet(3), nullptr);
     EXPECT_EQ(tree.Size(), 3);
     EXPECT_TRUE(tree.IsContinuous());
 
@@ -58,6 +59,16 @@ TEST(TestTree, Setup)
     // try to get node 2 (tree is no longer continuous)
     auto& node2_3 = tree.Get(2);
     EXPECT_EQ(node2_3.Id(), 2);
+
+    // Relabel, check if id 2 still exists (should not)
+    tree.Relabel();
+    EXPECT_TRUE(tree.IsContinuous());
+    EXPECT_EQ(tree.Size(), 2);
+    EXPECT_EQ(tree.TryGet(2), nullptr);
+
+    // verify that the node with id 1 now contains data from node 2
+    auto& relabeled = tree.Get(1);
+    EXPECT_EQ(relabeled.Data().a, 7);
 }
 
 TEST(TestTree, DepthFirst)
