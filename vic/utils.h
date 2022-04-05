@@ -45,6 +45,26 @@ private:
     static inline std::size_t mCount{0};
 };
 
+// Finally class, useful for RAII enforced cleanup.
+// Should generally only be used when working with c code.
+template <typename TFunctor>
+class Finally
+{
+public:
+    Finally(TFunctor functor)
+        : mFunctor(functor)
+    { }
+    ~Finally() { mFunctor(); }
+
+    Finally(const Finally&) = delete;
+    Finally(Finally&&) = delete;
+    Finally& operator=(const Finally&) = delete;
+    Finally& operator=(Finally&&) = delete;
+
+private:
+    TFunctor mFunctor;
+};
+
 // constexpr Abs
 template <typename T>
 constexpr T Abs(const T& val)
@@ -74,6 +94,18 @@ constexpr TRet Pow(const TBase base)
         return 1;
     else
         return base * Pow<exp - 1>(base);
+}
+
+template <typename T>
+constexpr T Min(const T& val1, const T& val2)
+{
+    return val1 < val2 ? val1 : val2;
+}
+
+template <typename T>
+constexpr T Max(const T& val1, const T& val2)
+{
+    return val1 > val2 ? val1 : val2;
 }
 
 // base conversion (e.g. normal representation to hex)

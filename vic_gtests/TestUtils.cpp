@@ -35,6 +35,15 @@ TEST(TestUtils, TestTimer)
     EXPECT_LT(interval_ms, 50.); // large upper bound, we don't know when sleep returns
 }
 
+TEST(TestUtils, TestFinally)
+{
+    bool value = false;
+    {
+        Finally fin{[&]() { value = true; }};
+    }
+    EXPECT_TRUE(value);
+}
+
 TEST(TestUtils, TestCounted)
 {
     struct S : public Counted<S>

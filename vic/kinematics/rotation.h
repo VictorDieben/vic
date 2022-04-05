@@ -52,7 +52,7 @@ constexpr Matrix<T, 3, 3> Rotate(const Vector3<T>& vec, const T angle)
 }
 
 template <typename T>
-Matrix<T, 3, 3> EulerAngles(const T alpha, const T beta, const T gamma)
+constexpr Matrix<T, 3, 3> EulerAngles(const T alpha, const T beta, const T gamma)
 {
     // TODO(vicdie): order of matrix multiplications
     return Matmul(Rotate(xAxis, alpha), Rotate(yAxis, beta), Rotate(zAxis, gamma));

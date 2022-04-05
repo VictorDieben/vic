@@ -1,21 +1,13 @@
 #pragma once
 
+#include "assert.h"
 #include "traits.h"
+#include "vic/utils.h"
 #include <array>
 #include <cstddef>
 
 namespace vic
 {
-template <typename T>
-constexpr T Min(const T& val1, const T& val2)
-{
-    return val1 < val2 ? val1 : val2;
-}
-template <typename T>
-constexpr T Max(const T& val1, const T& val2)
-{
-    return val1 > val2 ? val1 : val2;
-}
 namespace linalg
 {
 
