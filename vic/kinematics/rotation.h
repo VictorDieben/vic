@@ -36,7 +36,7 @@ constexpr Matrix<T, rows, 1> Dot(const Matrix<T, rows, 1>& v1, const Matrix<T, r
 template <typename T, std::size_t rows>
 constexpr T Norm(const Matrix<T, rows, 1>& vec)
 {
-    return Sum(Dot(vec, vec));
+    return std::sqrt(Sum(Dot(vec, vec)));
 }
 
 template <typename T>
@@ -56,6 +56,11 @@ constexpr Matrix<T, 3, 3> EulerAngles(const T alpha, const T beta, const T gamma
 {
     // TODO(vicdie): order of matrix multiplications
     return Matmul(Rotate(xAxis, alpha), Rotate(yAxis, beta), Rotate(zAxis, gamma));
+}
+
+Rotation RotationExponent(const Rotation& transform, const DataType angle)
+{
+    return {}; //
 }
 
 // wrapper around rotation matrix, so that we can later also use quaternions etc.

@@ -2,6 +2,7 @@
 
 #include "vic/kinematics/kinematics.h"
 #include "vic/kinematics/rotation.h"
+#include "vic/kinematics/transformation.h"
 #include "vic/linalg/traits.h"
 
 namespace vic
@@ -66,10 +67,7 @@ TEST(TestKinematics, rotation)
     EXPECT_TRUE(IsEqual(result.ToMatrix(), Identity<double, 3>{}));
 }
 
-TEST(TestKinematics, transformations)
-{
-    //
-}
+TEST(TestKinematics, transformations) { constexpr Transformation transform{}; }
 
 } // namespace kinematics
 } // namespace vic
