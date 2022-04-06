@@ -98,5 +98,40 @@ requires ConceptVector<TMat1> && ConceptVector<TMat2> && HasSameShape<TMat1, TMa
     return val;
 }
 
+// todo: TMatTarget needs to be asignable
+template <typename TMatTarget, typename TMatSource>
+constexpr void Assign(TMatTarget& target,
+                      const TMatSource& source, //
+                      const std::size_t row,
+                      const std::size_t col)
+{
+    assert(target.GetRows() >= source.GetRows() + row);
+    assert(target.GetColumns() >= source.GetColumns() + col);
+
+    for(std::size_t i = 0; i < source.GetRows(); ++i)
+    {
+        for(std::size_t j = 0; j < source.GetColumns(); ++j)
+        {
+            target.At(row + i, col + j) = source.At(i, j);
+        }
+    }
+}
+
+// todo: TMatTarget needs to be asignable
+template <std::size_t row, std::size_t col, typename TMatTarget, typename TMatSource>
+constexpr void Assign(TMatTarget& target, const TMatSource& source)
+{
+    static_assert(target.GetRows() >= source.GetRows() + row);
+    static_assert(target.GetColumns() >= source.GetColumns() + col);
+
+    for(std::size_t i = 0; i < source.GetRows(); ++i)
+    {
+        for(std::size_t j = 0; j < source.GetColumns(); ++j)
+        {
+            target.At(row + i, col + j) = source.Get(i, j);
+        }
+    }
+}
+
 } // namespace linalg
 } // namespace vic

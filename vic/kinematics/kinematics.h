@@ -45,6 +45,10 @@ private:
 using Twist = Screw;
 using Wrench = Screw;
 
+// inspired by boost, put any implementation details in detail namespace
+namespace detail
+{
+
 Matrix<DataType, 3, 3> ExponentialRotationHelper(const Matrix3<DataType>& b, //
                                                  const Matrix3<DataType>& bSquared, //
                                                  const DataType theta)
@@ -54,13 +58,15 @@ Matrix<DataType, 3, 3> ExponentialRotationHelper(const Matrix3<DataType>& b, //
                Matmul(1 - std::cos(theta), bSquared));
 }
 
+} // namespace detail
+
 Matrix<DataType, 3, 3> ExponentialRotation(const Vector3<DataType>& axis, //
                                            const DataType theta)
 {
     const auto b = Matrix3<DataType>{Bracket3(axis)};
     const auto bSquared = Matmul(b, b);
     // todo: bracket * bracket is itself a bracket (i think)
-    return ExponentialRotationHelper(b, bSquared, theta);
+    return detail::ExponentialRotationHelper(b, bSquared, theta);
 }
 
 Matrix<DataType, 4, 4> ExponentialTransform(const Screw& screw, //
@@ -75,12 +81,12 @@ Matrix<DataType, 4, 4> ExponentialTransform(const Screw& screw, //
                          Matmul(1. - std::cos(theta), b), //
                          Matmul(theta - std::sin(theta), bSquared));
 
-    const auto rot = ExponentialRotationHelper(b, bSquared, theta);
+    const Matrix3<DataType> rot = detail::ExponentialRotationHelper(b, bSquared, theta);
 
     Matrix<DataType, 4, 4> res{};
-    // todo: assign rot to [0:3, 0:3]
-    // todo: assign tmp*lin to [0:3, 3]
-    // todo: assing 1 to [3, 3]
+    Assign<0, 0>(res, rot); // assign rot to [0:3, 0:3]
+    Assign<0, 3>(res, Matmul(tmp, linear)); // assign tmp*lin to [0:3, 3]
+    res.At(3, 3) = 1.; // assing 1 to [3, 3]
     return res;
 }
 
