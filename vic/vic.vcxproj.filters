@@ -117,6 +117,18 @@
     <ClInclude Include="kinematics\translation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="kinematics\math.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kinematics\algorithms\forward_kinematics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kinematics\robot\robot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kinematics\robot\node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

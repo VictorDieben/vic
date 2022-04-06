@@ -20,7 +20,7 @@ namespace graph
 {
 
 using Uint = unsigned int;
-using Uint128 = uint64_t; // TODO(vicdie): enable in vs
+using Uint128 = uint64_t; // todo: enable in vs
 using Uint256 = uint64_t;
 using Uint512 = uint64_t;
 using Uint1024 = uint64_t;
@@ -60,7 +60,7 @@ struct Edge
 {
     using EdgeDataType = TData;
     using EdgeIdType = typename EmptyEdgeDataType::EdgeIdType;
-    using VertexIdType = EdgeIdType; // TODO(vicdie): decide if we want to just store the same type
+    using VertexIdType = EdgeIdType; // todo: decide if we want to just store the same type
 
     Edge() = default;
     Edge(const VertexIdType source, const VertexIdType sink, const EdgeIdType id)
@@ -86,7 +86,7 @@ struct Edge
     EdgeDataType mData{};
 };
 
-// TODO(vicdie): make a Graph concept (c++20)
+// todo: make a Graph concept (c++20)
 template <typename TVertex, typename TEdge>
 class BaseGraph
 {
@@ -127,7 +127,7 @@ public:
         {
             if(edge.Source() == source && edge.Sink() == sink)
                 return &edge;
-            // TODO(vicdie): check if graph is directed
+            // todo: check if graph is directed
             if(edge.Source() == sink && edge.Sink() == source)
                 return &edge;
         }

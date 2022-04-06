@@ -109,7 +109,7 @@ constexpr T Max(const T& val1, const T& val2)
 }
 
 // base conversion (e.g. normal representation to hex)
-// TODO(vicdie): make a version that works on a range of iterators
+// todo: make a version that works on a range of iterators
 template <typename TVec, typename TValue, typename TBase>
 void ToBase(const TValue value, const TBase base, std::vector<TVec>& buffer)
 {
@@ -126,17 +126,17 @@ void ToBase(const TValue value, const TBase base, std::vector<TVec>& buffer)
 template <typename TReturn, typename TValue, typename TBase>
 std::vector<TReturn> ToBase(const TValue value, const TBase base)
 {
-    std::vector<TReturn> result; // TODO(vicdie): initialize to good value
+    std::vector<TReturn> result; // todo: initialize to good value
     ToBase(value, base, result);
     return result;
 }
 
 // convert a list of numbers in a certain base back to normal representation
-// TODO(vicdie): make a version that works with an iterator range instead of vector
+// todo: make a version that works with an iterator range instead of vector
 template <typename TOut, typename TVec, typename TBase>
 TOut FromBase(const std::vector<TVec>& values, const TBase base)
 {
-    // TODO(vicdie): assert no value in values is larger than base?
+    // todo: assert no value in values is larger than base?
     uint64_t tmp = 1;
     TOut ret{0};
     for(const auto& value : values)

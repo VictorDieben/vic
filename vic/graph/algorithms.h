@@ -9,7 +9,7 @@
 #include "vic/graph/iterators.h"
 #include "vic/utils.h"
 
-// TODO(vicdie): make subfolder for algorithms?
+// todo: make subfolder for algorithms?
 
 namespace vic
 {
@@ -38,14 +38,14 @@ private:
     TEdgeCostFunctor mEdgeCostFunctor;
     using CostType = decltype(mEdgeCostFunctor(VertexIdType{}, EdgeIdType{}, VertexIdType{})); // return type of lambda
 
-    // TODO(vicdie): replace these with a matrix
+    // todo: replace these with a matrix
     std::vector<std::vector<CostType>> mCostMatrix{};
     std::vector<std::vector<VertexIdType>> mPolicyMatrix{};
 
 public:
     void Update()
     {
-        // TODO(vicdie): use Matrix from vic::linalg
+        // todo: use Matrix from vic::linalg
         // initialize
         const auto n = mGraph.GetNumVertices();
         constexpr CostType maxval = std::numeric_limits<CostType>::max() / 4.;
@@ -60,7 +60,7 @@ public:
             mPolicyMatrix[id][id] = id;
         }
 
-        // TODO(vicdie): fix for when 2 edges go between the same vertices
+        // todo: fix for when 2 edges go between the same vertices
 
         // set value of the direct edges
         for(const auto& edge : EdgeIterator(mGraph))

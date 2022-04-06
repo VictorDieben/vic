@@ -169,6 +169,10 @@
     <ClInclude Include="graph\iterators.h" />
     <ClInclude Include="graph\tensor_graph.h" />
     <ClInclude Include="graph\traits.h" />
+    <ClInclude Include="kinematics\algorithms\forward_kinematics.h" />
+    <ClInclude Include="kinematics\math.h" />
+    <ClInclude Include="kinematics\robot\node.h" />
+    <ClInclude Include="kinematics\robot\robot.h" />
     <ClInclude Include="kinematics\rotation.h" />
     <ClInclude Include="kinematics\transformation.h" />
     <ClInclude Include="kinematics\translation.h" />

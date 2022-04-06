@@ -96,7 +96,7 @@ public:
         }
     }
 
-    // TODO(vicdie): maybe we don't want to return a reference to the vector itself
+    // todo: maybe we don't want to return a reference to the vector itself
     const std::vector<EdgeIdType>& OutEdges(const VertexIdType id) const
     {
         assert(mGraph.GetNumVertices() == mOutEdges.size());

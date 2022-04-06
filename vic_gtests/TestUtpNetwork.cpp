@@ -27,7 +27,7 @@ TEST(TestUdpNetwork, TestHappyFlow)
         client.Send("Hello");
         client.Send("World!");
 
-        // TODO(vicdie): this sleep breaks the test
+        // todo: this sleep breaks the test
         // std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         server.Stop();
@@ -40,4 +40,4 @@ TEST(TestUdpNetwork, TestHappyFlow)
     }
 }
 
-// TODO(vicdie): how do you test a protocol that does not give a guarantee for _anything_?
+// todo: how do you test a protocol that does not give a guarantee for _anything_?

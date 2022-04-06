@@ -118,15 +118,15 @@ public:
 
     SeidelResult<T, dims> Calculate(const std::array<T, dims>& objective)
     {
-        // TODO(vicdie): shuffel constraints
+        // todo: shuffel constraints
         std::shuffle(mConstraints.begin(), mConstraints.end(), mGenerator);
 
-        // TODO(vicdie): select one constraint, check if it still satisfied
+        // todo: select one constraint, check if it still satisfied
         // - if it is, go to next constraint
         // - if it is not, calculate new solution in lower dimension, project, continue
         ResultType result(ESeidelState::OK, {}, objective);
 
-        // TODO(vicdie): check norm of objective
+        // todo: check norm of objective
 
         for(std::size_t i = 0; i < mConstraints.size(); ++i)
         {

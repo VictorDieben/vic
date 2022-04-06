@@ -32,9 +32,9 @@ concept ConceptGraph = requires(T graph)
     graph.GetNumEdges();
 };
 
-// todo(vicdie): tensor vertex concept
-// todo(vicdie): tensor edge concept
-// todo(vicdie): tensor graph concept
+// todo: tensor vertex concept
+// todo: tensor edge concept
+// todo: tensor graph concept
 template <typename T>
 concept ConceptTensorGraph = ConceptGraph<T> && requires(T graph)
 {
