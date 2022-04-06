@@ -67,7 +67,25 @@ TEST(TestKinematics, rotation)
     EXPECT_TRUE(IsEqual(result.ToMatrix(), Identity<double, 3>{}));
 }
 
-TEST(TestKinematics, transformations) { constexpr Transformation transform{}; }
+TEST(TestKinematics, transformations)
+{
+    constexpr Transformation transform{};
+
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> dist(-100., 100.);
+
+    for(std::size_t i = 0; i < 100; ++i)
+    {
+        Rotation rot{EulerAngles(dist(g), dist(g), dist(g))};
+        Translation tr{Vector3<DataType>{{dist(g), dist(g), dist(g)}}};
+
+        Transformation transformation{rot, tr};
+        auto inv = transformation.Inverse();
+
+        EXPECT_TRUE(IsEqual((transformation * inv).ToMatrix(), //
+                            Identity<DataType, 4>{}));
+    }
+}
 
 } // namespace kinematics
 } // namespace vic

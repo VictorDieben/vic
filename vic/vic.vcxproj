@@ -171,6 +171,7 @@
     <ClInclude Include="graph\traits.h" />
     <ClInclude Include="kinematics\rotation.h" />
     <ClInclude Include="kinematics\transformation.h" />
+    <ClInclude Include="kinematics\translation.h" />
     <ClInclude Include="linalg\matrices_dynamic.h" />
     <ClInclude Include="memory\garbage_collector.h" />
     <ClInclude Include="memory\refcounter.h" />

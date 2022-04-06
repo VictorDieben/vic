@@ -23,6 +23,8 @@ public:
         : mMatrix(translation)
     { }
 
+    const Vector3<DataType>& ToMatrix() const { return mMatrix; }
+
 private:
     Vector3<DataType> mMatrix{};
 };

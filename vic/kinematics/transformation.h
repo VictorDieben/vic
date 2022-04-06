@@ -16,44 +16,62 @@ namespace vic
 namespace kinematics
 {
 
-Transformation TransformationExponent(const Transformation& transform, const DataType theta)
-{
-    return {}; // todo
-}
-
 struct Transformation
 {
 public:
     constexpr Transformation() = default;
+    constexpr Transformation(const Rotation& rotation, //
+                             const Translation& translation)
+        : Transformation(rotation.ToMatrix(), translation.ToMatrix())
+    {
+        // todo
+    }
     constexpr Transformation(const Matrix<DataType, 3, 3>& rotation, //
                              const Vector3<DataType> translation)
-    { }
-
-    constexpr Transformation Inverse() const
     {
-        return {}; // todo
+        // todo
     }
+    constexpr Transformation(const Matrix<DataType, 4, 4>& mat)
+        : mMatrix(mat)
+    { }
 
     friend Transformation operator*(const Transformation& r1, const Transformation& r2)
     {
         return Transformation{}; // todo
     }
 
-    Rotation GetRotation() const
+    constexpr Rotation GetRotation() const
     {
         return Rotation{}; // todo
     }
 
-    Translation GetTranslation() const
+    constexpr Translation GetTranslation() const
     {
         return Translation{}; // todo
     }
 
-    Matrix<DataType, 4, 4> ToMatrix() const { return mMatrix; }
+    constexpr Matrix<DataType, 4, 4> ToMatrix() const
+    {
+        return mMatrix; // todo: construct from rot+trans
+    }
+
+    constexpr Transformation Inverse() const
+    {
+        Rotation rot = GetRotation();
+        auto inv = rot.Inverse();
+        Translation translation = GetTranslation();
+        auto res = Matmul(-1., inv.ToMatrix(), translation.ToMatrix());
+        return Transformation{inv, Translation{res}};
+    }
 
 private:
-    Matrix<DataType, 4, 4> mMatrix{};
+    Matrix<DataType, 4, 4> mMatrix{}; // todo: store rotation and translation
 };
+
+Transformation TransformationExponent(const Transformation& transform, const DataType theta)
+{
+    return {}; // todo
+}
 
 } // namespace kinematics
 } // namespace vic

@@ -58,11 +58,6 @@ constexpr Matrix<T, 3, 3> EulerAngles(const T alpha, const T beta, const T gamma
     return Matmul(Rotate(xAxis, alpha), Rotate(yAxis, beta), Rotate(zAxis, gamma));
 }
 
-Rotation RotationExponent(const Rotation& transform, const DataType angle)
-{
-    return {}; //
-}
-
 // wrapper around rotation matrix, so that we can later also use quaternions etc.
 // also allows us to use * operator
 // TODO(vicdie): make T a template?
@@ -86,6 +81,11 @@ public:
 private:
     Matrix<DataType, 3, 3> mMatrix{Identity<DataType, 3>{}};
 };
+
+Rotation RotationExponent(const Rotation& transform, const DataType theta)
+{
+    return {}; //
+}
 
 } // namespace kinematics
 } // namespace vic

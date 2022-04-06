@@ -114,6 +114,9 @@
     <ClInclude Include="kinematics\transformation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="kinematics\translation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">
