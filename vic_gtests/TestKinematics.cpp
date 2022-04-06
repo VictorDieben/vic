@@ -76,11 +76,11 @@ TEST(TestKinematics, transformations)
 
     for(std::size_t i = 0; i < 100; ++i)
     {
-        Rotation rot{EulerAngles(dist(g), dist(g), dist(g))};
-        Translation tr{Vector3<DataType>{{dist(g), dist(g), dist(g)}}};
+        const Rotation rot{EulerAngles(dist(g), dist(g), dist(g))};
+        const Translation tr{Vector3<DataType>{{dist(g), dist(g), dist(g)}}};
 
-        Transformation transformation{rot, tr};
-        auto inv = transformation.Inverse();
+        const Transformation transformation{rot, tr};
+        const auto inv = transformation.Inverse();
 
         EXPECT_TRUE(IsEqual((transformation * inv).ToMatrix(), //
                             Identity<DataType, 4>{}));

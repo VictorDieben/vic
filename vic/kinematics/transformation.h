@@ -22,17 +22,13 @@ public:
     constexpr Transformation() = default;
     constexpr Transformation(const Rotation& rotation, //
                              const Translation& translation)
-        : Transformation(rotation.ToMatrix(), translation.ToMatrix())
-    {
-        // todo
-    }
+        : mRotation(rotation)
+        , mTranslation(translation)
+    { }
     constexpr Transformation(const Matrix<DataType, 3, 3>& rotation, //
                              const Vector3<DataType> translation)
-    {
-        // todo
-    }
-    constexpr Transformation(const Matrix<DataType, 4, 4>& mat)
-        : mMatrix(mat)
+        : mRotation(rotation)
+        , mTranslation(translation)
     { }
 
     friend Transformation operator*(const Transformation& r1, const Transformation& r2)
@@ -40,32 +36,25 @@ public:
         return Transformation{}; // todo
     }
 
-    constexpr Rotation GetRotation() const
-    {
-        return Rotation{}; // todo
-    }
+    constexpr Rotation GetRotation() const { return mRotation; }
 
-    constexpr Translation GetTranslation() const
-    {
-        return Translation{}; // todo
-    }
+    constexpr Translation GetTranslation() const { return mTranslation; }
 
     constexpr Matrix<DataType, 4, 4> ToMatrix() const
     {
-        return mMatrix; // todo: construct from rot+trans
+        return {}; // todo: construct from rot+trans
     }
 
     constexpr Transformation Inverse() const
     {
-        Rotation rot = GetRotation();
-        auto inv = rot.Inverse();
-        Translation translation = GetTranslation();
-        auto res = Matmul(-1., inv.ToMatrix(), translation.ToMatrix());
+        const auto inv = mRotation.Inverse();
+        const auto res = Matmul(-1., inv.ToMatrix(), mTranslation.ToMatrix());
         return Transformation{inv, Translation{res}};
     }
 
 private:
-    Matrix<DataType, 4, 4> mMatrix{}; // todo: store rotation and translation
+    Translation mTranslation{};
+    Rotation mRotation{Matrix<DataType, 3, 3>{Identity<DataType, 3>{}}};
 };
 
 Transformation TransformationExponent(const Transformation& transform, const DataType theta)
