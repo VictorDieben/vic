@@ -166,4 +166,36 @@ std::vector<std::vector<T>> InitializeEmpty(const std::size_t size1, const std::
     return InitializeEmpty(T{}, size1, size2);
 }
 
+template <typename T>
+constexpr void Linspace(const T& begin,
+                        const T& end, //
+                        typename T::value_type beginVal,
+                        typename T::value_type endVal)
+{
+    using TVal = typename T::value_type;
+    const auto n = std::distance(begin, end);
+    if(n == 0)
+        return;
+    if(n == 1)
+    {
+        *begin = beginVal;
+        return;
+    }
+    const TVal delta = (endVal - beginVal) / static_cast<TVal>(n - 1);
+    std::size_t i = 0;
+    for(auto it = begin; it < end; ++it)
+    {
+        *it = beginVal + (delta * i);
+        ++i;
+    }
+}
+
+template <typename T>
+constexpr std::vector<T> Linspace(const T start, const T end, const std::size_t n)
+{
+    std::vector<T> result{};
+    result.resize(n);
+    Linspace(std::begin(result), std::end(result), start, end);
+    return result;
+}
 } // namespace vic

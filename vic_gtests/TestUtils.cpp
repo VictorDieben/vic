@@ -117,3 +117,24 @@ TEST(TestUtils, TestToFromBase)
         EXPECT_EQ(value, fromBase);
     }
 }
+
+TEST(TestUtils, Linspace)
+{
+    const auto vec0 = Linspace(0., 1., 0);
+    EXPECT_EQ(vec0.size(), 0);
+
+    const auto vec1 = Linspace(0., 1., 1);
+    EXPECT_EQ(vec1.size(), 1);
+    EXPECT_DOUBLE_EQ(vec1.at(0), 0.);
+
+    const auto vec2 = Linspace(0., 1., 2);
+    EXPECT_EQ(vec2.size(), 2);
+    EXPECT_DOUBLE_EQ(vec2.at(0), 0.);
+    EXPECT_DOUBLE_EQ(vec2.at(1), 1.);
+
+    const auto vec3 = Linspace(0., 1., 3);
+    EXPECT_EQ(vec3.size(), 3);
+    EXPECT_DOUBLE_EQ(vec3.at(0), 0.);
+    EXPECT_DOUBLE_EQ(vec3.at(1), .5);
+    EXPECT_DOUBLE_EQ(vec3.at(2), 1.);
+}

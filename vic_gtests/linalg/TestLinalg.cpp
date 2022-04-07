@@ -252,6 +252,10 @@ TEST(TestLinalg, TestBracket3)
     constexpr auto bracket = Bracket3(vec);
     constexpr Matrix<double, 3, 3> answer({0, -3, 2, 3, 0, -1, -2, 1, 0});
     ExpectMatrixEqual(bracket, answer);
+
+    constexpr auto bSquared = Matmul(bracket, bracket);
+
+    int bla = 1;
 }
 
 TEST(TestLinalg, TestBracket6)

@@ -1,9 +1,12 @@
 #include "pch.h"
 
 #include "vic/kinematics/kinematics.h"
+#include "vic/kinematics/math.h"
 #include "vic/kinematics/rotation.h"
 #include "vic/kinematics/transformation.h"
 #include "vic/linalg/traits.h"
+
+#include "vic/utils.h"
 
 namespace vic
 {
@@ -84,6 +87,61 @@ TEST(TestKinematics, transformations)
 
         EXPECT_TRUE(IsEqual((transformation * inv).ToMatrix(), //
                             Identity<DataType, 4>{}));
+    }
+}
+
+TEST(TestKinematics, Screw)
+{
+    Screw screw{Vector6<DataType>{{1, 2, 3, 4, 5, 6}}};
+    EXPECT_TRUE(IsEqual(screw.GetAngular(), Vector3<DataType>{{1, 2, 3}}));
+    EXPECT_TRUE(IsEqual(screw.GetLinear(), Vector3<DataType>{{4, 5, 6}}));
+
+    Screw screw2{Vector3<DataType>{{1, 2, 3}}, Vector3<DataType>{{4, 5, 6}}};
+    EXPECT_TRUE(IsEqual(screw2.GetAngular(), Vector3<DataType>{{1, 2, 3}}));
+    EXPECT_TRUE(IsEqual(screw2.GetLinear(), Vector3<DataType>{{4, 5, 6}}));
+}
+
+TEST(TestKinematics, ExponentialTransform)
+{
+    Screw screw{Vector6<DataType>{{0, 0, 1, 0, 0, 0}}}; // screw rotating around z
+
+    // check zero rotation
+    auto transform0 = ExponentialTransform(screw, 0.);
+    EXPECT_TRUE(IsEqual(transform0, Identity<DataType, 4>{}));
+
+    // check rotating over the same screw for a range of angles
+    for(const auto theta : Linspace(0., 2. * pi, 10))
+    {
+        auto tr = ExponentialTransform(screw, theta);
+
+        auto answer = Matrix<DataType, 4, 4>{Identity<DataType, 4>{}};
+        Assign<0, 0>(answer,
+                     Matrix<DataType, 2, 2>{{std::cos(theta), //
+                                             -std::sin(theta),
+                                             std::sin(theta),
+                                             std::cos(theta)}});
+
+        EXPECT_TRUE(IsEqual(tr, answer));
+    }
+
+    // construct a random screw, make sure that doing the full transform at once equals doing it in steps
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> dist(0, 1.);
+    for(std::size_t i = 0; i < 1; ++i)
+    {
+        Screw screw{Vector6<DataType>{{dist(g), dist(g), dist(g), dist(g), dist(g), dist(g)}}}; //
+
+        const auto theta1 = dist(g);
+        const auto theta2 = dist(g);
+
+        auto transFull = ExponentialTransform(screw, theta1 + theta2);
+
+        auto trans1 = ExponentialTransform(screw, theta1);
+        auto trans2 = ExponentialTransform(screw, theta2);
+        auto answer = Matmul(trans1, trans2);
+
+        // TODO: solve
+        //ASSERT_TRUE(IsEqual(transFull, answer));
     }
 }
 

@@ -18,7 +18,8 @@ public:
     ForwardRobot() = default;
 
 private:
-    vic::memory::Tree<Node> mTree;
+    vic::memory::Tree<Node> mTree{};
+    vic::memory::DepthFirstIterator<decltype(mTree)> mIterator{mTree};
 };
 
 } // namespace robots

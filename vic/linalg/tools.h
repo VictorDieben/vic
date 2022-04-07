@@ -45,7 +45,7 @@ public:
         if(i == 1 && j == 2)
             return -mVector.mData.at(0);
 
-        assert(false);
+        assert(false); // should be unreachable
         return T{0};
     }
 
@@ -131,6 +131,35 @@ constexpr void Assign(TMatTarget& target, const TMatSource& source)
             target.At(row + i, col + j) = source.Get(i, j);
         }
     }
+}
+
+// todo: TMatResult needs to have a static size, assignable
+template <typename TMatResult, std::size_t row, std::size_t col, typename TMatInput>
+constexpr TMatResult Extract(const TMatInput& source)
+{
+    static_assert(source.GetRows() >= TMatResult::GetRows() + row);
+    static_assert(source.GetColumns() >= TMatResult::GetColumns() + col);
+
+    TMatResult res{};
+    for(std::size_t i = 0; i < TMatResult::GetRows(); ++i)
+        for(std::size_t j = 0; j < TMatResult::GetColumns(); ++j)
+            res.At(i, j) = source.Get(i + row, j + col);
+
+    return res;
+}
+
+template <typename TMatResult, typename TMatInput>
+constexpr TMatResult Extract(const TMatInput& source, std::size_t row, std::size_t col)
+{
+    assert(source.GetRows() >= TMatResult::GetRows() + row);
+    assert(source.GetColumns() >= TMatResult::GetColumns() + col);
+
+    TMatResult res{};
+    for(std::size_t i = 0; i < TMatResult::GetRows(); ++i)
+        for(std::size_t j = 0; j < TMatResult::GetColumns(); ++j)
+            res.At(i, j) = source.Get(i + row, j + col);
+
+    return res; // todo
 }
 
 } // namespace linalg

@@ -57,10 +57,5 @@ private:
     Rotation mRotation{Matrix<DataType, 3, 3>{Identity<DataType, 3>{}}};
 };
 
-Transformation TransformationExponent(const Transformation& transform, const DataType theta)
-{
-    return {}; // todo
-}
-
 } // namespace kinematics
 } // namespace vic
