@@ -129,7 +129,8 @@ TEST(TestKinematics, ExponentialTransform)
     std::uniform_real_distribution<double> dist(0, 1.);
     for(std::size_t i = 0; i < 1; ++i)
     {
-        Screw screw{Vector6<DataType>{{dist(g), dist(g), dist(g), dist(g), dist(g), dist(g)}}}; //
+        Screw screw{Vector6<DataType>{{1, 0, 0, dist(g), dist(g), dist(g)}}}; //
+        //Screw screw{Normalize(Vector3<DataType>{{dist(g), dist(g), dist(g)}}), Vector3<DataType> {{dist(g), dist(g), dist(g)}};
 
         const auto theta1 = dist(g);
         const auto theta2 = dist(g);
