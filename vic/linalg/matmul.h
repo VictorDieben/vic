@@ -49,7 +49,7 @@ template <typename TMat1, typename TMat2, class TRet = decltype(typename TMat1::
 requires ConceptConstexprMatrix<TMat1> && ConceptConstexprMatrix<TMat2>
 constexpr auto MatmulStatic(const TMat1& mat1, const TMat2& mat2)
 {
-    // TODO(vicdie): specialize for certain types of matrix multiplications (e.g. diag*diag)
+    // TODO: specialize for certain types of matrix multiplications (e.g. diag*diag)
 
     static_assert(mat1.GetColumns() == mat2.GetRows());
     Matrix<TRet, mat1.GetRows(), mat2.GetColumns()> result{};

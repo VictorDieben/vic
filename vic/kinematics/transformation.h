@@ -36,13 +36,16 @@ public:
         return Transformation{}; // todo
     }
 
-    constexpr Rotation GetRotation() const { return mRotation; }
+    constexpr const Rotation& GetRotation() const { return mRotation; }
 
-    constexpr Translation GetTranslation() const { return mTranslation; }
+    constexpr const Translation& GetTranslation() const { return mTranslation; }
 
     constexpr Matrix<DataType, 4, 4> ToMatrix() const
     {
-        return {}; // todo: construct from rot+trans
+        Matrix<DataType, 4, 4> result{};
+        Assign<0, 0>(result, mRotation.ToMatrix()); // assign R
+        Assign<0, 3>(result, mTranslation.ToMatrix()); // assign p
+        return result;
     }
 
     constexpr Transformation Inverse() const

@@ -17,8 +17,8 @@ public:
         : mVector(vec)
     { }
 
-    constexpr static size_t Rows = 3;
-    constexpr static size_t Columns = 3;
+    constexpr static std::size_t Rows = 3;
+    constexpr static std::size_t Columns = 3;
     constexpr static std::size_t GetRows() { return Rows; }
     constexpr static std::size_t GetColumns() { return Columns; }
 

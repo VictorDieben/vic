@@ -75,8 +75,6 @@ private:
     }
 };
 
-// TODO(vicdie): if the data is stored in col mayor order,
-// the get index can be constexpr.
 template <typename T, std::size_t rows>
 class MatrixRowConst
 {
@@ -92,8 +90,7 @@ public:
 
     T Get(const std::size_t i, const std::size_t j) const
     {
-        // TODO
-        return 0.;
+        return 0.; // TODO
     }
 
     T& At(const std::size_t i, const std::size_t j)
@@ -124,8 +121,7 @@ public:
 
     T Get(const std::size_t i, const std::size_t j) const
     {
-        // TODO
-        return 0.;
+        return 0.; // TODO
     }
 
     T& At(const std::size_t i, const std::size_t j)

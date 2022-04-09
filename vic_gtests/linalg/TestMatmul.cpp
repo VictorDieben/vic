@@ -83,8 +83,10 @@ TEST(TestLinalg, TestMatmulDynamic)
     EXPECT_EQ(0, dyn1.Get(0, 0));
     EXPECT_EQ(0, dyn1.Get(1, 0));
     EXPECT_EQ(0, dyn1.Get(1, 2));
-    EXPECT_DEATH(dyn1.Get(1, 3), "");
-    EXPECT_DEATH(dyn1.Get(2, 2), "");
+    EXPECT_DEATH(dyn1.Get(1, 3), "invalid index");
+    EXPECT_DEATH(dyn1.Get(2, 2), "invalid index");
+
+    // todo: verify values
 }
 
 TEST(TestLinalg, TestMatmulMixed)

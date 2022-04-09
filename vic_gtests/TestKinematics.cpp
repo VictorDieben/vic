@@ -141,7 +141,7 @@ TEST(TestKinematics, ExponentialTransform)
         auto answer = Matmul(trans1, trans2);
 
         // TODO: solve
-        //ASSERT_TRUE(IsEqual(transFull, answer));
+        ASSERT_TRUE(IsEqual(transFull, answer));
     }
 }
 

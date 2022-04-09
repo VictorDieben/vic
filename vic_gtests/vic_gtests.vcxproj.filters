@@ -19,6 +19,7 @@
     <ClCompile Include="TestUtils.cpp" />
     <ClCompile Include="TestGeometry.cpp" />
     <ClCompile Include="TestTree.cpp" />
+    <ClCompile Include="TestMemory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
