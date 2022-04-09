@@ -54,8 +54,9 @@ constexpr Matrix<T, 3, 3> Rotate(const Vector3<T>& vec, const T angle)
 template <typename T>
 constexpr Matrix<T, 3, 3> EulerAngles(const T alpha, const T beta, const T gamma)
 {
-    // TODO(vicdie): order of matrix multiplications
-    return Matmul(Rotate(xAxis, alpha), Rotate(yAxis, beta), Rotate(zAxis, gamma));
+    // TODO(unit test): for Sequencial 'sxyz', or: rol alpha around x -> pitch beta around (new) y -> yaw gamma around (newest) z, we have to pre-multiply as implemented
+    //                  post multiplication (previous version) would perform the rotations around the origional axis (like in a trackball), which is not Sequential 
+    return Matmul(Rotate(zAxis, gamma), Rotate(yAxis, beta), Rotate(xAxis, alpha));
 }
 
 // wrapper around rotation matrix, so that we can later also use quaternions etc.
