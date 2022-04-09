@@ -43,7 +43,7 @@ Matrix<DataType, 4, 4> ExponentialTransform(const Screw& screw, //
     const auto b = Matrix3<DataType>{Bracket3(angular)}; // todo: Bracket3 overload for matmul
     const auto bSquared = Matmul(b, b);
 
-    const auto tmp = Add(Identity<DataType, 3>{}, //
+    const auto tmp = Add(Matmul(Identity<DataType, 3>{}, theta), //
                          Matmul(1. - std::cos(theta), b), //
                          Matmul(theta - std::sin(theta), bSquared));
 
