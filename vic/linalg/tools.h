@@ -9,6 +9,10 @@ namespace linalg
 
 // Bracket operator for vec3s.
 // (matrix form of cross product)
+// Should have the following shape:
+// |x1|   | 0  -x3  x2|
+// |x2| = | x3  0  -x1|
+// |x3|   |-x2  x1  0 |
 template <typename T>
 class Bracket3
 {
