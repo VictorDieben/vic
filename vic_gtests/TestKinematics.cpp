@@ -138,7 +138,7 @@ TEST(TestKinematics, ExponentialTransform)
 
         auto trans1 = ExponentialTransform(screw, theta1);
         auto trans2 = ExponentialTransform(screw, theta2);
-        auto answer = Matmul(trans1, trans2);
+        auto answer = Matmul(trans2, trans1);
 
         // TODO: solve
         ASSERT_TRUE(IsEqual(transFull, answer));
