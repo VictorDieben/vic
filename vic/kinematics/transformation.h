@@ -30,21 +30,25 @@ public:
         : mRotation(rotation)
         , mTranslation(translation)
     { }
+    constexpr Transformation(const Matrix<DataType, 4, 4>& matrix)
+        : mRotation(Extract<Matrix<DataType, 3, 3>, 0, 0>(matrix))
+        , mTranslation(Extract<Vector3<DataType>, 0, 3>(matrix))
+    { }
 
     friend Transformation operator*(const Transformation& r1, const Transformation& r2)
     {
-        return Transformation{}; // todo
+        return Transformation{Matmul(r1.ToMatrix(), r2.ToMatrix())}; //
     }
 
-    constexpr const Rotation& GetRotation() const { return mRotation; }
-
-    constexpr const Translation& GetTranslation() const { return mTranslation; }
-
+    // not const ref, other types of transformations might not have them in memory
+    constexpr Rotation GetRotation() const { return mRotation; }
+    constexpr Translation GetTranslation() const { return mTranslation; }
     constexpr Matrix<DataType, 4, 4> ToMatrix() const
     {
         Matrix<DataType, 4, 4> result{};
         Assign<0, 0>(result, mRotation.ToMatrix()); // assign R
         Assign<0, 3>(result, mTranslation.ToMatrix()); // assign p
+        result.At(3, 3) = 1.;
         return result;
     }
 

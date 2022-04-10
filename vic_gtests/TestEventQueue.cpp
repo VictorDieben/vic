@@ -1,44 +1,33 @@
 
 #include "pch.h"
 
-#include "vic/EventQueue.h"
+#include "vic/memory/event_queue.h"
 
-using namespace vic;
+using namespace vic::memory;
 
 struct MyEvent : public Event
 {
-	std::string mText{ "My Event" };
+    std::string mText{"My Event"};
 };
 
 struct MyOtherEvent : public Event
 {
-	std::string mOtherText{ "My Other Event" };
+    std::string mOtherText{"My Other Event"};
 };
 
 TEST(TestEventQueue, Startup)
 {
-	vic::PolymorphicEventQueue queue;
+    PolymorphicEventQueue queue;
 
-	vic::SpecializedListener<MyEvent> listener(queue,
-		[](MyEvent& event)
-		{
-			std::cout << "tadaaa: " << event.mText << std::endl;
-		}
-	);
+    SpecializedListener<MyEvent> listener(queue, [](MyEvent& event) { std::cout << "tadaaa: " << event.mText << std::endl; });
 
-	vic::SpecializedListener<MyOtherEvent> otherListener(queue,
-		[](MyOtherEvent& event) { std::cout << "tadaaa: " << event.mOtherText << std::endl; }
-	);
+    SpecializedListener<MyOtherEvent> otherListener(queue, [](MyOtherEvent& event) { std::cout << "tadaaa: " << event.mOtherText << std::endl; });
 
-	queue.EmplaceBack<MyEvent>();
-	queue.EmplaceBack<MyOtherEvent>();
+    queue.EmplaceBack<MyEvent>();
+    queue.EmplaceBack<MyOtherEvent>();
 
-	while (queue.Next())
-	{
-		// loop through all events
-	}
-
-	// ASSERT_TRUE(false);
-
+    while(queue.Next())
+    {
+        // loop through all events
+    }
 }
-

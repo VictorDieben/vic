@@ -11,49 +11,31 @@ namespace memory
 template <typename T>
 class RefCounted;
 
-template <typename T>
-class RefWrapper : public T
-{
-public:
-    template <typename... Args>
-    RefWrapper(Args&&... args)
-        : T(std::forward<Args>(args)...)
-    { }
-
-private:
-    std::size_t mCount{0};
-
-    void Add() { mCount++; }
-    void Subtract() { mCount--; }
-    std::size_t GetCount() const { return mCount; }
-    friend RefCounted<T>;
-};
-
-//template <typename T>
-//class RefWrapper
-//{
-//public:
-//    template <typename... Args>
-//    RefWrapper(Args&&... args)
-//        : mData{std::forward<Args>(args)...}
-//    { }
-//
-//private:
-//    T mData;
-//    std::size_t mCount{0};
-//
-//    void Add() { mCount++; }
-//    void Subtract() { mCount--; }
-//    std::size_t GetCount() const { return mCount; }
-//    friend RefCounted<T>;
-//};
-
-// shared_ptr, without the weak_ptr stuff
+// shared_ptr, without the weak_ptr stuff.
+// not suitable for multi-threading
 template <typename T>
 class RefCounted
 {
 public:
     // nested class that stores object and ref count
+    template <typename T>
+    class RefWrapper
+    {
+    public:
+        template <typename... Args>
+        RefWrapper(Args&&... args)
+            : mData{std::forward<Args>(args)...}
+        { }
+
+    private:
+        T mData;
+        std::size_t mCount{0};
+
+        void Add() { mCount++; }
+        void Subtract() { mCount--; }
+        std::size_t GetCount() const { return mCount; }
+        friend RefCounted<T>;
+    };
 
     template <typename... Args>
     RefCounted(Args&&... args)
@@ -85,6 +67,12 @@ public:
                 Destroy();
         }
     }
+
+    T& Get() { return mObject->mData; }
+    const T& Get() const { return mObject->mData; }
+
+    T* operator->() { return &(mObject->mData); }
+    const T* operator->() const { return &(mObject->mData); }
 
     std::size_t use_count() const { return mObject->GetCount(); }
 

@@ -10,6 +10,9 @@
 namespace vic
 {
 
+namespace memory
+{
+
 // base event
 struct Event
 {
@@ -102,4 +105,5 @@ private:
     std::function<void(Tevent&)> mLambda;
 };
 
+} // namespace memory
 } // namespace vic
