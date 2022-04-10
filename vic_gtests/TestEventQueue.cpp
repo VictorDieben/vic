@@ -3,7 +3,10 @@
 
 #include "vic/memory/event_queue.h"
 
-using namespace vic::memory;
+namespace vic
+{
+namespace memory
+{
 
 struct MyEvent : public Event
 {
@@ -19,9 +22,9 @@ TEST(TestEventQueue, Startup)
 {
     PolymorphicEventQueue queue;
 
-    SpecializedListener<MyEvent> listener(queue, [](MyEvent& event) { std::cout << "tadaaa: " << event.mText << std::endl; });
+    SpecializedListener<MyEvent> listener(queue, [](const MyEvent& event) { std::cout << "tadaaa: " << event.mText << std::endl; });
 
-    SpecializedListener<MyOtherEvent> otherListener(queue, [](MyOtherEvent& event) { std::cout << "tadaaa: " << event.mOtherText << std::endl; });
+    SpecializedListener<MyOtherEvent> otherListener(queue, [](const MyOtherEvent& event) { std::cout << "tadaaa: " << event.mOtherText << std::endl; });
 
     queue.EmplaceBack<MyEvent>();
     queue.EmplaceBack<MyOtherEvent>();
@@ -31,3 +34,6 @@ TEST(TestEventQueue, Startup)
         // loop through all events
     }
 }
+
+} // namespace memory
+} // namespace vic

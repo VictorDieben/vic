@@ -106,5 +106,25 @@ TEST(TestViews, TestViewBlockDiagonal)
         ViewBlockDiagonal(Identity<double, 1>{}, Identity<double, 2>{}), //
         ViewBlockDiagonal(Identity<double, 3>{}, Identity<double, 4>{}));
 }
+
+TEST(TestViews, TestViewTriangle)
+{
+    // Test views for upper / lower parts of matrix.
+    // useful when making LU decompositions
+    constexpr Matrix<double, 2, 2> mat({1, 2, 3, 4});
+
+    // TODO: find out why the decltype is needed
+    ExpectMatrixEqual(ViewUpperTriangle<decltype(mat)>{mat}, //
+                      Matrix<double, 2, 2>{{1, 2, 0, 4}});
+
+    ExpectMatrixEqual(ViewStrictUpperTriangle<decltype(mat)>{mat}, //
+                      Matrix<double, 2, 2>{{0, 2, 0, 0}});
+
+    ExpectMatrixEqual(ViewLowerTriangle<decltype(mat)>{mat}, //
+                      Matrix<double, 2, 2>{{1, 0, 3, 4}});
+
+    ExpectMatrixEqual(ViewStrictLowerTriangle<decltype(mat)>{mat}, //
+                      Matrix<double, 2, 2>{{0, 0, 3, 0}});
+}
 } // namespace linalg
 } // namespace vic

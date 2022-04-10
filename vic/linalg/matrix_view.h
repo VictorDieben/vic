@@ -177,5 +177,59 @@ private:
     const TMat& mMatrix;
 };
 
+enum class TriangleType
+{
+    Upper,
+    StrictUpper,
+    Lower,
+    StrictLower
+};
+
+template <TriangleType type, typename TMatrix>
+requires ConceptMatrix<TMatrix>
+class ViewTriangle
+{
+public:
+    ViewTriangle(const TMatrix& matrix)
+        : mMatrix(matrix)
+    { }
+
+    using DataType = typename TMatrix::DataType;
+    constexpr static std::size_t GetRows() { return TMatrix::GetRows(); }
+    constexpr static std::size_t GetColumns() { return TMatrix::GetColumns(); }
+
+    constexpr DataType Get(const std::size_t i, const std::size_t j) const
+    {
+        if constexpr(type == TriangleType::Upper)
+            return (i > j) ? 0. : mMatrix.Get(i, j);
+        else if constexpr(type == TriangleType::StrictUpper)
+            return (i >= j) ? 0. : mMatrix.Get(i, j);
+        else if constexpr(type == TriangleType::Lower)
+            return (i < j) ? 0. : mMatrix.Get(i, j);
+        else // if constexpr(type == TriangleType::StrictLower)
+            return (i <= j) ? 0. : mMatrix.Get(i, j);
+        //else
+        //{
+        //    static_assert(false); // unknown enum
+        //    return 0.;
+        //}
+    }
+
+private:
+    const TMatrix& mMatrix;
+};
+
+template <typename TMatrix>
+using ViewUpperTriangle = ViewTriangle<TriangleType::Upper, TMatrix>;
+
+template <typename TMatrix>
+using ViewStrictUpperTriangle = ViewTriangle<TriangleType::StrictUpper, TMatrix>;
+
+template <typename TMatrix>
+using ViewLowerTriangle = ViewTriangle<TriangleType::Lower, TMatrix>;
+
+template <typename TMatrix>
+using ViewStrictLowerTriangle = ViewTriangle<TriangleType::StrictLower, TMatrix>;
+
 } // namespace linalg
 } // namespace vic

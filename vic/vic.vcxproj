@@ -161,7 +161,6 @@
   <ItemGroup>
     <ClInclude Include="Emulator.h" />
     <ClInclude Include="EntitySystem.h" />
-    <ClInclude Include="EventQueue.h" />
     <ClInclude Include="geometry\algorithms\algorithms.h" />
     <ClInclude Include="geometry\geometry.h" />
     <ClInclude Include="graph\algorithms.h" />
@@ -177,6 +176,7 @@
     <ClInclude Include="kinematics\transformation.h" />
     <ClInclude Include="kinematics\translation.h" />
     <ClInclude Include="linalg\matrices_dynamic.h" />
+    <ClInclude Include="memory\event_queue.h" />
     <ClInclude Include="memory\garbage_collector.h" />
     <ClInclude Include="memory\refcounter.h" />
     <ClInclude Include="memory\tree.h" />
