@@ -145,25 +145,47 @@ TEST(TestKinematics, ExponentialTransform)
 
 TEST(TestKinematics, CartesianRobot)
 {
-    constexpr Matrix<double, 3, 3> matrix{Identity<double, 3>{}};
-    const Transformation I{Matrix<DataType, 4, 4>{Identity<double, 4>{}}};
+    //constexpr Matrix<double, 3, 3> matrix{Identity<double, 3>{}};
+    //const Transformation I{Matrix<DataType, 4, 4>{Identity<double, 4>{}}};
 
     const Screw stx{Vector6<DataType>{{0, 0, 0, 1, 0, 0}}}; // pure x translation
     const Screw sty{Vector6<DataType>{{0, 0, 0, 0, 1, 0}}}; // pure y translation
     const Screw stz{Vector6<DataType>{{0, 0, 0, 0, 0, 1}}}; // pure z translation
+    const Screw srx{Vector6<DataType>{{1, 0, 0, 0, 0, 0}}}; // pure x rotation
+    const Screw sry{Vector6<DataType>{{0, 1, 0, 0, 0, 0}}}; // pure y rotation
+    const Screw srz{Vector6<DataType>{{0, 0, 1, 0, 0, 0}}}; // pure z rotation
 
     robots::ForwardRobot robot{};
 
-    robot.AddJoint(std::nullopt, I, stx); // x axis
-    robot.AddJoint(0u, I, sty); // y axis
-    robot.AddJoint(1u, I, stz); // z axis
+    robot.AddJoint(std::nullopt, {}, stx); // x axis
+    robot.AddJoint(0u, {}, sty); // y axis
+    robot.AddJoint(1u, {}, stz); // z axis
 
     robot.Update(); // <-- update iterator with new joints
 
     const std::vector<DataType> theta{1., 2., 3.};
     const auto transforms = algorithms::ForwardKinematics(robot, theta);
-
     const auto translation = transforms.at(2u).GetTranslation();
+
+    ASSERT_TRUE(IsEqual(translation.ToMatrix(), Vector3<DataType>{{1., 2., 3.}}));
+
+    robot.AddJoint(2u, {}, srx); // x axis
+    robot.AddJoint(3u, {}, sry); // y axis
+    robot.AddJoint(4u, {}, srz); // z axis
+
+    robot.Update(); // <-- update iterator with new joints
+
+    
+
+    const Matrix<double, 3, 3> euler = EulerAngles(pi / 2, pi / 3, pi / 4);
+    const Rotation rot{euler};
+    const std::vector<DataType> theta2{3., 2., 1., pi/2, pi/3, pi/4};
+
+    const auto transforms2 = algorithms::ForwardKinematics(robot, theta2);
+    const auto rotation = transforms2.at(5u).GetRotation();
+    ASSERT_TRUE(IsEqual(rotation.ToMatrix(), rot.ToMatrix()));
+
+    
 }
 
 } // namespace kinematics
