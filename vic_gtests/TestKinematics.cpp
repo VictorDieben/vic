@@ -1,12 +1,17 @@
 #include "pch.h"
 
+#include "vic/kinematics/algorithms/forward_kinematics.h"
 #include "vic/kinematics/kinematics.h"
 #include "vic/kinematics/math.h"
+#include "vic/kinematics/robot/node.h"
+#include "vic/kinematics/robot/robot.h"
 #include "vic/kinematics/rotation.h"
 #include "vic/kinematics/transformation.h"
 #include "vic/linalg/traits.h"
 
 #include "vic/utils.h"
+
+#include <optional>
 
 namespace vic
 {
@@ -136,6 +141,18 @@ TEST(TestKinematics, ExponentialTransform)
         // TODO: solve
         ASSERT_TRUE(IsEqual(transFull, answer));
     }
+}
+
+TEST(TestKinematics, CartesianRobot)
+{
+    robots::ForwardRobot robot{};
+
+    robot.AddJoint(std::nullopt, {}, {}); // x axis
+    robot.AddJoint(0u, {}, {}); // y axis
+    robot.AddJoint(1u, {}, {}); // z axis
+
+    const std::vector<DataType> theta{1., 2., 3.};
+    const auto transforms = algorithms::ForwardKinematics(robot, theta);
 }
 
 } // namespace kinematics

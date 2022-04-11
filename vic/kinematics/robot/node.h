@@ -16,6 +16,13 @@ enum class NodeType
     Body
 };
 
+// todo
+template <typename T>
+struct Inertia
+{
+    T mass{};
+};
+
 class Node
 {
 public:
@@ -23,16 +30,35 @@ public:
     Node(const NodeType type)
         : mType(type)
     { }
+    Node(const NodeType type, const Transformation& transform)
+        : mType(type)
+        , mTransformation(transform)
+    { }
+    Node(const NodeType type, const Transformation& transform, const Screw& screw)
+        : mType(type)
+        , mTransformation(transform)
+        , mScrew(screw)
+    { }
 
     constexpr bool IsType(const NodeType type) const { return mType == type; }
 
     // todo
-    Screw GetScrew() const { return {}; }
-    Transformation GetTransformation() const { return {}; }
+    Transformation GetTransformation() const { return mTransformation; }
+    Screw GetScrew() const
+    {
+        assert(mType == NodeType::Joint);
+        return mScrew;
+    }
+    Inertia<DataType> GetInertia() const
+    {
+        assert(mType == NodeType::Body);
+        return {};
+    }
 
 private:
     NodeType mType{NodeType::Joint};
-    Screw mScrew{}; // todo: screw or transform?
+    Transformation mTransformation{};
+    Screw mScrew{};
 };
 } // namespace robots
 } // namespace kinematics
