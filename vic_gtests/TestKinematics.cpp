@@ -178,12 +178,11 @@ TEST(TestKinematics, CartesianRobot)
     
 
     const Matrix<double, 3, 3> euler = EulerAngles(pi / 2, pi / 3, pi / 4);
-    const Rotation rot{euler};
     const std::vector<DataType> theta2{3., 2., 1., pi/2, pi/3, pi/4};
 
     const auto transforms2 = algorithms::ForwardKinematics(robot, theta2);
     const auto rotation = transforms2.at(5u).GetRotation();
-    ASSERT_TRUE(IsEqual(rotation.ToMatrix(), rot.ToMatrix()));
+    ASSERT_TRUE(IsEqual(rotation.ToMatrix(), euler));
 
     
 }
