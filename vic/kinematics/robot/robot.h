@@ -42,6 +42,8 @@ public:
         // a rigid body is always connected to a joint
     }
 
+    void Update() { mIterator.Update(); }
+
     std::size_t GetNrJoints() const { return mTree.Size(); }
 
     const auto& GetTree() const { return mTree; }

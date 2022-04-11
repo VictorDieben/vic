@@ -128,7 +128,7 @@ TEST(TestKinematics, ExponentialTransform)
     {
         const Vector3<DataType> axis = Normalize(Vector3<DataType>{{dist(g), dist(g), dist(g)}});
         const Vector3<DataType> dir{{dist(g), dist(g), dist(g)}};
-        Screw screw{axis, dir};
+        const Screw screw{axis, dir};
 
         const auto theta1 = dist(g);
         const auto theta2 = dist(g);
@@ -158,8 +158,12 @@ TEST(TestKinematics, CartesianRobot)
     robot.AddJoint(0u, I, sty); // y axis
     robot.AddJoint(1u, I, stz); // z axis
 
+    robot.Update(); // <-- update iterator with new joints
+
     const std::vector<DataType> theta{1., 2., 3.};
     const auto transforms = algorithms::ForwardKinematics(robot, theta);
+
+    const auto translation = transforms.at(2u).GetTranslation();
 }
 
 } // namespace kinematics

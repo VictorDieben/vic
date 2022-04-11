@@ -37,11 +37,13 @@ std::vector<Transformation> ForwardKinematics(ForwardRobot& robot, //
         const auto id = joint.Id();
         const auto parentId = joint.Parent();
         const auto& data = joint.Data();
-        if(joint.IsRoot())
-            continue;
+        if(!data.IsType(NodeType::Joint))
+            continue; // ignore frames for now
 
-        neutralPoses[id] = neutralPoses[parentId] * data.GetTransformation();
-        exponentials[id] = exponentials[parentId] * ExponentialTransform(data.GetScrew(), theta[id]);
+        const auto transform = data.GetTransformation();
+        const auto exponent = ExponentialTransform(data.GetScrew(), theta[id]);
+        neutralPoses[id] = neutralPoses[parentId] * transform;
+        exponentials[id] = exponentials[parentId] * exponent;
         result[id] = exponentials[id] * neutralPoses[id];
     }
 
