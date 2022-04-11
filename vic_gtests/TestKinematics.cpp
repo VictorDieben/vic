@@ -124,10 +124,11 @@ TEST(TestKinematics, ExponentialTransform)
     // construct a random screw, make sure that doing the full transform at once equals doing it in steps
     std::default_random_engine g;
     std::uniform_real_distribution<double> dist(0, 1.);
-    for(std::size_t i = 0; i < 1; ++i)
+    for(std::size_t i = 0; i < 100; ++i)
     {
-        Screw screw{Vector6<DataType>{{1, 0, 0, dist(g), dist(g), dist(g)}}}; //
-        //Screw screw{Normalize(Vector3<DataType>{{dist(g), dist(g), dist(g)}}), Vector3<DataType> {{dist(g), dist(g), dist(g)}};
+        const Vector3<DataType> axis = Normalize(Vector3<DataType>{{dist(g), dist(g), dist(g)}});
+        const Vector3<DataType> dir{{dist(g), dist(g), dist(g)}};
+        Screw screw{axis, dir};
 
         const auto theta1 = dist(g);
         const auto theta2 = dist(g);
@@ -138,7 +139,6 @@ TEST(TestKinematics, ExponentialTransform)
         auto trans2 = ExponentialTransform(screw, theta2);
         auto answer = Matmul(trans2, trans1);
 
-        // TODO: solve
         ASSERT_TRUE(IsEqual(transFull, answer));
     }
 }

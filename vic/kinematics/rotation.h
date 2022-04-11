@@ -39,6 +39,13 @@ constexpr T Norm(const Matrix<T, rows, 1>& vec)
     return std::sqrt(Sum(Dot(vec, vec)));
 }
 
+template <typename T, std::size_t rows>
+constexpr Matrix<T, rows, 1> Normalize(const Matrix<T, rows, 1>& vec)
+{
+    const auto norm = Norm(vec);
+    return Matmul(vec, T{1} / norm);
+}
+
 template <typename T>
 constexpr Matrix<T, 3, 3> Rotate(const Vector3<T>& vec, const T angle)
 {
