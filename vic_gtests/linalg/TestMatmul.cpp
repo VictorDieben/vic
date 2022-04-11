@@ -101,9 +101,9 @@ TEST(TestLinalg, TestMatmulMixed)
 
     auto mat2x5_1 = Matmul(Matmul(mat2x3, dyn3x4), mat4x5);
     auto mat2x5_2 = Matmul(mat2x3, Matmul(dyn3x4, mat4x5));
-    // TODO(vicdie): the two mat2x5 matrices should be static size
+    // TODO: the two mat2x5 matrices should be static size
 
-    ExpectMatrixEqual(mat2x5_1, mat2x5_2); // TODO(vicdie): just zeros now
+    ExpectMatrixEqual(mat2x5_1, mat2x5_2); // TODO: just zeros now
 
     // check that if the inbetween dimension is variable, but the two outside edges are static,
     // the resulting shape is still static

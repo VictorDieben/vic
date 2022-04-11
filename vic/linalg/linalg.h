@@ -13,5 +13,6 @@ namespace vic
 {
 namespace linalg
 {
+
 }
 } // namespace vic

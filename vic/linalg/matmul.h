@@ -123,12 +123,19 @@ constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2)
     }
 }
 
-// TODO(vicdie): make a selector for proper algorithms
+// TODO: make a selector for proper algorithms
+// TODO: For now just inverse the order: (a * (b * (c*d)))
 template <typename TMat1, typename TMat2, typename... Types>
 constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2, const Types... others)
 {
     return Matmul(Matmul(mat1, mat2), others...);
 }
+
+//template <typename TMat1, typename TMat2, typename... Types>
+//constexpr auto Matmul(const Types... others, const TMat1& mat1, const TMat2& mat2)
+//{
+//    return Matmul(others..., Matmul(mat1, mat2));
+//}
 
 } // namespace linalg
 } // namespace vic

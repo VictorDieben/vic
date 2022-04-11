@@ -5,6 +5,7 @@
 #include "vic/linalg/matrices.h"
 #include "vic/linalg/matrices_dynamic.h"
 #include "vic/linalg/traits.h"
+#include "vic/linalg/transpose.h"
 
 #include "vic/linalg/tools.h"
 
@@ -184,34 +185,37 @@ TEST(TestLinalg, TestInverseTranspose)
 {
     constexpr Identity<double, 5> identity{};
     constexpr auto identityTranspose = Transpose(identity);
-    ExpectMatrixEqual(identityTranspose, identity);
+    EXPECT_TRUE(IsEqual(identityTranspose, identity));
     constexpr auto identityInverse = Inverse(identity);
-    ExpectMatrixEqual(identityInverse, identity);
+    EXPECT_TRUE(IsEqual(identityInverse, identity));
 
     constexpr Diagonal<double, 5, 5> diag({1, 2, 3, 4, 5});
     constexpr auto transposeDiag = Transpose(diag);
-    ExpectMatrixEqual(transposeDiag, diag);
+    EXPECT_TRUE(IsEqual(transposeDiag, diag));
     constexpr auto inverseDiag = Inverse(diag);
     constexpr Diagonal<double, 5, 5> inverseDiagAnswer({1., 1. / 2., 1. / 3., 1. / 4, 1. / 5.});
-    ExpectMatrixEqual(inverseDiag, inverseDiagAnswer);
+    EXPECT_TRUE(IsEqual(inverseDiag, inverseDiagAnswer));
 
     constexpr Matrix<double, 3, 3> matrix3({1, 2, 3, 4, 5, 6, 7, 8, 9});
     constexpr auto inverseMat3 = Inverse(matrix3);
-    constexpr Matrix<double, 3, 3> inverseMatrix3Answer({1, 2, 3, 4, 5, 6, 7, 8, 9});
-    // ExpectMatrixEqual(inverseMat3, inverseMatrix3Answer);
+    EXPECT_TRUE(IsEqual(Matmul(matrix3, inverseMat3), Identity<double, 3>{}));
+
     constexpr auto transposeMat3 = Transpose(matrix3);
     constexpr Matrix<double, 3, 3> transposeMatrix3Answer({1, 4, 7, 2, 5, 8, 3, 6, 9});
-    ExpectMatrixEqual(transposeMat3, transposeMatrix3Answer);
+    EXPECT_TRUE(IsEqual(transposeMat3, transposeMatrix3Answer));
 
-    // TODO(vicdie): check that a matrix is rotation, and can be transposed instead of inversed
+    // TODO: check that a matrix is rotation, and can be transposed instead of inversed
+
+    // TODO: Check block diagonal matrix inverse is inverse per block
 }
 
-TEST(TestLinalg, TestInverse)
+TEST(TestLinalg, TestInverseDiagonal)
 {
     constexpr auto diag1 = Diagonal<double, 3, 3>({1, 2, 3});
-    constexpr auto diagInv1 = InverseDiagonal(diag1);
-    auto diagInv2 = InverseStatic(diag1);
-    ExpectMatrixEqual(diagInv1, diagInv2);
+    constexpr Diagonal<double, 3, 3> diagInv1 = InverseDiagonal(diag1);
+    constexpr Diagonal<double, 3, 3> diagInv2 = Inverse(diag1);
+    EXPECT_TRUE(IsEqual(Matmul(diag1, diagInv1), Identity<double, 3>{}));
+    EXPECT_TRUE(IsEqual(Matmul(diag1, diagInv2), Identity<double, 3>{}));
 }
 
 TEST(TestLinalg, TestInverseRandom)
@@ -254,8 +258,6 @@ TEST(TestLinalg, TestBracket3)
     ExpectMatrixEqual(bracket, answer);
 
     constexpr auto bSquared = Matmul(bracket, bracket);
-
-    int bla = 1;
 }
 
 TEST(TestLinalg, TestBracket6)

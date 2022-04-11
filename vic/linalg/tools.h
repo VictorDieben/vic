@@ -166,5 +166,19 @@ constexpr TMatResult Extract(const TMatInput& source, std::size_t row, std::size
     return res; // todo
 }
 
+// mostly used for tests, but also useful outside of it
+template <typename TMat1, typename TMat2>
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const double eps = 1e-10)
+{
+    if((mat1.GetRows() != mat2.GetRows()) || (mat1.GetColumns() != mat2.GetColumns()))
+        return false;
+    for(std::size_t i = 0; i < mat1.GetRows(); ++i)
+        for(std::size_t j = 0; j < mat1.GetColumns(); ++j)
+            if(std::fabs(mat1.Get(i, j) - mat2.Get(i, j)) > eps)
+                return false;
+    return true;
+}
+
 } // namespace linalg
 } // namespace vic

@@ -69,7 +69,7 @@ private:
 template <typename T>
 constexpr T Abs(const T& val)
 {
-    if(val < 0.)
+    if(val < T{0})
         return -val;
     return val;
 }
