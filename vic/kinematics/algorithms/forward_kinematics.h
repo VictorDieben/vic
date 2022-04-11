@@ -5,6 +5,7 @@
 #include "vic/kinematics/transformation.h"
 #include "vic/kinematics/translation.h"
 
+#include "vic/kinematics/math.h"
 #include "vic/kinematics/robot/robot.h"
 
 #include <vector>
@@ -21,8 +22,33 @@ using namespace robots;
 std::vector<Transformation> ForwardKinematics(const ForwardRobot& robot, //
                                               const std::vector<DataType>& theta)
 {
+    assert(robot.GetTree().IsContinuous()); // if tree is not continuous, we cannot iterate over it
     // for each node in the robot, calculate the transformation
-    return {};
+    const std::size_t nJoints = robot.GetNrJoints();
+    std::vector<Transformation> neutralPoses{};
+    std::vector<Transformation> exponentials{};
+    std::vector<Transformation> result{};
+    std::vector<Screw> screws{};
+    neutralPoses.resize(nJoints);
+    exponentials.resize(nJoints);
+    result.resize(nJoints);
+    screws.resize(nJoints);
+
+    for(const auto& joint : robot)
+    {
+        const auto id = joint.Id();
+        const auto parentId = joint.Parent();
+        const auto& data = joint.Data();
+        if(joint.IsRoot())
+            continue;
+
+        screws[id] = data.GetScrew();
+        neutralPoses[id] = neutralPoses[parentId] * data.GetTransformation();
+        exponentials[id] = exponentials[parentId] * ExponentialTransform(screws[id], theta[id]);
+        result[id] = exponentials[id] * neutralPoses[id];
+    }
+
+    return result;
 }
 
 // todo: move to separate file

@@ -210,6 +210,9 @@ public:
     auto begin() { return Iterator(this, 0); }
     auto end() { return Iterator(this, mDFOrder.size()); }
 
+    const auto begin() const { return Iterator(this, 0); }
+    const auto end() const { return Iterator(this, mDFOrder.size()); }
+
 private:
     TTree& mTree;
     std::vector<NodeId> mDFOrder{};

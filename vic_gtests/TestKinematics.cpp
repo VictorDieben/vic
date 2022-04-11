@@ -28,6 +28,11 @@ TEST(TestKinematics, EulerAngles)
         auto inv = rot.Inverse();
         EXPECT_TRUE(IsEqual((rot * inv).ToMatrix(), Identity<double, 3>{}));
     }
+
+    // TODO: for Sequencial 'sxyz', or: rol alpha around x -> pitch beta around (new) y -> yaw gamma around (newest) z,
+    // we have to pre-multiply as implemented
+    // post multiplication (previous version) would perform the rotations around the origional axis (like in a trackball),
+    // which is not Sequential
 }
 
 TEST(TestKinematics, rotate)
