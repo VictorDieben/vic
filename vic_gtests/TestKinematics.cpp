@@ -145,11 +145,18 @@ TEST(TestKinematics, ExponentialTransform)
 
 TEST(TestKinematics, CartesianRobot)
 {
+    constexpr Matrix<double, 3, 3> matrix{Identity<double, 3>{}};
+    const Transformation I{Matrix<DataType, 4, 4>{Identity<double, 4>{}}};
+
+    const Screw stx{Vector6<DataType>{{0, 0, 0, 1, 0, 0}}}; // pure x translation
+    const Screw sty{Vector6<DataType>{{0, 0, 0, 0, 1, 0}}}; // pure y translation
+    const Screw stz{Vector6<DataType>{{0, 0, 0, 0, 0, 1}}}; // pure z translation
+
     robots::ForwardRobot robot{};
 
-    robot.AddJoint(std::nullopt, {}, {}); // x axis
-    robot.AddJoint(0u, {}, {}); // y axis
-    robot.AddJoint(1u, {}, {}); // z axis
+    robot.AddJoint(std::nullopt, I, stx); // x axis
+    robot.AddJoint(0u, I, sty); // y axis
+    robot.AddJoint(1u, I, stz); // z axis
 
     const std::vector<DataType> theta{1., 2., 3.};
     const auto transforms = algorithms::ForwardKinematics(robot, theta);
