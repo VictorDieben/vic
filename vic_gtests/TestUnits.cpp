@@ -43,11 +43,14 @@ TEST(TestUnits, Division)
 TEST(TestUnits, MixTypes)
 {
     // test adding different primitive types
-    Length<double> d1{1.};
-    Length<int> i1{1};
+    Length<double> d1{2.};
+    Length<int> i1{2};
 
     auto sum = d1 + i1;
     static_assert(std::is_same_v<decltype(sum), Length<double>>);
+
+    auto division = d1 / i1;
+    static_assert(std::is_same_v<decltype(division), Unitless<double>>);
 }
 
 } // namespace units
