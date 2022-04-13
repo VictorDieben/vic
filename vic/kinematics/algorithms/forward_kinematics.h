@@ -58,7 +58,7 @@ std::vector<DataType> InverseDynamics(const ForwardRobot& robot, //
 {
     // calculate the force on each of the joints, based on theta/derivatives,
     // together with gravity and other forces
-    return {}; //
+    return {};
 }
 
 } // namespace algorithms

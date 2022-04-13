@@ -129,6 +129,9 @@
     <ClInclude Include="memory\event_queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="units\units.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

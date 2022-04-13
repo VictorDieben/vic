@@ -24,22 +24,24 @@ public:
 
     using NodeId = typename decltype(mTree)::NodeId;
 
-    void AddJoint(const std::optional<NodeId> parent, const Transformation& transform, const Screw& screw)
+    NodeId AddJoint(const std::optional<NodeId> parent, const Transformation& transform, const Screw& screw)
     {
         if(parent)
-            mTree.NewNode(Node{NodeType::Joint, transform, screw}, *parent);
+            return mTree.NewNode(Node{NodeType::Joint, transform, screw}, *parent).Id();
         else
-            mTree.NewRoot(Node{NodeType::Joint, transform, screw});
+            return mTree.NewRoot(Node{NodeType::Joint, transform, screw}).Id();
     }
 
-    void AddFrame(const std::optional<NodeId> parent, const Transformation& transform)
+    NodeId AddFrame(const std::optional<NodeId> parent, const Transformation& transform)
     {
         // a frame is always directly connected to a joint,
         // it can be used to calculate the transformation at certain points of the robot
+        return {};
     }
-    void AddRigidBody(const std::optional<NodeId> parent, const Transformation& transform, const Inertia<DataType>& inertia)
+    NodeId AddRigidBody(const std::optional<NodeId> parent, const Transformation& transform, const Inertia<DataType>& inertia)
     {
         // a rigid body is always connected to a joint
+        return {};
     }
 
     void Update() { mIterator.Update(); }

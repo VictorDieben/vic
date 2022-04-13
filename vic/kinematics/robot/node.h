@@ -21,6 +21,7 @@ template <typename T>
 struct Inertia
 {
     T mass{};
+    // todo: MoI
 };
 
 class Node

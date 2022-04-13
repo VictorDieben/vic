@@ -145,9 +145,6 @@ TEST(TestKinematics, ExponentialTransform)
 
 TEST(TestKinematics, CartesianRobot)
 {
-    //constexpr Matrix<double, 3, 3> matrix{Identity<double, 3>{}};
-    //const Transformation I{Matrix<DataType, 4, 4>{Identity<double, 4>{}}};
-
     const Screw stx{Vector6<DataType>{{0, 0, 0, 1, 0, 0}}}; // pure x translation
     const Screw sty{Vector6<DataType>{{0, 0, 0, 0, 1, 0}}}; // pure y translation
     const Screw stz{Vector6<DataType>{{0, 0, 0, 0, 0, 1}}}; // pure z translation
@@ -175,16 +172,12 @@ TEST(TestKinematics, CartesianRobot)
 
     robot.Update(); // <-- update iterator with new joints
 
-    
-
     const Matrix<double, 3, 3> euler = EulerAngles(pi / 2, pi / 3, pi / 4);
-    const std::vector<DataType> theta2{3., 2., 1., pi/2, pi/3, pi/4};
+    const std::vector<DataType> theta2{3., 2., 1., pi / 2, pi / 3, pi / 4};
 
     const auto transforms2 = algorithms::ForwardKinematics(robot, theta2);
     const auto rotation = transforms2.at(5u).GetRotation();
     ASSERT_TRUE(IsEqual(rotation.ToMatrix(), euler));
-
-    
 }
 
 } // namespace kinematics
