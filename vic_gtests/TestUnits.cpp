@@ -53,5 +53,14 @@ TEST(TestUnits, MixTypes)
     // static_assert(std::is_same_v<decltype(division), Unitless<double>>);
 }
 
+template <typename T>
+using PendulumPhisics = BPIFundamentalPhysics<Time<T>, Mass<T>, Length<T>, Gravity<T>>;
+
+TEST(TestUnits, BPIPendulum)
+{
+    // https://en.wikipedia.org/wiki/Buckingham_%CF%80_theorem
+    PendulumPhisics<double> physics{};
+}
+
 } // namespace units
 } // namespace vic

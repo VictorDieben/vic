@@ -78,7 +78,19 @@ using Frequency = BPI<T, 0, -1, 0>;
 //
 
 template <typename T>
+using Gravity = BPI<T, 1, -2, 0>;
+
+//
+
+template <typename T>
 using Mass = BPI<T, 0, 0, 1>;
+
+template <typename T, typename... Ts>
+struct BPIFundamentalPhysics
+{
+public:
+private:
+};
 
 } // namespace units
 } // namespace vic
