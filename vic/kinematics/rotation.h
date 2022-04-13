@@ -61,7 +61,7 @@ constexpr Matrix<T, 3, 3> Rotate(const Vector3<T>& vec, const T angle)
 template <typename T>
 constexpr Matrix<T, 3, 3> EulerAngles(const T alpha, const T beta, const T gamma)
 {
-    return Matmul(Rotate(zAxis, gamma), Rotate(yAxis, beta), Rotate(xAxis, alpha));
+    return Matmul(Rotate(xAxis, alpha), Rotate(yAxis, beta), Rotate(zAxis, gamma)); // intrinsic x->y'->z''
 }
 
 // wrapper around rotation matrix, so that we can later also use quaternions etc.
