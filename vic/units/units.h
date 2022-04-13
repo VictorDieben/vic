@@ -8,6 +8,7 @@ namespace units
 // This file will contain templates that offer type checking at several levels of abstractions:
 // 1: Buckingham pi; avoid adding length to time or mass etc. No units included.
 // 2: Units: difference between m/cm/mm/um/etc.
+// 3: todo: Ok Jork, je hebt me omgepraat, Differential Geometry types (vector / covector etc.)
 
 // wrapper for buckingham pi
 template <typename T, int length, int time, int mass>
