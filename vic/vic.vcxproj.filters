@@ -132,6 +132,9 @@
     <ClInclude Include="units\units.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="linalg\solve.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

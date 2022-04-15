@@ -176,6 +176,7 @@
     <ClInclude Include="kinematics\transformation.h" />
     <ClInclude Include="kinematics\translation.h" />
     <ClInclude Include="linalg\matrices_dynamic.h" />
+    <ClInclude Include="linalg\solve.h" />
     <ClInclude Include="memory\event_queue.h" />
     <ClInclude Include="memory\garbage_collector.h" />
     <ClInclude Include="memory\refcounter.h" />
