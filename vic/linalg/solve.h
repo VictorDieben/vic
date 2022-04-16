@@ -10,6 +10,9 @@ namespace vic
 {
 namespace linalg
 {
+// Solving a matrix means solving the equation A*x = b, without calculating A^-1.
+// Generally, this means calculating a partial inverse (the inverse of the diagonal for instance)
+
 // https://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/linAlg34.pdf
 template <typename TMatrix, typename TVector>
 requires ConceptSquareMatrix<TMatrix>
@@ -21,19 +24,19 @@ auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const doubl
 
     const auto lPlusU = Add(matrix, Matmul(-1., D)); // (L+U) == matrix - diagonal
 
-    // TODO(vicdie): if matrix is very large, do not precompute this matrix
+    // TODO: if matrix is very large, do not precompute this matrix
     // just calculate the list of matrix-vector multiplications separately
     const auto DInvLPlusU = Matmul(Dinv, lPlusU);
 
     const auto DInvB = Matmul(Dinv, vector);
 
-    auto u = Matmul(Dinv, vector); // initialize by inversing diagonal
+    // make an initial estimate by inversing diagonal
+    auto u = Matmul(Dinv, vector);
 
     for(std::size_t i = 0; i < 1000; ++i)
     {
         const auto firstTerm = Matmul(-1., DInvLPlusU, u);
-        const auto utmp = Add(firstTerm, DInvB);
-        u = utmp;
+        u = Add(firstTerm, DInvB);
     }
     return u;
 }
