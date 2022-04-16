@@ -108,6 +108,13 @@ constexpr T Max(const T& val1, const T& val2)
     return val1 > val2 ? val1 : val2;
 }
 
+// wrapper for sqrt, so that it can be overloaded for BPI types, and a constexpr version can be added
+template <typename T>
+constexpr T Sqrt(const T& val)
+{
+    return std::sqrt(val);
+}
+
 // base conversion (e.g. normal representation to hex)
 // todo: make a version that works on a range of iterators
 template <typename TVec, typename TValue, typename TBase>

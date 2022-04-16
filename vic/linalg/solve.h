@@ -10,7 +10,7 @@ namespace vic
 {
 namespace linalg
 {
-// Solving a matrix means solving the equation A*x = b, without calculating A^-1.
+// Solving a matrix equation means solving the equation A*x = b, without calculating A^-1.
 // Generally, this means calculating a partial inverse (the inverse of the diagonal for instance)
 
 // https://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/linAlg34.pdf

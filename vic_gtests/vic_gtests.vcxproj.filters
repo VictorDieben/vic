@@ -22,6 +22,7 @@
     <ClCompile Include="TestMemory.cpp" />
     <ClCompile Include="TestUnits.cpp" />
     <ClCompile Include="linalg\TestSolve.cpp" />
+    <ClCompile Include="linalg\TestAlgorithms.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

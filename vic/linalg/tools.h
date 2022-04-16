@@ -2,6 +2,8 @@
 
 #include "vic/linalg/matrices.h"
 
+#include "vic/utils.h"
+
 namespace vic
 {
 namespace linalg
@@ -76,6 +78,29 @@ requires ConceptVector<T> &&(T::GetRows() == 2) //
     return (vec1.Get(0, 0) * vec2.Get(1, 0)) - (vec1.Get(1, 0) * vec2.Get(0, 0));
 }
 
+template <typename T>
+requires ConceptVector<T>
+constexpr auto Norm(const T& vec)
+{
+    typename T::DataType sum = 0;
+    for(std::size_t i = 0; i < T::GetRows(); ++i)
+    {
+        sum += (vec.Get(i, 0) * vec.Get(i, 0));
+    }
+    return ::vic::Sqrt(sum);
+}
+
+template <typename T>
+requires ConceptVector<T>
+constexpr auto Normalize(const T& vec)
+{
+    T res{};
+    const auto oneOverNorm = 1. / Norm(vec);
+    for(std::size_t i = 0; i < T::GetRows(); ++i)
+        res.At(i, 0) = vec.Get(i, 0) * oneOverNorm;
+    return res;
+}
+
 // 3d cross product
 template <typename T>
 requires ConceptVector<T> &&(T::GetRows() == 3) //
@@ -94,10 +119,10 @@ requires ConceptVector<TMat1> && ConceptVector<TMat2> && HasSameShape<TMat1, TMa
     constexpr auto
     Dot(const TMat1& mat1, const TMat2& mat2)
 {
-    static_assert(TMat1::Columns == 1 && TMat2::Columns == 1 && TMat1::Rows == TMat2::Rows);
-    using TRet = decltype((typename TMat1::DatType{}) * (typename TMat2::DataType{}));
+    static_assert(TMat1::GetColumns() == 1 && TMat2::GetColumns() == 1 && TMat1::GetRows() == TMat2::GetRows());
+    using TRet = decltype((typename TMat1::DataType{}) * (typename TMat2::DataType{}));
     TRet val{0};
-    for(std::size_t i = 0; i < TMat1::Rows; ++i)
+    for(std::size_t i = 0; i < TMat1::GetRows(); ++i)
         val += (mat1.Get(i, 0) * mat2.Get(i, 0));
     return val;
 }
@@ -178,6 +203,17 @@ constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const double eps = 
             if(std::fabs(mat1.Get(i, j) - mat2.Get(i, j)) > eps)
                 return false;
     return true;
+}
+
+// Verify that a matrix is orthogonal
+template <typename TMat>
+requires ConceptMatrix<TMat>
+constexpr auto IsOrthogonal(const TMat& mat, const double eps = 1e-10)
+{
+    return IsEqual( //
+        Matmul(Transpose(mat), mat), //
+        Identity<typename TMat::DataType, TMat::GetRows()> {} //
+        eps);
 }
 
 } // namespace linalg

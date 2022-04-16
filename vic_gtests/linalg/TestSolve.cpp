@@ -27,7 +27,6 @@ TEST(TestSolve, JacobiSimple)
 
 TEST(TestSolve, JacobiRandom)
 {
-
     constexpr std::size_t n = 3;
 
     std::default_random_engine g;

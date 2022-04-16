@@ -31,6 +31,13 @@ class Matrix
 public:
     using DataType = T;
     constexpr Matrix() = default;
+    
+    constexpr explicit Matrix(const T& value)
+    {
+        for(auto& item : mData)
+            item = value;
+    }
+
     constexpr explicit Matrix(const std::array<T, rows * columns>& data)
         : mData(data)
     { }
@@ -86,6 +93,9 @@ using Vector5 = Matrix<T, 5, 1>;
 template <typename T>
 using Vector6 = Matrix<T, 6, 1>;
 
+template <typename T, std::size_t n>
+using Vector = Matrix<T, n, 1>;
+
 template <typename T, std::size_t rows, std::size_t columns>
 class Zeros
 {
@@ -101,6 +111,24 @@ public:
     {
         assert(((i < GetRows()) && (j < GetColumns())));
         return T{0};
+    }
+};
+
+template <typename T, std::size_t rows, std::size_t columns>
+class Ones
+{
+public:
+    constexpr Ones() = default;
+
+    constexpr static std::size_t GetRows() { return rows; }
+    constexpr static std::size_t GetColumns() { return columns; }
+
+    using DataType = T;
+
+    constexpr T Get(const std::size_t i, const std::size_t j) const
+    {
+        assert(((i < GetRows()) && (j < GetColumns())));
+        return T{1};
     }
 };
 

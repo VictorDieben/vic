@@ -61,8 +61,14 @@ TEST(TestLinalg, TestIdentity)
 
 TEST(TestLinalg, TestMatrix)
 {
+    constexpr const Matrix<double, 3, 3> all2s(2.);
+    for(std::size_t i = 0; i < 3; ++i)
+        for(std::size_t j = 0; j < 3; ++j)
+            EXPECT_DOUBLE_EQ(all2s.Get(i, j), 2.);
+
     constexpr const Matrix<double, 3, 3> mat3({0, 1, 2, 3, 4, 5, 6, 7, 8});
 
+    EXPECT_DOUBLE_EQ(mat3.Get(0, 2), 2.);
     for(std::size_t i = 0; i < 3; ++i)
         for(std::size_t j = 0; j < 3; ++j)
             EXPECT_DOUBLE_EQ(mat3.Get(i, j), double(RowColToIndex<3>(i, j)));
