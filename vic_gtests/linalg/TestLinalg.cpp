@@ -276,5 +276,15 @@ TEST(TestLinalg, TestLieBracket)
     // TODO
 }
 
+TEST(TestLinalg, TestLambdaMatrix)
+{
+    constexpr auto lambda = [](const std::size_t i, const std::size_t j) {
+        return (i == j) ? 1. : 0.; //
+    };
+    constexpr LambdaMatrix<decltype(lambda), 3, 3> mat{lambda};
+
+    ExpectMatrixEqual(mat, Identity<double, 3>{}, 1E-14);
+}
+
 } // namespace linalg
 } // namespace vic

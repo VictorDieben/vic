@@ -86,5 +86,7 @@ using Direction3d = Direction<double, 3>;
 using Line2d = Line<double, 2>;
 using Line3d = Line<double, 3>;
 
+// todo: euler spiral (linearly changing curvature curve)
+
 } // namespace geom
 } // namespace vic

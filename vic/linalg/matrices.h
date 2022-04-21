@@ -31,7 +31,7 @@ class Matrix
 public:
     using DataType = T;
     constexpr Matrix() = default;
-    
+
     constexpr explicit Matrix(const T& value)
     {
         for(auto& item : mData)
@@ -211,12 +211,34 @@ public:
     constexpr T& At(const std::size_t i, const std::size_t j)
     {
         assert(((i < GetRows()) && (j < GetColumns())));
-        assert(i == j);
+        assert(i == j); // only diagonal can be set
         return mData[i];
     }
 
     // NOTE: not private, do with it what you want
     std::array<T, Min(rows, columns)> mData{};
+};
+
+template <typename TFunctor, std::size_t rows, std::size_t columns>
+class LambdaMatrix
+{
+    TFunctor mFunctor;
+
+public:
+    constexpr LambdaMatrix(TFunctor functor)
+        : mFunctor(functor)
+    { }
+
+    constexpr static std::size_t GetRows() { return rows; }
+    constexpr static std::size_t GetColumns() { return columns; }
+
+    using DataType = decltype(mFunctor(std::size_t{}, std::size_t{}));
+
+    constexpr DataType Get(const std::size_t i, const std::size_t j) const
+    {
+        assert(((i < GetRows()) && (j < GetColumns())));
+        return mFunctor(i, j);
+    }
 };
 
 } // namespace linalg

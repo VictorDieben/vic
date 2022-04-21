@@ -205,14 +205,14 @@ constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const double eps = 
     return true;
 }
 
-// Verify that a matrix is orthogonal
+// Verify that a matrix is orthogonal (e.g. A.T*A == I)
 template <typename TMat>
 requires ConceptMatrix<TMat>
 constexpr auto IsOrthogonal(const TMat& mat, const double eps = 1e-10)
 {
     return IsEqual( //
         Matmul(Transpose(mat), mat), //
-        Identity<typename TMat::DataType, TMat::GetRows()> {} //
+        Identity<typename TMat::DataType, TMat::GetRows()>{}, //
         eps);
 }
 

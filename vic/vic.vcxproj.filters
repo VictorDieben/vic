@@ -138,6 +138,9 @@
     <ClInclude Include="linalg\algorithms\eigenvalues.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="units\tensors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

@@ -46,7 +46,9 @@ TEST(TestLinalg, PowerMethod2d)
         const auto D = (a * d) - (b * c); // determinant
 
         const auto l1 = (T / 2.) + vic::Sqrt((T * T / 4.) - D); // eigenvalue 1
-        const auto l1 = (T / 2.) - vic::Sqrt((T * T / 4.) - D); // eigenvalue 2
+        const auto l2 = (T / 2.) - vic::Sqrt((T * T / 4.) - D); // eigenvalue 2
+
+        // todo
 
         const Matrix<double, 2, 2> mat{{a, b, c, d}};
     };

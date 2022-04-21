@@ -35,7 +35,7 @@ constexpr auto PowerMethod(const TMatrix& matrix, const double eps = 1E-10)
         const auto norm = Norm(w);
         v = Matmul(w, 1. / norm);
         if(std::fabs(normPrev - norm) < eps)
-            break;
+            break; // check if change in ev is smaller than a certain limit
         normPrev = norm;
     }
     return v;

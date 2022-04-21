@@ -182,6 +182,7 @@
     <ClInclude Include="memory\garbage_collector.h" />
     <ClInclude Include="memory\refcounter.h" />
     <ClInclude Include="memory\tree.h" />
+    <ClInclude Include="units\tensors.h" />
     <ClInclude Include="units\units.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="kinematics\kinematics.h" />
