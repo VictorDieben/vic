@@ -79,6 +79,7 @@
     </ClCompile>
     <ClCompile Include="TestEntitySystem.cpp" />
     <ClCompile Include="TestEventQueue.cpp" />
+    <ClCompile Include="TestGarbageCollection.cpp" />
     <ClCompile Include="TestGeometry.cpp" />
     <ClCompile Include="TestGraph.cpp" />
     <ClCompile Include="TestKinematics.cpp" />

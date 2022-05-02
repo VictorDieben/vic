@@ -1,8 +1,9 @@
 #pragma once
 
 #include "assert.h"
-#include "traits.h"
+#include "vic/linalg/traits.h"
 #include "vic/utils.h"
+
 #include <array>
 #include <cstddef>
 
