@@ -8,7 +8,7 @@ namespace vic
 namespace geom
 {
 
-// TODO(vicdie): use definitions from linalg.h?
+// TODO: use definitions from linalg.h?
 
 template <typename T, std::size_t dims>
 using Point = std::array<T, dims>;
@@ -38,7 +38,7 @@ struct Triangle
     Point<T, dims> p3{};
 };
 
-// todo(vicdie): Circle is just a 2d sphere?
+// todo: Circle is just a 2d sphere?
 //template <typename T, std::size_t dims>
 //struct Circle
 //{
@@ -66,7 +66,7 @@ struct CubeAxisAligned
     std::array<Interval<T>, dims> min{};
 };
 
-// TODO(vicdie): does a non-3d cylinder make sense?
+// TODO: does a non-3d cylinder make sense?
 template <typename T, std::size_t dims>
 struct Cylinder
 {

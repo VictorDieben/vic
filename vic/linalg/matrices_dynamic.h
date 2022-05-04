@@ -62,7 +62,7 @@ public:
     }
 
 private:
-    // TODO(vicdie): maybe std::vector is not the right fit,
+    // TODO: maybe std::vector is not the right fit,
     // we don't want to resize after initializing
     std::vector<T> mData{};
     std::size_t mRows{0};

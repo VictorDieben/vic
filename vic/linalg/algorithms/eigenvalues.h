@@ -14,7 +14,7 @@ namespace linalg
 {
 namespace algorithms
 {
-// TODO(vicdie): Eigenvalues / eigenvectors
+// TODO: Eigenvalues / eigenvectors
 // http://mathreview.uwaterloo.ca/archive/voli/1/panju.pdf
 
 template <typename TMatrix>

@@ -152,9 +152,9 @@ private:
     const TMat2& mMatrix2;
 };
 
-// TODO(vicdie): blockdiagonal<T..>
+// TODO: blockdiagonal<T..>
 
-// TODO(vicdie): submatrix
+// TODO: submatrix
 template <typename TMat, std::size_t rowStart, std::size_t rows, std::size_t colStart, std::size_t cols>
 requires ConceptMatrix<TMat> // && (rowStart + rows <= TMat::Rows()) && (colStart + cols <= TMat::GetColumns())
 class ViewSubMatrix

@@ -38,7 +38,7 @@ auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const doubl
         const auto firstTerm = Matmul(-1., DInvLPlusU, u);
         u = Add(firstTerm, DInvB);
 
-        // TODO(vicdie): end condition
+        // TODO: end condition
     }
     return u;
 }

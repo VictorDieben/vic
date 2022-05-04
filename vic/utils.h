@@ -302,6 +302,8 @@ private:
     T mStride{};
 };
 
+// todo: look at the following link and fix this:
+// https://committhis.github.io/2020/10/14/zip-iterator.html
 template <typename T1, typename T2>
 class Zip
 {

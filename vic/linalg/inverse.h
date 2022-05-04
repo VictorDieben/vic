@@ -44,7 +44,7 @@ template <typename TMat>
 requires ConceptSquareMatrix<TMat>
 constexpr auto InverseStatic(const TMat& mat)
 {
-    // TODO(vicdie): several algorithms, selector, estimator for how good it is
+    // TODO: several algorithms, selector, estimator for how good it is
     return InverseHotellingBodewig(mat, 1E-10);
 }
 
@@ -58,10 +58,10 @@ constexpr auto InverseHotellingBodewig(const TMat& A, const typename TMat::DataT
     constexpr auto identity = Identity<double, n>{};
     constexpr auto twoI = DiagonalConstant<T, n>(2.);
 
-    // TODO(vicdie): good initial guess
+    // TODO: good initial guess
     auto V = Matrix<T, n, n>(Matmul(1E-10, Transpose(A)));
 
-    // TODO(vicdie): choose decent max iterations
+    // TODO: choose decent max iterations
     std::size_t i = 0;
     for(; i < 1000; ++i)
     {
@@ -83,7 +83,7 @@ template <typename TMat>
 requires ConceptMatrix<TMat>
 constexpr auto InverseDynamic(const TMat& mat)
 {
-    // TODO(vicdie): maybe implement this function in a different file,
+    // TODO: maybe implement this function in a different file,
     // so we do not need to compile it if we don't want it
     return Zeros<double, 1, 1>{};
 }
