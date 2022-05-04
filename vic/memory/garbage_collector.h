@@ -10,21 +10,21 @@ namespace memory
 
 class GarbageCollector; // forward declare
 
+// CRTP type
 template <typename T>
 class Managed
 {
 public:
+    Managed() = default;
     Managed(GarbageCollector& gc)
         : mGc(gc)
-        , mObject(new T{})
     { }
 
-    ~Managed() { delete mObject; }
+    ~Managed() { }
 
-    T* Get() const { return mObject; }
+    std::size_t GetCount() const { return 0; }
 
 private:
-    T* mObject{nullptr};
     GarbageCollector& mGc;
 };
 
@@ -36,7 +36,8 @@ public:
     template <typename T>
     Managed<T> New()
     {
-        return Managed<T>(*this);
+        T* newObject = new T{};
+        return Managed<T>(*this, newObject);
     }
 
     template <typename TChild, typename TParent>

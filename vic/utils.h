@@ -205,4 +205,196 @@ constexpr std::vector<T> Linspace(const T start, const T end, const std::size_t 
     Linspace(std::begin(result), std::end(result), start, end);
     return result;
 }
+
+// allows us to write:
+// for (const auto& val : Range(0, 10))
+template <typename T>
+class Range
+{
+public:
+    Range(T end)
+        : Range(0, end, 1)
+    { }
+
+    Range(T begin, T end)
+        : Range(begin, end, 1)
+    { }
+
+    Range(T begin, T end, T stride)
+        : mBegin(begin)
+        , mEnd(end)
+        , mStride(stride)
+    {
+        assert(stride != 0);
+    }
+
+    struct RangeIterator
+    {
+        using iterator_category = std::random_access_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using value_type = T;
+        using pointer = T*;
+        using reference = T&;
+
+        RangeIterator() = default;
+        RangeIterator(T value, T end, T stride)
+            : mValue(value)
+            , mEnd(end)
+            , mStride(stride)
+        {
+            assert(mStride != 0);
+        }
+
+        reference operator*()
+        {
+            return mValue; //
+        }
+        pointer operator->()
+        {
+            return &mValue; //
+        }
+        RangeIterator& operator++()
+        {
+            mValue += mStride;
+            return *this;
+        }
+        RangeIterator operator++(int)
+        {
+            RangeIterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+        friend bool operator==(const RangeIterator& a, const RangeIterator& b)
+        {
+            if(a.mEnd != b.mEnd || a.mStride != b.mStride)
+                return false;
+            if(a.mValue == b.mValue)
+                return true; // same value is always equal
+            if(a.mStride > 0)
+            {
+                if(a.mValue >= a.mEnd && b.mValue >= b.mEnd)
+                    return true;
+            }
+            else
+            {
+                if(a.mValue <= a.mEnd && b.mValue <= b.mEnd)
+                    return true;
+            }
+            return false;
+        };
+        friend bool operator!=(const RangeIterator& a, const RangeIterator& b)
+        {
+            return !operator==(a, b); //
+        };
+
+    private:
+        T mValue{};
+        T mEnd{};
+        T mStride{};
+    };
+
+    RangeIterator begin() { return RangeIterator{mBegin, mEnd, mStride}; }
+    RangeIterator end() { return RangeIterator{mEnd, mEnd, mStride}; }
+
+private:
+    T mBegin{};
+    T mEnd{};
+    T mStride{};
+};
+
+template <typename T1, typename T2>
+class Zip
+{
+public:
+    Zip(const T1& range1, const T2& range2)
+        : mRange1(range1)
+        , mRange2(range2)
+    { }
+
+    struct ZipIterator
+    {
+        using iterator_category = std::random_access_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using value_type = std::pair<typename T1::value_type, typename T2::value_type>;
+        using pointer = value_type*;
+        using reference = value_type&;
+
+        ZipIterator() = default;
+
+        reference operator*()
+        {
+            auto val = value_type{}; //
+            return val;
+        }
+        //pointer operator->()
+        //{
+        //    return &mValue; //
+        //}
+        ZipIterator& operator++()
+        {
+            //mValue += mStride;
+            return *this;
+        }
+        ZipIterator operator++(int)
+        {
+            ZipIterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+        friend bool operator==(const ZipIterator& a, const ZipIterator& b) { return true; };
+        friend bool operator!=(const ZipIterator& a, const ZipIterator& b) { return !operator==(a, b); };
+
+    private:
+    };
+
+    ZipIterator begin() { return {}; }
+    ZipIterator end() { return {}; }
+
+private:
+    const T1& mRange1;
+    const T2& mRange2;
+};
+
+// statemachine that checks state change at compile time,
+// only needs to check if fromState is correct at runtime
+template <typename TEnum, std::size_t size, std::array<std::pair<TEnum, TEnum>, size> validChanges>
+class StateMachine
+{
+public:
+    constexpr StateMachine() = default;
+    constexpr StateMachine(const TEnum initialState)
+        : mState(initialState)
+    { }
+
+    template <TEnum val>
+    bool HasState() const
+    {
+        return mState == val;
+    }
+
+    TEnum GetState() const { return mState; }
+
+    template <TEnum fromState, TEnum toState>
+    constexpr static bool IsValid()
+    {
+        for(const auto& pair : validChanges)
+            if(pair.first == fromState && pair.second == toState)
+                return true;
+        return false;
+    }
+
+    template <TEnum fromState, TEnum toState>
+    void SetState()
+    {
+        static_assert(this->IsValid<fromState, toState>());
+        assert(mState == fromState); // todo: assert or throw?
+        //if(mState != fromState)
+        //    throw std::runtime_error("");
+        mState = toState;
+    }
+
+private:
+    TEnum mState{};
+};
+
 } // namespace vic
