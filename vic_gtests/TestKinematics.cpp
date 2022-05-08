@@ -89,7 +89,7 @@ TEST(TestKinematics, transformations)
 
 TEST(TestKinematics, Screw)
 {
-    Screw screw{Vector6<DataType>{{1, 2, 3, 4, 5, 6}}};
+    Screw screw{{1, 2, 3, 4, 5, 6}};
     EXPECT_TRUE(IsEqual(screw.GetAngular(), Vector3<DataType>{{1, 2, 3}}));
     EXPECT_TRUE(IsEqual(screw.GetLinear(), Vector3<DataType>{{4, 5, 6}}));
 
@@ -100,7 +100,7 @@ TEST(TestKinematics, Screw)
 
 TEST(TestKinematics, ExponentialTransform)
 {
-    Screw screw{Vector6<DataType>{{0, 0, 1, 0, 0, 0}}}; // screw rotating around z
+    Screw screw{{0, 0, 1, 0, 0, 0}}; // screw rotating around z
 
     // check zero rotation
     auto transform0 = ExponentialTransform(screw, 0.);
@@ -145,12 +145,12 @@ TEST(TestKinematics, ExponentialTransform)
 
 TEST(TestKinematics, CartesianRobot)
 {
-    const Screw stx{Vector6<DataType>{{0, 0, 0, 1, 0, 0}}}; // pure x translation
-    const Screw sty{Vector6<DataType>{{0, 0, 0, 0, 1, 0}}}; // pure y translation
-    const Screw stz{Vector6<DataType>{{0, 0, 0, 0, 0, 1}}}; // pure z translation
-    const Screw srx{Vector6<DataType>{{1, 0, 0, 0, 0, 0}}}; // pure x rotation
-    const Screw sry{Vector6<DataType>{{0, 1, 0, 0, 0, 0}}}; // pure y rotation
-    const Screw srz{Vector6<DataType>{{0, 0, 1, 0, 0, 0}}}; // pure z rotation
+    const Screw stx{{0, 0, 0, 1, 0, 0}}; // pure x translation
+    const Screw sty{{0, 0, 0, 0, 1, 0}}; // pure y translation
+    const Screw stz{{0, 0, 0, 0, 0, 1}}; // pure z translation
+    const Screw srx{{1, 0, 0, 0, 0, 0}}; // pure x rotation
+    const Screw sry{{0, 1, 0, 0, 0, 0}}; // pure y rotation
+    const Screw srz{{0, 0, 1, 0, 0, 0}}; // pure z rotation
 
     robots::ForwardRobot robot{};
 

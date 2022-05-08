@@ -3,6 +3,8 @@
 #include "vic/linalg/linalg.h"
 #include "vic/linalg/tools.h"
 
+#include <array>
+
 namespace vic
 {
 namespace kinematics
@@ -24,9 +26,17 @@ struct Screw
 {
 public:
     constexpr Screw() = default;
+    constexpr Screw(const std::array<DataType, 6>& vec)
+        : mVector(vec)
+    { }
     constexpr Screw(const Vector6<DataType>& vec)
         : mVector(vec)
     { }
+    constexpr Screw(const std::array<DataType, 3>& angular, const std::array<DataType, 3>& linear)
+    {
+        Assign<0, 0>(mVector, Vector3<DataType>{angular});
+        Assign<3, 0>(mVector, Vector3<DataType>{linear});
+    }
     constexpr Screw(const Vector3<DataType>& angular, const Vector3<DataType>& linear)
     {
         Assign<0, 0>(mVector, angular);

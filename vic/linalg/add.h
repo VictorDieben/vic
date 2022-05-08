@@ -20,7 +20,8 @@ constexpr auto AddConstant(const TMatrix& matrix, const typename TMatrix::DataTy
 }
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && HasSameShape<TMat1, TMat2>::value constexpr auto AddGeneral(const TMat1& mat1, const TMat2& mat2)
+// requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && HasSameShape<TMat1, TMat2>::value
+constexpr auto AddGeneral(const TMat1& mat1, const TMat2& mat2)
 {
     Matrix<double, TMat1::GetRows(), TMat1::GetColumns()> result{};
     for(std::size_t i = 0; i < TMat1::GetRows(); ++i)

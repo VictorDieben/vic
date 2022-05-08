@@ -11,11 +11,13 @@ namespace linalg
 {
 
 // multiplication of two equal matrix types
-template <typename TMat, typename TFloat, class TRet = decltype(typename TMat::DataType() * TFloat())>
+template <typename TMat, typename TFloat>
 requires ConceptMatrix<TMat>
 constexpr auto MatmulScalar(const TMat& mat, const TFloat& scalar)
 {
     using T = typename TMat::DataType;
+    using TRet = decltype(T{} * TFloat());
+
     constexpr auto rows = TMat::GetRows();
     constexpr auto cols = TMat::GetColumns();
 
@@ -29,7 +31,7 @@ constexpr auto MatmulScalar(const TMat& mat, const TFloat& scalar)
     }
     else if constexpr(std::is_same_v<TMat, Diagonal<T, rows, cols>>)
     {
-        Diagonal<T, rows, cols> result{};
+        Diagonal<TRet, rows, cols> result{};
         for(std::size_t i = 0; i < Min(rows, cols); ++i)
             result.At(i, i) = mat.Get(i, i) * scalar;
         return result;

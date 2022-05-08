@@ -37,6 +37,8 @@ public:
         friend RefCounted<T>;
     };
 
+    RefCounted() = default;
+
     template <typename... Args>
     RefCounted(Args&&... args)
     {
@@ -68,13 +70,13 @@ public:
         }
     }
 
-    T& Get() { return mObject->mData; }
-    const T& Get() const { return mObject->mData; }
+    T* Get() { return mObject ? &(mObject->mData) : nullptr; }
+    const T* Get() const { return mObject ? &(mObject->mData) : nullptr; }
 
     T* operator->() { return &(mObject->mData); }
     const T* operator->() const { return &(mObject->mData); }
 
-    std::size_t use_count() const { return mObject->GetCount(); }
+    std::size_t use_count() const { return mObject ? mObject->GetCount() : 0; }
 
 private:
     RefWrapper<T>* mObject{nullptr};

@@ -11,10 +11,10 @@ namespace geom
 // TODO: use definitions from linalg.h?
 
 template <typename T, std::size_t dims>
-using Point = std::array<T, dims>;
+using Point = vic::linalg::Matrix<T, dims, 1>;
 
 template <typename T, std::size_t dims>
-using Direction = std::array<T, dims>;
+using Direction = vic::linalg::Matrix<T, dims, 1>;
 
 template <typename T, std::size_t dims>
 struct Line // pos + (dir * x)
@@ -26,8 +26,8 @@ struct Line // pos + (dir * x)
 template <typename T, std::size_t dims>
 struct LineSegment
 {
-    Point<T, dims> p1{};
-    Point<T, dims> p2{};
+    Point<T, dims> p1{}; // position start
+    Point<T, dims> p2{}; // position end
 };
 
 template <typename T, std::size_t dims>
@@ -78,6 +78,8 @@ struct Cylinder
 // list of definitions
 
 using Point2d = Point<double, 2>;
+using Point2i = Point<int, 2>;
+
 using Point3d = Point<double, 3>;
 
 using Direction2d = Direction<double, 2>;

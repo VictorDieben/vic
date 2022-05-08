@@ -1,9 +1,10 @@
 #pragma once
 
-#include "linalg.h"
-#include "traits.h"
+#include "vic/linalg/linalg.h"
 #include "vic/linalg/matrix_view.h"
+#include "vic/linalg/traits.h"
 #include "vic/utils.h"
+
 #include <algorithm>
 
 namespace vic

@@ -24,6 +24,7 @@
     <ClCompile Include="linalg\TestSolve.cpp" />
     <ClCompile Include="linalg\TestAlgorithms.cpp" />
     <ClCompile Include="TestGarbageCollection.cpp" />
+    <ClCompile Include="TestSymbolic.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

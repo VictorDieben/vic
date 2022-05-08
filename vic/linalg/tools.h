@@ -72,8 +72,8 @@ constexpr auto Trace(const TMat& matrix)
 
 // 2d cross product
 template <typename T>
-requires ConceptVector<T> &&(T::GetRows() == 2) //
-    constexpr auto Cross(const T& vec1, const T& vec2)
+// requires ConceptVector<T> &&(T::GetRows() == 2) //
+constexpr auto Cross(const T& vec1, const T& vec2)
 {
     return (vec1.Get(0, 0) * vec2.Get(1, 0)) - (vec1.Get(1, 0) * vec2.Get(0, 0));
 }
@@ -103,8 +103,8 @@ constexpr auto Normalize(const T& vec)
 
 // 3d cross product
 template <typename T>
-requires ConceptVector<T> &&(T::GetRows() == 3) //
-    constexpr auto Cross(const Vector3<T>& vec1, const Vector3<T>& vec2)
+// requires ConceptVector<T> &&(T::GetRows() == 3) //
+constexpr auto Cross(const Vector3<T>& vec1, const Vector3<T>& vec2)
 {
     const double ax = vec1.Get(0, 0), ay = vec1.Get(1, 0), az = vec1.Get(1, 0);
     const double bx = vec2.Get(0, 0), by = vec2.Get(1, 0), bz = vec2.Get(1, 0);
@@ -114,10 +114,8 @@ requires ConceptVector<T> &&(T::GetRows() == 3) //
 }
 
 // dot product between two vectors
-template <typename TMat1, typename TMat2>
-requires ConceptVector<TMat1> && ConceptVector<TMat2> && HasSameShape<TMat1, TMat2>::value //
-    constexpr auto
-    Dot(const TMat1& mat1, const TMat2& mat2)
+template <typename TMat1, typename TMat2> // requires ConceptVector<TMat1> && ConceptVector<TMat2> && HasSameShape<TMat1, TMat2>::value //
+constexpr auto Dot(const TMat1& mat1, const TMat2& mat2)
 {
     static_assert(TMat1::GetColumns() == 1 && TMat2::GetColumns() == 1 && TMat1::GetRows() == TMat2::GetRows());
     using TRet = decltype((typename TMat1::DataType{}) * (typename TMat2::DataType{}));
@@ -193,7 +191,7 @@ constexpr TMatResult Extract(const TMatInput& source, std::size_t row, std::size
 
 // mostly used for tests, but also useful outside of it
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+// requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const double eps = 1e-10)
 {
     if((mat1.GetRows() != mat2.GetRows()) || (mat1.GetColumns() != mat2.GetColumns()))
@@ -214,6 +212,29 @@ constexpr auto IsOrthogonal(const TMat& mat, const double eps = 1e-10)
         Matmul(Transpose(mat), mat), //
         Identity<typename TMat::DataType, TMat::GetRows()>{}, //
         eps);
+}
+
+template <typename TMat>
+requires ConceptMatrix<TMat>
+constexpr auto Negative(const TMat& mat)
+{
+    TMat res{};
+    for(std::size_t i = 0; i < mat.GetRows(); ++i)
+        for(std::size_t j = 0; j < mat.GetColumns(); ++j)
+            res.At(i, j) = -mat.Get(i, j);
+    return res;
+}
+
+// 3d cross product
+template <typename TMat>
+requires ConceptVector<TMat>
+constexpr auto Subtract(const TMat& mat1, const TMat& mat2) // calculates mat1-mat2
+{
+    TMat res{};
+    for(std::size_t i = 0; i < mat1.GetRows(); ++i)
+        for(std::size_t j = 0; j < mat1.GetColumns(); ++j)
+            res.At(i, j) = mat1.Get(i, j) - mat2.Get(i, j);
+    return res;
 }
 
 } // namespace linalg

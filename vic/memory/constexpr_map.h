@@ -12,7 +12,9 @@ public:
 
     constexpr ConstexprMap(const ArrayType& map)
         : mMap(map)
-    { }
+    {
+        // TODO: check duplicates?
+    }
 
     constexpr TValue at(TKey key) const
     {

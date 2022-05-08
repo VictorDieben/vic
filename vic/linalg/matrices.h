@@ -60,6 +60,12 @@ public:
         assert(((i < rows) && (j < columns)));
         return mData[RowColToIndex<columns>(i, j)];
     }
+    constexpr T Get(const std::size_t i) const
+    {
+        static_assert(rows == 1 || columns == 1);
+        assert(i < mData.size());
+        return mData.at(i);
+    }
 
     constexpr T& At(const std::size_t i, const std::size_t j)
     {
