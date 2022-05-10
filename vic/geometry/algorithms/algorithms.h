@@ -160,6 +160,7 @@ constexpr SphereLineIntersectionResult<T> SphereLineIntersection(const Sphere<T,
     // todo: det will never be _exactly_ 0. so there will be either 0 or 2 intersections.
     // furthermore, even if we miss the circle, we now have useful information about the closest point to the sphere.
     // maybe we can do nice things with that information.
+    // todo: make branchless
     return SphereLineIntersectionResult<T>{2, u1, u2};
 }
 
@@ -167,7 +168,8 @@ template <typename T>
 constexpr SphereLineIntersectionResult<T> SphereLineIntersection(const Sphere<T, 3>& sphere, //
                                                                  const LineSegment<T, 3>& segment)
 {
-    // todo: with a line segment, we need to check if the intersections are on the interval of the segment
+    // todo: with a line segment, we need to check if the intersections are on the interval of the segment,
+    // e.g. if u1&u2 are within [0; 1]
     return SphereLineIntersection<T>(sphere, segment.p1, Subtract(segment.p2, segment.p1));
 }
 

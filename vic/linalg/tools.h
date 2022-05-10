@@ -106,8 +106,8 @@ template <typename T>
 // requires ConceptVector<T> &&(T::GetRows() == 3) //
 constexpr auto Cross(const Vector3<T>& vec1, const Vector3<T>& vec2)
 {
-    const double ax = vec1.Get(0, 0), ay = vec1.Get(1, 0), az = vec1.Get(1, 0);
-    const double bx = vec2.Get(0, 0), by = vec2.Get(1, 0), bz = vec2.Get(1, 0);
+    const double ax = vec1.Get(0), ay = vec1.Get(1), az = vec1.Get(2);
+    const double bx = vec2.Get(0), by = vec2.Get(1), bz = vec2.Get(2);
     return Vector3<double>({(ay * bz) - (az * by), //
                             (az * bx) - (ax * bz), //
                             (ax * by) - (ay * bx)});

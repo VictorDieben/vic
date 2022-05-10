@@ -147,6 +147,9 @@
     <ClInclude Include="symbolic\symbolic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="geometry\algorithms\bbox_tree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

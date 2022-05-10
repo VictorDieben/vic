@@ -60,10 +60,11 @@ struct Interval
     T max{};
 };
 
+// todo: bbox is basically an n-dimensional Interval
 template <typename T, std::size_t dims>
 struct CubeAxisAligned
 {
-    std::array<Interval<T>, dims> min{};
+    std::array<Interval<T>, dims> intervals{};
 };
 
 // TODO: does a non-3d cylinder make sense?
@@ -81,6 +82,7 @@ using Point2d = Point<double, 2>;
 using Point2i = Point<int, 2>;
 
 using Point3d = Point<double, 3>;
+using Point3i = Point<int, 3>;
 
 using Direction2d = Direction<double, 2>;
 using Direction3d = Direction<double, 3>;

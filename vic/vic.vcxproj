@@ -162,6 +162,7 @@
     <ClInclude Include="Emulator.h" />
     <ClInclude Include="EntitySystem.h" />
     <ClInclude Include="geometry\algorithms\algorithms.h" />
+    <ClInclude Include="geometry\algorithms\bbox_tree.h" />
     <ClInclude Include="geometry\geometry.h" />
     <ClInclude Include="graph\algorithms.h" />
     <ClInclude Include="graph\graph.h" />

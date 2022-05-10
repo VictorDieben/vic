@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <chrono>
 #include <vector>
 
@@ -120,6 +121,7 @@ constexpr T Sqrt(const T& val)
 template <typename TVec, typename TValue, typename TBase>
 void ToBase(const TValue value, const TBase base, std::vector<TVec>& buffer)
 {
+    assert(base > 0);
     const std::size_t size = buffer.size();
     TValue val = value; // mutable copy
     buffer.clear();
