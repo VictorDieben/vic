@@ -41,9 +41,9 @@ TEST(TestGeom, Initialization)
     ASSERT_TRUE(IsEqual(Point2i{{0, 0}}, Point2i{{0, 0}}));
 
     Triangle<int, 2> tri1{Point2i{{0, 0}}, Point2i{{1, 0}}, Point2i{{0, 1}}};
-    ASSERT_TRUE(IsEqual(tri1.p1, Point2i{{0, 0}}));
-    ASSERT_TRUE(IsEqual(tri1.p2, Point2i{{1, 0}}));
-    ASSERT_TRUE(IsEqual(tri1.p3, Point2i{{0, 1}}));
+    ASSERT_TRUE(IsEqual(tri1.points[0], Point2i{{0, 0}}));
+    ASSERT_TRUE(IsEqual(tri1.points[1], Point2i{{1, 0}}));
+    ASSERT_TRUE(IsEqual(tri1.points[2], Point2i{{0, 1}}));
 
     Interval<int> interval1{-1, 1};
     ASSERT_EQ(interval1.min, -1);
@@ -240,12 +240,74 @@ TEST(TestGeom, BBox)
 
 TEST(TestGeom, BoxTree)
 {
-    const auto lambda = [&](const std::size_t key) {
-        return BBox<double, 3>{}; //
-    };
-    BBoxTree<std::size_t, 3, decltype(lambda)> boxtree{lambda};
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> pos(-1., 1.);
+    std::uniform_real_distribution<double> eps(-0.1, 0.1);
 
-    boxtree.Insert(1u);
+    using TestObject = std::vector<Point<double, 3>>;
+
+    const auto toBBox = [](const TestObject& object) {
+        BBox<double, 3> bbox{};
+        for(const auto& point : object)
+            for(std::size_t i = 0; i < 3; ++i)
+                bbox.intervals[i] = Interval<double>{Min(bbox.intervals[i].min, point.Get(i)), //
+                                                     Max(bbox.intervals[i].max, point.Get(i))};
+        return bbox;
+    };
+
+    BBoxTree<TestObject, 3, decltype(toBBox)> boxtree{toBBox};
+
+    std::vector<TestObject> objects;
+
+    const auto makeObject = [&]() {
+        TestObject object{};
+        const double px = pos(g), py = pos(g), pz = pos(g);
+        for(const auto i : Range(10))
+            object.push_back(Point<double, 3>{{px + eps(g), py + eps(g), pz + eps(g)}});
+        return object;
+    };
+
+    for(const auto i : Range(3))
+        objects.push_back(makeObject());
+
+    for(auto& object : objects)
+        boxtree.Insert(object);
+}
+
+TEST(TestGeom, TriTri)
+{
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> pos(-1., 1.);
+
+    // ~13m iters per second
+    for(const auto i : Range(1000))
+    {
+        const Triangle<double, 3> tri1{Point3d{{pos(g), pos(g), pos(g)}}, //
+                                       Point3d{{pos(g), pos(g), pos(g)}},
+                                       Point3d{{pos(g), pos(g), pos(g)}}};
+        const Triangle<double, 3> tri2{Point3d{{pos(g), pos(g), pos(g)}}, //
+                                       Point3d{{pos(g), pos(g), pos(g)}},
+                                       Point3d{{pos(g), pos(g), pos(g)}}};
+
+        const auto res = TriTriIntersection(tri1, tri2);
+
+        if(res.interval.min >= res.interval.max)
+            continue; // not intersecting
+
+        const auto tarray = Linspace(res.interval.min, res.interval.max, 5);
+        for(const auto t : tarray | std::views::drop(1) | vic::drop_last)
+        {
+            const auto pos = Add(res.pos, Matmul(res.dir, t));
+
+            const double u1 = Project(tri1.points[0], Subtract(tri1.points[1], tri1.points[0]), pos);
+            const double v1 = Project(tri1.points[0], Subtract(tri1.points[2], tri1.points[0]), pos);
+            // ASSERT_TRUE(u1 >= 0. && v1 >= 0. && (u1 + v1) <= 1.);
+
+            const double u2 = Project(tri2.points[0], Subtract(tri2.points[1], tri2.points[0]), pos);
+            const double v2 = Project(tri2.points[0], Subtract(tri2.points[2], tri2.points[0]), pos);
+            // ASSERT_TRUE(u2 >= 0. && v2 >= 0. && (u2 + v2) <= 1.);
+        }
+    }
 }
 
 } // namespace geom

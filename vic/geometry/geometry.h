@@ -33,9 +33,10 @@ struct LineSegment
 template <typename T, std::size_t dims>
 struct Triangle
 {
-    Point<T, dims> p1{};
-    Point<T, dims> p2{};
-    Point<T, dims> p3{};
+    std::array<Point<T, dims>, 3> points{};
+    const Point<T, dims>& p1() const { return points[0]; }
+    const Point<T, dims>& p2() const { return points[1]; }
+    const Point<T, dims>& p3() const { return points[2]; }
 };
 
 // todo: Circle is just a 2d sphere?
@@ -56,8 +57,8 @@ struct Sphere
 template <typename T>
 struct Interval
 {
-    T min{};
-    T max{};
+    T min{std::numeric_limits<T>::max()};
+    T max{std::numeric_limits<T>::lowest()};
 };
 
 // todo: bbox is basically an n-dimensional Interval

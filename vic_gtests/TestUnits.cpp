@@ -62,6 +62,7 @@ TEST(TestUnits, MixTypes)
     MassFlow<double> massflow = Mass<double>{} / Time<double>{};
     Frequency<double> freq = Unitless<double>{} / Time<double>{};
 
+    // s = 0.5 * a * t^2
     Length<double> distance = Unitless<double>{0.5} * Acceleration<double>{3.} * Time<double>{2.} * Time<double>{2.};
 }
 

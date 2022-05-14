@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <ranges>
 #include <vector>
 
 namespace vic
@@ -114,6 +115,18 @@ template <typename T>
 constexpr T Sqrt(const T& val)
 {
     return std::sqrt(val);
+}
+
+template <typename T>
+constexpr int Sign(const T val)
+{
+    return static_cast<int>(std::copysign(T{1}, val));
+}
+
+template <typename T>
+constexpr int Signum(const T val)
+{
+    return ((T{0} < val) - (val < T{0})); // todo: make overload for unsigned types
 }
 
 // base conversion (e.g. normal representation to hex)
@@ -399,6 +412,69 @@ public:
 
 private:
     TEnum mState{};
+};
+
+// todo: replace with c++23 drop last, once available
+struct drop_last_t
+{
+    template <std::ranges::sized_range R>
+    requires std::ranges::viewable_range<R>
+    friend auto operator|(R&& r, drop_last_t)
+    {
+        return r | std::ranges::views::reverse | std::ranges::views::drop(1) | std::ranges::views::reverse; //
+    }
+};
+inline constexpr drop_last_t drop_last;
+
+// struct SomeObservableClass : public Observable<SomeObservableClass> {};
+// SomeObservableClass::Observe();
+//
+// observable wrapper, using crtp
+template <typename T>
+class Observable
+{
+    // handles are only valid as long as Observable is not moved.
+    // Observables can also not be moved while observed
+    template <typename T2>
+    class ObservableHandle
+    {
+    public:
+        ObservableHandle(Observable& observable)
+            : mObservable(observable)
+        {
+            mObservable.StartObserving();
+        }
+
+        // todo: handles should be movable, but not copyable
+        ObservableHandle(const ObservableHandle&) = delete;
+        ObservableHandle(ObservableHandle&&) = delete;
+        ObservableHandle& operator=(const ObservableHandle&) = delete;
+        ObservableHandle& operator=(ObservableHandle&&) = delete;
+
+        ~ObservableHandle() { mObservable.StopObserving(); }
+
+    private:
+        Observable<T>& mObservable;
+    };
+
+    // todo: an observable should be movable/copyable, but only while not observed
+    Observable(const Observable&) = delete;
+    Observable(Observable&&) = delete;
+    Observable& operator=(const Observable&) = delete;
+    Observable& operator=(Observable&&) = delete;
+
+public:
+    Observable() = default;
+    ObservableHandle<T> Observe() { return ObservableHandle<T>{*this}; }
+
+    bool IsObserved() const { return mObserverCount > 0; }
+
+private:
+    std::size_t mObserverCount{0};
+
+    // called by ObservableHandle
+    void StartObserving() { mObserverCount++; }
+    void StopObserving() { mObserverCount--; }
 };
 
 } // namespace vic

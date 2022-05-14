@@ -80,6 +80,18 @@ constexpr auto Cross(const T& vec1, const T& vec2)
 
 template <typename T>
 requires ConceptVector<T>
+constexpr auto SquaredNorm(const T& vec)
+{
+    typename T::DataType sum = 0;
+    for(std::size_t i = 0; i < T::GetRows(); ++i)
+    {
+        sum += (vec.Get(i, 0) * vec.Get(i, 0));
+    }
+    return sum;
+}
+
+template <typename T>
+requires ConceptVector<T>
 constexpr auto Norm(const T& vec)
 {
     typename T::DataType sum = 0;

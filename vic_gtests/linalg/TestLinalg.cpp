@@ -286,5 +286,22 @@ TEST(TestLinalg, TestLambdaMatrix)
     ExpectMatrixEqual(mat, Identity<double, 3>{}, 1E-14);
 }
 
+TEST(TestLinalg, TestMatmul4x4Perf)
+{
+
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> r(0.01, 100.);
+
+    //~3.3e9 iters/sec
+    for(const auto i : Range(1))
+    {
+        const Matrix<double, 4, 4> mat1{{r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g)}};
+        const Matrix<double, 4, 4> mat2{{r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g)}};
+
+        for(const auto j : Range(10000000000))
+            const auto res = Matmul(mat1, mat2);
+    }
+}
+
 } // namespace linalg
 } // namespace vic

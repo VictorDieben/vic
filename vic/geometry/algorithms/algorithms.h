@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vic/geometry/geometry.h"
+#include "vic/utils.h"
 
 #include "vic/linalg/add.h"
 #include "vic/linalg/matrices.h"
@@ -59,6 +60,21 @@ constexpr int WindingNumber(const std::vector<Point<T, 2>>& polygon, const Point
     return 0; //
 }
 
+template <typename T, std::size_t dims>
+T Project(const Point<T, dims>& origin, const Direction<T, dims>& dir, const Point<T, dims>& point)
+{
+    const auto relative = Subtract(point, origin);
+    return Dot(relative, dir) / Dot(dir, dir);
+}
+
+template <typename T>
+Point<T, 2> ProjectUV(const Triangle<T, 3>& tri, const Point<T, 3>& pos)
+{
+    const Direction<T, 3> e1 = Subtract(tri.points[1], tri.points[0]);
+    const Direction<T, 3> e2 = Subtract(tri.points[2], tri.points[0]);
+    return Point<T, 2>{Project(tri.points[0], e1, pos), Project(tri.points[0], e2, pos)};
+}
+
 //
 //
 //
@@ -103,7 +119,7 @@ constexpr TriLineIntersectionResult<T> TriLineIntersection(const Triangle<T, 3>&
 {
     const auto neg = Negative(segment.p1);
     const auto dir = Add(segment.p2, neg);
-    return TriLineIntersection(tri.p1, tri.p2, tri.p3, segment.p1, dir);
+    return TriLineIntersection(tri.points[0], tri.points[1], tri.points[2], segment.p1, dir);
 }
 
 template <typename T>
@@ -179,6 +195,131 @@ constexpr SphereLineIntersectionResult<T> SphereLineIntersection(const Sphere<T,
 {
     return SphereLineIntersection<T>(sphere, line.p1, line.p2);
 }
+
+// find out which of the points of tri is uniquely on one side of dir.
+// returns nullopt if all points are on the same side
+template <typename T>
+std::optional<std::size_t> GetUniqueSide(const Triangle<T, 3>& tri, //
+                                         const Point<T, 3>& pos, //
+                                         const Point<T, 3>& dir)
+{
+    const auto sign1 = Sign(Dot(Subtract(tri.p1, pos), dir));
+    const auto sign2 = Sign(Dot(Subtract(tri.p2, pos), dir));
+    const auto sign3 = Sign(Dot(Subtract(tri.p3, pos), dir));
+
+    // todo: can this be made branchless?
+    // I assume there is some multiplication that can give the right answer
+    if(sign1 == sign2)
+    {
+        if(sign1 != sign3)
+            return 2u; // third point
+        else
+            return std::nullopt;
+    }
+    else if(sign1 == sign3)
+    {
+        return 1u; // second point
+    }
+    else
+    {
+        return 0u;
+    }
+}
+
+template <typename T>
+constexpr Interval<T> GetTriIntersectionInterval(const Point<T, 3>& v1, //
+                                                 const Point<T, 3>& v2,
+                                                 const Point<T, 3>& v3,
+                                                 const Point<T, 3>& pos,
+                                                 const Point<T, 3>& dir)
+{
+    // project vertices onto line
+    const T t1 = Project(pos, dir, v1);
+    const T t2 = Project(pos, dir, v2);
+    const T t3 = Project(pos, dir, v3);
+
+    // calculate how far each vertex is from nearest point on line
+    const T p1 = Norm(Subtract(v1, Add(pos, Matmul(dir, t1))));
+    const T p2 = Norm(Subtract(v2, Add(pos, Matmul(dir, t2))));
+    const T p3 = Norm(Subtract(v3, Add(pos, Matmul(dir, t3))));
+
+    const T i12 = t1 + ((t2 - t1) * (-p1) / (p2 - p1));
+    const T i13 = t1 + ((t3 - t1) * (-p1) / (p3 - p1));
+
+    // todo: choose impl
+    return Interval<T>{Min(i12, i13), Max(i12, i13)};
+    //if(i12 > i13)
+    //    std::swap(i12, i13);
+    //return Interval<T>{i12, i13};
+}
+
+template <typename T>
+struct TriTriIntersectionResult
+{
+    Point<T, 3> pos{};
+    Point<T, 3> dir{};
+    Interval<T> interval{};
+};
+
+template <typename T>
+TriTriIntersectionResult<T> TriTriIntersection(const Triangle<T, 3>& tri1, const Triangle<T, 3>& tri2)
+{
+    const Point<T, 3> e11 = Subtract(tri1.points[1], tri1.points[0]);
+    const Point<T, 3> e12 = Subtract(tri1.points[2], tri1.points[0]);
+
+    const Point<T, 3> e21 = Subtract(tri2.points[1], tri2.points[0]);
+    const Point<T, 3> e22 = Subtract(tri2.points[2], tri2.points[0]);
+
+    const auto n1 = Cross(e11, e12);
+    const auto n2 = Cross(e21, e22);
+
+    const auto sign11 = Sign(Dot(Subtract(tri1.points[0], tri2.points[0]), n2));
+    const auto sign12 = Sign(Dot(Subtract(tri1.points[1], tri2.points[0]), n2));
+    const auto sign13 = Sign(Dot(Subtract(tri1.points[2], tri2.points[0]), n2));
+
+    if(sign11 == sign12 && sign12 && sign13)
+        return {}; // all points of tri1 are on one side of tri2
+
+    const auto sign21 = Sign(Dot(Subtract(tri2.points[0], tri1.points[0]), n1));
+    const auto sign22 = Sign(Dot(Subtract(tri2.points[1], tri1.points[0]), n1));
+    const auto sign23 = Sign(Dot(Subtract(tri2.points[2], tri1.points[0]), n1));
+
+    if(sign21 == sign22 && sign22 && sign23)
+        return {}; // all points of tri2 are on one side of tri1
+
+    // At this point, we know the triangles could be intersecting,
+    // so we have to perform the projections
+    const auto intersectionDir = Cross(n1, n2);
+
+    // make indices offset, such that the uniquely-sided point is on index 0
+    // todo: branchless?
+    const std::size_t offset1 = (sign12 == sign13) ? 0u : //
+                                    (sign11 == sign12) ? 2u
+                                                       : 1u;
+    const std::size_t offset2 = (sign22 == sign23) ? 0u : //
+                                    (sign21 == sign22) ? 2u
+                                                       : 1u;
+
+    // calculate the position/direction of the intersection
+    const auto intersectionPos = Point<T, 3>{};
+
+    // find the interval of the intersection of tri1
+    const auto interval1 = GetTriIntersectionInterval(tri1.points[(0 + offset1) % 3], //
+                                                      tri1.points[(1 + offset1) % 3],
+                                                      tri1.points[(2 + offset1) % 3],
+                                                      intersectionPos,
+                                                      intersectionDir);
+
+    // find the interval of the intersection of tri2
+    const auto interval2 = GetTriIntersectionInterval(tri2.points[(0 + offset2) % 3], //
+                                                      tri2.points[(1 + offset2) % 3],
+                                                      tri2.points[(2 + offset2) % 3],
+                                                      intersectionPos,
+                                                      intersectionDir);
+
+    // calculate the overlap of the two intersections (if any)
+    return TriTriIntersectionResult{intersectionPos, intersectionDir, Overlap(interval1, interval2)};
+};
 
 } // namespace geom
 } // namespace vic

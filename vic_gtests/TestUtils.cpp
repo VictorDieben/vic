@@ -239,3 +239,26 @@ TEST(TestUtils, TestStateMachine)
     // and maybe even predict deadlock states
     //stateMachine.Tick(); // calls: stateMachine.Tick<State::Two>();
 }
+
+TEST(TestUtils, TestObservable)
+{
+    struct TestObservable : public Observable<TestObservable>
+    { };
+
+    TestObservable object{};
+
+    ASSERT_FALSE(object.IsObserved());
+    {
+        const auto handle = object.Observe();
+
+        ASSERT_TRUE(object.IsObserved());
+
+        {
+            const auto handle2 = object.Observe();
+            ASSERT_TRUE(object.IsObserved());
+        }
+
+        ASSERT_TRUE(object.IsObserved());
+    }
+    ASSERT_FALSE(object.IsObserved());
+}
