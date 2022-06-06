@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vic/linalg/linalg.h"
+#include "vic/linalg/matrices.h"
 
 // This file defines shapes such as triangles, squares, circles, spheres, etc.
 namespace vic

@@ -1,8 +1,9 @@
 #pragma once
 #pragma once
 
-#include "vic/linalg/linalg.h"
+#include "vic/linalg/matmul.h"
 #include "vic/linalg/matrices.h"
+#include "vic/linalg/tools.h"
 #include "vic/linalg/traits.h"
 #include "vic/utils.h"
 
@@ -17,8 +18,7 @@ namespace algorithms
 // TODO: Eigenvalues / eigenvectors
 // http://mathreview.uwaterloo.ca/archive/voli/1/panju.pdf
 
-template <typename TMatrix>
-requires ConceptSquareMatrix<TMatrix>
+template <typename TMatrix> // requires ConceptSquareMatrix<TMatrix>
 constexpr auto PowerMethod(const TMatrix& matrix, const double eps = 1E-10)
 {
     using DataType = typename TMatrix::DataType;
@@ -45,8 +45,7 @@ constexpr auto PowerMethod(const TMatrix& matrix, const double eps = 1E-10)
 //
 //
 
-template <typename TMatrix>
-requires ConceptSquareMatrix<TMatrix>
+template <typename TMatrix> // requires ConceptSquareMatrix<TMatrix>
 constexpr auto QRMethod(const TMatrix& matrix, const double eps = 1E-10)
 {
     using DataType = typename TMatrix::DataType;

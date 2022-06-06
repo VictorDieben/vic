@@ -3,6 +3,7 @@
 #include "vic/geometry/geometry.h"
 #include "vic/utils.h"
 
+#include <map>
 #include <optional>
 #include <unordered_map>
 #include <variant>
@@ -111,12 +112,14 @@ class BBoxTree
     struct Node
     {
         Node() = default;
-        Node(const Box& box, const Leaf& leaf)
-            : box(box)
+        Node(const Key parent, const Box& box, const Leaf& leaf)
+            : parent(parent)
+            , box(box)
             , data{leaf}
         { }
-        Node(const Box& box, const Branch& branch)
-            : box(box)
+        Node(const Key parent, const Box& box, const Branch& branch)
+            : parent(parent)
+            , box(box)
             , data{branch}
         { }
         bool IsLeaf() const { return std::holds_alternative<Leaf>(data); }
@@ -125,8 +128,42 @@ class BBoxTree
         std::variant<Branch, Leaf> data{};
     };
 
-    TLambda mBoxLambda; // todo: check that it takes in a TObject& and returns a Box
+    // todo: check that it takes in a TObject& and returns a Box
+    // todo: decide if we want to pass a lambda for the bbox,
+    // i did it so that we can easily update the tree when objects move,
+    // but maybe i should just keep it out of scope for now.
+    TLambda mBoxLambda;
+
     std::unordered_map<Key, Node> mData{};
+    Key mRoot{};
+
+    void UpdateBBoxes(const Key key)
+    {
+        // iterate upwards from the leaf node. bboxes are re-calculated.
+        // key should point to the first non-leaf node, so we don't have to check it in the loop
+        Key iterKey = key;
+        while(true)
+        {
+            auto& node = mData[iterKey];
+
+            assert(!node.IsLeaf());
+
+            const auto& branch = std::get<Branch>(node.data);
+            const auto& box1 = mData[branch.children[0]].box;
+            const auto& box2 = mData[branch.children[1]].box;
+
+            const auto newbox = Combine(box1, box2);
+            if(Includes(node.box, newbox))
+                break; // old box contains new box, we are done
+            node.box = newbox;
+
+            Key parentKey = node.parent;
+            if(parentKey == iterKey)
+                break; // root node, we are done
+
+            iterKey = parentKey;
+        }
+    }
 
     Key PlaceInbetween(const Box& box, const Key parentKey, const Key childKey, TObject& object)
     {
@@ -139,17 +176,26 @@ class BBoxTree
 
         const auto combinedBBox = Combine(mData[childKey].box, box);
 
-        mData[branchkey] = Node{combinedBBox, Branch{leafkey, childKey}};
-        mData[leafkey] = Node{box, Leaf{&object}};
-
-        if(parentKey != childKey)
+        const Branch newbranch{leafkey, childKey};
+        if(parentKey != childKey) // normal case: put new node in between parent and child
         {
+            mData[branchkey] = Node{parentKey, combinedBBox, newbranch};
+
             auto& branch = std::get<Branch>(mData[parentKey].data);
-            if(branch.children[0] == childKey)
-                branch.children[0] = branchkey;
-            else
-                branch.children[1] = branchkey;
+
+            // find index that should be replaced without branching
+            const std::size_t idx = std::size_t{branch.children[0] != childKey};
+
+            branch.children[idx] = branchkey;
         }
+        else // special case: putting leaf right next to the (previous) root
+        {
+            mRoot = branchkey;
+            mData[branchkey] = Node{branchkey, combinedBBox, newbranch};
+        }
+        mData[childKey].parent = branchkey;
+        mData[leafkey] = Node{branchkey, box, Leaf{&object}};
+
         return leafkey;
     }
 
@@ -158,46 +204,49 @@ class BBoxTree
         const auto& node = mData.at(currentKey);
 
         if(node.IsLeaf())
-        {
-            // make a new leaf node, combine the two in one branch
-            const auto parentKey = node.parent;
             return PlaceInbetween(box, node.parent, currentKey, object);
-        }
-        else
+
+        // check if box is inside either of the children.
+        // if not, pick the closest child, combine them in 1 branch
+        const auto& branch = std::get<Branch>(node.data);
+        const auto& bbox1 = mData[branch.children[0]].box;
+        const auto& bbox2 = mData[branch.children[1]].box;
+        const bool included1 = Includes(bbox1, box);
+        const bool included2 = Includes(bbox2, box);
+        //if(included1 && !included2)
+        //    return InsertRecursive(box, branch.children[0], object);
+        //else if(!included1 && included2)
+        //    return InsertRecursive(box, branch.children[1], object);
+        if(included1 != included2)
         {
-            // check if box is inside either of the children.
-            // if not, pick the closest child, combine them in 1 branch
-            const auto& branch = std::get<Branch>(node.data);
-            const auto& bbox1 = mData[branch.children[0]].box;
-            const auto& bbox2 = mData[branch.children[1]].box;
-            const bool included1 = Includes(bbox1, box);
-            const bool included2 = Includes(bbox2, box);
-            if(included1 && !included2)
-                return InsertRecursive(box, branch.children[0], object);
-            else if(!included1 && included2)
-                return InsertRecursive(box, branch.children[1], object);
-            else if(!included1 && !included2)
-            {
-                // Not inside either. Put a new branch in between, add new leaf
-                const auto volume1 = Volume(Combine(box, bbox1));
-                const auto volume2 = Volume(Combine(box, bbox2));
-                if(volume1 < volume2)
-                    return PlaceInbetween(box, currentKey, branch.children[0], object); // combine with 1
-                else
-                    return PlaceInbetween(box, currentKey, branch.children[1], object);
-            }
-            else
-            {
-                // todo: box is inside both children, choose best
-                const auto combined1 = Combine(box, bbox1);
-                const auto combined2 = Combine(box, bbox2);
-                const auto volume1 = Volume(combined1);
-                const auto volume2 = Volume(combined2);
-                if(volume1 < volume2)
-                    return {};
-                else
-                    return {};
-            }
+            const std::size_t idx = included2; // if 2 is included, cast true to index 1
+            return InsertRecursive(box, branch.children[idx], object);
+        }
+        else if(included1 && included2)
+        {
+            // todo: box is inside both children, choose best,
+            // Right now we choose the smallest box
+            const std::size_t idx = Volume(bbox1) > Volume(bbox2);
+            return InsertRecursive(box, branch.children[idx], object);
+        }
+        else //  if(!included1 && !included2)
+        {
+            // Not inside either. Choose box that increases the least
+
+            const std::size_t idx = mKeyCounter % 2;
+            return PlaceInbetween(box, currentKey, branch.children[idx], object);
+
+            //const auto change1 = Volume(Combine(box, bbox1)) - Volume(bbox1);
+            //const auto change2 = Volume(Combine(box, bbox2)) - Volume(bbox2);
+            //// const std::size_t idx = change1 < change2 ? 0 : 1;
+            //const std::size_t idx = change1 > change2;
+            // return PlaceInbetween(box, currentKey, branch.children[idx], object);
+
+            //const auto change1 = Volume(Combine(box, bbox1));
+            //const auto change2 = Volume(Combine(box, bbox2));
+            //// const std::size_t idx = change1 < change2 ? 0 : 1;
+            //const std::size_t idx = change1 > change2;
+            // return PlaceInbetween(box, currentKey, branch.children[idx], object);
         }
     }
 
@@ -214,13 +263,16 @@ public:
         {
             const auto key = NewKey();
             Leaf leaf{&object};
-            Node node{box, leaf};
+            Node node{key, box, leaf};
             mData[key] = node;
+            mRoot = key;
             return key;
         }
         else
         {
-            return InsertRecursive(box, mData.begin()->first, object);
+            const auto key = InsertRecursive(box, mRoot, object);
+            UpdateBBoxes(mData[key].parent);
+            return key;
         }
     }
 
@@ -230,6 +282,8 @@ public:
     }
 
     // todo: make a Collisions(Box& box) function that returns a view of all leafs that might collide
+
+    void Collisions(const Box& box) { }
 };
 
 //template <typename TKey, std::size_t dims, typename TLambda>

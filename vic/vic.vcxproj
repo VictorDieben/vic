@@ -163,6 +163,8 @@
     <ClInclude Include="EntitySystem.h" />
     <ClInclude Include="geometry\algorithms\algorithms.h" />
     <ClInclude Include="geometry\algorithms\bbox_tree.h" />
+    <ClInclude Include="geometry\algorithms\intersections.h" />
+    <ClInclude Include="geometry\algorithms\interval_heap.h" />
     <ClInclude Include="geometry\geometry.h" />
     <ClInclude Include="graph\algorithms.h" />
     <ClInclude Include="graph\graph.h" />
@@ -184,6 +186,7 @@
     <ClInclude Include="memory\garbage_collector.h" />
     <ClInclude Include="memory\refcounter.h" />
     <ClInclude Include="memory\tree.h" />
+    <ClInclude Include="simulations\cfd\mesh.h" />
     <ClInclude Include="symbolic\symbolic.h" />
     <ClInclude Include="units\tensors.h" />
     <ClInclude Include="units\units.h" />
@@ -202,6 +205,11 @@
     <ClInclude Include="linalg\traits.h" />
     <ClInclude Include="linprog\seidel.h" />
     <ClInclude Include="network\udp.h" />
+    <ClInclude Include="utils\observable.h" />
+    <ClInclude Include="utils\ranges.h" />
+    <ClInclude Include="utils\sort.h" />
+    <ClInclude Include="utils\statemachine.h" />
+    <ClInclude Include="utils\timing.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp" />

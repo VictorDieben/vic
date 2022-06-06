@@ -2,6 +2,9 @@
 
 #include "test_base.h"
 #include "vic/utils.h"
+#include "vic/utils/observable.h"
+#include "vic/utils/statemachine.h"
+#include "vic/utils/timing.h"
 
 #include "vic/memory/constexpr_map.h"
 
@@ -261,4 +264,37 @@ TEST(TestUtils, TestObservable)
         ASSERT_TRUE(object.IsObserved());
     }
     ASSERT_FALSE(object.IsObserved());
+}
+
+TEST(TestUtils, TestIsPowerOfTwo)
+{
+    // check constexpr
+    static_assert(IsPowerOfTwo(int8_t{2}));
+    static_assert(IsPowerOfTwo(int16_t{2}));
+    static_assert(IsPowerOfTwo(int32_t{2}));
+    static_assert(IsPowerOfTwo(int64_t{2}));
+    static_assert(IsPowerOfTwo(uint8_t{2}));
+    static_assert(IsPowerOfTwo(uint16_t{2}));
+    static_assert(IsPowerOfTwo(uint32_t{2}));
+    static_assert(IsPowerOfTwo(uint64_t{2}));
+
+    static_assert(!IsPowerOfTwo(int8_t{3}));
+    static_assert(!IsPowerOfTwo(int16_t{3}));
+    static_assert(!IsPowerOfTwo(int32_t{3}));
+    static_assert(!IsPowerOfTwo(int64_t{3}));
+    static_assert(!IsPowerOfTwo(uint8_t{3}));
+    static_assert(!IsPowerOfTwo(uint16_t{3}));
+    static_assert(!IsPowerOfTwo(uint32_t{3}));
+    static_assert(!IsPowerOfTwo(uint64_t{3}));
+
+    // check that negative numbers are not powers of two
+    for(int32_t i = 0; i < 100; ++i)
+        ASSERT_FALSE(IsPowerOfTwo(-i));
+
+    // check all powers of two in the range of 2^[2; 30]
+    for(uint32_t i = 2; i < 31; ++i)
+        ASSERT_TRUE(IsPowerOfTwo(Power<int32_t>(2, i))) << i;
+
+    for(uint32_t i = 2; i < 31; ++i)
+        ASSERT_FALSE(IsPowerOfTwo(Power<int32_t>(2, i) - 1)) << i;
 }

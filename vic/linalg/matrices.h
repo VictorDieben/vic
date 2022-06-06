@@ -1,7 +1,5 @@
 #pragma once
 
-#include "assert.h"
-#include "vic/linalg/traits.h"
 #include "vic/utils.h"
 
 #include <array>
@@ -43,8 +41,7 @@ public:
         : mData(data)
     { }
 
-    template <typename TMat>
-    requires ConceptMatrix<TMat>
+    template <typename TMat> // requires ConceptMatrix<TMat> //
     constexpr explicit Matrix(const TMat& matrix)
     {
         for(std::size_t i = 0; i < rows; ++i)
@@ -196,8 +193,7 @@ public:
         for(std::size_t i = 0; i < Min(rows, columns); ++i)
             mData[i] = value;
     }
-    template <typename TMat>
-    requires ConceptMatrix<TMat>
+    template <typename TMat> // requires ConceptMatrix<TMat> // works, but is not c++17
     constexpr explicit Diagonal(const TMat& matrix)
     {
         for(std::size_t i = 0; i < Min(rows, columns); ++i)

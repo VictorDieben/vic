@@ -4,12 +4,10 @@
 #include "vic/kinematics/rotation.h"
 #include "vic/kinematics/translation.h"
 
+#include "vic/linalg/matmul.h"
 #include "vic/linalg/tools.h"
 #include "vic/linalg/transpose.h"
 #include "vic/utils.h"
-
-#include <algorithm>
-#include <assert.h>
 
 namespace vic
 {

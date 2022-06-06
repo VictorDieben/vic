@@ -1,6 +1,7 @@
 #include "../pch.h"
 #include "../test_base.h"
 
+#include "vic/linalg/add.h"
 #include "vic/linalg/inverse.h"
 #include "vic/linalg/matrices.h"
 #include "vic/linalg/matrices_dynamic.h"
@@ -293,12 +294,12 @@ TEST(TestLinalg, TestMatmul4x4Perf)
     std::uniform_real_distribution<double> r(0.01, 100.);
 
     //~3.3e9 iters/sec
-    for(const auto i : Range(1))
+    for(const auto i : Range(10))
     {
         const Matrix<double, 4, 4> mat1{{r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g)}};
         const Matrix<double, 4, 4> mat2{{r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g)}};
 
-        for(const auto j : Range(10000000000))
+        for(const auto j : Range(1000))
             const auto res = Matmul(mat1, mat2);
     }
 }

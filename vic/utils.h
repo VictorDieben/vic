@@ -1,34 +1,10 @@
 #pragma once
 
 #include <cassert>
-#include <chrono>
-#include <ranges>
 #include <vector>
 
 namespace vic
 {
-
-class CTimer
-{
-public:
-    CTimer()
-        : mStart(std::chrono::high_resolution_clock::now())
-    { }
-
-    using ClockType = std::chrono::high_resolution_clock;
-
-    template <typename T, typename R>
-    std::chrono::duration<T, R> GetTime() const
-    {
-        const auto now = ClockType::now();
-        return std::chrono::duration_cast<std::chrono::duration<T, R>>(now - mStart);
-    }
-
-    void Reset() { mStart = std::chrono::high_resolution_clock::now(); }
-
-private:
-    std::chrono::time_point<ClockType> mStart;
-};
 
 // example:
 // struct SomeCountedClass : public Counted<SomeCountedClass> {};
@@ -129,6 +105,18 @@ constexpr int Signum(const T val)
     return ((T{0} < val) - (val < T{0})); // todo: make overload for unsigned types
 }
 
+template <typename T>
+constexpr bool IsPowerOfTwo(const T val)
+{
+    return (val > T{}) && (!(val & (val - 1))); // check nonzero, and val bitwise and with val-1 should be 0
+}
+
+template <typename T>
+constexpr std::pair<T, T> ModulusAndRemainder(const T i, const T divisor)
+{
+    return std::pair<T, T>{i % divisor, i / divisor}; // returns modulus and remainder
+}
+
 // base conversion (e.g. normal representation to hex)
 // todo: make a version that works on a range of iterators
 template <typename TVec, typename TValue, typename TBase>
@@ -220,6 +208,61 @@ constexpr std::vector<T> Linspace(const T start, const T end, const std::size_t 
     Linspace(std::begin(result), std::end(result), start, end);
     return result;
 }
+
+// todo: look at the following link and fix this:
+// https://committhis.github.io/2020/10/14/zip-iterator.html
+template <typename T1, typename T2>
+class Zip
+{
+public:
+    Zip(const T1& range1, const T2& range2)
+        : mRange1(range1)
+        , mRange2(range2)
+    { }
+
+    struct ZipIterator
+    {
+        using iterator_category = std::random_access_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using value_type = std::pair<typename T1::value_type, typename T2::value_type>;
+        using pointer = value_type*;
+        using reference = value_type&;
+
+        ZipIterator() = default;
+
+        reference operator*()
+        {
+            auto val = value_type{}; //
+            return val;
+        }
+        //pointer operator->()
+        //{
+        //    return &mValue; //
+        //}
+        ZipIterator& operator++()
+        {
+            //mValue += mStride;
+            return *this;
+        }
+        ZipIterator operator++(int)
+        {
+            ZipIterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+        friend bool operator==(const ZipIterator& a, const ZipIterator& b) { return true; };
+        friend bool operator!=(const ZipIterator& a, const ZipIterator& b) { return !operator==(a, b); };
+
+    private:
+    };
+
+    ZipIterator begin() { return {}; }
+    ZipIterator end() { return {}; }
+
+private:
+    const T1& mRange1;
+    const T2& mRange2;
+};
 
 // allows us to write:
 // for (const auto& val : Range(0, 10))
@@ -317,164 +360,5 @@ private:
     T mStride{};
 };
 
-// todo: look at the following link and fix this:
-// https://committhis.github.io/2020/10/14/zip-iterator.html
-template <typename T1, typename T2>
-class Zip
-{
-public:
-    Zip(const T1& range1, const T2& range2)
-        : mRange1(range1)
-        , mRange2(range2)
-    { }
-
-    struct ZipIterator
-    {
-        using iterator_category = std::random_access_iterator_tag;
-        using difference_type = std::ptrdiff_t;
-        using value_type = std::pair<typename T1::value_type, typename T2::value_type>;
-        using pointer = value_type*;
-        using reference = value_type&;
-
-        ZipIterator() = default;
-
-        reference operator*()
-        {
-            auto val = value_type{}; //
-            return val;
-        }
-        //pointer operator->()
-        //{
-        //    return &mValue; //
-        //}
-        ZipIterator& operator++()
-        {
-            //mValue += mStride;
-            return *this;
-        }
-        ZipIterator operator++(int)
-        {
-            ZipIterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-        friend bool operator==(const ZipIterator& a, const ZipIterator& b) { return true; };
-        friend bool operator!=(const ZipIterator& a, const ZipIterator& b) { return !operator==(a, b); };
-
-    private:
-    };
-
-    ZipIterator begin() { return {}; }
-    ZipIterator end() { return {}; }
-
-private:
-    const T1& mRange1;
-    const T2& mRange2;
-};
-
-// statemachine that checks state change at compile time,
-// only needs to check if fromState is correct at runtime
-template <typename TEnum, std::size_t size, std::array<std::pair<TEnum, TEnum>, size> validChanges>
-class StateMachine
-{
-public:
-    constexpr StateMachine() = default;
-    constexpr StateMachine(const TEnum initialState)
-        : mState(initialState)
-    { }
-
-    template <TEnum val>
-    bool HasState() const
-    {
-        return mState == val;
-    }
-
-    TEnum GetState() const { return mState; }
-
-    template <TEnum fromState, TEnum toState>
-    constexpr static bool IsValid()
-    {
-        for(const auto& pair : validChanges)
-            if(pair.first == fromState && pair.second == toState)
-                return true;
-        return false;
-    }
-
-    template <TEnum fromState, TEnum toState>
-    void SetState()
-    {
-        static_assert(this->IsValid<fromState, toState>());
-        assert(mState == fromState); // todo: assert or throw?
-        //if(mState != fromState)
-        //    throw std::runtime_error("");
-        mState = toState;
-    }
-
-private:
-    TEnum mState{};
-};
-
-// todo: replace with c++23 drop last, once available
-struct drop_last_t
-{
-    template <std::ranges::sized_range R>
-    requires std::ranges::viewable_range<R>
-    friend auto operator|(R&& r, drop_last_t)
-    {
-        return r | std::ranges::views::reverse | std::ranges::views::drop(1) | std::ranges::views::reverse; //
-    }
-};
-inline constexpr drop_last_t drop_last;
-
-// struct SomeObservableClass : public Observable<SomeObservableClass> {};
-// SomeObservableClass::Observe();
 //
-// observable wrapper, using crtp
-template <typename T>
-class Observable
-{
-    // handles are only valid as long as Observable is not moved.
-    // Observables can also not be moved while observed
-    template <typename T2>
-    class ObservableHandle
-    {
-    public:
-        ObservableHandle(Observable& observable)
-            : mObservable(observable)
-        {
-            mObservable.StartObserving();
-        }
-
-        // todo: handles should be movable, but not copyable
-        ObservableHandle(const ObservableHandle&) = delete;
-        ObservableHandle(ObservableHandle&&) = delete;
-        ObservableHandle& operator=(const ObservableHandle&) = delete;
-        ObservableHandle& operator=(ObservableHandle&&) = delete;
-
-        ~ObservableHandle() { mObservable.StopObserving(); }
-
-    private:
-        Observable<T>& mObservable;
-    };
-
-    // todo: an observable should be movable/copyable, but only while not observed
-    Observable(const Observable&) = delete;
-    Observable(Observable&&) = delete;
-    Observable& operator=(const Observable&) = delete;
-    Observable& operator=(Observable&&) = delete;
-
-public:
-    Observable() = default;
-    ObservableHandle<T> Observe() { return ObservableHandle<T>{*this}; }
-
-    bool IsObserved() const { return mObserverCount > 0; }
-
-private:
-    std::size_t mObserverCount{0};
-
-    // called by ObservableHandle
-    void StartObserving() { mObserverCount++; }
-    void StopObserving() { mObserverCount--; }
-};
-
 } // namespace vic

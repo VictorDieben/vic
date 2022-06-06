@@ -59,8 +59,7 @@ public:
 };
 
 // trace is sum of all diagonal elements
-template <typename TMat>
-requires ConceptSquareMatrix<TMat>
+template <typename TMat> // requires ConceptSquareMatrix<TMat>
 constexpr auto Trace(const TMat& matrix)
 {
     static_assert(IsSquare<TMat>::value);
@@ -71,15 +70,13 @@ constexpr auto Trace(const TMat& matrix)
 }
 
 // 2d cross product
-template <typename T>
-// requires ConceptVector<T> &&(T::GetRows() == 2) //
+template <typename T> // requires ConceptVector<T> &&(T::GetRows() == 2) //
 constexpr auto Cross(const T& vec1, const T& vec2)
 {
     return (vec1.Get(0, 0) * vec2.Get(1, 0)) - (vec1.Get(1, 0) * vec2.Get(0, 0));
 }
 
-template <typename T>
-requires ConceptVector<T>
+template <typename T> // requires ConceptVector<T>
 constexpr auto SquaredNorm(const T& vec)
 {
     typename T::DataType sum = 0;
@@ -90,8 +87,7 @@ constexpr auto SquaredNorm(const T& vec)
     return sum;
 }
 
-template <typename T>
-requires ConceptVector<T>
+template <typename T> // requires ConceptVector<T>
 constexpr auto Norm(const T& vec)
 {
     typename T::DataType sum = 0;
@@ -102,8 +98,7 @@ constexpr auto Norm(const T& vec)
     return ::vic::Sqrt(sum);
 }
 
-template <typename T>
-requires ConceptVector<T>
+template <typename T> // requires ConceptVector<T>
 constexpr auto Normalize(const T& vec)
 {
     T res{};
@@ -114,8 +109,7 @@ constexpr auto Normalize(const T& vec)
 }
 
 // 3d cross product
-template <typename T>
-// requires ConceptVector<T> &&(T::GetRows() == 3) //
+template <typename T> // requires ConceptVector<T> &&(T::GetRows() == 3) //
 constexpr auto Cross(const Vector3<T>& vec1, const Vector3<T>& vec2)
 {
     const double ax = vec1.Get(0), ay = vec1.Get(1), az = vec1.Get(2);
@@ -202,8 +196,7 @@ constexpr TMatResult Extract(const TMatInput& source, std::size_t row, std::size
 }
 
 // mostly used for tests, but also useful outside of it
-template <typename TMat1, typename TMat2>
-// requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+template <typename TMat1, typename TMat2> // requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const double eps = 1e-10)
 {
     if((mat1.GetRows() != mat2.GetRows()) || (mat1.GetColumns() != mat2.GetColumns()))
@@ -216,8 +209,7 @@ constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const double eps = 
 }
 
 // Verify that a matrix is orthogonal (e.g. A.T*A == I)
-template <typename TMat>
-requires ConceptMatrix<TMat>
+template <typename TMat> // requires ConceptMatrix<TMat>
 constexpr auto IsOrthogonal(const TMat& mat, const double eps = 1e-10)
 {
     return IsEqual( //
@@ -226,8 +218,7 @@ constexpr auto IsOrthogonal(const TMat& mat, const double eps = 1e-10)
         eps);
 }
 
-template <typename TMat>
-requires ConceptMatrix<TMat>
+template <typename TMat> // requires ConceptMatrix<TMat>
 constexpr auto Negative(const TMat& mat)
 {
     TMat res{};
@@ -238,8 +229,7 @@ constexpr auto Negative(const TMat& mat)
 }
 
 // 3d cross product
-template <typename TMat>
-requires ConceptVector<TMat>
+template <typename TMat> // requires ConceptVector<TMat>
 constexpr auto Subtract(const TMat& mat1, const TMat& mat2) // calculates mat1-mat2
 {
     TMat res{};

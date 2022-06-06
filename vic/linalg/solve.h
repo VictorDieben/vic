@@ -2,6 +2,7 @@
 
 #include "linalg.h"
 #include "traits.h"
+#include "vic/linalg/add.h"
 #include "vic/linalg/matrices.h"
 #include "vic/utils.h"
 #include <algorithm>
@@ -14,8 +15,7 @@ namespace linalg
 // Generally, this means calculating a partial inverse (the inverse of the diagonal for instance)
 
 // https://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/linAlg34.pdf
-template <typename TMatrix, typename TVector>
-requires ConceptSquareMatrix<TMatrix>
+template <typename TMatrix, typename TVector> // requires ConceptSquareMatrix<TMatrix>
 auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const double eps = 1E-10)
 {
     constexpr const std::size_t n = TMatrix::GetRows();

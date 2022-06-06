@@ -2,9 +2,15 @@
 
 #include "vic/geometry/algorithms/algorithms.h"
 #include "vic/geometry/algorithms/bbox_tree.h"
+#include "vic/geometry/algorithms/intersections.h"
+#include "vic/geometry/algorithms/interval_heap.h"
 #include "vic/geometry/geometry.h"
 #include "vic/linalg/add.h"
+#include "vic/linalg/matmul.h"
 #include "vic/linalg/tools.h"
+
+#include "vic/utils/timing.h"
+#include <format>
 
 using namespace vic;
 
@@ -209,6 +215,9 @@ constexpr bool BBoxEqual(const BBox<double, 2>& bbox1, const BBox<double, 2>& bb
 
 TEST(TestGeom, BBox)
 {
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> r(-1., 1.);
+
     using Inter = Interval<double>;
     const BBox<double, 2> bbox1{{Inter{1., 2.}, Inter{1., 2.}}};
 
@@ -217,6 +226,14 @@ TEST(TestGeom, BBox)
     ASSERT_FALSE(Includes(bbox1, BBox<double, 2>{{Inter{1.01, 1.99}, Inter{1.01, 2.01}}}));
     ASSERT_FALSE(Includes(bbox1, BBox<double, 2>{{Inter{1.01, 2.01}, Inter{1.01, 1.99}}}));
     ASSERT_FALSE(Includes(bbox1, BBox<double, 2>{{Inter{1.01, 2.01}, Inter{1.01, 2.01}}}));
+
+    // make sure boxes always include themselves
+    for(const std::size_t i : Range(1000))
+    {
+        const double pos = r(g), eps = r(g);
+        BBox<double, 1> box{{Inter{pos - eps, pos + eps}}};
+        ASSERT_TRUE(Includes(box, box));
+    }
 
     // Overlaps
     ASSERT_TRUE(Overlaps(bbox1, BBox<double, 2>{{Inter{1.99, 3.}, Inter{1.99, 3.}}}));
@@ -242,7 +259,7 @@ TEST(TestGeom, BoxTree)
 {
     std::default_random_engine g;
     std::uniform_real_distribution<double> pos(-1., 1.);
-    std::uniform_real_distribution<double> eps(-0.1, 0.1);
+    std::uniform_real_distribution<double> eps(-0.001, 0.001);
 
     using TestObject = std::vector<Point<double, 3>>;
 
@@ -267,47 +284,174 @@ TEST(TestGeom, BoxTree)
         return object;
     };
 
-    for(const auto i : Range(3))
+    for(const auto i : Range(1000))
         objects.push_back(makeObject());
 
-    for(auto& object : objects)
-        boxtree.Insert(object);
+    {
+        CTimer timer{};
+        for(auto& object : objects)
+            boxtree.Insert(object);
+        const auto totalTime = timer.GetTime();
+
+        int bla = 1;
+    }
 }
 
-TEST(TestGeom, TriTri)
+//TEST(TestGeom, TriTri)
+//{
+//    std::default_random_engine g;
+//    std::uniform_real_distribution<double> pos(-1., 1.);
+//
+//    // ~13m iters per second
+//    for(const auto i : Range(1000))
+//    {
+//        const Triangle<double, 3> tri1{Point3d{{pos(g), pos(g), pos(g)}}, //
+//                                       Point3d{{pos(g), pos(g), pos(g)}},
+//                                       Point3d{{pos(g), pos(g), pos(g)}}};
+//        const Triangle<double, 3> tri2{Point3d{{pos(g), pos(g), pos(g)}}, //
+//                                       Point3d{{pos(g), pos(g), pos(g)}},
+//                                       Point3d{{pos(g), pos(g), pos(g)}}};
+//
+//        const auto res = TriTriIntersection(tri1, tri2);
+//
+//        if(res.interval.min >= res.interval.max)
+//            continue; // not intersecting
+//
+//        const auto tarray = Linspace(res.interval.min, res.interval.max, 5);
+//        for(const auto t : tarray | std::views::drop(1) | vic::drop_last)
+//        {
+//            const auto pos = Add(res.pos, Matmul(res.dir, t));
+//
+//            const double u1 = Project(tri1.points[0], Subtract(tri1.points[1], tri1.points[0]), pos);
+//            const double v1 = Project(tri1.points[0], Subtract(tri1.points[2], tri1.points[0]), pos);
+//            // ASSERT_TRUE(u1 >= 0. && v1 >= 0. && (u1 + v1) <= 1.);
+//
+//            const double u2 = Project(tri2.points[0], Subtract(tri2.points[1], tri2.points[0]), pos);
+//            const double v2 = Project(tri2.points[0], Subtract(tri2.points[2], tri2.points[0]), pos);
+//            // ASSERT_TRUE(u2 >= 0. && v2 >= 0. && (u2 + v2) <= 1.);
+//        }
+//    }
+//}
+
+TEST(TestGeom, IntervalHeap)
 {
+    using Box = BBox<double, 2>;
+    using Key = uint32_t;
     std::default_random_engine g;
     std::uniform_real_distribution<double> pos(-1., 1.);
+    std::uniform_real_distribution<double> size(0.00001, 0.1);
+    constexpr std::size_t nodes = 10000000;
 
-    // ~13m iters per second
-    for(const auto i : Range(1000))
+    const auto randomInterval = [&]() {
+        double p = pos(g), d = size(g);
+        return Interval<double>{p - d, p + d};
+    };
+
+    const auto randomBBox = [&]() { return Box{{randomInterval(), randomInterval()}}; };
+
+    // make a list of random bboxes
+    std::vector<Box> boxes{};
+    for(const auto i : Range(nodes))
+        boxes.push_back(randomBBox());
+
+    const auto lambdax = [&](Key key) {
+        const auto bbox = boxes.at(key).intervals[0];
+        return bbox;
+    };
+    IntervalHeap<Key, decltype(lambdax)> heapX{lambdax};
+
+    for(Key i = 0; i < boxes.size(); ++i)
+        heapX.Add(i);
+    heapX.Resort();
+
+    const auto overlapInterval = Interval<double>{-0.5, -0.49};
+
+    // find overlaps using algorithm
+    std::chrono::duration<double> time, bruteForceTime;
+    std::vector<Key> overlap;
+    CTimer timer{};
+    heapX.Overlap(overlapInterval, overlap);
+    time = timer.GetTime();
+
+    // find overlaps using brute force
+    std::vector<Key> bruteForce;
+    CTimer bruteForceTimer{};
+    for(Key i = 0; i < boxes.size(); ++i)
+        if(Overlaps(overlapInterval, lambdax(i)))
+            bruteForce.push_back(i);
+    bruteForceTime = bruteForceTimer.GetTime();
+
+    std::cout << std::format("algorithm: {}[s]; brute force: {}[s]", time.count(), bruteForceTime.count()) << std::endl;
+
+    // check that all overlaps do indeed overlap
+    for(const auto& item : overlap)
+        ASSERT_TRUE(Overlaps(boxes.at(item).intervals[0], overlapInterval));
+
+    // Check that all items that are not in overlap do indeed not overlap
+    std::sort(overlap.begin(), overlap.end());
+    for(const auto i : Range(nodes))
     {
-        const Triangle<double, 3> tri1{Point3d{{pos(g), pos(g), pos(g)}}, //
-                                       Point3d{{pos(g), pos(g), pos(g)}},
-                                       Point3d{{pos(g), pos(g), pos(g)}}};
-        const Triangle<double, 3> tri2{Point3d{{pos(g), pos(g), pos(g)}}, //
-                                       Point3d{{pos(g), pos(g), pos(g)}},
-                                       Point3d{{pos(g), pos(g), pos(g)}}};
-
-        const auto res = TriTriIntersection(tri1, tri2);
-
-        if(res.interval.min >= res.interval.max)
-            continue; // not intersecting
-
-        const auto tarray = Linspace(res.interval.min, res.interval.max, 5);
-        for(const auto t : tarray | std::views::drop(1) | vic::drop_last)
+        if(!std::binary_search(overlap.begin(), overlap.end(), i))
         {
-            const auto pos = Add(res.pos, Matmul(res.dir, t));
-
-            const double u1 = Project(tri1.points[0], Subtract(tri1.points[1], tri1.points[0]), pos);
-            const double v1 = Project(tri1.points[0], Subtract(tri1.points[2], tri1.points[0]), pos);
-            // ASSERT_TRUE(u1 >= 0. && v1 >= 0. && (u1 + v1) <= 1.);
-
-            const double u2 = Project(tri2.points[0], Subtract(tri2.points[1], tri2.points[0]), pos);
-            const double v2 = Project(tri2.points[0], Subtract(tri2.points[2], tri2.points[0]), pos);
-            // ASSERT_TRUE(u2 >= 0. && v2 >= 0. && (u2 + v2) <= 1.);
+            const auto interval = boxes.at(i).intervals[0];
+            ASSERT_FALSE(Overlaps(interval, overlapInterval));
         }
     }
+
+    ASSERT_TRUE(false);
+}
+
+TEST(TestGeom, IntervalSorted)
+{
+    using Inter = Interval<double>;
+    using Key = uint32_t;
+
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> pos(-1., 1.);
+    std::uniform_real_distribution<double> size(0.00001, 0.1);
+
+    const auto randomInterval = [&]() {
+        const double p = pos(g), d = size(g);
+        return Inter{p - d, p + d};
+    };
+
+    constexpr std::size_t nodes = 100;
+
+    std::vector<Inter> intervals{};
+    for(const auto i : Range(nodes))
+        intervals.push_back(randomInterval());
+
+    const auto getInterval = [&](const Key key) { return intervals.at(key); };
+
+    IntervalSorted<Key, decltype(getInterval)> collection{getInterval};
+
+    for(auto i : Range<Key>(nodes))
+        collection.Add(i);
+    collection.Resort();
+
+    //
+
+    int bla = 1;
+    (void)bla;
+}
+
+TEST(TestGeom, HeapVector)
+{
+    ASSERT_EQ(FromBinaryIndex(0, 4), 0);
+    ASSERT_EQ(FromBinaryIndex(1, 4), 2);
+    ASSERT_EQ(FromBinaryIndex(2, 4), 1);
+    ASSERT_EQ(FromBinaryIndex(3, 4), 3);
+
+    const auto lambda = [&](const double d1, const double d2) { return d1 < d2; };
+    BinaryTreeVector<double, decltype(lambda)> heapvec{lambda};
+
+    //ASSERT_EQ(heapvec.size(), 0);
+    //ASSERT_EQ(heapvec.capacity(), 0);
+
+    //heapvec.push_back(1.);
+    //ASSERT_EQ(heapvec.size(), 1);
+    //ASSERT_EQ(heapvec.capacity(), 1);
+    //ASSERT_TRUE(heapvec.IsFilled(0));
 }
 
 } // namespace geom

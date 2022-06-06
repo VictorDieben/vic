@@ -8,8 +8,7 @@ namespace vic
 namespace linalg
 {
 
-template <typename TMatrix>
-requires ConceptMatrix<TMatrix>
+template <typename TMatrix> // requires ConceptMatrix<TMatrix>
 constexpr auto AddConstant(const TMatrix& matrix, const typename TMatrix::DataType& value)
 {
     Matrix<TMatrix::DataType, TMatrix::GetRows(), TMatrix::GetColumns()> result{};

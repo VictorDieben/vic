@@ -5,9 +5,12 @@
 #include "vic/kinematics/transformation.h"
 #include "vic/kinematics/translation.h"
 
+#include "vic/linalg/add.h"
 #include "vic/linalg/tools.h"
 #include "vic/linalg/transpose.h"
 #include "vic/utils.h"
+
+#include <cmath>
 
 namespace vic
 {
@@ -23,7 +26,7 @@ Matrix<DataType, 3, 3> ExponentialRotationHelper(const Matrix3<DataType>& b, //
 {
     return Add(Identity<DataType, 3>{}, //
                Matmul(std::sin(theta), b),
-               Matmul(1 - std::cos(theta), bSquared));
+               Matmul(1. - std::cos(theta), bSquared));
 }
 } // namespace detail
 

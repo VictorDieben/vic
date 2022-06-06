@@ -1,14 +1,6 @@
 #pragma once
 
-#include "vic/kinematics/kinematics.h"
-#include "vic/kinematics/rotation.h"
-
-#include "vic/linalg/tools.h"
-#include "vic/linalg/transpose.h"
-#include "vic/utils.h"
-
-#include <algorithm>
-#include <assert.h>
+#include "vic/linalg/matrices.h"
 
 namespace vic
 {
