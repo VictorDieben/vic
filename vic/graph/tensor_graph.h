@@ -15,7 +15,7 @@ namespace vic
 namespace graph
 {
 
-// todo(vicdie): a tensor graph is a wrapper around a normal graph, to support path planning with multiple robots
+// todo: a tensor graph is a wrapper around a normal graph, to support path planning with multiple robots
 // with such a large graph, data storage becomes critical,
 // so a lot of work is put into storing it as efficiently as possible
 
@@ -275,7 +275,7 @@ public:
     {
         const TensorVertexType tensorTarget(mGraph, target);
 
-        // TODO(vicdie): unordered_map cleanup seems very slow
+        // todo: unordered_map cleanup seems very slow
         std::map<TensorVertexId, ExploredObject> exploredSet;
 
         std::vector<HeapObject> heap;

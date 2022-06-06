@@ -1,17 +1,14 @@
 #include "../pch.h"
 #include "../test_base.h"
 
+#include "vic/linalg/add.h"
 #include "vic/linalg/inverse.h"
 #include "vic/linalg/matrices.h"
 #include "vic/linalg/matrices_dynamic.h"
 #include "vic/linalg/traits.h"
+#include "vic/linalg/transpose.h"
 
 #include "vic/linalg/tools.h"
-
-#include <memory>
-
-#include <random>
-#include <utility>
 
 namespace vic
 {
@@ -65,8 +62,14 @@ TEST(TestLinalg, TestIdentity)
 
 TEST(TestLinalg, TestMatrix)
 {
+    constexpr const Matrix<double, 3, 3> all2s(2.);
+    for(std::size_t i = 0; i < 3; ++i)
+        for(std::size_t j = 0; j < 3; ++j)
+            EXPECT_DOUBLE_EQ(all2s.Get(i, j), 2.);
+
     constexpr const Matrix<double, 3, 3> mat3({0, 1, 2, 3, 4, 5, 6, 7, 8});
 
+    EXPECT_DOUBLE_EQ(mat3.Get(0, 2), 2.);
     for(std::size_t i = 0; i < 3; ++i)
         for(std::size_t j = 0; j < 3; ++j)
             EXPECT_DOUBLE_EQ(mat3.Get(i, j), double(RowColToIndex<3>(i, j)));
@@ -150,6 +153,18 @@ TEST(TestLinalg, TestAddConstant)
             EXPECT_DOUBLE_EQ(res1.Get(i, j), i == j ? 2. : 0.);
 }
 
+TEST(TestLinalg, TestAddMultivariate)
+{
+    constexpr auto I4 = Identity<double, 4>{};
+    constexpr auto add2 = Add(I4, I4);
+    constexpr auto add3 = Add(I4, I4, I4);
+    constexpr auto add4 = Add(I4, I4, I4, I4);
+    constexpr auto add5 = Add(I4, I4, I4, I4, I4);
+    constexpr auto add6 = Add(I4, I4, I4, I4, I4, I4);
+    constexpr auto add7 = Add(I4, I4, I4, I4, I4, I4, I4);
+    ExpectMatrixEqual(add7, DiagonalConstant<double, 4>{7});
+}
+
 TEST(TestLinalg, TestDeterminant)
 {
     constexpr auto identityDetD = Determinant(Identity<double, 100>{});
@@ -177,34 +192,37 @@ TEST(TestLinalg, TestInverseTranspose)
 {
     constexpr Identity<double, 5> identity{};
     constexpr auto identityTranspose = Transpose(identity);
-    ExpectMatrixEqual(identityTranspose, identity);
+    EXPECT_TRUE(IsEqual(identityTranspose, identity));
     constexpr auto identityInverse = Inverse(identity);
-    ExpectMatrixEqual(identityInverse, identity);
+    EXPECT_TRUE(IsEqual(identityInverse, identity));
 
     constexpr Diagonal<double, 5, 5> diag({1, 2, 3, 4, 5});
     constexpr auto transposeDiag = Transpose(diag);
-    ExpectMatrixEqual(transposeDiag, diag);
+    EXPECT_TRUE(IsEqual(transposeDiag, diag));
     constexpr auto inverseDiag = Inverse(diag);
     constexpr Diagonal<double, 5, 5> inverseDiagAnswer({1., 1. / 2., 1. / 3., 1. / 4, 1. / 5.});
-    ExpectMatrixEqual(inverseDiag, inverseDiagAnswer);
+    EXPECT_TRUE(IsEqual(inverseDiag, inverseDiagAnswer));
 
     constexpr Matrix<double, 3, 3> matrix3({1, 2, 3, 4, 5, 6, 7, 8, 9});
     constexpr auto inverseMat3 = Inverse(matrix3);
-    constexpr Matrix<double, 3, 3> inverseMatrix3Answer({1, 2, 3, 4, 5, 6, 7, 8, 9});
-    // ExpectMatrixEqual(inverseMat3, inverseMatrix3Answer);
+    EXPECT_TRUE(IsEqual(Matmul(matrix3, inverseMat3), Identity<double, 3>{}));
+
     constexpr auto transposeMat3 = Transpose(matrix3);
     constexpr Matrix<double, 3, 3> transposeMatrix3Answer({1, 4, 7, 2, 5, 8, 3, 6, 9});
-    ExpectMatrixEqual(transposeMat3, transposeMatrix3Answer);
+    EXPECT_TRUE(IsEqual(transposeMat3, transposeMatrix3Answer));
 
-    // TODO(vicdie): check that a matrix is rotation, and can be transposed instead of inversed
+    // TODO: check that a matrix is rotation, and can be transposed instead of inversed
+
+    // TODO: Check block diagonal matrix inverse is inverse per block
 }
 
-TEST(TestLinalg, TestInverse)
+TEST(TestLinalg, TestInverseDiagonal)
 {
     constexpr auto diag1 = Diagonal<double, 3, 3>({1, 2, 3});
-    constexpr auto diagInv1 = InverseDiagonal(diag1);
-    auto diagInv2 = InverseStatic(diag1);
-    ExpectMatrixEqual(diagInv1, diagInv2);
+    constexpr Diagonal<double, 3, 3> diagInv1 = InverseDiagonal(diag1);
+    constexpr Diagonal<double, 3, 3> diagInv2 = Inverse(diag1);
+    EXPECT_TRUE(IsEqual(Matmul(diag1, diagInv1), Identity<double, 3>{}));
+    EXPECT_TRUE(IsEqual(Matmul(diag1, diagInv2), Identity<double, 3>{}));
 }
 
 TEST(TestLinalg, TestInverseRandom)
@@ -245,6 +263,8 @@ TEST(TestLinalg, TestBracket3)
     constexpr auto bracket = Bracket3(vec);
     constexpr Matrix<double, 3, 3> answer({0, -3, 2, 3, 0, -1, -2, 1, 0});
     ExpectMatrixEqual(bracket, answer);
+
+    constexpr auto bSquared = Matmul(bracket, bracket);
 }
 
 TEST(TestLinalg, TestBracket6)
@@ -255,6 +275,33 @@ TEST(TestLinalg, TestBracket6)
 TEST(TestLinalg, TestLieBracket)
 {
     // TODO
+}
+
+TEST(TestLinalg, TestLambdaMatrix)
+{
+    constexpr auto lambda = [](const std::size_t i, const std::size_t j) {
+        return (i == j) ? 1. : 0.; //
+    };
+    constexpr LambdaMatrix<decltype(lambda), 3, 3> mat{lambda};
+
+    ExpectMatrixEqual(mat, Identity<double, 3>{}, 1E-14);
+}
+
+TEST(TestLinalg, TestMatmul4x4Perf)
+{
+
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> r(0.01, 100.);
+
+    //~3.3e9 iters/sec
+    for(const auto i : Range(10))
+    {
+        const Matrix<double, 4, 4> mat1{{r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g)}};
+        const Matrix<double, 4, 4> mat2{{r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g)}};
+
+        for(const auto j : Range(1000))
+            const auto res = Matmul(mat1, mat2);
+    }
 }
 
 } // namespace linalg

@@ -33,14 +33,14 @@ concept ConceptConstexprColumns = requires
 template <typename T>
 concept ConceptMatrix = requires(T mat)
 {
-    // TODO(vicdie): check that these statements have the correct return type
+    // TODO: check that these statements have the correct return type
     T::DataType;
     mat.GetRows();
     mat.GetColumns();
     mat.Get(std::size_t(0), std::size_t(0));
 };
 
-// TODO(vicdie): implement, check that GetRows() and GetColumns() are constexpr
+// TODO: implement, check that GetRows() and GetColumns() are constexpr
 template <typename T>
 concept ConceptConstexprMatrix = ConceptMatrix<T> && ConceptConstexprRows<T> && ConceptConstexprColumns<T>;
 
@@ -56,7 +56,7 @@ struct IsSquare
     constexpr static bool value = (TMat::GetRows() == TMat::GetColumns());
 };
 
-// TODO(vicdie): fix this, IsSquare should not be needed
+// TODO: fix this, IsSquare should not be needed
 template <typename T>
 concept ConceptSquareMatrix = ConceptMatrix<T> && IsSquare<T>::value;
 
@@ -90,7 +90,7 @@ struct IsFloatOrIntegral
 template <typename TMatrix>
 constexpr bool IsPositiveDefinite(const TMatrix& matrix)
 {
-    return true; // TODO(vicdie): implement
+    return true; // TODO: implement
 }
 
 template <typename TMatrix>
@@ -102,7 +102,7 @@ constexpr bool IsTotallyPositive(const TMatrix& matrix)
     }
     else
     {
-        return true; // TODO(vicdie): implement
+        return true; // TODO: implement
     }
 }
 

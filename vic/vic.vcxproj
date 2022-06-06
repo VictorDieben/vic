@@ -88,7 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
@@ -107,7 +107,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
@@ -126,7 +126,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
@@ -145,7 +145,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
@@ -161,20 +161,35 @@
   <ItemGroup>
     <ClInclude Include="Emulator.h" />
     <ClInclude Include="EntitySystem.h" />
-    <ClInclude Include="EventQueue.h" />
-    <ClInclude Include="framework.h" />
     <ClInclude Include="geometry\algorithms\algorithms.h" />
+    <ClInclude Include="geometry\algorithms\bbox_tree.h" />
+    <ClInclude Include="geometry\algorithms\intersections.h" />
+    <ClInclude Include="geometry\algorithms\interval_heap.h" />
     <ClInclude Include="geometry\geometry.h" />
-    <ClInclude Include="Graph.h" />
     <ClInclude Include="graph\algorithms.h" />
     <ClInclude Include="graph\graph.h" />
     <ClInclude Include="graph\iterators.h" />
     <ClInclude Include="graph\tensor_graph.h" />
     <ClInclude Include="graph\traits.h" />
+    <ClInclude Include="kinematics\algorithms\forward_kinematics.h" />
+    <ClInclude Include="kinematics\math.h" />
+    <ClInclude Include="kinematics\robot\node.h" />
+    <ClInclude Include="kinematics\robot\robot.h" />
+    <ClInclude Include="kinematics\rotation.h" />
+    <ClInclude Include="kinematics\transformation.h" />
+    <ClInclude Include="kinematics\translation.h" />
+    <ClInclude Include="linalg\algorithms\eigenvalues.h" />
     <ClInclude Include="linalg\matrices_dynamic.h" />
+    <ClInclude Include="linalg\solve.h" />
+    <ClInclude Include="memory\constexpr_map.h" />
+    <ClInclude Include="memory\event_queue.h" />
     <ClInclude Include="memory\garbage_collector.h" />
     <ClInclude Include="memory\refcounter.h" />
     <ClInclude Include="memory\tree.h" />
+    <ClInclude Include="simulations\cfd\mesh.h" />
+    <ClInclude Include="symbolic\symbolic.h" />
+    <ClInclude Include="units\tensors.h" />
+    <ClInclude Include="units\units.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="kinematics\kinematics.h" />
     <ClInclude Include="linalg\add.h" />
@@ -190,15 +205,13 @@
     <ClInclude Include="linalg\traits.h" />
     <ClInclude Include="linprog\seidel.h" />
     <ClInclude Include="network\udp.h" />
-    <ClInclude Include="pch.h" />
+    <ClInclude Include="utils\observable.h" />
+    <ClInclude Include="utils\ranges.h" />
+    <ClInclude Include="utils\sort.h" />
+    <ClInclude Include="utils\statemachine.h" />
+    <ClInclude Include="utils\timing.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="vic.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

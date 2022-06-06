@@ -8,8 +8,7 @@ namespace vic
 namespace linalg
 {
 
-template <typename TMatrix>
-requires ConceptMatrix<TMatrix>
+template <typename TMatrix> // requires ConceptMatrix<TMatrix>
 constexpr auto AddConstant(const TMatrix& matrix, const typename TMatrix::DataType& value)
 {
     Matrix<TMatrix::DataType, TMatrix::GetRows(), TMatrix::GetColumns()> result{};
@@ -20,7 +19,8 @@ constexpr auto AddConstant(const TMatrix& matrix, const typename TMatrix::DataTy
 }
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && HasSameShape<TMat1, TMat2>::value constexpr auto AddGeneral(const TMat1& mat1, const TMat2& mat2)
+// requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && HasSameShape<TMat1, TMat2>::value
+constexpr auto AddGeneral(const TMat1& mat1, const TMat2& mat2)
 {
     Matrix<double, TMat1::GetRows(), TMat1::GetColumns()> result{};
     for(std::size_t i = 0; i < TMat1::GetRows(); ++i)
@@ -46,6 +46,13 @@ constexpr auto Add(const TMat1& mat1, const TMat2& mat2)
 
     else
         return AddGeneral(mat1, mat2);
+}
+
+// TODO: make a selector for proper algorithms
+template <typename TMat1, typename TMat2, typename... Types>
+constexpr auto Add(const TMat1& mat1, const TMat2& mat2, const Types... others)
+{
+    return Add(Add(mat1, mat2), others...);
 }
 
 } // namespace linalg

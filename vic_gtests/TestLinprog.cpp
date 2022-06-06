@@ -138,7 +138,7 @@ TEST(TestLinprog, UnitCircle)
         seidel.AddConstraint(Constraint<double, 2>({std::sin(3.1415 * (double(i) / double(n - 1))), //
                                                     std::cos(3.1415 * (double(i) / double(n - 1)))},
                                                    1));
-    for(std::size_t i = 0; i < 1000000; ++i)
+    for(std::size_t i = 0; i < 4; ++i)
     {
         auto res = seidel.Calculate({1, 1});
         ASSERT_EQ(res.mState, ESeidelState::OK);

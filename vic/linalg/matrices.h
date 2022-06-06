@@ -1,21 +1,12 @@
 #pragma once
 
-#include "traits.h"
+#include "vic/utils.h"
+
 #include <array>
 #include <cstddef>
 
 namespace vic
 {
-template <typename T>
-constexpr T Min(const T& val1, const T& val2)
-{
-    return val1 < val2 ? val1 : val2;
-}
-template <typename T>
-constexpr T Max(const T& val1, const T& val2)
-{
-    return val1 > val2 ? val1 : val2;
-}
 namespace linalg
 {
 
@@ -39,12 +30,18 @@ class Matrix
 public:
     using DataType = T;
     constexpr Matrix() = default;
+
+    constexpr explicit Matrix(const T& value)
+    {
+        for(auto& item : mData)
+            item = value;
+    }
+
     constexpr explicit Matrix(const std::array<T, rows * columns>& data)
         : mData(data)
     { }
 
-    template <typename TMat>
-    requires ConceptMatrix<TMat>
+    template <typename TMat> // requires ConceptMatrix<TMat> //
     constexpr explicit Matrix(const TMat& matrix)
     {
         for(std::size_t i = 0; i < rows; ++i)
@@ -59,6 +56,12 @@ public:
     {
         assert(((i < rows) && (j < columns)));
         return mData[RowColToIndex<columns>(i, j)];
+    }
+    constexpr T Get(const std::size_t i) const
+    {
+        static_assert(rows == 1 || columns == 1);
+        assert(i < mData.size());
+        return mData.at(i);
     }
 
     constexpr T& At(const std::size_t i, const std::size_t j)
@@ -94,6 +97,9 @@ using Vector5 = Matrix<T, 5, 1>;
 template <typename T>
 using Vector6 = Matrix<T, 6, 1>;
 
+template <typename T, std::size_t n>
+using Vector = Matrix<T, n, 1>;
+
 template <typename T, std::size_t rows, std::size_t columns>
 class Zeros
 {
@@ -109,6 +115,24 @@ public:
     {
         assert(((i < GetRows()) && (j < GetColumns())));
         return T{0};
+    }
+};
+
+template <typename T, std::size_t rows, std::size_t columns>
+class Ones
+{
+public:
+    constexpr Ones() = default;
+
+    constexpr static std::size_t GetRows() { return rows; }
+    constexpr static std::size_t GetColumns() { return columns; }
+
+    using DataType = T;
+
+    constexpr T Get(const std::size_t i, const std::size_t j) const
+    {
+        assert(((i < GetRows()) && (j < GetColumns())));
+        return T{1};
     }
 };
 
@@ -169,8 +193,7 @@ public:
         for(std::size_t i = 0; i < Min(rows, columns); ++i)
             mData[i] = value;
     }
-    template <typename TMat>
-    requires ConceptMatrix<TMat>
+    template <typename TMat> // requires ConceptMatrix<TMat> // works, but is not c++17
     constexpr explicit Diagonal(const TMat& matrix)
     {
         for(std::size_t i = 0; i < Min(rows, columns); ++i)
@@ -191,12 +214,34 @@ public:
     constexpr T& At(const std::size_t i, const std::size_t j)
     {
         assert(((i < GetRows()) && (j < GetColumns())));
-        assert(i == j);
+        assert(i == j); // only diagonal can be set
         return mData[i];
     }
 
     // NOTE: not private, do with it what you want
     std::array<T, Min(rows, columns)> mData{};
+};
+
+template <typename TFunctor, std::size_t rows, std::size_t columns>
+class LambdaMatrix
+{
+    TFunctor mFunctor;
+
+public:
+    constexpr LambdaMatrix(TFunctor functor)
+        : mFunctor(functor)
+    { }
+
+    constexpr static std::size_t GetRows() { return rows; }
+    constexpr static std::size_t GetColumns() { return columns; }
+
+    using DataType = decltype(mFunctor(std::size_t{}, std::size_t{}));
+
+    constexpr DataType Get(const std::size_t i, const std::size_t j) const
+    {
+        assert(((i < GetRows()) && (j < GetColumns())));
+        return mFunctor(i, j);
+    }
 };
 
 } // namespace linalg

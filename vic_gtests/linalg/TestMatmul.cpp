@@ -4,10 +4,9 @@
 #include "vic/linalg/matrices.h"
 #include "vic/linalg/matrices_dynamic.h"
 #include "vic/linalg/traits.h"
+#include "vic/utils.h"
 
 #include "vic/linalg/tools.h"
-
-#include <utility>
 
 namespace vic
 {
@@ -86,6 +85,8 @@ TEST(TestLinalg, TestMatmulDynamic)
     EXPECT_EQ(0, dyn1.Get(1, 2));
     EXPECT_DEATH(dyn1.Get(1, 3), "");
     EXPECT_DEATH(dyn1.Get(2, 2), "");
+
+    // todo: verify values
 }
 
 TEST(TestLinalg, TestMatmulMixed)
@@ -100,9 +101,9 @@ TEST(TestLinalg, TestMatmulMixed)
 
     auto mat2x5_1 = Matmul(Matmul(mat2x3, dyn3x4), mat4x5);
     auto mat2x5_2 = Matmul(mat2x3, Matmul(dyn3x4, mat4x5));
-    // TODO(vicdie): the two mat2x5 matrices should be static size
+    // TODO: the two mat2x5 matrices should be static size
 
-    ExpectMatrixEqual(mat2x5_1, mat2x5_2); // TODO(vicdie): just zeros now
+    ExpectMatrixEqual(mat2x5_1, mat2x5_2); // TODO: just zeros now
 
     // check that if the inbetween dimension is variable, but the two outside edges are static,
     // the resulting shape is still static
@@ -111,5 +112,16 @@ TEST(TestLinalg, TestMatmulMixed)
     const Matrix<double, 3, 5> static3x5 = Matmul(rowconst3x100, colconst100x5);
 }
 
+TEST(TestLinalg, TestMultivariate)
+{
+    // test multivariate
+    constexpr auto M = DiagonalConstant<double, 3>(2);
+    constexpr auto ans3 = Matmul(M, M, M);
+    constexpr auto ans4 = Matmul(M, M, M, M);
+    constexpr auto ans5 = Matmul(M, M, M, M, M);
+    constexpr auto ans6 = Matmul(M, M, M, M, M, M);
+    constexpr auto ans7 = Matmul(M, M, M, M, M, M, M);
+    ExpectMatrixEqual(ans7, DiagonalConstant<double, 3>(Pow<7>(2.)));
+}
 } // namespace linalg
 } // namespace vic

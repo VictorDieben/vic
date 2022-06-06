@@ -36,3 +36,23 @@ void ExpectVectorsEqual(const TVec1& vec1, const TVec2& vec2)
 {
     ExpectIterablesEqual(vec1.begin(), vec1.end(), vec2.begin(), vec2.end()); // pass along
 }
+
+template <typename TOnConstruct, typename TOnCopy, typename TOnMove, typename TOnDestruct>
+struct OnEventObject
+{
+    OnEventObject(TOnConstruct onConstruct, //
+                  TOnCopy onCopy,
+                  TOnMove onMove,
+                  TOnDestruct onDestruct)
+        : mOnConstruct(onConstruct)
+        , mOnCopy(onCopy)
+        , mOnMove(onMove)
+        , mOnDestruct(onDestruct)
+    { }
+
+private:
+    TOnConstruct mOnConstruct;
+    TOnCopy mOnCopy;
+    TOnMove mOnMove;
+    TOnDestruct mOnDestruct;
+};

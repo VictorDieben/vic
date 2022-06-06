@@ -11,11 +11,13 @@ namespace linalg
 {
 
 // multiplication of two equal matrix types
-template <typename TMat, typename TFloat, class TRet = decltype(typename TMat::DataType() * TFloat())>
+template <typename TMat, typename TFloat>
 requires ConceptMatrix<TMat>
 constexpr auto MatmulScalar(const TMat& mat, const TFloat& scalar)
 {
     using T = typename TMat::DataType;
+    using TRet = decltype(T{} * TFloat());
+
     constexpr auto rows = TMat::GetRows();
     constexpr auto cols = TMat::GetColumns();
 
@@ -29,7 +31,7 @@ constexpr auto MatmulScalar(const TMat& mat, const TFloat& scalar)
     }
     else if constexpr(std::is_same_v<TMat, Diagonal<T, rows, cols>>)
     {
-        Diagonal<T, rows, cols> result{};
+        Diagonal<TRet, rows, cols> result{};
         for(std::size_t i = 0; i < Min(rows, cols); ++i)
             result.At(i, i) = mat.Get(i, i) * scalar;
         return result;
@@ -49,7 +51,7 @@ template <typename TMat1, typename TMat2, class TRet = decltype(typename TMat1::
 requires ConceptConstexprMatrix<TMat1> && ConceptConstexprMatrix<TMat2>
 constexpr auto MatmulStatic(const TMat1& mat1, const TMat2& mat2)
 {
-    // TODO(vicdie): specialize for certain types of matrix multiplications (e.g. diag*diag)
+    // TODO: specialize for certain types of matrix multiplications (e.g. diag*diag)
 
     static_assert(mat1.GetColumns() == mat2.GetRows());
     Matrix<TRet, mat1.GetRows(), mat2.GetColumns()> result{};
@@ -122,6 +124,20 @@ constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2)
         return MatmulDynamic(mat1, mat2);
     }
 }
+
+// TODO: make a selector for proper algorithms
+// TODO: For now just inverse the order: (a * (b * (c*d)))
+template <typename TMat1, typename TMat2, typename... Types>
+constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2, const Types... others)
+{
+    return Matmul(Matmul(mat1, mat2), others...);
+}
+
+//template <typename TMat1, typename TMat2, typename... Types>
+//constexpr auto Matmul(const Types... others, const TMat1& mat1, const TMat2& mat2)
+//{
+//    return Matmul(others..., Matmul(mat1, mat2));
+//}
 
 } // namespace linalg
 } // namespace vic

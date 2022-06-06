@@ -1,44 +1,17 @@
 #pragma once
 
-#include "linalg.h"
-#include "traits.h"
+#include "vic/linalg/matmul.h"
+#include "vic/linalg/matrices.h"
 #include "vic/linalg/matrix_view.h"
+#include "vic/linalg/traits.h"
+#include "vic/utils.h"
+
 #include <algorithm>
 
 namespace vic
 {
 namespace linalg
 {
-
-template <typename TMatrix>
-requires ConceptSquareMatrix<TMatrix>
-constexpr auto Inverse(const TMatrix& matrix)
-{
-    // TODO(vicdie): if is:
-    // - rotation
-    // - transformation
-    // - banded
-    // - block
-
-    // TODO(vicdie): split Inverse() up into 2 parts:
-    // - preconditioner, initial guess, partly dependant on solver
-    // - solving algorithm, either iterative/LU-decomposition/something else
-
-    if constexpr(std::is_same_v<TMatrix, Identity<TMatrix::DataType, TMatrix::GetRows()>>)
-    {
-        return Identity<TMatrix::DataType, TMatrix::GetRows()>{}; // inverse of identity is identity
-    }
-    else if constexpr(std::is_same_v<TMatrix, Diagonal<TMatrix::DataType, TMatrix::GetRows(), TMatrix::GetColumns()>> && //
-                      (TMatrix::GetRows() == TMatrix::GetColumns()))
-    {
-        return InverseDiagonal(matrix);
-    }
-    else
-    {
-        return matrix;
-    }
-}
-
 // inverse of diagonal is 1/<diag value> (for square matrices)
 template <typename T, std::size_t size>
 constexpr Diagonal<T, size, size> InverseDiagonal(const typename Diagonal<T, size, size>& matrix)
@@ -73,35 +46,35 @@ template <typename TMat>
 requires ConceptSquareMatrix<TMat>
 constexpr auto InverseStatic(const TMat& mat)
 {
-    // TODO(vicdie): several algorithms, selector, estimator for how good it is
+    // TODO: several algorithms, selector, estimator for how good it is
     return InverseHotellingBodewig(mat, 1E-10);
 }
 
 template <typename TMat>
 requires ConceptSquareMatrix<TMat>
-constexpr auto InverseHotellingBodewig(const TMat& mat, const typename TMat::DataType eps)
+constexpr auto InverseHotellingBodewig(const TMat& A, const typename TMat::DataType eps)
 {
     // Hotelling-Bodewig algorithm: V_n+1 = V_n * (2*I - A*V_n)
     using T = typename TMat::DataType;
-    constexpr std::size_t n = mat.GetRows();
+    constexpr std::size_t n = A.GetRows();
     constexpr auto identity = Identity<double, n>{};
     constexpr auto twoI = DiagonalConstant<T, n>(2.);
 
-    // TODO(vicdie): good initial guess
-    auto V = Matrix<T, n, n>(Matmul(1E-10, Transpose(mat)));
+    // TODO: good initial guess
+    auto V = Matrix<T, n, n>(Matmul(1E-10, Transpose(A)));
 
-    // TODO(vicdie): choose decent max iterations
+    // TODO: choose decent max iterations
     std::size_t i = 0;
     for(; i < 1000; ++i)
     {
-        const auto tmp = Matmul(mat, V);
-        V = Matmul(V, Add(twoI, ViewNegative(tmp)));
+        const auto tmp = Matmul(A, V);
+        V = Matmul(V, Add(twoI, Matmul(-1., tmp)));
 
         // sum up the difference between tmp and I, break if it is small enough
         double absSum = 0.;
         for(std::size_t i = 0; i < n; ++i)
             for(std::size_t j = 0; j < n; ++j)
-                absSum += std::fabs(tmp.Get(i, j) - identity.Get(i, j));
+                absSum += Abs(tmp.Get(i, j) - identity.Get(i, j));
         if(absSum < eps * n * n)
             break;
     }
@@ -112,7 +85,7 @@ template <typename TMat>
 requires ConceptMatrix<TMat>
 constexpr auto InverseDynamic(const TMat& mat)
 {
-    // TODO(vicdie): maybe implement this function in a different file,
+    // TODO: maybe implement this function in a different file,
     // so we do not need to compile it if we don't want it
     return Zeros<double, 1, 1>{};
 }
@@ -139,7 +112,6 @@ requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto FrobeniusInnerProduct(const TMat1& mat1, const TMat2& mat2)
 {
     // calculate tr(mat1.T * mat2)
-    //
 }
 
 // todo: frobenius inner product
@@ -159,6 +131,37 @@ constexpr auto FrobeniusInnerProduct(const TMat& mat)
 // todo: pre-conditioners
 
 // todo:
+
+// Selector for Inverse algorithm
+template <typename TMatrix>
+requires ConceptSquareMatrix<TMatrix>
+constexpr auto Inverse(const TMatrix& matrix)
+{
+    // TODO: if is:
+    // - rotation
+    // - transformation
+    // - banded
+    // - block
+
+    // TODO: check if user has made a specialization for this specific type of matrix
+
+    // TODO: split Inverse() up into 2 parts:
+    // - preconditioner, initial guess, partly dependant on solver
+    // - solving algorithm, either iterative/LU-decomposition/something else
+
+    if constexpr(std::is_same_v<TMatrix, Identity<TMatrix::DataType, TMatrix::GetRows()>>)
+    {
+        return Identity<TMatrix::DataType, TMatrix::GetRows()>{}; // inverse of identity is identity
+    }
+    else if constexpr(std::is_same_v<TMatrix, Diagonal<TMatrix::DataType, TMatrix::GetRows(), TMatrix::GetColumns()>>)
+    {
+        return InverseDiagonal(matrix);
+    }
+    else
+    {
+        return InverseGeneral(matrix);
+    }
+}
 
 } // namespace linalg
 } // namespace vic

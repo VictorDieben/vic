@@ -1,15 +1,13 @@
 #pragma once
 
-#include "linalg.h"
-#include "traits.h"
+// #include "linalg.h"
 
 namespace vic
 {
 namespace linalg
 {
 
-template <typename TMatrix>
-requires ConceptMatrix<TMatrix>
+template <typename TMatrix> // requires ConceptMatrix<TMatrix>
 constexpr auto Transpose(const TMatrix& matrix)
 {
     if constexpr(std::is_same_v<TMatrix, Identity<TMatrix::DataType, TMatrix::GetRows()>>)
@@ -27,8 +25,7 @@ constexpr auto Transpose(const TMatrix& matrix)
     }
 }
 
-template <typename TMatrix>
-requires ConceptMatrix<TMatrix>
+template <typename TMatrix> // requires ConceptMatrix<TMatrix>
 constexpr auto TransposeGeneral(const TMatrix& matrix)
 {
     Matrix<TMatrix::DataType, TMatrix::GetColumns(), TMatrix::GetRows()> transpose;
