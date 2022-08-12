@@ -8,13 +8,16 @@
 #include <unordered_map>
 #include <variant>
 
+// box2d version:
+// https://box2d.org/files/ErinCatto_DynamicBVH_GDC2019.pdf
+
 namespace vic
 {
 namespace geom
 {
 
 template <typename T, std::size_t dims>
-using BBox = CubeAxisAligned<T, dims>;
+using BBox = AABB<T, dims>;
 
 // calculate the overlap of two intervals.
 // min > max, if the two intervals do not overlap
@@ -43,7 +46,6 @@ constexpr bool Overlaps(const BBox<T, dims>& bbox1, const BBox<T, dims>& bbox2)
 template <typename T>
 constexpr bool Includes(const Interval<T>& interval1, const Interval<T>& interval2)
 {
-
     return (interval1.min <= interval2.min) && (interval1.max >= interval2.max);
 }
 
@@ -72,12 +74,18 @@ constexpr BBox<T, dims> Combine(const BBox<T, dims>& bbox1, const BBox<T, dims>&
     return bbox;
 }
 
+template <typename T>
+constexpr T Volume(const Interval<T>& interval)
+{
+    return interval.max - interval.min;
+}
+
 template <typename T, std::size_t dims>
 constexpr T Volume(const BBox<T, dims>& bbox)
 {
     T volume{1.};
     for(std::size_t i = 0; i < dims; ++i)
-        volume *= (bbox.intervals[i].max - bbox.intervals[i].min);
+        volume *= Volume(bbox.intervals[i]);
     return volume;
 }
 
@@ -100,7 +108,7 @@ class BBoxTree
     }
 
     // A node can either be a leaf or a branch.
-    // a leaf has an object, a branch has children.
+    // a leaf has an object, a branch has 2 children.
     struct Branch
     {
         std::array<Key, 2> children{};

@@ -63,7 +63,7 @@ struct Interval
 
 // todo: bbox is basically an n-dimensional Interval
 template <typename T, std::size_t dims>
-struct CubeAxisAligned
+struct AABB
 {
     std::array<Interval<T>, dims> intervals{};
 };

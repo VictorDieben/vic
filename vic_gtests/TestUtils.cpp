@@ -2,6 +2,7 @@
 
 #include "test_base.h"
 #include "vic/utils.h"
+#include "vic/utils/counted.h"
 #include "vic/utils/observable.h"
 #include "vic/utils/statemachine.h"
 #include "vic/utils/timing.h"

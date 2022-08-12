@@ -2,6 +2,8 @@
 
 #include "vic/geometry/algorithms/algorithms.h"
 
+#include "vic/geometry/geometry.h"
+#include "vic/geometry/parametric.h"
 #include "vic/utils.h"
 
 namespace vic::geom
@@ -29,7 +31,10 @@ constexpr std::optional<Point<T, 2>> Intersection(const LineSegment<T, 2>& seg1,
 template <typename T>
 struct TriLineIntersectionResult
 {
-    T u{}, v{}, t{};
+    T u{};
+    T v{};
+    T t{};
+    bool Hits() const { return 0 <= u && 0. <= v && (u + v) < 1.; }
 };
 
 // Return UV pair, indicating where the intersection is,
@@ -78,9 +83,11 @@ constexpr TriLineIntersectionResult<T> TriLineIntersection(const Triangle<T, 3>&
 template <typename T>
 struct SphereLineIntersectionResult
 {
+    // todo: we could store u1 and u2 as an interval, and consider it a hit if u1 < u2
     uint8_t nIntersections{};
     T u1{};
     T u2{};
+    bool Hits() const { return nIntersections; }
 };
 
 // http://portal.ku.edu.tr/~cbasdogan/Courses/Robotics/projects/IntersectionLineSphere.pdf
@@ -200,6 +207,7 @@ struct TriTriIntersectionResult
     Point<T, 3> pos{};
     Point<T, 3> dir{};
     Interval<T> interval{};
+    bool Hits() const { return interval.min <= interval.max; }
 };
 
 template <typename T>
@@ -218,14 +226,14 @@ TriTriIntersectionResult<T> TriTriIntersection(const Triangle<T, 3>& tri1, const
     const auto sign12 = Sign(Dot(Subtract(tri1.points[1], tri2.points[0]), n2));
     const auto sign13 = Sign(Dot(Subtract(tri1.points[2], tri2.points[0]), n2));
 
-    if(sign11 == sign12 && sign12 && sign13)
+    if(sign11 == sign12 && sign12 == sign13)
         return {}; // all points of tri1 are on one side of tri2
 
     const auto sign21 = Sign(Dot(Subtract(tri2.points[0], tri1.points[0]), n1));
     const auto sign22 = Sign(Dot(Subtract(tri2.points[1], tri1.points[0]), n1));
     const auto sign23 = Sign(Dot(Subtract(tri2.points[2], tri1.points[0]), n1));
 
-    if(sign21 == sign22 && sign22 && sign23)
+    if(sign21 == sign22 && sign22 == sign23)
         return {}; // all points of tri2 are on one side of tri1
 
     // At this point, we know the triangles could be intersecting,
@@ -261,5 +269,52 @@ TriTriIntersectionResult<T> TriTriIntersection(const Triangle<T, 3>& tri1, const
     // calculate the overlap of the two intersections (if any)
     return TriTriIntersectionResult{intersectionPos, intersectionDir, Overlap(interval1, interval2)};
 };
+
+//
+//
+//
+
+template <typename T>
+Interval<T> IntervalIntersection(const Interval<T>& interval, const T origin, const T direction)
+{
+    const T v1 = (interval.min - origin) / direction;
+    const T v2 = (interval.max - origin) / direction;
+
+    // todo: this is incredibly unlikely to occur, but we do need to check for it.
+    // is there a way to perform the division such that nan can never occur?
+    if(std::isnan(v1) || std::isnan(v2))
+        return Interval<T>{-std::numeric_limits<T>::infinity(), std::numeric_limits<T>::infinity()};
+
+    return Interval<T>{std::min({v1, v2}), std::max({v1, v2})};
+}
+
+template <typename T>
+struct AABBLineIntersectionResult
+{
+    Interval<T> interval{};
+    bool Hits() const { return interval.min <= interval.max; }
+};
+
+template <typename T>
+AABBLineIntersectionResult<T> AABBLineIntersection(const AABB<T, 3>& aabb, //
+                                                   const Line<T, 3>& line)
+{
+    // for each dimension separately, calculate the interval of the intersection.
+    // The 3d interval is equal to the overlap of all dimensions combined
+    const Interval<T> x = IntervalIntersection(aabb.intervals[0], line.pos.Get(0), line.dir.Get(0));
+    const Interval<T> y = IntervalIntersection(aabb.intervals[1], line.pos.Get(1), line.dir.Get(1));
+    const Interval<T> z = IntervalIntersection(aabb.intervals[2], line.pos.Get(2), line.dir.Get(2));
+    return AABBLineIntersectionResult<T>{Interval<T>{std::max({x.min, y.min, z.min}), //
+                                                     std::min({x.max, y.max, z.max})}};
+}
+
+template <typename T>
+auto ParametricPatchLineIntersection(const BSurface<T, 3>& surface, //
+                                     const Line<T, 3>& line)
+{
+    // paper on the subject:
+    // https://dl.acm.org/doi/pdf/10.1145/800064.801287
+    return false; //
+}
 
 } // namespace vic::geom
