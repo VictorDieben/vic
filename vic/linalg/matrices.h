@@ -31,6 +31,11 @@ public:
     using DataType = T;
     constexpr Matrix() = default;
 
+    constexpr explicit Matrix(const std::size_t verify_rows, const std::size_t verify_columns)
+    {
+        assert(verify_rows == rows && verify_columns == columns); //
+    }
+
     constexpr explicit Matrix(const T& value)
     {
         for(auto& item : mData)

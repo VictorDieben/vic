@@ -13,10 +13,10 @@ namespace entity
 template <typename T1, typename T2, typename TSystem, typename TFunctor>
 void FilterForeach(TSystem& system, TFunctor functor)
 {
-    auto it1 = system.ComponentSystem<T1>::begin();
-    auto it2 = system.ComponentSystem<T2>::begin();
-    const auto it1End = system.ComponentSystem<T1>::end();
-    const auto it2End = system.ComponentSystem<T2>::end();
+    auto it1 = system.begin<T1>();
+    auto it2 = system.begin<T2>();
+    const auto it1End = system.end<T1>();
+    const auto it2End = system.end<T2>();
 
     while(it1 != it1End && it2 != it2End)
     {

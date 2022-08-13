@@ -144,6 +144,30 @@ public:
         return ComponentSystem<T>::Remove(id);
     }
 
+    template <typename T>
+    auto begin()
+    {
+        return ComponentSystem<T>::begin();
+    }
+
+    template <typename T>
+    auto end()
+    {
+        return ComponentSystem<T>::end();
+    }
+
+    template <typename T>
+    auto begin() const
+    {
+        return ComponentSystem<T>::begin();
+    }
+
+    template <typename T>
+    auto end() const
+    {
+        return ComponentSystem<T>::end();
+    }
+
     // filter entities that have two specific components
     // todo: filter on 3 or more? combine one filter with another?
     template <typename T1, typename T2>

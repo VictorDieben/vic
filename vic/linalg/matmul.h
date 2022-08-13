@@ -10,6 +10,52 @@ namespace vic
 namespace linalg
 {
 
+// selector for default Matmul(mat1, mat2) return type
+template <typename TMat1, typename TMat2>
+struct default_matmul
+{
+private:
+    static constexpr bool row_const = ConceptConstexprRows<TMat1>;
+    static constexpr bool col_const = ConceptConstexprColumns<TMat2>;
+
+    static constexpr std::size_t CalculateRows()
+    {
+        if constexpr(ConceptConstexprRows<TMat1>)
+            return TMat1::GetRows();
+        else
+            return 0; // cannot deduce
+    }
+    static constexpr std::size_t CalculateColumns()
+    {
+        if constexpr(ConceptConstexprColumns<TMat2>)
+            return TMat2::GetColumns();
+        else
+            return 0; // cannot deduce
+    }
+    static constexpr std::size_t rows = CalculateRows();
+    static constexpr std::size_t cols = CalculateColumns();
+
+    using value_type = decltype(typename TMat1::DataType() * typename TMat2::DataType());
+
+    // possible results
+    using MatConst = Matrix<value_type, rows, cols>;
+    using MatRowConst = MatrixRowConst<value_type, rows>;
+    using MatColConst = MatrixColConst<value_type, cols>;
+    using MatDynamic = MatrixDynamic<value_type>;
+
+public:
+    using type = std::conditional_t<row_const && col_const, //
+                                    MatConst, //
+                                    std::conditional_t<row_const, //
+                                                       MatRowConst, //
+                                                       std::conditional_t<col_const, //
+                                                                          MatColConst, //
+                                                                          MatDynamic>>>; //
+};
+
+template <typename TMat1, typename TMat2>
+using default_matmul_t = default_matmul<TMat1, TMat2>::type;
+
 // multiplication of two equal matrix types
 template <typename TMat, typename TFloat>
 requires ConceptMatrix<TMat>
@@ -47,14 +93,14 @@ constexpr auto MatmulScalar(const TMat& mat, const TFloat& scalar)
 }
 
 // multiplication of any 2 matrices of constant size
-template <typename TMat1, typename TMat2, class TRet = decltype(typename TMat1::DataType() * typename TMat2::DataType())>
+template <typename TMat1, typename TMat2, typename TMatRet = default_matmul_t<TMat1, TMat2>>
 requires ConceptConstexprMatrix<TMat1> && ConceptConstexprMatrix<TMat2>
 constexpr auto MatmulStatic(const TMat1& mat1, const TMat2& mat2)
 {
     // TODO: specialize for certain types of matrix multiplications (e.g. diag*diag)
 
     static_assert(mat1.GetColumns() == mat2.GetRows());
-    Matrix<TRet, mat1.GetRows(), mat2.GetColumns()> result{};
+    TMatRet result{};
     for(std::size_t i = 0; i < mat1.GetRows(); ++i)
         for(std::size_t j = 0; j < mat2.GetColumns(); ++j)
             for(std::size_t k = 0; k < mat1.GetColumns(); ++k)
@@ -63,38 +109,22 @@ constexpr auto MatmulStatic(const TMat1& mat1, const TMat2& mat2)
 }
 
 // multiplication of any 2 matrices where size is not (fully) known
-template <typename TMat1, typename TMat2>
+template <typename TMat1, typename TMat2, typename TMatRet = default_matmul_t<TMat1, TMat2>>
 requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto MatmulDynamic(const TMat1& mat1, const TMat2& mat2)
 {
-    using ReturnType = decltype(typename TMat1::DataType() * typename TMat2::DataType());
     assert(mat1.GetColumns() == mat2.GetRows());
 
-    if constexpr(ConceptConstexprRows<TMat1> && ConceptConstexprColumns<TMat2>)
-    {
-        // output can be fixed size, even though the two inputs are not
-        return Matrix<ReturnType, mat1.GetRows(), mat2.GetColumns()>();
-    }
-    else if constexpr(ConceptConstexprRows<TMat1>)
-    {
-        // output can have constant row size
-        return MatrixRowConst<ReturnType, mat1.GetRows()>(mat2.GetColumns());
-    }
-    else if constexpr(ConceptConstexprColumns<TMat2>)
-    {
-        // output can have constant col size
-        return MatrixColConst<ReturnType, mat2.GetColumns()>(mat1.GetRows());
-    }
-    else
-    {
-        // don't bother optimizing, no dimension is known
-        MatrixDynamic<ReturnType> result{mat1.GetRows(), mat2.GetColumns()};
+    const auto MatmulLambda = [&](const auto& mat1, const auto& mat2, auto& result) {
         for(std::size_t i = 0; i < mat1.GetRows(); ++i)
             for(std::size_t j = 0; j < mat2.GetColumns(); ++j)
                 for(std::size_t k = 0; k < mat1.GetColumns(); ++k)
                     result.At(i, j) += (mat1.Get(i, k) * mat2.Get(k, j));
-        return result;
-    }
+    };
+
+    TMatRet result{mat1.GetRows(), mat2.GetColumns()};
+    MatmulLambda(mat1, mat2, result);
+    return result;
 }
 
 // selector for the correct type of matrix multiplication

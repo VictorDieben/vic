@@ -124,6 +124,30 @@ TEST(TestLinalg, TestDiagonal)
                 EXPECT_DOUBLE_EQ(diag3.Get(i, j), 0.);
 }
 
+TEST(TestLinalg, TestAddDefaultType)
+{
+    using value_type = double;
+    static constexpr std::size_t rows = 3;
+    static constexpr std::size_t cols = 2;
+
+    using MatConst = Matrix<value_type, rows, cols>;
+    using MatRowConst = MatrixRowConst<value_type, rows>;
+    using MatColConst = MatrixColConst<value_type, cols>;
+    using MatDynamic = MatrixDynamic<value_type>;
+
+    static_assert(std::is_same_v<MatConst, default_add_t<MatConst, MatConst>>);
+    static_assert(std::is_same_v<MatRowConst, default_add_t<MatRowConst, MatRowConst>>);
+    static_assert(std::is_same_v<MatColConst, default_add_t<MatColConst, MatColConst>>);
+    static_assert(std::is_same_v<MatDynamic, default_add_t<MatDynamic, MatDynamic>>);
+
+    static_assert(std::is_same_v<MatConst, default_add_t<MatRowConst, MatConst>>);
+    static_assert(std::is_same_v<MatConst, default_add_t<MatConst, MatRowConst>>);
+    static_assert(std::is_same_v<MatConst, default_add_t<MatColConst, MatConst>>);
+    static_assert(std::is_same_v<MatConst, default_add_t<MatConst, MatColConst>>);
+    static_assert(std::is_same_v<MatConst, default_add_t<MatRowConst, MatColConst>>);
+    static_assert(std::is_same_v<MatConst, default_add_t<MatColConst, MatRowConst>>);
+}
+
 TEST(TestLinalg, TestAddMatrix)
 {
     constexpr double value = 1.0;
@@ -302,6 +326,30 @@ TEST(TestLinalg, TestMatmul4x4Perf)
         for(const auto j : Range(1000))
             const auto res = Matmul(mat1, mat2);
     }
+}
+
+TEST(TestLinalg, TestMatmulDefaultType)
+{
+    using value_type = double;
+    static constexpr std::size_t rows = 3;
+    static constexpr std::size_t cols = 2;
+
+    using MatConst = Matrix<value_type, rows, cols>;
+    using MatRowConst = MatrixRowConst<value_type, rows>;
+    using MatColConst = MatrixColConst<value_type, cols>;
+    using MatDynamic = MatrixDynamic<value_type>;
+
+    static_assert(std::is_same_v<MatConst, default_matmul_t<MatConst, MatConst>>);
+    static_assert(std::is_same_v<MatRowConst, default_matmul_t<MatRowConst, MatRowConst>>);
+    static_assert(std::is_same_v<MatColConst, default_matmul_t<MatColConst, MatColConst>>);
+    static_assert(std::is_same_v<MatDynamic, default_matmul_t<MatDynamic, MatDynamic>>);
+
+    static_assert(std::is_same_v<MatConst, default_matmul_t<MatRowConst, MatConst>>);
+    static_assert(std::is_same_v<MatRowConst, default_matmul_t<MatConst, MatRowConst>>);
+    static_assert(std::is_same_v<MatColConst, default_matmul_t<MatColConst, MatConst>>);
+    static_assert(std::is_same_v<MatConst, default_matmul_t<MatConst, MatColConst>>);
+    static_assert(std::is_same_v<MatConst, default_matmul_t<MatRowConst, MatColConst>>);
+    static_assert(std::is_same_v<MatDynamic, default_matmul_t<MatColConst, MatRowConst>>);
 }
 
 } // namespace linalg

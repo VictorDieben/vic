@@ -84,6 +84,12 @@ public:
     {
         Initialize();
     }
+    MatrixRowConst(const std::size_t validate_rows, const std::size_t columns)
+        : mColumns(columns)
+    {
+        assert(validate_rows == rows);
+        Initialize();
+    }
     using DataType = T;
     constexpr static std::size_t GetRows() { return rows; }
     std::size_t GetColumns() const { return mColumns; }
@@ -113,6 +119,12 @@ public:
     MatrixColConst(const std::size_t rows)
         : mRows(rows)
     {
+        Initialize();
+    }
+    MatrixColConst(const std::size_t rows, const std::size_t validate_columns)
+        : mRows(rows)
+    {
+        assert(columns == validate_columns);
         Initialize();
     }
     using DataType = T;

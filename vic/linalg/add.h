@@ -1,12 +1,82 @@
 #pragma once
 
 #include "vic/linalg/matrices.h"
+#include "vic/linalg/matrices_dynamic.h"
 #include "vic/linalg/traits.h"
+
+#include <type_traits>
 
 namespace vic
 {
 namespace linalg
 {
+
+// selector for default Add(mat1, mat2) return type
+template <typename TMat1, typename TMat2>
+struct default_add
+{
+
+private:
+    static constexpr bool row_const = ConceptConstexprRows<TMat1> || ConceptConstexprRows<TMat2>;
+    static constexpr bool col_const = ConceptConstexprColumns<TMat1> || ConceptConstexprColumns<TMat2>;
+
+    static constexpr std::size_t CalculateRows()
+    {
+        if constexpr(ConceptConstexprRows<TMat1>)
+            return TMat1::GetRows();
+        else if constexpr(ConceptConstexprRows<TMat2>)
+            return TMat2::GetRows();
+        else
+            return 0; // cannot deduce
+    }
+    static constexpr std::size_t CalculateColumns()
+    {
+        if constexpr(ConceptConstexprColumns<TMat1>)
+            return TMat1::GetColumns();
+        else if constexpr(ConceptConstexprColumns<TMat2>)
+            return TMat2::GetColumns();
+        else
+            return 0; // cannot deduce
+    }
+    static constexpr std::size_t rows = CalculateRows();
+    static constexpr std::size_t cols = CalculateColumns();
+
+    using value_type = decltype(typename TMat1::DataType() + typename TMat2::DataType());
+
+    // possible results
+    using MatConst = Matrix<value_type, rows, cols>;
+    using MatRowConst = MatrixRowConst<value_type, rows>;
+    using MatColConst = MatrixColConst<value_type, cols>;
+    using MatDynamic = MatrixDynamic<value_type>;
+
+public:
+    // default type that should be retured by Add():
+    using type = std::conditional_t<row_const && col_const, //
+                                    MatConst, //
+                                    std::conditional_t<row_const, //
+                                                       MatRowConst, //
+                                                       std::conditional_t<col_const, //
+                                                                          MatColConst, //
+                                                                          MatDynamic>>>; //
+};
+
+template <typename TMat1, typename TMat2>
+using default_add_t = default_add<TMat1, TMat2>::type;
+
+// addition of any 2 matrices of constant size
+template <typename TMat1, typename TMat2, class TMatRet = default_add_t<TMat1, TMat2>>
+requires ConceptConstexprMatrix<TMat1> && ConceptConstexprMatrix<TMat2>
+constexpr auto AddStatic(const TMat1& mat1, const TMat2& mat2)
+{
+    static_assert(TMat1::GetColumns() == TMat2::GetColumns());
+    static_assert(TMat1::GetRows() == TMat2::GetRows());
+
+    TMatRet result{};
+    for(std::size_t i = 0; i < TMat1::GetRows(); ++i)
+        for(std::size_t j = 0; j < TMat1::GetColumns(); ++j)
+            result.At(i, j) = mat1.Get(i, j) + mat2.Get(i, j);
+    return result;
+}
 
 template <typename TMatrix> // requires ConceptMatrix<TMatrix>
 constexpr auto AddConstant(const TMatrix& matrix, const typename TMatrix::DataType& value)
@@ -17,12 +87,11 @@ constexpr auto AddConstant(const TMatrix& matrix, const typename TMatrix::DataTy
             result.At(i, j) = matrix.Get(i, j) + value;
     return result;
 }
-
-template <typename TMat1, typename TMat2>
-// requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && HasSameShape<TMat1, TMat2>::value
+template <typename TMat1, typename TMat2, typename TMatRet = default_add_t<TMat1, TMat2>>
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto AddGeneral(const TMat1& mat1, const TMat2& mat2)
 {
-    Matrix<double, TMat1::GetRows(), TMat1::GetColumns()> result{};
+    TMatRet result{mat1.GetRows(), mat1.GetColumns()};
     for(std::size_t i = 0; i < TMat1::GetRows(); ++i)
         for(std::size_t j = 0; j < TMat1::GetColumns(); ++j)
             result.At(i, j) = mat1.Get(i, j) + mat2.Get(i, j);
