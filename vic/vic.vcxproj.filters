@@ -201,6 +201,12 @@
     <ClInclude Include="entity_system\definitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="memory\dense_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="memory\merge_sort.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

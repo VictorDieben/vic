@@ -65,6 +65,9 @@ template <typename T>
 class ComponentSystem
 {
 public:
+    // todo: make a custom component system, that does not rely on std::map
+    // example: https://austinmorlan.com/posts/entity_component_system/
+    // maybe make a custom container, a densely packed map or something
     using ComponentType = T;
     using Iterator = std::map<EntityId, T>::iterator;
 

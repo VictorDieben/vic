@@ -167,10 +167,12 @@ using Work = BPI<T, 1, 2, -2>;
 template <typename T>
 using Power = BPI<T, 1, 2, -3>;
 
-//template <typename T>
-//using SpecificVolume = BPI<T, -1, 4, -2>; // seems wrong
-
-//
+// todo:
+// BPI uses 3 values,
+// a different system uses 7: SoME2.
+// think about changing these classes
+// example:
+// https://www.youtube.com/watch?v=bI-FS7aZJpY
 
 // TODO:
 // This struct is only needed to determine the types of variables.

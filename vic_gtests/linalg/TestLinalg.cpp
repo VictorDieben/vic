@@ -317,14 +317,18 @@ TEST(TestLinalg, TestMatmul4x4Perf)
     std::default_random_engine g;
     std::uniform_real_distribution<double> r(0.01, 100.);
 
-    //~3.3e9 iters/sec
-    for(const auto i : Range(10))
+    // release: ~3.3e9 matmuls/sec
+    // debug: ~5e5 matmuls/sec
+    for(const auto i : Range(1000))
     {
         const Matrix<double, 4, 4> mat1{{r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g)}};
         const Matrix<double, 4, 4> mat2{{r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g)}};
 
-        for(const auto j : Range(1000))
+        for(const auto j : Range(100000))
+        {
             const auto res = Matmul(mat1, mat2);
+            volatile auto copy = res; // avoid optimizations
+        }
     }
 }
 
