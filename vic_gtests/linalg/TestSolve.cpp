@@ -9,6 +9,7 @@
 #include "vic/linalg/transpose.h"
 
 #include "vic/linalg/tools.h"
+#include <random>
 
 namespace vic
 {

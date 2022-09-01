@@ -14,6 +14,7 @@
 
 #include "vic/utils/timing.h"
 #include <format>
+#include <random>
 
 using namespace vic;
 

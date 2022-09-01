@@ -12,6 +12,7 @@
 #include "vic/utils.h"
 
 #include <optional>
+#include <random>
 
 namespace vic
 {

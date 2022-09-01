@@ -4,6 +4,8 @@
 
 #include "vic/memory/tree.h"
 
+#include <optional>
+
 namespace vic
 {
 namespace kinematics

@@ -9,6 +9,9 @@
 
 #include "vic/memory/constexpr_map.h"
 
+#include <random>
+#include <thread>
+
 using namespace vic;
 
 TEST(TestUtils, TestPow)

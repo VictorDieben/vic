@@ -10,6 +10,7 @@
 
 #include "vic/linalg/tools.h"
 #include "vic/utils.h"
+#include <random>
 
 namespace vic
 {

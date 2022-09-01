@@ -5,6 +5,8 @@
 #include "vic/graph/iterators.h"
 #include "vic/graph/tensor_graph.h"
 
+#include <random>
+
 using namespace vic;
 
 namespace vic
