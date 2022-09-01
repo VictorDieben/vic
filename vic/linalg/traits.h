@@ -72,7 +72,7 @@ struct IsDiagonal
 template <typename T1, typename T2>
 struct HasSameType
 {
-    constexpr static bool value = std::is_same_v<T1::DataType, T2::DataType>;
+    constexpr static bool value = std::is_same_v<typename T1::DataType, typename T2::DataType>;
 };
 
 template <typename T1, typename T2>

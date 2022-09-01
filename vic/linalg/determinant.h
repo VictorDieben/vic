@@ -40,7 +40,7 @@ requires ConceptMatrix<TMatrix>
 constexpr auto Determinant2x2(const TMatrix& matrix)
 {
     assert(matrix.GetRows() == 2 && matrix.GetColumns() == 2);
-    using TRet = TMatrix::DataType;
+    using TRet = typename TMatrix::DataType;
     const TRet a = matrix.Get(0, 0);
     const TRet b = matrix.Get(0, 1);
     const TRet c = matrix.Get(1, 0);
@@ -53,7 +53,7 @@ requires ConceptMatrix<TMatrix>
 constexpr auto Determinant3x3(const TMatrix& matrix)
 {
     assert(matrix.GetRows() == 3 && matrix.GetColumns() == 3);
-    using TRet = TMatrix::DataType;
+    using TRet = typename TMatrix::DataType;
     const TRet a = matrix.Get(0, 0);
     const TRet b = matrix.Get(0, 1);
     const TRet c = matrix.Get(0, 2);
@@ -70,7 +70,7 @@ template <typename TMatrix>
 requires ConceptSquareMatrix<TMatrix>
 constexpr auto DeterminantGeneral(const TMatrix& matrix)
 {
-    using TRet = TMatrix::DataType;
+    using TRet = typename TMatrix::DataType;
     constexpr auto nrows = TMatrix.GetRows();
     constexpr auto ncols = TMatrix.GetRows();
 
@@ -97,7 +97,7 @@ template <typename TMatrix>
 requires ConceptMatrix<TMatrix>
 constexpr auto Determinant(const TMatrix& matrix)
 {
-    using TRet = TMatrix::DataType;
+    using TRet = typename TMatrix::DataType;
     if constexpr(std::is_same_v<TMatrix, Identity<TMatrix::DataType, TMatrix::GetRows()>>)
     {
         return TRet{1};

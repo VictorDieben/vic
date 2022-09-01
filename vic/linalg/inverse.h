@@ -149,11 +149,11 @@ constexpr auto Inverse(const TMatrix& matrix)
     // - preconditioner, initial guess, partly dependant on solver
     // - solving algorithm, either iterative/LU-decomposition/something else
 
-    if constexpr(std::is_same_v<TMatrix, Identity<TMatrix::DataType, TMatrix::GetRows()>>)
+    if constexpr(std::is_same_v<TMatrix, Identity<typename TMatrix::DataType, TMatrix::GetRows()>>)
     {
-        return Identity<TMatrix::DataType, TMatrix::GetRows()>{}; // inverse of identity is identity
+        return Identity<typename TMatrix::DataType, TMatrix::GetRows()>{}; // inverse of identity is identity
     }
-    else if constexpr(std::is_same_v<TMatrix, Diagonal<TMatrix::DataType, TMatrix::GetRows(), TMatrix::GetColumns()>>)
+    else if constexpr(std::is_same_v<TMatrix, Diagonal<typename TMatrix::DataType, TMatrix::GetRows(), TMatrix::GetColumns()>>)
     {
         return InverseDiagonal(matrix);
     }
