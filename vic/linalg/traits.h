@@ -87,14 +87,14 @@ struct is_float_or_integral
     constexpr static bool value = (std::is_integral_v<T> || std::is_floating_point_v<T>);
 };
 
-template <typename TMatrix>
-constexpr bool IsPositiveDefinite(const TMatrix& matrix)
+template <typename T>
+struct is_positive_definite
 {
-    return true; // TODO: implement
-}
+    static constexpr bool value = false;
+};
 
 template <typename TMatrix>
-constexpr bool IsTotallyPositive(const TMatrix& matrix)
+constexpr bool is_totally_positive(const TMatrix& matrix)
 {
     if constexpr(!ConceptSquareMatrix<TMatrix>)
     {
@@ -102,7 +102,7 @@ constexpr bool IsTotallyPositive(const TMatrix& matrix)
     }
     else
     {
-        return true; // TODO: implement
+        return false; // TODO: implement
     }
 }
 
@@ -116,6 +116,10 @@ template <typename T>
 inline constexpr bool is_square_v = is_square<T>::value;
 template <typename T1, typename T2>
 inline constexpr bool is_same_type_v = is_same_type<T1, T2>::value;
+template <typename T>
+inline constexpr bool is_positive_definite_v = is_positive_definite<T>::value;
+template <typename T>
+inline constexpr bool is_totally_positive_v = is_totally_positive<T>::value;
 
 } // namespace linalg
 } // namespace vic
