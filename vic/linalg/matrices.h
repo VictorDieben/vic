@@ -1,7 +1,7 @@
 #pragma once
 
+#include "vic/linalg/traits.h"
 #include "vic/utils.h"
-
 #include <array>
 #include <cstddef>
 
@@ -225,6 +225,12 @@ public:
 
     // NOTE: not private, do with it what you want
     std::array<T, Min(rows, columns)> mData{};
+};
+
+template <typename T, std::size_t rows, std::size_t columns>
+struct is_diagonal<Diagonal<T, rows, columns>>
+{
+    static constexpr bool value = true;
 };
 
 template <typename TFunctor, std::size_t rows, std::size_t columns>

@@ -21,15 +21,15 @@ TEST(TestLinalg, HappyFlow)
     constexpr Identity<double, 4> identity1{};
     constexpr Diagonal<double, 4, 4> diagonal1{};
 
-    EXPECT_TRUE((HasSameType<decltype(mat1), decltype(identity1)>::value));
-    EXPECT_TRUE((HasSameType<decltype(mat1), decltype(diagonal1)>::value));
-    EXPECT_TRUE((HasSameType<decltype(diagonal1), decltype(identity1)>::value));
+    EXPECT_TRUE((is_same_type_v<decltype(mat1), decltype(identity1)>));
+    EXPECT_TRUE((is_same_type_v<decltype(mat1), decltype(diagonal1)>));
+    EXPECT_TRUE((is_same_type_v<decltype(diagonal1), decltype(identity1)>));
 
-    EXPECT_FALSE((HasSameType<Matrix<float, 4, 4>, Matrix<double, 4, 4>>::value));
-    EXPECT_FALSE((HasSameType<Identity<float, 4>, Identity<double, 4>>::value));
-    EXPECT_FALSE((HasSameType<Diagonal<float, 4, 4>, Diagonal<double, 4, 4>>::value));
-    EXPECT_FALSE((HasSameType<Matrix<float, 4, 4>, Identity<double, 4>>::value));
-    EXPECT_FALSE((HasSameType<Matrix<float, 4, 4>, Diagonal<double, 4, 4>>::value));
+    EXPECT_FALSE((is_same_type_v<Matrix<float, 4, 4>, Matrix<double, 4, 4>>));
+    EXPECT_FALSE((is_same_type_v<Identity<float, 4>, Identity<double, 4>>));
+    EXPECT_FALSE((is_same_type_v<Diagonal<float, 4, 4>, Diagonal<double, 4, 4>>));
+    EXPECT_FALSE((is_same_type_v<Matrix<float, 4, 4>, Identity<double, 4>>));
+    EXPECT_FALSE((is_same_type_v<Matrix<float, 4, 4>, Diagonal<double, 4, 4>>));
 }
 
 TEST(TestLinalg, TestZeros)

@@ -55,7 +55,7 @@ private:
 };
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && HasSameType<TMat1, TMat2>::value //
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && is_same_type<TMat1, TMat2>::value //
     class ViewRowStack
 {
 public:
@@ -85,7 +85,7 @@ private:
 };
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && HasSameType<TMat1, TMat2>::value //
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && is_same_type<TMat1, TMat2>::value //
     class ViewColumnStack
 {
 public:
@@ -119,7 +119,7 @@ private:
 // put several matrices along the diagonal
 // This object can be nested, e.g. diag(diag(a, b), diag(c, d))
 template <typename TMat1, typename TMat2>
-requires ConceptSquareMatrix<TMat1> && ConceptSquareMatrix<TMat2> && HasSameType<TMat1, TMat2>::value //
+requires ConceptSquareMatrix<TMat1> && ConceptSquareMatrix<TMat2> && is_same_type<TMat1, TMat2>::value //
     class ViewBlockDiagonal
 {
 public:

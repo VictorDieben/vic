@@ -62,7 +62,7 @@ public:
 template <typename TMat> // requires ConceptSquareMatrix<TMat>
 constexpr auto Trace(const TMat& matrix)
 {
-    static_assert(IsSquare<TMat>::value);
+    static_assert(is_square_v<TMat>);
     typename TMat::DataType val{0};
     for(std::size_t i = 0; i < TMat::Rows; ++i)
         val += matrix.Get(i, i);
@@ -120,7 +120,7 @@ constexpr auto Cross(const Vector3<T>& vec1, const Vector3<T>& vec2)
 }
 
 // dot product between two vectors
-template <typename TMat1, typename TMat2> // requires ConceptVector<TMat1> && ConceptVector<TMat2> && HasSameShape<TMat1, TMat2>::value //
+template <typename TMat1, typename TMat2> // requires ConceptVector<TMat1> && ConceptVector<TMat2> && is_same_shape<TMat1, TMat2>::value //
 constexpr auto Dot(const TMat1& mat1, const TMat2& mat2)
 {
     static_assert(TMat1::GetColumns() == 1 && TMat2::GetColumns() == 1 && TMat1::GetRows() == TMat2::GetRows());

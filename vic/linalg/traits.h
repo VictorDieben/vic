@@ -51,38 +51,38 @@ concept ConceptVector = ConceptMatrix<T> && requires(T mat)
 };
 
 template <typename TMat>
-struct IsSquare
+struct is_square
 {
     constexpr static bool value = (TMat::GetRows() == TMat::GetColumns());
 };
 
 // TODO: fix this, IsSquare should not be needed
 template <typename T>
-concept ConceptSquareMatrix = ConceptMatrix<T> && IsSquare<T>::value;
+concept ConceptSquareMatrix = ConceptMatrix<T> && is_square<T>::value;
 
 template <typename T>
 using Base = std::remove_const_t<std::decay_t<T>>;
 
-template <typename TMat>
-struct IsDiagonal
+template <typename T>
+struct is_diagonal
 {
-    constexpr static bool value = IsSquare<TMat>::value; // todo: make this a property of matrix types
+    static constexpr bool value = false;
 };
 
 template <typename T1, typename T2>
-struct HasSameType
+struct is_same_type
 {
     constexpr static bool value = std::is_same_v<typename T1::DataType, typename T2::DataType>;
 };
 
 template <typename T1, typename T2>
-struct HasSameShape
+struct is_same_shape
 {
     constexpr static bool value = (T1::GetRows() == T2::GetRows()) && (T1::GetColumns() == T2::GetColumns());
 };
 
 template <typename T>
-struct IsFloatOrIntegral
+struct is_float_or_integral
 {
     constexpr static bool value = (std::is_integral_v<T> || std::is_floating_point_v<T>);
 };
@@ -105,6 +105,17 @@ constexpr bool IsTotallyPositive(const TMatrix& matrix)
         return true; // TODO: implement
     }
 }
+
+template <typename T>
+inline constexpr bool is_float_or_integral_v = is_float_or_integral<T>::value;
+template <typename T>
+inline constexpr bool is_same_shape_v = is_same_shape<T>::value;
+template <typename T>
+inline constexpr bool is_diagonal_v = is_diagonal<T>::value;
+template <typename T>
+inline constexpr bool is_square_v = is_square<T>::value;
+template <typename T1, typename T2>
+inline constexpr bool is_same_type_v = is_same_type<T1, T2>::value;
 
 } // namespace linalg
 } // namespace vic

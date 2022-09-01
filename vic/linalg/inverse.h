@@ -12,7 +12,7 @@ namespace vic
 {
 namespace linalg
 {
-// inverse of diagonal is 1/<diag value> (for square matrices)
+// inverse of diagonal is 1/<diag value>
 template <typename T, std::size_t size>
 constexpr Diagonal<T, size, size> InverseDiagonal(const typename Diagonal<T, size, size>& matrix)
 {

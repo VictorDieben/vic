@@ -102,7 +102,7 @@ constexpr auto Determinant(const TMatrix& matrix)
     {
         return TRet{1};
     }
-    else if constexpr(IsDiagonal<TMatrix>::value)
+    else if constexpr(is_diagonal<TMatrix>::value)
     {
         return DeterminantDiagonal(matrix);
     }

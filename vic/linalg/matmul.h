@@ -131,8 +131,8 @@ constexpr auto MatmulDynamic(const TMat1& mat1, const TMat2& mat2)
 template <typename TMat1, typename TMat2>
 constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2)
 {
-    constexpr bool isFloat1 = IsFloatOrIntegral<std::decay_t<TMat1>>::value;
-    constexpr bool isFloat2 = IsFloatOrIntegral<std::decay_t<TMat2>>::value;
+    constexpr bool isFloat1 = is_float_or_integral_v<std::decay_t<TMat1>>;
+    constexpr bool isFloat2 = is_float_or_integral_v<std::decay_t<TMat2>>;
 
     if constexpr(isFloat1 && isFloat2)
         return mat1 * mat2;
