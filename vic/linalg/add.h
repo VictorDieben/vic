@@ -81,7 +81,7 @@ constexpr auto AddStatic(const TMat1& mat1, const TMat2& mat2)
 template <typename TMatrix> // requires ConceptMatrix<TMatrix>
 constexpr auto AddConstant(const TMatrix& matrix, const typename TMatrix::DataType& value)
 {
-    Matrix<TMatrix::DataType, TMatrix::GetRows(), TMatrix::GetColumns()> result{};
+    Matrix<typename TMatrix::DataType, TMatrix::GetRows(), TMatrix::GetColumns()> result{};
     for(std::size_t i = 0; i < TMatrix::GetRows(); ++i)
         for(std::size_t j = 0; j < TMatrix::GetColumns(); ++j)
             result.At(i, j) = matrix.Get(i, j) + value;
