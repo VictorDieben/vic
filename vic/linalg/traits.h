@@ -34,7 +34,7 @@ template <typename T>
 concept ConceptMatrix = requires(T mat)
 {
     // TODO: check that these statements have the correct return type
-    T::DataType;
+    typename T::DataType;
     mat.GetRows();
     mat.GetColumns();
     mat.Get(std::size_t(0), std::size_t(0));
