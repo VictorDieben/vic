@@ -18,13 +18,13 @@ struct Transformation
 {
 public:
     constexpr Transformation() = default;
-    constexpr Transformation(const Rotation& rotation, //
+    Transformation(const Rotation& rotation, //
                              const Translation& translation)
     {
         Assign<0, 0>(mMatrix, rotation.ToMatrix());
         Assign<0, 3>(mMatrix, translation.ToMatrix());
     }
-    constexpr Transformation(const Matrix<DataType, 3, 3>& rotation, //
+    Transformation(const Matrix<DataType, 3, 3>& rotation, //
                              const Vector3<DataType> translation)
     {
         Assign<0, 0>(mMatrix, rotation);
@@ -45,7 +45,7 @@ public:
     constexpr Translation GetTranslation() const { return Translation{Extract<Vector3<DataType>, 0, 3>(mMatrix)}; }
     constexpr Matrix<DataType, 4, 4> ToMatrix() const { return mMatrix; }
 
-    constexpr Transformation Inverse() const
+    Transformation Inverse() const
     {
         const auto inv = Transpose(Extract<Matrix<DataType, 3, 3>, 0, 0>(mMatrix));
         const auto trans = Matmul(-1., inv, Extract<Vector3<DataType>, 0, 3>(mMatrix));

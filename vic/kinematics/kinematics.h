@@ -32,19 +32,19 @@ public:
     constexpr Screw(const Vector6<DataType>& vec)
         : mVector(vec)
     { }
-    constexpr Screw(const std::array<DataType, 3>& angular, const std::array<DataType, 3>& linear)
+    Screw(const std::array<DataType, 3>& angular, const std::array<DataType, 3>& linear)
     {
         Assign<0, 0>(mVector, Vector3<DataType>{angular});
         Assign<3, 0>(mVector, Vector3<DataType>{linear});
     }
-    constexpr Screw(const Vector3<DataType>& angular, const Vector3<DataType>& linear)
+    Screw(const Vector3<DataType>& angular, const Vector3<DataType>& linear)
     {
         Assign<0, 0>(mVector, angular);
         Assign<3, 0>(mVector, linear);
     }
 
-    constexpr Vector3<DataType> GetAngular() const { return Extract<Vector3<DataType>, 0, 0>(mVector); }
-    constexpr Vector3<DataType> GetLinear() const { return Extract<Vector3<DataType>, 3, 0>(mVector); }
+    Vector3<DataType> GetAngular() const { return Extract<Vector3<DataType>, 0, 0>(mVector); }
+    Vector3<DataType> GetLinear() const { return Extract<Vector3<DataType>, 3, 0>(mVector); }
 
 private:
     Vector6<DataType> mVector{};

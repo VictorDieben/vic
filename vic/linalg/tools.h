@@ -133,7 +133,7 @@ constexpr auto Dot(const TMat1& mat1, const TMat2& mat2)
 
 // todo: TMatTarget needs to be asignable
 template <typename TMatTarget, typename TMatSource>
-constexpr void Assign(TMatTarget& target,
+void Assign(TMatTarget& target,
                       const TMatSource& source, //
                       const std::size_t row,
                       const std::size_t col)
@@ -152,7 +152,7 @@ constexpr void Assign(TMatTarget& target,
 
 // todo: TMatTarget needs to be asignable
 template <std::size_t row, std::size_t col, typename TMatTarget, typename TMatSource>
-constexpr void Assign(TMatTarget& target, const TMatSource& source)
+void Assign(TMatTarget& target, const TMatSource& source)
 {
     static_assert(target.GetRows() >= source.GetRows() + row);
     static_assert(target.GetColumns() >= source.GetColumns() + col);
@@ -168,7 +168,7 @@ constexpr void Assign(TMatTarget& target, const TMatSource& source)
 
 // todo: TMatResult needs to have a static size, assignable
 template <typename TMatResult, std::size_t row, std::size_t col, typename TMatInput>
-constexpr TMatResult Extract(const TMatInput& source)
+TMatResult Extract(const TMatInput& source)
 {
     static_assert(source.GetRows() >= TMatResult::GetRows() + row);
     static_assert(source.GetColumns() >= TMatResult::GetColumns() + col);
@@ -182,7 +182,7 @@ constexpr TMatResult Extract(const TMatInput& source)
 }
 
 template <typename TMatResult, typename TMatInput>
-constexpr TMatResult Extract(const TMatInput& source, std::size_t row, std::size_t col)
+TMatResult Extract(const TMatInput& source, std::size_t row, std::size_t col)
 {
     assert(source.GetRows() >= TMatResult::GetRows() + row);
     assert(source.GetColumns() >= TMatResult::GetColumns() + col);
