@@ -108,8 +108,8 @@ constexpr bool is_totally_positive(const TMatrix& matrix)
 
 template <typename T>
 inline constexpr bool is_float_or_integral_v = is_float_or_integral<T>::value;
-template <typename T>
-inline constexpr bool is_same_shape_v = is_same_shape<T>::value;
+template <typename T1, typename T2>
+inline constexpr bool is_same_shape_v = is_same_shape<T1, T2>::value;
 template <typename T>
 inline constexpr bool is_diagonal_v = is_diagonal<T>::value;
 template <typename T>
