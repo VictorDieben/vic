@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "test_base.h"
 #include "vic/memory/dense_map.h"
+#include "vic/memory/flat_map.h"
 #include "vic/memory/merge_sort.h"
 #include "vic/memory/refcounter.h"
 
@@ -112,6 +113,41 @@ TEST(TestMemory, DenseMap)
     map.Write();
 
     ASSERT_TRUE(false);
+}
+
+TEST(TestMemory, FlatMap)
+{
+    struct MyType
+    {
+        int val;
+    };
+    vic::memory::FlatMap<uint32_t, MyType> map{};
+
+    ASSERT_TRUE(map.empty());
+    ASSERT_EQ(map.size(), 0);
+    ASSERT_EQ(map.count(0), 0);
+    auto it = map.find(0);
+    EXPECT_TRUE(it == map.end());
+
+    map[5] = {1};
+    ASSERT_FALSE(map.empty());
+    ASSERT_EQ(map.size(), 1);
+    it = map.find(0);
+    EXPECT_TRUE(it == map.end());
+    //ASSERT_EQ(map.count(0), 0);
+    //ASSERT_EQ(map.count(5), 1);
+    map[4] = {2};
+
+    map[5] = {3};
+    ASSERT_FALSE(map.empty());
+    ASSERT_EQ(map.size(), 2);
+    ASSERT_EQ(map.count(0), 0);
+    ASSERT_EQ(map.count(5), 1);
+
+    map.erase(5);
+    ASSERT_EQ(map.size(), 1);
+
+
 }
 
 TEST(TestMemory, MergeSort)
