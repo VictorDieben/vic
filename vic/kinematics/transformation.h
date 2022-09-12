@@ -41,8 +41,8 @@ public:
     }
 
     // not const ref, other types of transformations might not have them in memory
-    constexpr Rotation GetRotation() const { return Rotation{Extract<Matrix<DataType, 3, 3>, 0, 0>(mMatrix)}; }
-    constexpr Translation GetTranslation() const { return Translation{Extract<Vector3<DataType>, 0, 3>(mMatrix)}; }
+    Rotation GetRotation() const { return Rotation{Extract<Matrix<DataType, 3, 3>, 0, 0>(mMatrix)}; }
+    Translation GetTranslation() const { return Translation{Extract<Vector3<DataType>, 0, 3>(mMatrix)}; }
     constexpr Matrix<DataType, 4, 4> ToMatrix() const { return mMatrix; }
 
     Transformation Inverse() const

@@ -75,7 +75,7 @@ public:
         : mMatrix(rotation)
     { }
 
-    constexpr Rotation Inverse() const { return Rotation{Transpose(mMatrix)}; }
+    Rotation Inverse() const { return Rotation{Transpose(mMatrix)}; }
 
     friend Rotation operator*(const Rotation& r1, const Rotation& r2)
     {
