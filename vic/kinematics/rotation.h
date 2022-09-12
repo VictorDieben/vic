@@ -82,7 +82,7 @@ public:
         return Rotation(Matmul(r1.mMatrix, r2.mMatrix)); //
     }
 
-    Matrix<DataType, 3, 3> ToMatrix() const { return mMatrix; }
+    constexpr Matrix<DataType, 3, 3> ToMatrix() const { return mMatrix; }
 
 private:
     Matrix<DataType, 3, 3> mMatrix{Identity<DataType, 3>{}};
