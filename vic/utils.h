@@ -3,6 +3,8 @@
 #include <cassert>
 #include <vector>
 #include <cmath>
+#include <bit>
+#include <cstdint>
 
 namespace vic
 {
