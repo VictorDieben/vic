@@ -2,6 +2,7 @@
 #include "../test_base.h"
 
 #include "vic/linalg/matrices.h"
+#include "vic/linalg/matmul.h"
 #include "vic/linalg/matrices_dynamic.h"
 #include "vic/linalg/traits.h"
 #include "vic/utils.h"
@@ -87,6 +88,16 @@ TEST(TestLinalg, TestMatmulDynamic)
     EXPECT_DEATH(dyn1.Get(2, 2), "");
 
     // todo: verify values
+
+    // verify that the dynamic matmul can be called with static matrices
+    
+    using Tstatic = Matrix<double, 3, 3>;
+    const auto mat3x3 = Tstatic{};
+    auto res = MatmulDynamic(mat3x3, mat3x3);
+    (void)res;
+    
+    const auto dyn3x3 = MatrixDynamic<double>{3, 3};
+    auto res2 = MatmulDynamic(dyn3x3, dyn3x3);
 }
 
 TEST(TestLinalg, TestMatmulMixed)

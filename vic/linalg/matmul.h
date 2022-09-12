@@ -115,15 +115,21 @@ constexpr auto MatmulDynamic(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetColumns() == mat2.GetRows());
 
-    const auto MatmulLambda = [&](const auto& mat1, const auto& mat2, auto& result) {
-        for(std::size_t i = 0; i < mat1.GetRows(); ++i)
-            for(std::size_t j = 0; j < mat2.GetColumns(); ++j)
-                for(std::size_t k = 0; k < mat1.GetColumns(); ++k)
-                    result.At(i, j) += (mat1.Get(i, k) * mat2.Get(k, j));
-    };
+    //const auto MatmulLambda = [&](const auto& mat1, const auto& mat2, auto& result) {
+    //    for(std::size_t i = 0; i < mat1.GetRows(); ++i)
+    //        for(std::size_t j = 0; j < mat2.GetColumns(); ++j)
+    //            for(std::size_t k = 0; k < mat1.GetColumns(); ++k)
+    //                result.At(i, j) += (mat1.Get(i, k) * mat2.Get(k, j));
+    //};
 
     TMatRet result{mat1.GetRows(), mat2.GetColumns()};
-    MatmulLambda(mat1, mat2, result);
+    // MatmulLambda(mat1, mat2, result);
+
+    for(std::size_t i = 0; i < mat1.GetRows(); ++i)
+        for(std::size_t j = 0; j < mat2.GetColumns(); ++j)
+            for(std::size_t k = 0; k < mat1.GetColumns(); ++k)
+                result.At(i, j) += (mat1.Get(i, k) * mat2.Get(k, j));
+
     return result;
 }
 
@@ -150,7 +156,7 @@ constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2)
     }
     else
     {
-        assert(mat1.GetColumns() == mat2.GetRows());
+        assert(mat1.GetColumns() == mat2.GetRows() && "Incompatible dynamic matrix sizes!");
         return MatmulDynamic(mat1, mat2);
     }
 }
