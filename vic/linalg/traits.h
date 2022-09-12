@@ -117,9 +117,7 @@ inline constexpr bool is_square_v = is_square<T>::value;
 template <typename T1, typename T2>
 inline constexpr bool is_same_type_v = is_same_type<T1, T2>::value;
 template <typename T>
-inline constexpr bool is_positive_definite_v = is_positive_definite<T>::value;
-template <typename T>
-inline constexpr bool is_totally_positive_v = is_totally_positive<T>::value;
+inline constexpr bool is_positive_definite_v = is_positive_definite<T>::value; 
 
 } // namespace linalg
 } // namespace vic
