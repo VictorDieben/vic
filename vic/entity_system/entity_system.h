@@ -102,6 +102,8 @@ public:
 
 private:
     // todo: think about optimized map container (specialized for many/few large/small objects?)
+    // a flat map (like boost::flat_map) might be a better solution, 
+    // as we really need fast iteration, but don't really care about insert/remove
     std::map<EntityId, T> mComponents{};
 };
 

@@ -69,6 +69,13 @@ TEST(TestEntitySystem, Filter)
             ent.Add<Buzz>({});
     }
 
+    // iterate 1d
+    for(auto it = system.begin<Fizz>(); it != system.end<Fizz>(); ++it)
+    {
+        Name& name = system.Get<Name>(it->first);
+        EXPECT_TRUE(name.mI % 3 == 0);
+    }
+
     // now filter out all objects with both the Fizz and Buzz component
     int sum = 0;
     for(auto [entId, fizzPtr, buzzPtr] : Filter<Fizz, Buzz>(system))
@@ -79,6 +86,12 @@ TEST(TestEntitySystem, Filter)
         sum++;
     }
     EXPECT_EQ(sum, 7);
+
+    //// todo: iterate 3d;
+    //for(auto [entId, namePtr, fizzPtr, buzzPtr] : Filter<Name, Fizz, Buzz>(system))
+    //{
+    //    //
+    //}
 }
 
 TEST(TestEntitySystem, Remove)

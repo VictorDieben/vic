@@ -90,7 +90,7 @@ struct is_float_or_integral
 template <typename T>
 struct is_positive_definite
 {
-    static constexpr bool value = false;
+    static constexpr bool value = false; // todo: overloads for specific types
 };
 
 template <typename TMatrix>

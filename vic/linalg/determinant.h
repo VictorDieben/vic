@@ -98,7 +98,7 @@ requires ConceptMatrix<TMatrix>
 constexpr auto Determinant(const TMatrix& matrix)
 {
     using TRet = typename TMatrix::DataType;
-    if constexpr(std::is_same_v<TMatrix, Identity<TMatrix::DataType, TMatrix::GetRows()>>)
+    if constexpr(std::is_same_v<TMatrix, Identity<typename TMatrix::DataType, TMatrix::GetRows()>>)
     {
         return TRet{1};
     }
