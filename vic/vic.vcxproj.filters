@@ -21,9 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EntitySystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Emulator.h">
       <Filter>Header Files</Filter>
     </ClInclude>

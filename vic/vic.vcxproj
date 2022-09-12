@@ -160,7 +160,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Emulator.h" />
-    <ClInclude Include="EntitySystem.h" />
     <ClInclude Include="entity_system\algorithms.h" />
     <ClInclude Include="entity_system\definitions.h" />
     <ClInclude Include="entity_system\entity_system.h" />
