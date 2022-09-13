@@ -71,7 +71,7 @@ struct Rotation
 {
 public:
     constexpr Rotation() = default;
-    constexpr Rotation(const Matrix<DataType, 3, 3>& rotation)
+    explicit constexpr Rotation(const Matrix<DataType, 3, 3>& rotation)
         : mMatrix(rotation)
     { }
 

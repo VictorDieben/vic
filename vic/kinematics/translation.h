@@ -11,7 +11,7 @@ struct Translation
 {
 public:
     constexpr Translation() = default;
-    constexpr Translation(const Vector3<DataType> translation)
+    explicit constexpr Translation(const Vector3<DataType> translation)
         : mMatrix(translation)
     { }
 
