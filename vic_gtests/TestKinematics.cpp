@@ -24,9 +24,9 @@ TEST(TestKinematics, EulerAngles)
     /* Test if EulerAngles treats inputs as rotations about X, Y, Z respectively, in rad. */ 
 
     // create results for 90 deg rotations over any one axis
-    Matrix<double, 3, 3> eulerRx90 = EulerAngles(pi / 2, 0., 0.);
-    Matrix<double, 3, 3> eulerRym90 = EulerAngles(0., -pi / 2, 0.);
-    Matrix<double, 3, 3> eulerRz90 = EulerAngles(0., 0., pi / 2);
+    Matrix<double, 3, 3> eulerRx90 = EulerAngles(pi/2, 0., 0.);
+    Matrix<double, 3, 3> eulerRym90 = EulerAngles(0., -pi/2, 0.);
+    Matrix<double, 3, 3> eulerRz90 = EulerAngles(0., 0., pi/2);
     // manually defined answers
     Matrix<double, 3, 3> matRx90({1., 0., 0., 0., 0., -1., 0., 1., 0.});
     Matrix<double, 3, 3> matRym90({0., 0., -1., 0., 1., 0., 1., 0., 0.});
@@ -205,6 +205,50 @@ TEST(TestKinematics, CartesianRobot)
     const auto transforms2 = algorithms::ForwardKinematics(robot, theta2);
     const auto rotation = transforms2.at(5u).GetRotation();
     ASSERT_TRUE(IsEqual(rotation.ToMatrix(), euler));
+
+
+    
+
+}
+
+TEST(TestKinematics, Doublependulum) { 
+    /* defines a simple double pendulum, balanced on a cart. 
+    *  - cart travels along X-axis (positive to the right)
+    *  - 1st rotary joint on cart's center, roting around Y-axis (poitive into screen)
+    *  - 1st boom connected to rotor, alligned to z in neurtal pose (upward)
+    *  - 2nd rotary joint attached to 1st boom's end, same orientation as 1st joint
+    *  - 2nd boom fixed to the 2nd rotor
+    * 
+    *  given state-space variables of the cart and 2 jounts, what is the position and orientation of the end effector?
+    */
+    const Screw cart{{0., 0., 0., 1, 0, 0}};
+    const Screw rotor1{{0., 1., 0., 0, 0, 0}};
+    const Screw rotor2{{0., 1., 0., 0, 0, 0}};
+    const Screw endEffector{{0., 1., 0., 0, 0, 0}};
+    
+    
+    const Transformation transform12{EulerAngles(0., 0., 0.), Vector3<double>{{0., 0., 0.5}}}; // TODO replacing EulerAngles(0., 0., 0.) changes output?!
+    const Transformation transform23{EulerAngles(0., 0., 0.), Vector3<double>{{0., 0., 0.5}}};
+    const Matrix<double, 3, 3> euler = EulerAngles(0., 0., 0.);
+    robots::ForwardRobot robot2{};
+
+    robot2.AddJoint(std::nullopt, {}, cart);
+    robot2.AddJoint(0u, {}, rotor1);
+    robot2.AddJoint(1u, transform12, rotor2);
+    robot2.AddJoint(2u, transform23, endEffector);
+
+    robot2.Update();
+
+    //const std::vector<DataType> theta0{1., -pi/3., 2*pi/3., 0.};
+    const std::vector<DataType> theta0{1., -pi / 3., 2 * pi / 3, 0.};
+
+    const auto transform = algorithms::ForwardKinematics(robot2, theta0);
+
+    auto p = transform.at(3u).GetTranslation().ToMatrix();
+    auto R = transform.at(3u).GetRotation();
+
+
+    ASSERT_TRUE(IsEqual(p, Vector3<DataType>{{1., 0., 0.5}})); 
 }
 
 } // namespace kinematics
