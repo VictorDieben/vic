@@ -21,6 +21,12 @@ TEST(TestLinalg, TestMatmulScalar)
     EXPECT_DOUBLE_EQ(diag2.Get(1, 1), 2.);
     EXPECT_DOUBLE_EQ(diag2.Get(0, 1), 0.);
     EXPECT_DOUBLE_EQ(diag2.Get(1, 0), 0.);
+
+    constexpr Diagonal<double, 2, 2> diag2b = Matmul(2., Identity<double, 2>{});
+    EXPECT_DOUBLE_EQ(diag2b.Get(0, 0), 2.);
+    EXPECT_DOUBLE_EQ(diag2b.Get(1, 1), 2.);
+    EXPECT_DOUBLE_EQ(diag2b.Get(0, 1), 0.);
+    EXPECT_DOUBLE_EQ(diag2b.Get(1, 0), 0.);
 }
 
 TEST(TestLinalg, TestMatmul)
