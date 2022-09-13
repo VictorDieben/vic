@@ -21,7 +21,33 @@ namespace kinematics
 
 TEST(TestKinematics, EulerAngles)
 {
-    // todo: verify if the resulting matrix is as expected
+    /* Test if EulerAngles treats inputs as rotations about X, Y, Z respectively, in rad. */ 
+
+    // create results for 90 deg rotations over any one axis
+    Matrix<double, 3, 3> eulerRx90 = EulerAngles(pi / 2, 0., 0.);
+    Matrix<double, 3, 3> eulerRym90 = EulerAngles(0., -pi / 2, 0.);
+    Matrix<double, 3, 3> eulerRz90 = EulerAngles(0., 0., pi / 2);
+    // manually defined answers
+    Matrix<double, 3, 3> matRx90({1., 0., 0., 0., 0., -1., 0., 1., 0.});
+    Matrix<double, 3, 3> matRym90({0., 0., -1., 0., 1., 0., 1., 0., 0.});
+    Matrix<double, 3, 3> matRz90({0., -1., 0., 1., 0., 0., 0., 0., 1.});
+    
+    EXPECT_TRUE(IsEqual(eulerRx90, matRx90, 1e-10));
+    EXPECT_TRUE(IsEqual(eulerRym90, matRym90, 1e-10));
+    EXPECT_TRUE(IsEqual(eulerRz90, matRz90, 1e-10));
+
+     /* Test if EulerAngles implements rotations in INTRINSIC x-y-z sequence.
+     * Intrinsic means that subsequent rotations are fedined in the new intermediade frames
+     * As opposed to Extrinsic, where all rotations are defined in the original reference frame
+     * INTRINSIC wrt consecutive-current: Rot(X0,theta)->Rot(Y1, phi)->Rot(Z2, gamma) = R(X,theta)R(Y,phi)R(Z,gamma)
+     * EXTRINSIC wrt origional:           Rot(X0,theta)->Rot(Y0, phi)->Rot(Z0, gamma) = R(Z,gamma)R(Y,phi)R(X,theta)
+     */
+    Matrix<double, 3, 3> euler = EulerAngles(0., pi/4, pi/2.);
+    Matrix<double, 3, 3> matIntrinsic({0., -0.70710678118, 0.70710678118, 1., 0., 0., 0., 0.70710678118, 0.70710678118});
+    Matrix<double, 3, 3> matExtrinsic({0., -1., 0., 0.70710678118, 0., 0.70710678118, -0.70710678118, 0., 0.70710678118});
+    EXPECT_TRUE(IsEqual(euler, matIntrinsic, 1e-10));
+    EXPECT_FALSE(IsEqual(euler, matExtrinsic, 1e-10));
+
 
     std::default_random_engine g;
     std::uniform_real_distribution<double> dist(-100., 100.);
