@@ -75,6 +75,52 @@ std::vector<Transformation> ForwardKinematics2(ForwardRobot& robot, //
     return result;
 }
 
+/* Tilde operation re-writes a 2d or 3d vector  such that: 
+ * CrossProduct(x, y) = MatMul(Tilde(x), y) 
+ */
+template <typename T>
+Matrix<T, 3, 3> Tilde(const std::array<DataType, 3>& vec)
+{
+    const Matrix<T, 3, 3> vec_tilde({
+        0,       -vec[2], vec[1], 
+        vec[2],  0,       -vec[0], 
+        -vec[1], vec[0],   0 });
+    return vec_tilde;
+}
+
+
+
+/* Tilde operator extended for twists & wrenches */
+template <typename T>
+Matrix<T, 4, 4> Tilde(const std::array<DataType, 6>& vec)
+{
+    const Matrix<T, 4, 4> vec_tilde(
+       {0,       -vec[2], vec[1],  vec[3],
+        vec[2],  0,       -vec[0], vec[4],
+        -vec[1], vec[0],  0,       vec[5],
+        0,       0,       0,       0      });
+    return vec_tilde;
+}
+
+/* the Adjoint matrix re-expresses:  
+ * Tilde(twist_transformed) = H * Tilde(twist) * H^-1
+ *                   to:
+ * twist_transformed = Adjoint(H) * twist
+ */
+template <typename T>
+Matrix<T, 6, 6> Adjoint(const Transformation& transform)
+{
+    const Matrix<T, 6, 6> adjoint; // assume initialised with zeros
+    auto R = transform.GetRotation();
+    auto p = transform.GetTranslation();
+
+    Assign<0, 0>(adjoint, R);                   // 3x3; top left
+    //Assign<0, 3>(adjoint, Mat3());            // 3x3 zeros; top right
+    Assign<3, 0>(adjoint, MatMul(Tilde(P),R));  // 3x3; bottom left
+    Assign<3, 3>(adjoint, R);                   // 3x3; bottom right
+    return adjoint;
+}
+
 std::vector<Twist> ForwardKinematicsDot(ForwardRobot& robot,
                                         const std::vector<Transformation> transforms,
                                                const std::vector<DataType>& thetaDot)
