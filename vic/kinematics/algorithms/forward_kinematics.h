@@ -50,6 +50,33 @@ std::vector<Transformation> ForwardKinematics(ForwardRobot& robot, //
     return result;
 }
 
+std::vector<Transformation> ForwardKinematics2(ForwardRobot& robot, //
+                                              const std::vector<DataType>& theta)
+{
+    assert(robot.GetTree().IsContinuous()); // if tree is not continuous, we cannot iterate over it
+    // for each node in the robot, calculate the transformation
+    const std::size_t nJoints = robot.GetNrJoints();
+    std::vector<Transformation> neutralPoses{};
+    std::vector<Transformation> exponentials{};
+    std::vector<Transformation> result{};
+    result.resize(nJoints);
+
+    for(auto& joint : robot)
+    {
+        const auto id = joint.Id();
+        const auto parentId = joint.Parent();
+        const auto& data = joint.Data();
+        if(!data.IsType(NodeType::Joint))
+            continue; // ignore frames for now
+
+        const auto transform = data.GetTransformation();
+        const auto exponent = ExponentialTransform(data.GetScrew(), theta[id]);
+        result[id] = result[parentId] * transform * exponent;
+    }
+
+    return result;
+}
+
 // todo: move to separate file
 std::vector<DataType> InverseDynamics(const ForwardRobot& robot, //
                                       const std::vector<DataType>& theta, //
