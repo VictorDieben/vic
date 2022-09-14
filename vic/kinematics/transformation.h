@@ -23,14 +23,14 @@ public:
     {
         Assign<0, 0>(mMatrix, rotation.ToMatrix());
         Assign<0, 3>(mMatrix, translation.ToMatrix());
-        //mMatrix.At(3, 3) = 1.; // 
+        // 3,3 already set to 1 by default constructor
     }
-    Transformation(const Matrix<DataType, 3, 3>& rotation, //
-                             const Vector3<DataType> translation)
+    explicit Transformation(const Matrix<DataType, 3, 3>& rotation, //
+                             const Vector3<DataType>& translation)
     {
         Assign<0, 0>(mMatrix, rotation);
         Assign<0, 3>(mMatrix, translation);
-        //mMatrix.At(3, 3) = 1.;
+        // 3,3 already set to 1 by default constructor
     }
     constexpr Transformation(const Matrix<DataType, 4, 4>& matrix)
         : mMatrix(matrix)

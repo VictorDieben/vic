@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <utility>
 #include <vector>
+#include <stdexcept>
 
 namespace vic
 {
@@ -61,14 +62,12 @@ public:
     // Modifiers
     void clear() { mData.clear(); }
     std::pair<iterator, bool> insert(const value_type& pair)
-    {
-        assert(false);
-        return {};
+    { 
+        throw std::runtime_error("not implemented"); 
     }
     std::pair<iterator, bool> insert(value_type&& pair)
     {
-        assert(false);
-        return {};
+        throw std::runtime_error("not implemented"); 
     }
 
     iterator erase(iterator pos) { return mData.erase(pos); }
@@ -83,7 +82,7 @@ public:
                 return mData.begin() + i;
         return mData.end();
 
-        // todo: binary search? maybe not worth the time
+        // todo: binary search? probably not worth the time
 
         //const auto lambda = [](auto const& item, const key_type k) -> bool { return item.first < k; };
         //auto it = std::lower_bound(mData.begin(), mData.end(), key, lambda);

@@ -7,6 +7,7 @@
 
 #include "vic/entity_system/algorithms.h"
 #include "vic/entity_system/definitions.h"
+#include "vic/memory/flat_map.h"
 
 namespace vic
 {
@@ -64,14 +65,25 @@ private:
 template <typename T>
 class ComponentSystem
 {
+private:
+    // todo: think about optimized map container (specialized for many/few large/small objects?)
+    // a flat map (like boost::flat_map) might be a better solution,
+    // as we really need fast iteration, but don't really care about insert/remove
+    // std::map<EntityId, T> mComponents{};
+    vic::memory::FlatMap<EntityId, T> mComponents{};
+
 public:
     // todo: make a custom component system, that does not rely on std::map
     // example: https://austinmorlan.com/posts/entity_component_system/
     // maybe make a custom container, a densely packed map or something
     using ComponentType = T;
-    using Iterator = std::map<EntityId, T>::iterator;
+    using Iterator = typename decltype(mComponents)::iterator;
 
-    void Add(const EntityId id, const T& component) { mComponents[id] = component; }
+    T& Add(const EntityId id, const T& component)
+    {
+        mComponents[id] = component;
+        return mComponents[id];
+    }
 
     T& Get(const EntityId id)
     {
@@ -99,12 +111,6 @@ public:
 
     const Iterator cbegin() const { return mComponents.begin(); }
     const Iterator cend() const { return mComponents.end(); }
-
-private:
-    // todo: think about optimized map container (specialized for many/few large/small objects?)
-    // a flat map (like boost::flat_map) might be a better solution, 
-    // as we really need fast iteration, but don't really care about insert/remove
-    std::map<EntityId, T> mComponents{};
 };
 
 template <typename... TComponents>
@@ -121,6 +127,15 @@ public:
         EntityHandle newEntity(mEntityCounter, this);
         mEntityCounter++;
         return newEntity;
+    }
+
+    Handle GetEntity(EntityId id)
+    {
+        // note: there is no way for us to know if id actually exists.
+        // No list of valid ids is stored anywhere.
+        // we could make EntityId only constructable by EntitySystem,
+        // that waywe can at least be sure that it was valid at some point in time
+        return EntityHandle(id, this);
     }
 
     void RemoveEntity(EntityId id) { RemoveEntityRecursive<TComponents...>(id); }

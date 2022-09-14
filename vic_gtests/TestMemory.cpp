@@ -134,11 +134,12 @@ TEST(TestMemory, FlatMap)
     ASSERT_EQ(map.size(), 1);
     it = map.find(0);
     EXPECT_TRUE(it == map.end());
-    //ASSERT_EQ(map.count(0), 0);
-    //ASSERT_EQ(map.count(5), 1);
-    map[4] = {2};
+    ASSERT_EQ(map.count(0), 0);
+    ASSERT_EQ(map.count(5), 1);
 
+    map[4] = {2};
     map[5] = {3};
+
     ASSERT_FALSE(map.empty());
     ASSERT_EQ(map.size(), 2);
     ASSERT_EQ(map.count(0), 0);
@@ -146,8 +147,20 @@ TEST(TestMemory, FlatMap)
 
     map.erase(5);
     ASSERT_EQ(map.size(), 1);
+    EXPECT_TRUE(map.find(5) == map.end());
 
+    map[10] = {4};
+    map[9] = {5};
+    map[8] = {6};
+    map[7] = {7};
+    map[6] = {8};
 
+    uint32_t key = map.begin()->first;
+    for(auto it = map.begin() + 1; it < map.end(); ++it)
+    {
+        EXPECT_TRUE(key < it->first);
+        key = it->first;
+    }
 }
 
 TEST(TestMemory, MergeSort)

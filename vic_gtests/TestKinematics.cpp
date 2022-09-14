@@ -21,6 +21,8 @@ namespace kinematics
 
 TEST(TestKinematics, EulerAngles)
 {
+    EXPECT_TRUE(IsEqual(EulerAngles(0., 0., 0.), Identity<double,  3>{}));
+
     /* Test if EulerAngles treats inputs as rotations about X, Y, Z respectively, in rad. */ 
 
     // create results for 90 deg rotations over any one axis
@@ -48,7 +50,6 @@ TEST(TestKinematics, EulerAngles)
     EXPECT_TRUE(IsEqual(euler, matIntrinsic, 1e-10));
     EXPECT_FALSE(IsEqual(euler, matExtrinsic, 1e-10));
 
-
     std::default_random_engine g;
     std::uniform_real_distribution<double> dist(-100., 100.);
 
@@ -69,6 +70,9 @@ TEST(TestKinematics, EulerAngles)
 
 TEST(TestKinematics, rotate)
 {
+    
+    EXPECT_TRUE(IsEqual(Rotation{}.ToMatrix(), Identity<double,  3>{}));
+
     constexpr Matrix<double, 3, 3> matrix{Identity<double, 3>{}};
     auto zRotation = Rotate(zAxis, pi / 2.);
 
@@ -88,15 +92,28 @@ TEST(TestKinematics, rotate)
 
 TEST(TestKinematics, rotation)
 {
+    EXPECT_TRUE(IsEqual(Rotation{}.ToMatrix(), Identity<double, 3>{}));
+
     Rotation r1{Rotate(zAxis, pi / 2.)};
     Rotation r1Inverse = r1.Inverse();
     Rotation result = r1 * r1Inverse;
     EXPECT_TRUE(IsEqual(result.ToMatrix(), Identity<double, 3>{}));
 }
 
-TEST(TestKinematics, transformations)
+TEST(TestKinematics, translation)
 {
-    constexpr Transformation transform{};
+    EXPECT_TRUE(IsEqual(Translation{}.ToMatrix(), Zeros<double, 3, 1>{}));
+
+    auto t = Translation{Vector3<double>{{1., 2., 3}}};
+    EXPECT_TRUE(IsEqual(t.ToMatrix(), Matrix<double, 3, 1>{1., 2., 3.}));
+}
+
+
+TEST(TestKinematics, transformations)
+{ 
+    EXPECT_TRUE(IsEqual(Transformation{}.ToMatrix(), Identity<double, 4>{}));
+    
+    // EXPECT_TRUE(IsEqual(Transformation{}.ToMatrix(), Transformation{{}, {}}.ToMatrix() ));
 
     std::default_random_engine g;
     std::uniform_real_distribution<double> dist(-100., 100.);
