@@ -188,7 +188,7 @@ TEST(TestKinematics, CartesianRobot)
     robot.Update(); // <-- update iterator with new joints
 
     const std::vector<DataType> theta{1., 2., 3.};
-    const auto transforms = algorithms::ForwardKinematics(robot, theta);
+    const auto transforms = algorithms::ForwardKinematics2(robot, theta);
     const auto translation = transforms.at(2u).GetTranslation();
 
     ASSERT_TRUE(IsEqual(translation.ToMatrix(), Vector3<DataType>{{1., 2., 3.}}));
@@ -202,7 +202,7 @@ TEST(TestKinematics, CartesianRobot)
     const Matrix<double, 3, 3> euler = EulerAngles(pi / 2, pi / 3, pi / 4);
     const std::vector<DataType> theta2{3., 2., 1., pi / 2, pi / 3, pi / 4};
 
-    const auto transforms2 = algorithms::ForwardKinematics(robot, theta2);
+    const auto transforms2 = algorithms::ForwardKinematics2(robot, theta2);
     const auto rotation = transforms2.at(5u).GetRotation();
     ASSERT_TRUE(IsEqual(rotation.ToMatrix(), euler));
 
@@ -227,28 +227,26 @@ TEST(TestKinematics, Doublependulum) {
     const Screw endEffector{{0., 1., 0., 0, 0, 0}};
     
     
-    const Transformation transform12{EulerAngles(0., 0., 0.), Vector3<double>{{0., 0., 0.5}}}; // TODO replacing EulerAngles(0., 0., 0.) changes output?!
+     const Transformation transform12{Rotation{}, Translation{Vector3<DataType>{{0., 0., 0.5}}}}; 
     const Transformation transform23{EulerAngles(0., 0., 0.), Vector3<double>{{0., 0., 0.5}}};
-    const Matrix<double, 3, 3> euler = EulerAngles(0., 0., 0.);
-    robots::ForwardRobot robot2{};
+    robots::ForwardRobot robot{};
 
-    robot2.AddJoint(std::nullopt, {}, cart);
-    robot2.AddJoint(0u, {}, rotor1);
-    robot2.AddJoint(1u, transform12, rotor2);
-    robot2.AddJoint(2u, transform23, endEffector);
+    robot.AddJoint(std::nullopt, {}, cart);
+    robot.AddJoint(0u, {}, rotor1);
+    robot.AddJoint(1u, transform12, rotor2);
+    robot.AddJoint(2u, transform23, endEffector);
 
-    robot2.Update();
+    robot.Update();
 
-    //const std::vector<DataType> theta0{1., -pi/3., 2*pi/3., 0.};
-    const std::vector<DataType> theta0{1., -pi / 3., 2 * pi / 3, 0.};
+    const std::vector<DataType> theta0{1., -pi/3., 2*pi/3., -pi/3.};
 
-    const auto transform = algorithms::ForwardKinematics(robot2, theta0);
+    const auto transform = algorithms::ForwardKinematics2(robot, theta0);
 
-    auto p = transform.at(3u).GetTranslation().ToMatrix();
+    auto p = transform.at(3u).GetTranslation();
     auto R = transform.at(3u).GetRotation();
 
 
-    ASSERT_TRUE(IsEqual(p, Vector3<DataType>{{1., 0., 0.5}})); 
+    ASSERT_TRUE(IsEqual(p.ToMatrix(), Vector3<DataType>{{1., 0., 0.5}}));
 }
 
 } // namespace kinematics
