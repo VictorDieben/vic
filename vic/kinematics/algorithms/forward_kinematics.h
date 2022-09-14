@@ -56,8 +56,6 @@ std::vector<Transformation> ForwardKinematics2(ForwardRobot& robot, //
     assert(robot.GetTree().IsContinuous()); // if tree is not continuous, we cannot iterate over it
     // for each node in the robot, calculate the transformation
     const std::size_t nJoints = robot.GetNrJoints();
-    std::vector<Transformation> neutralPoses{};
-    std::vector<Transformation> exponentials{};
     std::vector<Transformation> result{};
     result.resize(nJoints);
 
@@ -75,6 +73,36 @@ std::vector<Transformation> ForwardKinematics2(ForwardRobot& robot, //
     }
 
     return result;
+}
+
+std::vector<Twist> ForwardKinematicsDot(ForwardRobot& robot,
+                                        const std::vector<Transformation> transforms,
+                                               const std::vector<DataType>& thetaDot)
+{
+    assert(robot.GetTree().IsContinuous()); // if tree is not continuous, we cannot iterate over it
+    // TODO
+    const std::size_t nJoints = robot.GetNrJoints();
+    std::vector<Transformation> exponentials{};
+    std::vector<Twist> twists{};
+    exponentials.resize(nJoints);
+    twists.resize(nJoints);
+    
+
+    for(auto& joint : robot)
+    {
+        const auto id = joint.Id();
+        const auto parentId = joint.Parent();
+        const auto& data = joint.Data();
+        if(!data.IsType(NodeType::Joint))
+            continue; // ignore frames for now
+
+        // TODO: implement derivation of Twist calculations
+        //const auto exponent = ExponentialTransform(data.GetScrew(), thetaDot[id]);
+        //exponentials[id] = exponentials[parentId] * exponent;
+        //twists[id] = twists[parentId] * transforms[id] * exponentials[id];
+    }
+
+    return twists;
 }
 
 // todo: move to separate file
