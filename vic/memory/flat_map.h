@@ -49,9 +49,11 @@ public:
 
     // Iterators
     auto begin() { return mData.begin(); }
+    auto begin() const{ return mData.begin(); }
     auto cbegin() const { return mData.cbegin(); }
 
     auto end() { return mData.end(); }
+    auto end() const { return mData.end(); }
     auto cend() const { return mData.cend(); }
 
     // Capacity

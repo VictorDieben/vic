@@ -90,15 +90,14 @@ Matrix<T, 3, 3> Tilde(const std::array<DataType, 3>& vec)
 
 
 
-/* Tilde operator extended for twists & wrenches */
-template <typename T>
-Matrix<T, 4, 4> Tilde(const std::array<DataType, 6>& vec)
+/* Tilde operator extended for twists & wrenches */ 
+Matrix<DataType, 4, 4> Tilde(const std::array<DataType, 6>& vec)
 {
-    const Matrix<T, 4, 4> vec_tilde(
-       {0,       -vec[2], vec[1],  vec[3],
-        vec[2],  0,       -vec[0], vec[4],
-        -vec[1], vec[0],  0,       vec[5],
-        0,       0,       0,       0      });
+    const Matrix<DataType, 4, 4> vec_tilde( //
+       {0,       -vec[2], vec[1],  vec[3], //
+        vec[2],  0,       -vec[0], vec[4],//
+        -vec[1], vec[0],  0,       vec[5],//
+        0,       0,       0,       0      });//
     return vec_tilde;
 }
 
@@ -110,13 +109,16 @@ Matrix<T, 4, 4> Tilde(const std::array<DataType, 6>& vec)
 template <typename T>
 Matrix<T, 6, 6> Adjoint(const Transformation& transform)
 {
-    const Matrix<T, 6, 6> adjoint; // assume initialised with zeros
+    const Matrix<T, 6, 6> adjoint{}; 
     auto R = transform.GetRotation();
     auto p = transform.GetTranslation();
 
     Assign<0, 0>(adjoint, R);                   // 3x3; top left
-    //Assign<0, 3>(adjoint, Mat3());            // 3x3 zeros; top right
-    Assign<3, 0>(adjoint, MatMul(Tilde(P),R));  // 3x3; bottom left
+    //Assign<0, 3>(adjoint, Mat3());            // 3x3 zeros; top right 
+    
+    // todo(jork): p is a vec3, Tilde requires an array of length 6, something is wrong
+    // Assign<3, 0>(adjoint, MatMul(Tilde(p),R));  // 3x3; bottom left
+
     Assign<3, 3>(adjoint, R);                   // 3x3; bottom right
     return adjoint;
 }

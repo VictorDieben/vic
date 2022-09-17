@@ -105,7 +105,7 @@ TEST(TestKinematics, translation)
     EXPECT_TRUE(IsEqual(Translation{}.ToMatrix(), Zeros<double, 3, 1>{}));
 
     auto t = Translation{Vector3<double>{{1., 2., 3}}};
-    EXPECT_TRUE(IsEqual(t.ToMatrix(), Matrix<double, 3, 1>{1., 2., 3.}));
+    EXPECT_TRUE(IsEqual(t.ToMatrix(), Vector3<double>{{1., 2., 3.}}));
 }
 
 

@@ -39,6 +39,33 @@ TEST(TestEntitySystem, Startup)
     ASSERT_FALSE(ent.Has<std::string>());
 }
 
+TEST(TestEntitySystem, ComponentSystem)
+{
+    struct TestType
+    {
+        uint64_t val;
+    };
+    using ComponentSystem = vic::entity::ComponentSystem<TestType>;
+    ComponentSystem components{};
+
+    for(std::size_t i = 0; i < 10; ++i)
+        components.Add(i, TestType{static_cast<uint64_t>(i)});
+
+    // create a const ref to the system, try to read from there
+    const ComponentSystem& refComponents = components;
+    EXPECT_EQ(refComponents.Get(1).val, 1u);
+
+    for(const auto& comp : refComponents)
+        EXPECT_EQ(comp.first, comp.second.val);
+
+    // test removing an item
+    EXPECT_TRUE(components.Has(0));
+    EXPECT_TRUE(components.Remove(0));
+    EXPECT_FALSE(components.Has(0));
+    EXPECT_FALSE(components.Remove(0)); // cannot remove an item that is already removed
+    EXPECT_FALSE(components.Has(0));
+}
+
 TEST(TestEntitySystem, Filter)
 {
     struct Name
@@ -91,6 +118,13 @@ TEST(TestEntitySystem, Filter)
     //for(auto [entId, namePtr, fizzPtr, buzzPtr] : Filter<Name, Fizz, Buzz>(system))
     //{
     //    //
+    //}
+
+    // todo: const iteration
+    const System& refSystem = system;
+
+    //for(const auto [entId, fizzPtr, buzzPtr] : Filter<Fizz, Buzz>(refSystem))
+    //{
     //}
 }
 

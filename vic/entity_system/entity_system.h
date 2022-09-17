@@ -92,7 +92,14 @@ public:
         return it->second;
     }
 
-    bool Has(const EntityId id) { return mComponents.find(id) != mComponents.end(); }
+    const T& Get(const EntityId id) const
+    {
+        auto it = mComponents.find(id);
+        assert(it != mComponents.end());
+        return it->second;
+    }
+
+    bool Has(const EntityId id) const { return mComponents.find(id) != mComponents.end(); }
 
     bool Remove(const EntityId id)
     {
@@ -103,14 +110,14 @@ public:
         return true;
     }
 
-    Iterator begin() { return mComponents.begin(); }
-    Iterator end() { return mComponents.end(); }
+    auto begin() { return mComponents.begin(); }
+    auto end() { return mComponents.end(); }
 
-    //Iterator begin() const { return mComponents.begin(); }
-    //Iterator end() const { return mComponents.end(); }
+    const auto begin() const { return mComponents.begin(); }
+    const auto end() const { return mComponents.end(); }
 
-    const Iterator cbegin() const { return mComponents.begin(); }
-    const Iterator cend() const { return mComponents.end(); }
+    const auto cbegin() const { return mComponents.cbegin(); }
+    const auto cend() const { return mComponents.cend(); }
 };
 
 template <typename... TComponents>
@@ -179,13 +186,13 @@ public:
     template <typename T>
     auto begin() const
     {
-        return ComponentSystem<T>::begin();
+        return ComponentSystem<T>::cbegin();
     }
 
     template <typename T>
     auto end() const
     {
-        return ComponentSystem<T>::end();
+        return ComponentSystem<T>::cend();
     }
 
     // filter entities that have two specific components
