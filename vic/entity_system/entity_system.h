@@ -77,7 +77,9 @@ public:
     // example: https://austinmorlan.com/posts/entity_component_system/
     // maybe make a custom container, a densely packed map or something
     using ComponentType = T;
-    using Iterator = typename decltype(mComponents)::iterator;
+
+    using iterator = typename decltype(mComponents)::iterator;
+    using const_iterator = typename decltype(mComponents)::const_iterator;
 
     T& Add(const EntityId id, const T& component)
     {
@@ -110,14 +112,14 @@ public:
         return true;
     }
 
-    auto begin() { return mComponents.begin(); }
-    auto end() { return mComponents.end(); }
+    iterator begin() { return mComponents.begin(); }
+    iterator end() { return mComponents.end(); }
 
-    const auto begin() const { return mComponents.begin(); }
-    const auto end() const { return mComponents.end(); }
+    const_iterator begin() const { return mComponents.cbegin(); }
+    const_iterator end() const { return mComponents.cend(); }
 
-    const auto cbegin() const { return mComponents.cbegin(); }
-    const auto cend() const { return mComponents.cend(); }
+    const_iterator cbegin() const { return mComponents.cbegin(); }
+    const_iterator cend() const { return mComponents.cend(); }
 };
 
 template <typename... TComponents>

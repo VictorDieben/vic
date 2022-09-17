@@ -13,10 +13,13 @@ namespace entity
 template <typename T1, typename T2, typename TSystem, typename TFunctor>
 void FilterForeach(TSystem& system, TFunctor functor)
 {
-    auto it1 = system.begin<T1>();
-    auto it2 = system.begin<T2>();
-    const auto it1End = system.end<T1>();
-    const auto it2End = system.end<T2>();
+    using Type1 = std::remove_cv_t<T1>;
+    using Type2 = std::remove_cv_t<T2>;
+
+    auto it1 = system.begin<Type1>();
+    auto it2 = system.begin<Type2>();
+    const auto it1End = system.end<Type1>();
+    const auto it2End = system.end<Type2>();
 
     while(it1 != it1End && it2 != it2End)
     {

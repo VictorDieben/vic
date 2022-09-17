@@ -4,6 +4,8 @@
 
 #include "vic/entity_system/algorithms.h"
 
+#include <optional>
+
 using namespace vic;
 
 TEST(TestEntitySystem, Startup)
@@ -55,8 +57,16 @@ TEST(TestEntitySystem, ComponentSystem)
     const ComponentSystem& refComponents = components;
     EXPECT_EQ(refComponents.Get(1).val, 1u);
 
+    std::optional<vic::entity::EntityId> previous;
     for(const auto& comp : refComponents)
+    {
         EXPECT_EQ(comp.first, comp.second.val);
+        if(previous) // check increasing order
+        {
+            EXPECT_TRUE(previous.value() < comp.first);
+            previous = comp.first;
+        }
+    }
 
     // test removing an item
     EXPECT_TRUE(components.Has(0));
@@ -76,7 +86,9 @@ TEST(TestEntitySystem, Filter)
     struct Fizz
     { };
     struct Buzz
-    { };
+    {
+        std::string buzzName{};
+    };
 
     using System = vic::entity::EntitySystem<Name, Fizz, Buzz>;
     using Handle = System::Handle;
@@ -123,9 +135,16 @@ TEST(TestEntitySystem, Filter)
     // todo: const iteration
     const System& refSystem = system;
 
-    //for(const auto [entId, fizzPtr, buzzPtr] : Filter<Fizz, Buzz>(refSystem))
-    //{
-    //}
+    for(const auto& [entId, namePtr, buzzPtr] : Filter<const Name, const Buzz>(refSystem))
+    {  
+        // no need to do anything, this should just compile
+    }
+
+    for(auto& [entId, namePtr, buzzPtr] : Filter<const Name, Buzz>(system))
+    { 
+        // namePtr->mName = "bla"; // <-- this should not compile! assigning to const ptr
+        buzzPtr->buzzName = namePtr->mName;
+    }
 }
 
 TEST(TestEntitySystem, Remove)
