@@ -64,6 +64,66 @@ constexpr Matrix<T, 3, 3> EulerAngles(const T alpha, const T beta, const T gamma
     return Matmul(Rotate(xAxis, alpha), Rotate(yAxis, beta), Rotate(zAxis, gamma)); // intrinsic x->y'->z''
 }
 
+template <typename T>
+constexpr Matrix<T, 3, 3> Quaternion( T w,  T x, const T y, const T z)
+{
+    Matrix<T, 3, 3> R;
+    R.At(0,0) = 2*(w*w + x*x)-1;
+    R.At(0,1) = 2*(x*y - w*z);
+    R.At(0,2) = 2*(x*z + w*y);
+    
+    R.At(1,0) = 2*(x*y + w*z);
+    R.At(1,1) = 2*(w*w + y*y)-1;
+    R.At(1,2) = 2*(y*z - w*x);
+
+    R.At(2,0) = 2*(x*z - w*y);
+    R.At(2,1) = 2*(y*z + w*x);
+    R.At(2,2) = 2*(w*w + z*z)-1;
+    
+    return R;
+}
+
+template <typename T>
+constexpr Matrix<T, 3, 3> Quaternion(std::vector<T> wxyz)
+{
+    return Quaternion(wxyz[0], wxyz[1], wxyz[2], wxyz[3]);
+}
+
+template <typename T>
+constexpr std::vector<T> R2Q(Matrix<T, 3, 3> R){
+    std::vector<T> wxyz;
+    auto trace = Trace(R);
+    if (trace > 0){
+        T s = 0.5 / sqrt(trace + 1.0);
+        wxyz[0] = 0.25 / s;
+        wxyz[1] = (R.Get(2,1) - R.Get(1,2)) * s;
+        wxyz[2] = (R.Get(0,2) - R.Get(2,0)) * s;
+        wxyz[3] = (R.Get(1,0) - R.Get(0,1)) * s;
+    } else{
+        if ( R.Get(0,0) > R.Get(1,1) && R.Get(0,0) > R.Get(2,2) ) {
+      T s = 2.0 * sqrt( 1.0 + R.Get(0,0) - R.Get(1,1) - R.Get(2,2));
+      wxyz[0] = (R.Get(2,1) - R.Get(1,2) ) / s;
+      wxyz[1] = 0.25 * s;
+      wxyz[2] = (R.Get(0,1) + R.Get(1,0) ) / s;
+      wxyz[3] = (R.Get(0,2) + R.Get(2,0) ) / s;
+    } else if (R.Get(1,1) > R.Get(2,2)) {
+      TIMER_ALARM0_LSB s = 2.0 * sqrt( 1.0 + R.Get(1,1) - R.Get(0,0) - R.Get(2,2));
+      wxyz[0]= (R.Get(0,2) - R.Get(2,0) ) / s;
+      wxyz[1] = (R.Get(0,1) + R.Get(1,0) ) / s;
+      wxyz[2] = 0.25 * s;
+      wxyz[3] = (R.Get(1,2) + R.Get(2,1) ) / s;
+    } else {
+      T s = 2.0 * sqrtf( 1.0 + R.Get(2,2) - R.Get(0,0) - R.Get(1,1) );
+      wxyz[0] = (R.Get(1,0) - R.Get(0,1) ) / s;
+      wxyz[1] = (R.Get(0,2) + R.Get(2,0) ) / s;
+      wxyz[2] = (R.Get(1,2) + R.Get(2,1) ) / s;
+      wxyz[3] = 0.25 * s;
+    }
+
+    return wxyz;
+}
+
+
 // wrapper around rotation matrix, so that we can later also use quaternions etc.
 // also allows us to use * operator
 // TODO: make T a template?
