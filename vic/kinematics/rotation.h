@@ -119,7 +119,7 @@ constexpr Matrix<T, 3, 3> Vec6ToRot(const Vector6<T>& Rep)
 
     const Vector3<DataType> b1 = Normalize(a1);
 
-    const Vector3<DataType> b2; // = Normalize(Subtract(a2, Matmul(Sum(Dot(b1, a2)), b1)));
+    const Vector3<DataType> b2 = Normalize(Subtract(a2, Matmul(Dot(b1, a2), b1)));
     const Vector3<DataType> b3 = Cross(b1, b2);
 
     Assign<0, 0>(X, b1);
