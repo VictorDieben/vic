@@ -88,7 +88,7 @@ TEST(TestKinematics, Quaternion)
         */
         const Matrix<DataType, 3, 3> R = Quaternion(wxyz.Get(0, 0), wxyz.Get(1, 0), wxyz.Get(2, 0), wxyz.Get(3, 0));
         EXPECT_TRUE(IsOrthogonal(R));
-        EXPECT_TRUE(std::fabs(Determinant(R) - 1.) <= eps); // TODO: IsEqual not defined for values; only for matrices
+        EXPECT_TRUE(std::fabs(Determinant3x3(R) - 1.) <= eps); // TODO: IsEqual not defined for values; only for matrices
 
         /* Assert that the mapping is a "representation"
         * nessesary:
@@ -103,8 +103,8 @@ TEST(TestKinematics, Vec6ToRot)
 {
     const double eps = 1e-10;
     std::default_random_engine g;
-    std::uniform_real_distribution<double> dist(-1000., 1000.);
-    for(std::size_t i = 0; i < 1000; ++i)
+    std::uniform_real_distribution<double> dist(-1., 1.);
+    for(std::size_t i = 0; i < 100; ++i)
     {
         // generate random valid vector6:
         const Vector6<double> Rep = Vector6<double>{{dist(g), dist(g), dist(g), dist(g), dist(g), dist(g)}};
@@ -116,14 +116,17 @@ TEST(TestKinematics, Vec6ToRot)
         */
         const Matrix<double, 3, 3> X = Vec6ToRot(Rep);
         EXPECT_TRUE(IsOrthogonal(X));
-        EXPECT_TRUE(std::fabs(Determinant(X) - 1.) <= eps); // TODO: IsEqual not defined for values; only for matrices
+        EXPECT_TRUE(std::fabs(Determinant3x3(X) - 1.) <= eps); // TODO: IsEqual not defined for values; only for matrices
 
         /* Assert that the mapping is a "representation"
         * nessesary:
         * 1) Vec6ToRot( RotToVec6( X ) ) = X; for any X, and RotToVec6( Vec6ToRot( Rot ) ) = Rot; for any Rot
         */
         const Vector6<double> Rep2 = RotToVec6(X);
-        EXPECT_TRUE(IsEqual(Rep, Rep2));
+        //EXPECT_TRUE(IsEqual(Rep, Rep2)); // multiple vec6 map to the same Rot, because of normalisation 
+        const Matrix<double, 3, 3> X2 = Vec6ToRot(Rep2);
+        EXPECT_TRUE(IsEqual(X, X2));
+        EXPECT_TRUE(IsEqual(RotToVec6(X2), Rep2));
     }
 }
 
