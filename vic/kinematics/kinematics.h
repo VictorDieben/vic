@@ -45,6 +45,7 @@ public:
 
     Vector3<DataType> GetAngular() const { return Extract<Vector3<DataType>, 0, 0>(mVector); }
     Vector3<DataType> GetLinear() const { return Extract<Vector3<DataType>, 3, 0>(mVector); }
+    Vector6<DataType> ToMatrix() const { return mVector; }
 
 private:
     Vector6<DataType> mVector{};
