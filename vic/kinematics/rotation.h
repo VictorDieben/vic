@@ -25,7 +25,7 @@ constexpr T Sum(const Matrix<T, rows, cols>& mat)
 }
 
 template <typename T, std::size_t rows>
-constexpr Matrix<T, rows, 1> Dot(const Matrix<T, rows, 1>& v1, const Matrix<T, rows, 1>& v2)
+constexpr Matrix<T, rows, 1> (const Matrix<T, rows, 1>& v1, const Matrix<T, rows, 1>& v2)
 {
     Matrix<T, rows, 1> res;
     for(std::size_t i = 0; i < rows; ++i)
@@ -36,7 +36,7 @@ constexpr Matrix<T, rows, 1> Dot(const Matrix<T, rows, 1>& v1, const Matrix<T, r
 template <typename T, std::size_t rows>
 constexpr T Norm(const Matrix<T, rows, 1>& vec)
 {
-    return std::sqrt(Sum(Dot(vec, vec)));
+    return std::sqrt(Sum((vec, vec)));
 }
 
 template <typename T, std::size_t rows>
@@ -93,7 +93,7 @@ constexpr Matrix<T, 3, 3> Quaternion(std::vector<T> wxyz)
 
 
 template <typename T>
-constexpr std::vector<T> R2Q(Matrix<T, 3, 3> R){
+constexpr std::vector<T> RotToQuaternion(Matrix<T, 3, 3> R){
     std::vector<T> wxyz;
     auto trace = Trace(R);
     if (trace > 0){
@@ -127,6 +127,56 @@ constexpr std::vector<T> R2Q(Matrix<T, 3, 3> R){
     return wxyz;
 }
 
+/*!
+ *    @brief  Transforms an arbirtary 6D vector to a valid rotation matrix.
+ *            This represenation avoids discontinuities found in Euler or quaternons,  
+ *            which facilitates network regression in machine learning applications.
+              See also: https://doi.org/10.48550/arXiv.1812.07035
+ *    @param  Rep 6D representation of a rotation. 
+ *    @return A valid rotation matrix
+ */
+template <typename T>
+constexpr Matrix<T, 3, 3> Vec6ToRot(Vector6 Rep)
+{
+    Matrix<T, 3, 3> X; // [b1 | b2 | b3]
+
+    Vector3<DataType> a1 = Extract<Vector3<DataType>, 0, 0>(Rep);
+    Vector3<DataType> a2 = Extract<Vector3<DataType>, 3, 0>(Rep);
+    
+    Vector3<DataType> b1 = Norm(a1);
+    Vector3<DataType> b2 = Norm(a2 - ((b1,a2)*b1));
+    Vector3<DataType> b3 = Cross(b1,b2);
+
+    Assign<0,0>(X, b1);
+    Assign<0,1>(X, b2);
+    Assign<0,2>(X, b3);
+
+    return X;
+}
+
+/*!
+ *    @brief  Inverse mapping of Vec6ToRot(): rotation matrix to an arbirtary 6D representation vector.
+              See also: https://doi.org/10.48550/arXiv.1812.07035
+ *    @param X a valid rotation matrix
+ *    @return 6D representation of X. 
+ *                Essentially, the last column is dropped.
+ */
+template <typename T>
+constexpr  Vec6 RotToVec6(Matrix<T, 3, 3> X)
+{
+    Vector6 Rep;
+    //     [0 1 2
+    // X =  3 4 5
+    //      6 7 8]
+    Rep[0] = X[0]; // X.Get(0,0)
+    Rep[1] = X[3]; // X.Get(1,0)
+    Rep[2] = X[6]; // X.Get(2,0)
+
+    Rep[3] = X[1]; // X.Get(0,1)
+    Rep[4] = X[4]; // X.Get(1,1)
+    Rep[5] = X[7]; // X.Get(2,1)
+    return Rep;
+}
 
 // wrapper around rotation matrix, so that we can later also use quaternions etc.
 // also allows us to use * operator
