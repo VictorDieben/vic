@@ -5,6 +5,7 @@
 #include "vic/linalg/matmul.h"
 #include "vic/linalg/tools.h"
 #include "vic/linalg/transpose.h"
+#include "vic/linalg/add.h"
 #include "vic/utils.h"
 
 #include <cassert>
@@ -25,7 +26,7 @@ constexpr T Sum(const Matrix<T, rows, cols>& mat)
 }
 
 template <typename T, std::size_t rows>
-constexpr Matrix<T, rows, 1> (const Matrix<T, rows, 1>& v1, const Matrix<T, rows, 1>& v2)
+constexpr Matrix<T, rows, 1> Dot(const Matrix<T, rows, 1>& v1, const Matrix<T, rows, 1>& v2)
 {
     Matrix<T, rows, 1> res;
     for(std::size_t i = 0; i < rows; ++i)
@@ -36,7 +37,7 @@ constexpr Matrix<T, rows, 1> (const Matrix<T, rows, 1>& v1, const Matrix<T, rows
 template <typename T, std::size_t rows>
 constexpr T Norm(const Matrix<T, rows, 1>& vec)
 {
-    return std::sqrt(Sum((vec, vec)));
+    return std::sqrt(Sum(Dot(vec, vec)));
 }
 
 template <typename T, std::size_t rows>
@@ -96,7 +97,7 @@ template <typename T>
 constexpr std::vector<T> RotToQuaternion(Matrix<T, 3, 3> R){
     std::vector<T> wxyz;
     auto trace = Trace(R);
-    if (trace > 0){
+    if (trace > 0.){
         T s = 0.5 / sqrt(trace + 1.0);
         wxyz[0] = 0.25 / s;
         wxyz[1] = (R.Get(2,1) - R.Get(1,2)) * s;
@@ -136,15 +137,15 @@ constexpr std::vector<T> RotToQuaternion(Matrix<T, 3, 3> R){
  *    @return A valid rotation matrix
  */
 template <typename T>
-constexpr Matrix<T, 3, 3> Vec6ToRot(Vector6 Rep)
+constexpr Matrix<T, 3, 3> Vec6ToRot(const Vector6<T>& Rep)
 {
     Matrix<T, 3, 3> X; // [b1 | b2 | b3]
 
-    Vector3<DataType> a1 = Extract<Vector3<DataType>, 0, 0>(Rep);
-    Vector3<DataType> a2 = Extract<Vector3<DataType>, 3, 0>(Rep);
+    Vector3<DataType> a1 = Extract<Vector3<T>, 0, 0>(Rep);
+    Vector3<DataType> a2 = Extract<Vector3<T>, 3, 0>(Rep);
     
     Vector3<DataType> b1 = Norm(a1);
-    Vector3<DataType> b2 = Norm(a2 - ((b1,a2)*b1));
+    Vector3<DataType> b2 = Norm(Add(a2 , Matmul(-1*Sum(Dot(b1,a2)),b1))); 
     Vector3<DataType> b3 = Cross(b1,b2);
 
     Assign<0,0>(X, b1);
@@ -162,9 +163,9 @@ constexpr Matrix<T, 3, 3> Vec6ToRot(Vector6 Rep)
  *                Essentially, the last column is dropped.
  */
 template <typename T>
-constexpr  Vec6 RotToVec6(Matrix<T, 3, 3> X)
+constexpr  Vector6<T> RotToVec6(Matrix<T, 3, 3>& X)
 {
-    Vector6 Rep;
+    Vector6<T> Rep;
     //     [0 1 2
     // X =  3 4 5
     //      6 7 8]
