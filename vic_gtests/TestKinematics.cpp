@@ -41,12 +41,12 @@ TEST(TestKinematics, EulerAngles)
     EXPECT_TRUE(IsEqual(eulerRym90, matRym90, 1e-10));
     EXPECT_TRUE(IsEqual(eulerRz90, matRz90, 1e-10));
 
-     /* Test if EulerAngles implements rotations in INTRINSIC x-y-z sequence.
-     * Intrinsic means that subsequent rotations are fedined in the new intermediade frames
-     * As opposed to Extrinsic, where all rotations are defined in the original reference frame
-     * INTRINSIC wrt consecutive-current: Rot(X0,theta)->Rot(Y1, phi)->Rot(Z2, gamma) = R(X,theta)R(Y,phi)R(Z,gamma)
-     * EXTRINSIC wrt origional:           Rot(X0,theta)->Rot(Y0, phi)->Rot(Z0, gamma) = R(Z,gamma)R(Y,phi)R(X,theta)
-     */
+     // Test if EulerAngles implements rotations in INTRINSIC x-y-z sequence.
+     // Intrinsic means that subsequent rotations are fedined in the new intermediade frames
+     // As opposed to Extrinsic, where all rotations are defined in the original reference frame
+     // INTRINSIC wrt consecutive-current: Rot(X0,theta)->Rot(Y1, phi)->Rot(Z2, gamma) = R(X,theta)R(Y,phi)R(Z,gamma)
+     // EXTRINSIC wrt origional:           Rot(X0,theta)->Rot(Y0, phi)->Rot(Z0, gamma) = R(Z,gamma)R(Y,phi)R(X,theta)
+     //
     Matrix<double, 3, 3> euler = EulerAngles(0., pi/4, pi/2.);
     Matrix<double, 3, 3> matIntrinsic({0., -0.70710678118, 0.70710678118, 1., 0., 0., 0., 0.70710678118, 0.70710678118});
     Matrix<double, 3, 3> matExtrinsic({0., -1., 0., 0.70710678118, 0., 0.70710678118, -0.70710678118, 0., 0.70710678118});
@@ -81,19 +81,19 @@ TEST(TestKinematics, Quaternion)
         // generate random valid quaternions:
         const Vector4<double> wxyz = Normalize(Vector4<double>{{dist(g), dist(g), dist(g), dist(g)}});
         
-        /*Assert that any Quaternion wxyz results in a valid Rotation R
-        * nessesary and sufficient:
-        * 1) R^T * R = R * R^T = I (orthogonality)
-        * 2) det(R) = +1
-        */
+        //Assert that any Quaternion wxyz results in a valid Rotation R
+        // nessesary and sufficient:
+        // 1) R^T * R = R * R^T = I (orthogonality)
+        // 2) det(R) = +1
+        //
         const Matrix<DataType, 3, 3> R = Quaternion(wxyz.Get(0, 0), wxyz.Get(1, 0), wxyz.Get(2, 0), wxyz.Get(3, 0));
         EXPECT_TRUE(IsOrthogonal(R));
         EXPECT_TRUE(std::fabs(Determinant3x3(R) - 1.) <= eps); // TODO: IsEqual not defined for values; only for matrices
 
-        /* Assert that the mapping is a "representation"
-        * nessesary:
-        * 1) RotToQuaternion( Quaternion( wxyz ) ) = wxyz and Quaternion( RotToQuaternion( R ) ) = R
-        */ 
+        // Assert that the mapping is a "representation"
+        // nessesary:
+        // 1) RotToQuaternion( Quaternion( wxyz ) ) = wxyz and Quaternion( RotToQuaternion( R ) ) = R
+        // 
         const Vector4<double> wxyz2 = RotToQuaternion(R);
         EXPECT_TRUE(IsEqual(wxyz, wxyz2));
     }
@@ -109,19 +109,19 @@ TEST(TestKinematics, Vec6ToRot)
         // generate random valid vector6:
         const Vector6<double> Rep = Vector6<double>{{dist(g), dist(g), dist(g), dist(g), dist(g), dist(g)}};
 
-        /*Assert that any Vector6 results in a valid Rotation X
-        * nessesary and sufficient:
-        * 1) orthogonality
-        * 2) det(X) = +1
-        */
+        //Assert that any Vector6 results in a valid Rotation X
+        // nessesary and sufficient:
+        // 1) orthogonality
+        // 2) det(X) = +1
+        //
         const Matrix<double, 3, 3> X = Vec6ToRot(Rep);
         EXPECT_TRUE(IsOrthogonal(X));
         EXPECT_TRUE(std::fabs(Determinant3x3(X) - 1.) <= eps); // TODO: IsEqual not defined for values; only for matrices
 
-        /* Assert that the mapping is a "representation"
-        * nessesary:
-        * 1) Vec6ToRot( RotToVec6( X ) ) = X; for any X, and RotToVec6( Vec6ToRot( Rot ) ) = Rot; for any Rot
-        */
+        // Assert that the mapping is a "representation"
+        // nessesary:
+        // 1) Vec6ToRot( RotToVec6( X ) ) = X; for any X, and RotToVec6( Vec6ToRot( Rot ) ) = Rot; for any Rot
+        //
         const Vector6<double> Rep2 = RotToVec6(X);
         //EXPECT_TRUE(IsEqual(Rep, Rep2)); // multiple vec6 map to the same Rot, because of normalisation 
         const Matrix<double, 3, 3> X2 = Vec6ToRot(Rep2);
@@ -267,7 +267,7 @@ TEST(TestKinematics, CartesianRobot)
     robot.Update(); // <-- update iterator with new joints
 
     const std::vector<DataType> theta{1., 2., 3.};
-    const auto transforms = algorithms::ForwardKinematics2(robot, theta);
+    const auto transforms = algorithms::ForwardKinematics(robot, theta);
     const auto translation = transforms.at(2u).GetTranslation();
 
     ASSERT_TRUE(IsEqual(translation.ToMatrix(), Vector3<DataType>{{1., 2., 3.}}));
