@@ -34,18 +34,7 @@ constexpr Matrix<T, rows, 1> Dot(const Matrix<T, rows, 1>& v1, const Matrix<T, r
     return res;
 }
 
-template <typename T, std::size_t rows>
-constexpr T Norm(const Matrix<T, rows, 1>& vec)
-{
-    return std::sqrt(Sum(Dot(vec, vec)));
-}
 
-template <typename T, std::size_t rows>
-constexpr Matrix<T, rows, 1> Normalize(const Matrix<T, rows, 1>& vec)
-{
-    const auto norm = Norm(vec);
-    return Matmul(vec, T{1} / norm);
-}
 
 template <typename T>
 constexpr Matrix<T, 3, 3> Rotate(const Vector3<T>& vec, const T angle)
@@ -85,41 +74,41 @@ constexpr Matrix<T, 3, 3> Quaternion( T w,  T x, const T y, const T z)
     return R;
 }
 
-template <typename DataType>
-constexpr Matrix<DataType, 3, 3> Quaternion(const std::vector<DataType> wxyz)
+template <typename T>
+constexpr Matrix<T, 3, 3> Quaternion(const std::vector<T> wxyz)
 {
     return Quaternion(wxyz[0], wxyz[1], wxyz[2], wxyz[3]);
 }
 
 
 
-template <typename DataType>
-constexpr Vector4<DataType> RotToQuaternion(const Matrix<DataType, 3, 3> R)
+template <typename T>
+constexpr Vector4<T> RotToQuaternion(const Matrix<T, 3, 3> R)
 {
     //std::vector<T> wxyz;
-    Vector4<DataType> wxyz; 
-    DataType trace = Trace(R);
+    Vector4<T> wxyz; 
+    T trace = Trace(R);
     if (trace > 0.){
-        DataType s = 0.5 / sqrt(trace + 1.0);
+        T s = 0.5 / sqrt(trace + 1.0);
         wxyz[0] = 0.25 / s;
         wxyz[1] = (R.Get(2,1) - R.Get(1,2)) * s;
         wxyz[2] = (R.Get(0,2) - R.Get(2,0)) * s;
         wxyz[3] = (R.Get(1,0) - R.Get(0,1)) * s;
     } else{
         if ( R.Get(0,0) > R.Get(1,1) && R.Get(0,0) > R.Get(2,2) ) {
-            DataType s = 2.0 * sqrt(1.0 + R.Get(0, 0) - R.Get(1, 1) - R.Get(2, 2));
+            T s = 2.0 * sqrt(1.0 + R.Get(0, 0) - R.Get(1, 1) - R.Get(2, 2));
             wxyz[0] = (R.Get(2,1) - R.Get(1,2) ) / s;
             wxyz[1] = 0.25 * s;
             wxyz[2] = (R.Get(0,1) + R.Get(1,0) ) / s;
             wxyz[3] = (R.Get(0,2) + R.Get(2,0) ) / s;
         } else if (R.Get(1,1) > R.Get(2,2)) {
-            DataType s = 2.0 * sqrt(1.0 + R.Get(1, 1) - R.Get(0, 0) - R.Get(2, 2));
+            T s = 2.0 * sqrt(1.0 + R.Get(1, 1) - R.Get(0, 0) - R.Get(2, 2));
             wxyz[0]= (R.Get(0,2) - R.Get(2,0) ) / s;
             wxyz[1] = (R.Get(0,1) + R.Get(1,0) ) / s;
             wxyz[2] = 0.25 * s;
             wxyz[3] = (R.Get(1,2) + R.Get(2,1) ) / s;
         } else {
-            DataType s = 2.0 * sqrt(1.0 + R.Get(2, 2) - R.Get(0, 0) - R.Get(1, 1));
+            T s = 2.0 * sqrt(1.0 + R.Get(2, 2) - R.Get(0, 0) - R.Get(1, 1));
             wxyz[0] = (R.Get(1,0) - R.Get(0,1) ) / s;
             wxyz[1] = (R.Get(0,2) + R.Get(2,0) ) / s;
             wxyz[2] = (R.Get(1,2) + R.Get(2,1) ) / s;
