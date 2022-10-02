@@ -64,7 +64,7 @@ constexpr auto Trace(const TMat& matrix)
 {
     static_assert(is_square_v<TMat>);
     typename TMat::DataType val{0};
-    for(std::size_t i = 0; i < TMat::Rows; ++i)
+    for(std::size_t i = 0; i < matrix.GetRows(); ++i)
         val += matrix.Get(i, i);
     return val;
 }
@@ -130,6 +130,18 @@ constexpr auto Dot(const TMat1& mat1, const TMat2& mat2)
         val += (mat1.Get(i, 0) * mat2.Get(i, 0));
     return val;
 }
+
+
+template <typename TMat >
+constexpr auto Sum(const TMat& mat)
+{
+    typename TMat::DataType sum = 0;
+    for(std::size_t i = 0; i < TMat::GetRows(); ++i)
+        for(std::size_t j = 0; j < TMat::GetColumns(); ++j)
+            sum += mat.Get(i, j);
+    return sum;
+}
+
 
 // todo: TMatTarget needs to be asignable
 template <typename TMatTarget, typename TMatSource>

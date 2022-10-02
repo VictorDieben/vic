@@ -9,6 +9,7 @@
 #include "vic/kinematics/transformation.h"
 #include "vic/linalg/traits.h"
 #include "vic/linalg/determinant.h"
+#include "vic/linalg/tools.h"
 #include "vic/utils.h"
 
 #include <optional>
@@ -18,6 +19,8 @@ namespace vic
 {
 namespace kinematics
 {
+
+using namespace vic::linalg;
 
 TEST(TestKinematics, EulerAngles)
 {
