@@ -27,6 +27,7 @@
     <ClCompile Include="TestSymbolic.cpp" />
     <ClCompile Include="TestSimulations.cpp" />
     <ClCompile Include="TestImages.cpp" />
+    <ClCompile Include="TestNetwork.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

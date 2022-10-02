@@ -20,11 +20,23 @@ struct MyOtherEvent : public Event
 
 TEST(TestEventQueue, Startup)
 {
-    PolymorphicEventQueue queue;
+    EventQueue queue;
 
-    SpecializedListener<MyEvent> listener(queue, [](const MyEvent& event) { std::cout << "tadaaa: " << event.mText << std::endl; });
+    int val = 0;
 
-    SpecializedListener<MyOtherEvent> otherListener(queue, [](const MyOtherEvent& event) { std::cout << "tadaaa: " << event.mOtherText << std::endl; });
+    EventListener<MyEvent> listener(queue, //
+                                          [&](const MyEvent& event) {
+                                              std::cout << "tadaaa: " << event.mText << std::endl; //
+                                              EXPECT_EQ(val, 0);
+                                              val++;
+                                          });
+
+    EventListener<MyOtherEvent> otherListener(queue, //
+                                                    [&](const MyOtherEvent& event) {
+                                                        std::cout << "tadaaa: " << event.mOtherText << std::endl; //
+                                                        EXPECT_EQ(val, 1);
+                                                        val++;
+                                                    });
 
     queue.EmplaceBack<MyEvent>();
     queue.EmplaceBack<MyOtherEvent>();
@@ -33,6 +45,8 @@ TEST(TestEventQueue, Startup)
     {
         // loop through all events
     }
+
+    EXPECT_EQ(val, 2);
 }
 
 } // namespace memory

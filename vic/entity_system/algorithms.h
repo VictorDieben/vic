@@ -9,6 +9,42 @@ namespace vic
 {
 namespace entity
 {
+// 3d
+template <typename T1, typename T2, typename T3, typename TSystem, typename TFunctor>
+void FilterForeach(TSystem& system, TFunctor functor)
+{
+    using Type1 = std::remove_cv_t<T1>;
+    using Type2 = std::remove_cv_t<T2>;
+    using Type3 = std::remove_cv_t<T3>;
+
+    auto it1 = system.begin<Type1>();
+    auto it2 = system.begin<Type2>();
+    auto it3 = system.begin<Type3>();
+
+    const auto it1End = system.end<Type1>();
+    const auto it2End = system.end<Type2>();
+    const auto it3End = system.end<Type3>();
+
+    while(it1 != it1End && it2 != it2End && it3 != it3End)
+    {
+        if(it1->first == it2->first)
+        {
+            if(it2->first == it3->first)
+            {
+                functor(it1->first, it1->second, it2->second, it3->second);
+                it1 = std::next(it1);
+            }
+            else if(it1->first < it3->first)
+                it1 = std::next(it1);
+            else
+                it3 = std::next(it3);
+        }
+        else if(it1->first < it2->first)
+            it1 = std::next(it1);
+        else
+            it2 = std::next(it2);
+    }
+}
 
 template <typename T1, typename T2, typename TSystem, typename TFunctor>
 void FilterForeach(TSystem& system, TFunctor functor)
@@ -35,26 +71,78 @@ void FilterForeach(TSystem& system, TFunctor functor)
     }
 }
 
+template <typename T, typename TSystem, typename TFunctor>
+void FilterForeach(TSystem& system, TFunctor functor)
+{
+    using Type1 = std::remove_cv_t<T>;
+
+    auto itBegin = system.begin<Type1>();
+    const auto itEnd = system.end<Type1>();
+    for(const auto it = itBegin; it != itEnd; ++it)
+    {
+        functor(it->first, it->second);
+    }
+}
+
+// 3d
+template <typename T1, typename T2, typename T3, typename TSystem, typename TResult>
+auto Filter(TSystem& system, std::vector<TResult>& result)
+{
+    result.clear();
+    const auto functor = [&](EntityId id, T1& first, T2& second, T3& third) {
+        result.push_back(TResult{id, &first, &second, &third}); //
+    };
+    FilterForeach<T1, T2, T3>(system, functor);
+    return result;
+}
+
 template <typename T1, typename T2, typename TSystem, typename TResult>
 auto Filter(TSystem& system, std::vector<TResult>& result)
 {
     result.clear();
-
     const auto functor = [&](EntityId id, T1& first, T2& second) {
         result.push_back(TResult{id, &first, &second}); //
     };
-
     FilterForeach<T1, T2>(system, functor);
-
     return result;
 }
 
+template <typename T, typename TSystem, typename TResult>
+auto Filter(TSystem& system, std::vector<TResult>& result)
+{
+    result.clear();
+    const auto functor = [&](EntityId id, T& first) {
+        result.push_back(TResult{id, &first}); //
+    };
+    FilterForeach<T>(system, functor);
+    return result;
+}
+
+// 3d
+template <typename T1, typename T2, typename T3, typename TSystem>
+auto Filter(TSystem& system)
+{
+    using ResultType = std::tuple<EntityId, T1*, T2*, T3*>;
+    std::vector<ResultType> result{};
+    return Filter<T1, T2, T3>(system, result);
+}
+
+// 2d
 template <typename T1, typename T2, typename TSystem>
 auto Filter(TSystem& system)
 {
     using ResultType = std::tuple<EntityId, T1*, T2*>;
     std::vector<ResultType> result{};
     return Filter<T1, T2>(system, result);
+}
+
+// 1d
+template <typename T, typename TSystem>
+auto Filter(TSystem& system)
+{
+    using ResultType = std::tuple<EntityId, T*>;
+    std::vector<ResultType> result{};
+    return Filter<T>(system, result);
 }
 
 } // namespace entity

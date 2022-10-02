@@ -195,6 +195,8 @@
     <ClInclude Include="memory\merge_sort.h" />
     <ClInclude Include="memory\refcounter.h" />
     <ClInclude Include="memory\tree.h" />
+    <ClInclude Include="network\binary_conversion.h" />
+    <ClInclude Include="network\i2c.h" />
     <ClInclude Include="physics\rendering\rendering_equation.h" />
     <ClInclude Include="simulations\cfd\mesh.h" />
     <ClInclude Include="symbolic\symbolic.h" />

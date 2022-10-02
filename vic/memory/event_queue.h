@@ -20,20 +20,20 @@ struct Event
     virtual ~Event() = default;
 };
 
-class EventListener
+class BaseEventListener
 {
 public:
-    EventListener() = default;
-    virtual ~EventListener() = default;
+    BaseEventListener() = default;
+    virtual ~BaseEventListener() = default;
 
     virtual void OnEvent(Event& event) = 0;
 };
 
-class PolymorphicEventQueue
+class EventQueue
 {
 public:
-    PolymorphicEventQueue() = default;
-    ~PolymorphicEventQueue() = default;
+    EventQueue() = default;
+    ~EventQueue() = default;
 
     void Add(std::unique_ptr<Event> event) { mEvents.push_back(std::move(event)); }
 
@@ -51,21 +51,21 @@ public:
         {
             std::unique_ptr<Event> event = std::move(mEvents.front()); // this moves the value out, front is now nullptr
             mEvents.pop_front(); // remove the nullptr
-            for(EventListener* listener : mListeners)
-                listener->OnEvent(*event);
+            for(BaseEventListener* listener : mListeners)
+                listener->OnEvent(*event); // todo: filter listeners per type
             return true;
         }
         else
             return false;
     }
 
-    void AddListener(EventListener& listener)
+    void AddListener(BaseEventListener& listener)
     {
         // add the listener to the list, make sure that it is unique
         assert(std::find(mListeners.begin(), mListeners.end(), &listener) == mListeners.end());
         mListeners.push_back(&listener);
     }
-    void RemoveListener(EventListener& listener)
+    void RemoveListener(BaseEventListener& listener)
     {
         // remove all occurances of listener
         mListeners.erase(std::find(mListeners.begin(), mListeners.end(), &listener));
@@ -76,21 +76,26 @@ private:
     std::deque<std::unique_ptr<Event>> mEvents{};
 
     // todo: separate vector for every type of event? useful if we have a lot of listeners
-    std::vector<EventListener*> mListeners{};
+    std::vector<BaseEventListener*> mListeners{};
 };
 
 template <typename Tevent>
-class SpecializedListener : public EventListener
+class EventListener : public BaseEventListener
 {
 public:
-    SpecializedListener(PolymorphicEventQueue& queue, std::function<void(Tevent&)> lambda)
+    EventListener(EventQueue& queue, std::function<void(Tevent&)> lambda)
         : mQueue(queue)
         , mLambda(lambda)
     {
         queue.AddListener(*this);
     }
 
-    ~SpecializedListener() override { mQueue.RemoveListener(*this); }
+    ~EventListener() override { mQueue.RemoveListener(*this); }
+
+    EventListener(const EventListener&) = delete;
+    EventListener& operator=(const EventListener&) = delete;
+    EventListener(EventListener&&) = delete;
+    EventListener& operator=(EventListener&&) = delete;
 
     void OnEvent(Event& event) override
     {
@@ -101,7 +106,7 @@ public:
     }
 
 private:
-    PolymorphicEventQueue& mQueue;
+    EventQueue& mQueue;
     std::function<void(Tevent&)> mLambda;
 };
 

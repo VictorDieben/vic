@@ -136,12 +136,12 @@ TEST(TestEntitySystem, Filter)
     const System& refSystem = system;
 
     for(const auto& [entId, namePtr, buzzPtr] : Filter<const Name, const Buzz>(refSystem))
-    {  
+    {
         // no need to do anything, this should just compile
     }
 
     for(auto& [entId, namePtr, buzzPtr] : Filter<const Name, Buzz>(system))
-    { 
+    {
         // namePtr->mName = "bla"; // <-- this should not compile! assigning to const ptr
         buzzPtr->buzzName = namePtr->mName;
     }
@@ -183,4 +183,22 @@ TEST(TestEntitySystem, Remove)
 
     // todo: invalidate handle?
     EXPECT_FALSE(handle.Has<A>() || handle.Has<B>() || handle.Has<C>() || handle.Has<D>());
+}
+
+TEST(TestEntitySystem, 3d)
+{
+    struct A
+    { };
+    struct B
+    { };
+    struct C
+    { };
+    struct D
+    { };
+
+    using System = vic::entity::EntitySystem<A, B, C, D>;
+    using Handle = System::Handle;
+
+    System system;
+    Handle handle = system.NewEntity();
 }

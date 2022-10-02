@@ -2,9 +2,9 @@
 #pragma once
 
 #include <algorithm>
+#include <stdexcept>
 #include <utility>
 #include <vector>
-#include <stdexcept>
 
 namespace vic
 {
@@ -28,15 +28,15 @@ public:
     using const_iterator = decltype(mData.cbegin());
     using key_type = TKey;
     using mapped_type = TValue;
-    using difference_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
     // todo: key_compare
     using reference = value_type&;
     using const_reference = const value_type&;
     using size_type = std::size_t;
 
     // element access
-    TValue& at(const TKey& key) { return {}; }
-    const TValue& at(const TKey& key) const { return {}; }
+    TValue& at(const TKey& key) { return *find(key); }
+    const TValue& at(const TKey& key) const { return *find(key); }
     TValue& operator[](const TKey& key)
     {
         auto it = find(key);
@@ -49,7 +49,7 @@ public:
 
     // Iterators
     auto begin() { return mData.begin(); }
-    auto begin() const{ return mData.begin(); }
+    auto begin() const { return mData.begin(); }
     auto cbegin() const { return mData.cbegin(); }
 
     auto end() { return mData.end(); }
@@ -63,14 +63,8 @@ public:
 
     // Modifiers
     void clear() { mData.clear(); }
-    std::pair<iterator, bool> insert(const value_type& pair)
-    { 
-        throw std::runtime_error("not implemented"); 
-    }
-    std::pair<iterator, bool> insert(value_type&& pair)
-    {
-        throw std::runtime_error("not implemented"); 
-    }
+    std::pair<iterator, bool> insert(const value_type& pair) { throw std::runtime_error("not implemented"); }
+    std::pair<iterator, bool> insert(value_type&& pair) { throw std::runtime_error("not implemented"); }
 
     iterator erase(iterator pos) { return mData.erase(pos); }
     iterator erase(const_iterator pos) { return mData.erase(pos); }

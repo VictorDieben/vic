@@ -173,6 +173,8 @@ public:
         return ComponentSystem<T>::Remove(id);
     }
 
+    // todo: remove list of entities
+
     template <typename T>
     auto begin()
     {
