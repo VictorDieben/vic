@@ -85,39 +85,41 @@ constexpr Matrix<T, 3, 3> Quaternion( T w,  T x, const T y, const T z)
     return R;
 }
 
-template <typename T>
-constexpr Matrix<T, 3, 3> Quaternion(std::vector<T> wxyz)
+template <typename DataType>
+constexpr Matrix<DataType, 3, 3> Quaternion(const std::vector<DataType> wxyz)
 {
     return Quaternion(wxyz[0], wxyz[1], wxyz[2], wxyz[3]);
 }
 
 
 
-template <typename T>
-constexpr std::vector<T> RotToQuaternion(Matrix<T, 3, 3> R){
-    std::vector<T> wxyz;
-    auto trace = Trace(R);
+template <typename DataType>
+constexpr Vector4<DataType> RotToQuaternion(const Matrix<DataType, 3, 3> R)
+{
+    //std::vector<T> wxyz;
+    Vector4<DataType> wxyz; 
+    DataType trace = Trace(R);
     if (trace > 0.){
-        T s = 0.5 / sqrt(trace + 1.0);
+        DataType s = 0.5 / sqrt(trace + 1.0);
         wxyz[0] = 0.25 / s;
         wxyz[1] = (R.Get(2,1) - R.Get(1,2)) * s;
         wxyz[2] = (R.Get(0,2) - R.Get(2,0)) * s;
         wxyz[3] = (R.Get(1,0) - R.Get(0,1)) * s;
     } else{
         if ( R.Get(0,0) > R.Get(1,1) && R.Get(0,0) > R.Get(2,2) ) {
-            T s = 2.0 * sqrt( 1.0 + R.Get(0,0) - R.Get(1,1) - R.Get(2,2));
+            DataType s = 2.0 * sqrt(1.0 + R.Get(0, 0) - R.Get(1, 1) - R.Get(2, 2));
             wxyz[0] = (R.Get(2,1) - R.Get(1,2) ) / s;
             wxyz[1] = 0.25 * s;
             wxyz[2] = (R.Get(0,1) + R.Get(1,0) ) / s;
             wxyz[3] = (R.Get(0,2) + R.Get(2,0) ) / s;
         } else if (R.Get(1,1) > R.Get(2,2)) {
-            T s = 2.0 * sqrt( 1.0 + R.Get(1,1) - R.Get(0,0) - R.Get(2,2));
+            DataType s = 2.0 * sqrt(1.0 + R.Get(1, 1) - R.Get(0, 0) - R.Get(2, 2));
             wxyz[0]= (R.Get(0,2) - R.Get(2,0) ) / s;
             wxyz[1] = (R.Get(0,1) + R.Get(1,0) ) / s;
             wxyz[2] = 0.25 * s;
             wxyz[3] = (R.Get(1,2) + R.Get(2,1) ) / s;
         } else {
-            T s = 2.0 * sqrt( 1.0 + R.Get(2,2) - R.Get(0,0) - R.Get(1,1) );
+            DataType s = 2.0 * sqrt(1.0 + R.Get(2, 2) - R.Get(0, 0) - R.Get(1, 1));
             wxyz[0] = (R.Get(1,0) - R.Get(0,1) ) / s;
             wxyz[1] = (R.Get(0,2) + R.Get(2,0) ) / s;
             wxyz[2] = (R.Get(1,2) + R.Get(2,1) ) / s;
@@ -144,8 +146,8 @@ constexpr Matrix<T, 3, 3> Vec6ToRot(const Vector6<T>& Rep)
     Vector3<DataType> a1 = Extract<Vector3<T>, 0, 0>(Rep);
     Vector3<DataType> a2 = Extract<Vector3<T>, 3, 0>(Rep);
     
-    Vector3<DataType> b1 = Norm(a1);
-    Vector3<DataType> b2 = Norm(Add(a2 , Matmul(-1*Sum(Dot(b1,a2)),b1))); 
+    Vector3<DataType> b1 = Normalize(a1);
+    Vector3<DataType> b2 = Normalize(Subtract(a2, Matmul(Sum(Dot(b1, a2)), b1))); 
     Vector3<DataType> b3 = Cross(b1,b2);
 
     Assign<0,0>(X, b1);
@@ -163,7 +165,7 @@ constexpr Matrix<T, 3, 3> Vec6ToRot(const Vector6<T>& Rep)
  *                Essentially, the last column is dropped.
  */
 template <typename T>
-constexpr  Vector6<T> RotToVec6(Matrix<T, 3, 3>& X)
+constexpr  Vector6<T> RotToVec6(const Matrix<T, 3, 3>& X)
 {
     Vector6<T> Rep;
     //     [0 1 2
