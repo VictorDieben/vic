@@ -92,8 +92,8 @@ requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto AddGeneral(const TMat1& mat1, const TMat2& mat2)
 {
     TMatRet result{mat1.GetRows(), mat1.GetColumns()};
-    for(std::size_t i = 0; i < TMat1::GetRows(); ++i)
-        for(std::size_t j = 0; j < TMat1::GetColumns(); ++j)
+    for(std::size_t i = 0; i < mat1.GetRows(); ++i)
+        for(std::size_t j = 0; j < mat1.GetColumns(); ++j)
             result.At(i, j) = mat1.Get(i, j) + mat2.Get(i, j);
     return result;
 }

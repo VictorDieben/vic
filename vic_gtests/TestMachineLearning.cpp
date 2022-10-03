@@ -9,7 +9,7 @@
 
 namespace vic
 {
-namespace memory
+namespace ml
 {
 
 TEST(TestMachineLearning, Setup)

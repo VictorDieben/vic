@@ -5,6 +5,8 @@
 
 #include "vic/machine_learning/layer.h"
 
+#include "vic/linalg/add.h"
+#include "vic/linalg/matmul.h"
 #include "vic/linalg/matrices_dynamic.h"
 
 namespace vic
@@ -17,14 +19,16 @@ template <typename T>
 class BaseMapping
 {
 public:
-    BaseMapping(const BaseLayer<T>& from, const BaseLayer<T>& to)
+    BaseMapping(BaseLayer<T>& from, BaseLayer<T>& to)
         : mFrom(from)
         , mTo(to)
     { }
 
-private:
-    const BaseLayer<T>& mFrom;
-    const BaseLayer<T>& mTo;
+    virtual void Calculate() = 0;
+
+protected:
+    BaseLayer<T>& mFrom;
+    BaseLayer<T>& mTo;
 };
 
 // simple mapping. just a matrix.
@@ -32,14 +36,30 @@ template <typename T>
 class Mapping : public BaseMapping<T>
 {
 public:
-    Mapping(const BaseLayer<T>& from, const BaseLayer<T>& to)
+    using BaseMapping<T>::mFrom;
+    using BaseMapping<T>::mTo;
+
+    Mapping(BaseLayer<T>& from, BaseLayer<T>& to)
         : BaseMapping<T>(from, to)
     {
-        mMatrix = vic::linalg::MatrixDynamic<T>(from.Size(), to.Size());
+        mMatrix = vic::linalg::MatrixDynamic<T>(mFrom.Size(), mTo.Size());
+        mBiases = vic::linalg::VectorDynamic<T>(mTo.Size());
+    }
+
+    void Calculate() override
+    { 
+        const auto result = vic::linalg::Add(vic::linalg::Matmul(mMatrix, mFrom.ToVector()), mBiases);
+
+        // todo: workaround to copy matrix with 1 column to a vector
+        vic::linalg::VectorDynamic<T> vec{result}; 
+
+        mTo.SetVector(vec);
     }
 
 private:
     vic::linalg::MatrixDynamic<T> mMatrix;
+
+    vic::linalg::VectorDynamic<T> mBiases;
 };
 
 } // namespace ml

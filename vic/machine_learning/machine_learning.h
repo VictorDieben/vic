@@ -39,8 +39,8 @@ public:
 
     void Initialize(const std::vector<std::size_t>& layers) override
     {
+        mMappings.clear(); // <-- should be done first
         mLayers.clear();
-        mMappings.clear();
         for(const auto& size : layers)
             mLayers.push_back(std::make_unique<Layer<T>>(size));
 

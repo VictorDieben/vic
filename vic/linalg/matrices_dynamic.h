@@ -164,8 +164,31 @@ public:
     { 
     }
 
+    template <typename TMatrix>
+    explicit VectorDynamic(const TMatrix& other)
+    {
+        assert(other.GetColumns() == 1);
+        for (std::size_t i = 0; i < other.GetRows(); ++i)
+        {
+            mData[i] = other.Get(i, 0);
+        }
+    }
+
     std::size_t GetRows() const { return mData.size(); }
     std::size_t GetColumns() const { return 1; }
+    
+    T Get(const std::size_t i, const std::size_t j) const
+    {
+        assert(j == 0);
+        return mData[i];
+    }
+
+    T& At(const std::size_t i, const std::size_t j)
+    {
+        assert(j == 0);
+        return mData[i];
+    }
+
 
 private:
     std::vector<T> mData;
