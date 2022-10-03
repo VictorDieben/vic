@@ -29,10 +29,10 @@ public:
     }
 
     template <typename TIter>
-    static void Read (T& object, TIter begin, TIter end){};
+    static void Read(T& object, TIter begin, TIter end){};
 
     template <typename TIter>
-    static void Write (const T& object, TIter begin, TIter end){};
+    static void Write(const T& object, TIter begin, TIter end){};
 };
 
 // implementation for std::array<T, N>
@@ -48,6 +48,7 @@ struct is_std_array<std::array<T, N>> : std::true_type
 template <class T>
 constexpr bool is_std_array_v = is_std_array<std::remove_cvref_t<T>>::value;
 
+/* disabled to allow compilation
 template <typename T>
 struct BinaryConversion
 {
@@ -62,10 +63,11 @@ public:
     }
 
     template <typename TIter>
-    static void Read (T& object, TIter begin, TIter end){};
+    static void Read(T& object, TIter begin, TIter end){};
 
     template <typename TIter>
-    static void Write (const T& object, TIter begin, TIter end){};
+    static void Write(const T& object, TIter begin, TIter end){};
 };
-
+*/
+} // namespace network
 } // namespace vic
