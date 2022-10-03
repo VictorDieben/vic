@@ -34,7 +34,7 @@ constexpr Matrix<T, 3, 3> EulerAngles(const T alpha, const T beta, const T gamma
 }
 
 template <typename T>
-constexpr Matrix<T, 3, 3> Quaternion(T w, T x, const T y, const T z)
+constexpr Matrix<T, 3, 3> Quaternion(const T w, const T x, const T y, const T z)
 {
     Matrix<T, 3, 3> R;
     R.At(0, 0) = 2 * (w * w + x * x) - 1;
@@ -53,13 +53,13 @@ constexpr Matrix<T, 3, 3> Quaternion(T w, T x, const T y, const T z)
 }
 
 template <typename T>
-constexpr Matrix<T, 3, 3> Quaternion(const std::vector<T> wxyz)
+constexpr Matrix<T, 3, 3> Quaternion(const std::vector<T>& wxyz)
 {
     return Quaternion(wxyz[0], wxyz[1], wxyz[2], wxyz[3]);
 }
 
 template <typename T>
-constexpr Vector4<T> RotToQuaternion(const Matrix<T, 3, 3> R)
+constexpr Vector4<T> RotToQuaternion(const Matrix<T, 3, 3>& R)
 {
     //std::vector<T> wxyz;
     Vector4<T> wxyz;
@@ -103,12 +103,12 @@ constexpr Vector4<T> RotToQuaternion(const Matrix<T, 3, 3> R)
     return wxyz;
 }
 
-// @brief  Transforms an arbirtary 6D vector to a valid rotation matrix.
+// Transforms an arbirtary 6D vector to a valid rotation matrix.
 //     This represenation avoids discontinuities found in Euler or quaternons,
 //     which facilitates network regression in machine learning applications.
 //     See also: https://doi.org/10.48550/arXiv.1812.07035
-// @param  Rep 6D representation of a rotation.
-// @return A valid rotation matrix
+// Rep: 6D representation of a rotation.
+// returns: A valid rotation matrix
 template <typename T>
 constexpr Matrix<T, 3, 3> Vec6ToRot(const Vector6<T>& Rep)
 {
@@ -129,10 +129,10 @@ constexpr Matrix<T, 3, 3> Vec6ToRot(const Vector6<T>& Rep)
     return X;
 }
 
-// @brief  Inverse mapping of Vec6ToRot(): rotation matrix to an arbirtary 6D representation vector.
+// Inverse mapping of Vec6ToRot(): rotation matrix to an arbirtary 6D representation vector.
 //         See also: https://doi.org/10.48550/arXiv.1812.07035
-// @param X a valid rotation matrix
-// @return 6D representation of X.
+// X: a valid rotation matrix
+// returns a 6D representation of X.
 //         Essentially, the last column is dropped.
 template <typename T>
 constexpr Vector6<T> RotToVec6(const Matrix<T, 3, 3>& X)
