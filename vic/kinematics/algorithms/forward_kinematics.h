@@ -7,6 +7,8 @@
 
 #include "vic/kinematics/math.h"
 #include "vic/kinematics/robot/robot.h"
+#include "vic/linalg/matmul.h"
+#include "vic/linalg/tools.h"
 
 #include <vector>
 
@@ -18,6 +20,23 @@ namespace algorithms
 {
 
 using namespace robots;
+
+// the Adjoint matrix re-expresses:
+// Tilde(twist_transformed) = H * Tilde(twist) * H^-1
+//                   to:
+// twist_transformed = Adjoint(H) * twist
+Matrix<DataType, 6, 6> Adjoint(const Transformation& transform)
+{
+    Matrix<DataType, 6, 6> adjoint; // assume initialised with zeros
+    const Matrix<DataType, 3, 3> R = transform.GetRotation().ToMatrix();
+    const Vector3<DataType> p = transform.GetTranslation().ToMatrix();
+
+    Assign<0, 0>(adjoint, R); // 3x3; top left
+    //Assign<0, 3>(adjoint, Mat3());            // 3x3 zeros; top right
+    Assign<3, 0>(adjoint, Matmul(Bracket3(p), R)); // 3x3; bottom left
+    Assign<3, 3>(adjoint, R); // 3x3; bottom right
+    return adjoint;
+}
 
 std::vector<Transformation> ForwardKinematics(ForwardRobot& robot, //
                                               const std::vector<DataType>& theta)
@@ -40,9 +59,14 @@ std::vector<Transformation> ForwardKinematics(ForwardRobot& robot, //
         if(!data.IsType(NodeType::Joint))
             continue; // ignore frames for now
 
-        const auto transform = data.GetTransformation();
-        const auto exponent = ExponentialTransform(data.GetScrew(), theta[id]);
+        const Transformation transform = data.GetTransformation();
+
         neutralPoses[id] = neutralPoses[parentId] * transform;
+        // express Transforms in base frame:
+        const Matrix<DataType, 6, 6> adjoint = Adjoint(neutralPoses[id]);
+        const Screw screwInBaseFrame = Screw(Matmul(adjoint, data.GetScrew().ToMatrix()));
+        const auto exponent = ExponentialTransform(screwInBaseFrame, theta[id]);
+
         exponentials[id] = exponentials[parentId] * exponent;
         result[id] = exponentials[id] * neutralPoses[id];
     }
@@ -51,7 +75,7 @@ std::vector<Transformation> ForwardKinematics(ForwardRobot& robot, //
 }
 
 std::vector<Transformation> ForwardKinematics2(ForwardRobot& robot, //
-                                              const std::vector<DataType>& theta)
+                                               const std::vector<DataType>& theta)
 {
     assert(robot.GetTree().IsContinuous()); // if tree is not continuous, we cannot iterate over it
     // for each node in the robot, calculate the transformation
@@ -75,45 +99,7 @@ std::vector<Transformation> ForwardKinematics2(ForwardRobot& robot, //
     return result;
 }
 
-
-
-
-/* Bracket operator extended for twists & wrenches. 
-TODO: migrate to linalg/tools.h ?and refactor to class? 
-*/
-template <typename T>
-Matrix<T, 4, 4> Bracket6(const std::array<T, 6>& vec)
-{
-    const Matrix<T, 4, 4> vec_tilde(
-       {0,       -vec[2], vec[1],  vec[3],
-        vec[2],  0,       -vec[0], vec[4],
-        -vec[1], vec[0],  0,       vec[5],
-        0,       0,       0,       0      });
-    return vec_tilde;
-}
-
-/* the Adjoint matrix re-expresses:  
- * Tilde(twist_transformed) = H * Tilde(twist) * H^-1
- *                   to:
- * twist_transformed = Adjoint(H) * twist
- */
-template <typename T>
-Matrix<T, 6, 6> Adjoint(const Transformation& transform)
-{
-    const Matrix<T, 6, 6> adjoint; // assume initialised with zeros
-    Rotation R = transform.GetRotation();
-    Translation p = transform.GetTranslation().ToMatrix();
-
-    Assign<0, 0>(adjoint, R);                   // 3x3; top left
-    //Assign<0, 3>(adjoint, Mat3());            // 3x3 zeros; top right
-    Assign<3, 0>(adjoint, Matrix<T, 3, 3>::MatMul(Matrix<T, 3, 3>::Bracket3(p),R));  // 3x3; bottom left
-    Assign<3, 3>(adjoint, R);                   // 3x3; bottom right
-    return adjoint;
-}
-
-std::vector<Twist> ForwardKinematicsDot(ForwardRobot& robot,
-                                        const std::vector<Transformation> transforms,
-                                               const std::vector<DataType>& thetaDot)
+std::vector<Twist> ForwardKinematicsDot(ForwardRobot& robot, const std::vector<Transformation>& transforms, const std::vector<DataType>& thetaDot)
 {
     assert(robot.GetTree().IsContinuous()); // if tree is not continuous, we cannot iterate over it
     // TODO
@@ -122,7 +108,6 @@ std::vector<Twist> ForwardKinematicsDot(ForwardRobot& robot,
     std::vector<Twist> twists{};
     exponentials.resize(nJoints);
     twists.resize(nJoints);
-    
 
     for(auto& joint : robot)
     {
