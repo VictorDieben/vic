@@ -28,6 +28,7 @@
     <ClCompile Include="TestSimulations.cpp" />
     <ClCompile Include="TestImages.cpp" />
     <ClCompile Include="TestNetwork.cpp" />
+    <ClCompile Include="TestMachineLearning.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

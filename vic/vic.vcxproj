@@ -187,6 +187,11 @@
     <ClInclude Include="linalg\algorithms\eigenvalues.h" />
     <ClInclude Include="linalg\matrices_dynamic.h" />
     <ClInclude Include="linalg\solve.h" />
+    <ClInclude Include="machine_learning\back_propagation.h" />
+    <ClInclude Include="machine_learning\definitions.h" />
+    <ClInclude Include="machine_learning\layer.h" />
+    <ClInclude Include="machine_learning\machine_learning.h" />
+    <ClInclude Include="machine_learning\mapping.h" />
     <ClInclude Include="memory\constexpr_map.h" />
     <ClInclude Include="memory\dense_map.h" />
     <ClInclude Include="memory\event_queue.h" />

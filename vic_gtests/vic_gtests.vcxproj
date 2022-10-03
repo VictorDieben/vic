@@ -85,6 +85,7 @@
     <ClCompile Include="TestImages.cpp" />
     <ClCompile Include="TestKinematics.cpp" />
     <ClCompile Include="TestLinprog.cpp" />
+    <ClCompile Include="TestMachineLearning.cpp" />
     <ClCompile Include="TestMemory.cpp" />
     <ClCompile Include="TestNetwork.cpp" />
     <ClCompile Include="TestSimulations.cpp" />

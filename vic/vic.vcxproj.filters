@@ -213,6 +213,21 @@
     <ClInclude Include="network\binary_conversion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="machine_learning\machine_learning.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="machine_learning\back_propagation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="machine_learning\definitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="machine_learning\layer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="machine_learning\mapping.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

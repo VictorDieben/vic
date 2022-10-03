@@ -148,6 +148,28 @@ private:
 
     void Initialize() { mData.resize(mRows * columns); }
 };
+ 
+
+
+
+template <typename T>
+class VectorDynamic
+{
+public:
+    using DataType = T;
+    VectorDynamic() = default;
+    VectorDynamic(std::size_t size) { mData.resize(size); }
+    VectorDynamic(const std::vector<T>& data)
+        : mData(data)
+    { 
+    }
+
+    std::size_t GetRows() const { return mData.size(); }
+    std::size_t GetColumns() const { return 1; }
+
+private:
+    std::vector<T> mData;
+};
 
 } // namespace linalg
 } // namespace vic
