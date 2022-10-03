@@ -27,6 +27,7 @@ TEST(TestMachineLearning, Setup)
 TEST(TestMachineLearning, SimpleModel)
 {
     //
+    auto system = vic::ml::System<double>({5, 4, 3, 2});
 }
 
 } // namespace memory

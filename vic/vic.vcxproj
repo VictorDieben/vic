@@ -223,6 +223,7 @@
     <ClInclude Include="linprog\seidel.h" />
     <ClInclude Include="network\udp.h" />
     <ClInclude Include="utils\Counted.h" />
+    <ClInclude Include="utils\math.h" />
     <ClInclude Include="utils\observable.h" />
     <ClInclude Include="utils\ranges.h" />
     <ClInclude Include="utils\sort.h" />

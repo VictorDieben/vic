@@ -23,7 +23,8 @@ public:
         : mFrom(from)
         , mTo(to)
     { }
-
+    
+    virtual void Initialize() = 0;
     virtual void Calculate() = 0;
 
 protected:
@@ -42,16 +43,21 @@ public:
     Mapping(BaseLayer<T>& from, BaseLayer<T>& to)
         : BaseMapping<T>(from, to)
     {
+        Initialize();
+    }
+
+    void Initialize() override
+    { 
         mMatrix = vic::linalg::MatrixDynamic<T>(mFrom.Size(), mTo.Size());
         mBiases = vic::linalg::VectorDynamic<T>(mTo.Size());
     }
 
     void Calculate() override
-    { 
+    {
         const auto result = vic::linalg::Add(vic::linalg::Matmul(mMatrix, mFrom.ToVector()), mBiases);
 
         // todo: workaround to copy matrix with 1 column to a vector
-        vic::linalg::VectorDynamic<T> vec{result}; 
+        vic::linalg::VectorDynamic<T> vec{result};
 
         mTo.SetVector(vec);
     }

@@ -228,6 +228,9 @@
     <ClInclude Include="machine_learning\mapping.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="utils\math.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

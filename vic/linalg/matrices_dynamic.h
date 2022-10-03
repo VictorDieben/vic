@@ -168,12 +168,14 @@ public:
     explicit VectorDynamic(const TMatrix& other)
     {
         assert(other.GetColumns() == 1);
+        mData.resize(other.GetRows());
         for (std::size_t i = 0; i < other.GetRows(); ++i)
         {
-            mData[i] = other.Get(i, 0);
+            mData[i] = other.Get(i, 0); // todo: copy underlying std::vector directly
         }
     }
 
+    // todo: transpose?
     std::size_t GetRows() const { return mData.size(); }
     std::size_t GetColumns() const { return 1; }
     

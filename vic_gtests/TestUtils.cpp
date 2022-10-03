@@ -3,6 +3,7 @@
 #include "test_base.h"
 #include "vic/utils.h"
 #include "vic/utils/counted.h"
+#include "vic/utils/math.h"
 #include "vic/utils/observable.h"
 #include "vic/utils/statemachine.h"
 #include "vic/utils/timing.h"
@@ -301,4 +302,18 @@ TEST(TestUtils, TestIsPowerOfTwo)
 
     for(uint32_t i = 2; i < 31; ++i)
         ASSERT_FALSE(IsPowerOfTwo(Power<int32_t>(2, i) - 1)) << i;
+}
+
+TEST(TestUtils, Exp)
+{
+    std::default_random_engine rng;
+    std::uniform_real_distribution dist(0.0001, 100.);
+
+    for(int32_t i = 0; i < 1000000; ++i)
+    { 
+        const double x = dist(rng);
+        const double answer = std::exp(x);
+        const double eps = answer * 1e-5;
+        ASSERT_NEAR(answer, vic::math::exp(x), eps) << "x = " << x;
+    }
 }
