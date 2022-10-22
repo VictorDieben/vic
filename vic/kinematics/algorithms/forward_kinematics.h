@@ -19,15 +19,16 @@ namespace algorithms
 
 using namespace robots;
 
-std::vector<Transformation> ForwardKinematics(ForwardRobot& robot, //
-                                              const std::vector<DataType>& theta)
+template <typename T>
+std::vector<Transformation<T>> ForwardKinematics(ForwardRobot<T>& robot, //
+                                                 const std::vector<T>& theta)
 {
     assert(robot.GetTree().IsContinuous()); // if tree is not continuous, we cannot iterate over it
     // for each node in the robot, calculate the transformation
     const std::size_t nJoints = robot.GetNrJoints();
-    std::vector<Transformation> neutralPoses{};
-    std::vector<Transformation> exponentials{};
-    std::vector<Transformation> result{};
+    std::vector<Transformation<T>> neutralPoses{};
+    std::vector<Transformation<T>> exponentials{};
+    std::vector<Transformation<T>> result{};
     neutralPoses.resize(nJoints);
     exponentials.resize(nJoints);
     result.resize(nJoints);
@@ -50,13 +51,14 @@ std::vector<Transformation> ForwardKinematics(ForwardRobot& robot, //
     return result;
 }
 
-std::vector<Transformation> ForwardKinematics2(ForwardRobot& robot, //
-                                              const std::vector<DataType>& theta)
+template <typename T>
+std::vector<Transformation<T>> ForwardKinematics2(ForwardRobot<T>& robot, //
+                                                  const std::vector<T>& theta)
 {
     assert(robot.GetTree().IsContinuous()); // if tree is not continuous, we cannot iterate over it
     // for each node in the robot, calculate the transformation
     const std::size_t nJoints = robot.GetNrJoints();
-    std::vector<Transformation> result{};
+    std::vector<Transformation<T>> result{};
     result.resize(nJoints);
 
     for(auto& joint : robot)
@@ -75,20 +77,13 @@ std::vector<Transformation> ForwardKinematics2(ForwardRobot& robot, //
     return result;
 }
 
-
-
-
 /* Bracket operator extended for twists & wrenches. 
 TODO: migrate to linalg/tools.h ?and refactor to class? 
 */
 template <typename T>
 Matrix<T, 4, 4> Bracket6(const std::array<T, 6>& vec)
 {
-    const Matrix<T, 4, 4> vec_tilde(
-       {0,       -vec[2], vec[1],  vec[3],
-        vec[2],  0,       -vec[0], vec[4],
-        -vec[1], vec[0],  0,       vec[5],
-        0,       0,       0,       0      });
+    const Matrix<T, 4, 4> vec_tilde({0, -vec[2], vec[1], vec[3], vec[2], 0, -vec[0], vec[4], -vec[1], vec[0], 0, vec[5], 0, 0, 0, 0});
     return vec_tilde;
 }
 
@@ -98,31 +93,29 @@ Matrix<T, 4, 4> Bracket6(const std::array<T, 6>& vec)
  * twist_transformed = Adjoint(H) * twist
  */
 template <typename T>
-Matrix<T, 6, 6> Adjoint(const Transformation& transform)
+Matrix<T, 6, 6> Adjoint(const Transformation<T>& transform)
 {
     const Matrix<T, 6, 6> adjoint; // assume initialised with zeros
     Rotation R = transform.GetRotation();
     Translation p = transform.GetTranslation().ToMatrix();
 
-    Assign<0, 0>(adjoint, R);                   // 3x3; top left
+    Assign<0, 0>(adjoint, R); // 3x3; top left
     //Assign<0, 3>(adjoint, Mat3());            // 3x3 zeros; top right
-    Assign<3, 0>(adjoint, Matrix<T, 3, 3>::MatMul(Matrix<T, 3, 3>::Bracket3(p),R));  // 3x3; bottom left
-    Assign<3, 3>(adjoint, R);                   // 3x3; bottom right
+    Assign<3, 0>(adjoint, Matrix<T, 3, 3>::MatMul(Matrix<T, 3, 3>::Bracket3(p), R)); // 3x3; bottom left
+    Assign<3, 3>(adjoint, R); // 3x3; bottom right
     return adjoint;
 }
 
-std::vector<Twist> ForwardKinematicsDot(ForwardRobot& robot,
-                                        const std::vector<Transformation> transforms,
-                                               const std::vector<DataType>& thetaDot)
+template <typename T>
+std::vector<Twist<T>> ForwardKinematicsDot(ForwardRobot<T>& robot, const std::vector<Transformation<T>> transforms, const std::vector<T>& thetaDot)
 {
     assert(robot.GetTree().IsContinuous()); // if tree is not continuous, we cannot iterate over it
     // TODO
     const std::size_t nJoints = robot.GetNrJoints();
-    std::vector<Transformation> exponentials{};
-    std::vector<Twist> twists{};
+    std::vector<Transformation<T>> exponentials{};
+    std::vector<Twist<T>> twists{};
     exponentials.resize(nJoints);
     twists.resize(nJoints);
-    
 
     for(auto& joint : robot)
     {
@@ -142,10 +135,11 @@ std::vector<Twist> ForwardKinematicsDot(ForwardRobot& robot,
 }
 
 // todo: move to separate file
-std::vector<DataType> InverseDynamics(const ForwardRobot& robot, //
-                                      const std::vector<DataType>& theta, //
-                                      const std::vector<DataType>& thetaDot, //
-                                      const std::vector<DataType>& thetaDotDot)
+template <typename T>
+std::vector<T> InverseDynamics(const ForwardRobot<T>& robot, //
+                               const std::vector<T>& theta, //
+                               const std::vector<T>& thetaDot, //
+                               const std::vector<T>& thetaDotDot)
 {
     // calculate the force on each of the joints, based on theta/derivatives,
     // together with gravity and other forces

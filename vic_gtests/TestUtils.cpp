@@ -313,7 +313,7 @@ TEST(TestUtils, Exp)
     { 
         const double x = dist(rng);
         const double answer = std::exp(x);
-        const double eps = answer * 1e-5;
+        const double eps = answer * 1e-7;
         ASSERT_NEAR(answer, vic::math::exp(x), eps) << "x = " << x;
     }
 }

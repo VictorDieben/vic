@@ -14,17 +14,18 @@ using namespace vic::linalg;
 
 // todo: this type is mostly for convenience.
 // We will likely never use this library with anything other than a double.
-using DataType = double;
-
-static constexpr Vector3<DataType> xAxis{{1, 0, 0}};
-static constexpr Vector3<DataType> yAxis{{0, 1, 0}};
-static constexpr Vector3<DataType> zAxis{{0, 0, 1}};
+static constexpr Vector3<double> xAxis{{1, 0, 0}};
+static constexpr Vector3<double> yAxis{{0, 1, 0}};
+static constexpr Vector3<double> zAxis{{0, 0, 1}};
 
 constexpr double pi = 3.14159265358979323846;
 
+template <typename T>
 struct Screw
 {
 public:
+    using DataType = T;
+
     constexpr Screw() = default;
     constexpr Screw(const std::array<DataType, 6>& vec)
         : mVector(vec)
@@ -51,8 +52,12 @@ private:
 };
 
 // todo: separate types? they will be exactly the same
-using Twist = Screw;
-using Wrench = Screw;
+
+template <typename T>
+using Twist = Screw<T>;
+
+template <typename T>
+using Wrench = Screw<T>;
 
 } // namespace kinematics
 } // namespace vic

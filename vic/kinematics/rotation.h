@@ -2,10 +2,10 @@
 
 #include "vic/kinematics/kinematics.h"
 
+#include "vic/linalg/add.h"
 #include "vic/linalg/matmul.h"
 #include "vic/linalg/tools.h"
 #include "vic/linalg/transpose.h"
-#include "vic/linalg/add.h"
 #include "vic/utils.h"
 
 #include <cassert>
@@ -65,23 +65,22 @@ constexpr Matrix<T, 3, 3> EulerAngles(const T alpha, const T beta, const T gamma
     return Matmul(Rotate(xAxis, alpha), Rotate(yAxis, beta), Rotate(zAxis, gamma)); // intrinsic x->y'->z''
 }
 
-
 template <typename T>
-constexpr Matrix<T, 3, 3> Quaternion( T w,  T x, const T y, const T z)
+constexpr Matrix<T, 3, 3> Quaternion(T w, T x, const T y, const T z)
 {
     Matrix<T, 3, 3> R;
-    R.At(0,0) = 2*(w*w + x*x)-1;
-    R.At(0,1) = 2*(x*y - w*z);
-    R.At(0,2) = 2*(x*z + w*y);
-    
-    R.At(1,0) = 2*(x*y + w*z);
-    R.At(1,1) = 2*(w*w + y*y)-1;
-    R.At(1,2) = 2*(y*z - w*x);
+    R.At(0, 0) = 2 * (w * w + x * x) - 1;
+    R.At(0, 1) = 2 * (x * y - w * z);
+    R.At(0, 2) = 2 * (x * z + w * y);
 
-    R.At(2,0) = 2*(x*z - w*y);
-    R.At(2,1) = 2*(y*z + w*x);
-    R.At(2,2) = 2*(w*w + z*z)-1;
-    
+    R.At(1, 0) = 2 * (x * y + w * z);
+    R.At(1, 1) = 2 * (w * w + y * y) - 1;
+    R.At(1, 2) = 2 * (y * z - w * x);
+
+    R.At(2, 0) = 2 * (x * z - w * y);
+    R.At(2, 1) = 2 * (y * z + w * x);
+    R.At(2, 2) = 2 * (w * w + z * z) - 1;
+
     return R;
 }
 
@@ -91,36 +90,43 @@ constexpr Matrix<T, 3, 3> Quaternion(std::vector<T> wxyz)
     return Quaternion(wxyz[0], wxyz[1], wxyz[2], wxyz[3]);
 }
 
-
-
 template <typename T>
-constexpr std::vector<T> RotToQuaternion(Matrix<T, 3, 3> R){
+constexpr std::vector<T> RotToQuaternion(Matrix<T, 3, 3> R)
+{
     std::vector<T> wxyz;
     auto trace = Trace(R);
-    if (trace > 0.){
+    if(trace > 0.)
+    {
         T s = 0.5 / sqrt(trace + 1.0);
         wxyz[0] = 0.25 / s;
-        wxyz[1] = (R.Get(2,1) - R.Get(1,2)) * s;
-        wxyz[2] = (R.Get(0,2) - R.Get(2,0)) * s;
-        wxyz[3] = (R.Get(1,0) - R.Get(0,1)) * s;
-    } else{
-        if ( R.Get(0,0) > R.Get(1,1) && R.Get(0,0) > R.Get(2,2) ) {
-            T s = 2.0 * sqrt( 1.0 + R.Get(0,0) - R.Get(1,1) - R.Get(2,2));
-            wxyz[0] = (R.Get(2,1) - R.Get(1,2) ) / s;
+        wxyz[1] = (R.Get(2, 1) - R.Get(1, 2)) * s;
+        wxyz[2] = (R.Get(0, 2) - R.Get(2, 0)) * s;
+        wxyz[3] = (R.Get(1, 0) - R.Get(0, 1)) * s;
+    }
+    else
+    {
+        if(R.Get(0, 0) > R.Get(1, 1) && R.Get(0, 0) > R.Get(2, 2))
+        {
+            T s = 2.0 * sqrt(1.0 + R.Get(0, 0) - R.Get(1, 1) - R.Get(2, 2));
+            wxyz[0] = (R.Get(2, 1) - R.Get(1, 2)) / s;
             wxyz[1] = 0.25 * s;
-            wxyz[2] = (R.Get(0,1) + R.Get(1,0) ) / s;
-            wxyz[3] = (R.Get(0,2) + R.Get(2,0) ) / s;
-        } else if (R.Get(1,1) > R.Get(2,2)) {
-            T s = 2.0 * sqrt( 1.0 + R.Get(1,1) - R.Get(0,0) - R.Get(2,2));
-            wxyz[0]= (R.Get(0,2) - R.Get(2,0) ) / s;
-            wxyz[1] = (R.Get(0,1) + R.Get(1,0) ) / s;
+            wxyz[2] = (R.Get(0, 1) + R.Get(1, 0)) / s;
+            wxyz[3] = (R.Get(0, 2) + R.Get(2, 0)) / s;
+        }
+        else if(R.Get(1, 1) > R.Get(2, 2))
+        {
+            T s = 2.0 * sqrt(1.0 + R.Get(1, 1) - R.Get(0, 0) - R.Get(2, 2));
+            wxyz[0] = (R.Get(0, 2) - R.Get(2, 0)) / s;
+            wxyz[1] = (R.Get(0, 1) + R.Get(1, 0)) / s;
             wxyz[2] = 0.25 * s;
-            wxyz[3] = (R.Get(1,2) + R.Get(2,1) ) / s;
-        } else {
-            T s = 2.0 * sqrt( 1.0 + R.Get(2,2) - R.Get(0,0) - R.Get(1,1) );
-            wxyz[0] = (R.Get(1,0) - R.Get(0,1) ) / s;
-            wxyz[1] = (R.Get(0,2) + R.Get(2,0) ) / s;
-            wxyz[2] = (R.Get(1,2) + R.Get(2,1) ) / s;
+            wxyz[3] = (R.Get(1, 2) + R.Get(2, 1)) / s;
+        }
+        else
+        {
+            T s = 2.0 * sqrt(1.0 + R.Get(2, 2) - R.Get(0, 0) - R.Get(1, 1));
+            wxyz[0] = (R.Get(1, 0) - R.Get(0, 1)) / s;
+            wxyz[1] = (R.Get(0, 2) + R.Get(2, 0)) / s;
+            wxyz[2] = (R.Get(1, 2) + R.Get(2, 1)) / s;
             wxyz[3] = 0.25 * s;
         }
     }
@@ -141,16 +147,16 @@ constexpr Matrix<T, 3, 3> Vec6ToRot(const Vector6<T>& Rep)
 {
     Matrix<T, 3, 3> X; // [b1 | b2 | b3]
 
-    Vector3<DataType> a1 = Extract<Vector3<T>, 0, 0>(Rep);
-    Vector3<DataType> a2 = Extract<Vector3<T>, 3, 0>(Rep);
-    
-    Vector3<DataType> b1 = Norm(a1);
-    Vector3<DataType> b2 = Norm(Add(a2 , Matmul(-1*Sum(Dot(b1,a2)),b1))); 
-    Vector3<DataType> b3 = Cross(b1,b2);
+    Vector3<T> a1 = Extract<Vector3<T>, 0, 0>(Rep);
+    Vector3<T> a2 = Extract<Vector3<T>, 3, 0>(Rep);
 
-    Assign<0,0>(X, b1);
-    Assign<0,1>(X, b2);
-    Assign<0,2>(X, b3);
+    Vector3<T> b1 = Norm(a1);
+    Vector3<T> b2 = Norm(Add(a2, Matmul(-1 * Sum(Dot(b1, a2)), b1)));
+    Vector3<T> b3 = Cross(b1, b2);
+
+    Assign<0, 0>(X, b1);
+    Assign<0, 1>(X, b2);
+    Assign<0, 2>(X, b3);
 
     return X;
 }
@@ -163,7 +169,7 @@ constexpr Matrix<T, 3, 3> Vec6ToRot(const Vector6<T>& Rep)
  *                Essentially, the last column is dropped.
  */
 template <typename T>
-constexpr  Vector6<T> RotToVec6(Matrix<T, 3, 3>& X)
+constexpr Vector6<T> RotToVec6(Matrix<T, 3, 3>& X)
 {
     Vector6<T> Rep;
     //     [0 1 2
@@ -181,12 +187,14 @@ constexpr  Vector6<T> RotToVec6(Matrix<T, 3, 3>& X)
 
 // wrapper around rotation matrix, so that we can later also use quaternions etc.
 // also allows us to use * operator
-// TODO: make T a template?
+template <typename T>
 struct Rotation
 {
 public:
+    using DataType = T;
+
     constexpr Rotation() = default;
-    explicit constexpr Rotation(const Matrix<DataType, 3, 3>& rotation)
+    explicit constexpr Rotation(const Matrix<T, 3, 3>& rotation)
         : mMatrix(rotation)
     { }
 
@@ -197,13 +205,14 @@ public:
         return Rotation(Matmul(r1.mMatrix, r2.mMatrix)); //
     }
 
-    constexpr Matrix<DataType, 3, 3> ToMatrix() const { return mMatrix; }
+    constexpr Matrix<T, 3, 3> ToMatrix() const { return mMatrix; }
 
 private:
-    Matrix<DataType, 3, 3> mMatrix{Identity<DataType, 3>{}};
+    Matrix<T, 3, 3> mMatrix{Identity<T, 3>{}};
 };
 
-Rotation RotationExponent(const Rotation& transform, const DataType theta)
+template <typename T>
+Rotation<T> RotationExponent(const Rotation<T>& transform, const T theta)
 {
     return {}; //
 }
