@@ -5,9 +5,11 @@
 #include "vic/memory/flat_map.h"
 #include "vic/memory/merge_sort.h"
 #include "vic/memory/refcounter.h"
+#include "vic/memory/ring_buffer.h"
 
 #include <algorithm>
 #include <random>
+#include <thread>
 #include <vector>
 
 namespace vic
@@ -161,6 +163,66 @@ TEST(TestMemory, FlatMap)
         EXPECT_TRUE(key < it->first);
         key = it->first;
     }
+}
+
+TEST(TestMemory, RingBuffer)
+{
+    struct TestStruct
+    {
+        int a;
+        float b;
+    };
+
+    constexpr std::size_t capacity = 100;
+
+    // verify empty buffer
+    RingBuffer<TestStruct, capacity> buffer;
+    ASSERT_EQ(buffer.Capacity(), capacity);
+    ASSERT_EQ(buffer.Size(), 0);
+    ASSERT_EQ(buffer.Pop(), std::nullopt);
+
+    // put in 1 item, verify value
+    buffer.Push({1, 1.});
+    ASSERT_EQ(buffer.Size(), 1);
+    auto item = buffer.Pop();
+    ASSERT_NE(item, std::nullopt);
+    EXPECT_EQ(item.value().a, 1);
+    ASSERT_EQ(buffer.Size(), 0);
+
+    // test with a separate push and pop thread
+    const std::size_t n = 100000;
+
+    std::thread pushThread([&]() {
+        // push n items into buffer
+        for(int i = 0; i < n; ++i)
+            while(!buffer.Push({i, 0.}))
+                std::this_thread::yield();
+    });
+
+    int previous = -1;
+    std::thread popThread([&]() {
+        // pop items, check that the index of a always increases
+        while(true)
+        {
+            auto item = buffer.Pop();
+            if(item == std::nullopt)
+            {
+                std::this_thread::yield();
+                continue;
+            }
+            ASSERT_TRUE(item.value().a > previous);
+            previous = item.value().a;
+            if(previous == n - 1)
+                break;
+
+            std::this_thread::yield();
+        }
+    });
+
+    pushThread.join();
+    popThread.join();
+    EXPECT_EQ(buffer.Size(), 0);
+    EXPECT_EQ(previous, n - 1);
 }
 
 TEST(TestMemory, MergeSort)

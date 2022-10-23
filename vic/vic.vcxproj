@@ -199,6 +199,7 @@
     <ClInclude Include="memory\garbage_collector.h" />
     <ClInclude Include="memory\merge_sort.h" />
     <ClInclude Include="memory\refcounter.h" />
+    <ClInclude Include="memory\ring_buffer.h" />
     <ClInclude Include="memory\tree.h" />
     <ClInclude Include="network\binary_conversion.h" />
     <ClInclude Include="network\i2c.h" />
