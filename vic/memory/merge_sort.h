@@ -21,9 +21,18 @@ void merge_sort(TIter begin, TIter midpoint, TIter end, TCompare comp)
     TIter it_mid_r = midpoint;
     TIter it_end = std::prev(end);
 
-    // todo: if the second vector is smaller than the first:
+    // todo: this only works for Ts that have a + operator. 
+    // maybe add an extra lambda?
+
+    // If the second vector is smaller than the first:
     // swap iterator ranges, run as normal, and then rotate.
     // this way, the worst case O(n^2) now runs as O(n).
+    const bool rotate = (*it_mid_l + *it_begin) > (*it_end + *it_mid_r);
+    if(rotate)
+    {
+        std::swap(it_begin, it_mid_r);
+        std::swap(it_mid_l, it_end);
+    }
 
     while(true)
     {
@@ -66,6 +75,12 @@ void merge_sort(TIter begin, TIter midpoint, TIter end, TCompare comp)
     // do 1 final check for the remaining 2 items
     if(*it_mid_l > *it_mid_r)
         std::swap(*it_mid_l, *it_mid_r);
+
+    // undo the rotation if we swapped the iterators earlier
+    if(rotate)
+    {
+        std::rotate(begin, midpoint, end);
+    }
 }
 
 template <typename TIter>

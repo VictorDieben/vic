@@ -345,13 +345,23 @@ TEST(TestMemory, MergeSortFailure)
 TEST(TestMemory, MergeSortRotate)
 {
     // test the case where we need to rotate
-    std::vector<int> vec = {4, 5, 6, 1, 2, 3};
+    std::vector<int> vec;
+    vec.resize(10);
+    std::iota(vec.begin(), vec.end(), 0);
 
-    vic::sorting::merge_sort(vec.begin(), vec.begin() + 5, vec.end());
+    for(std::size_t i = 0; i < 10; i++)
+    {
+        auto copy = vec;
+        std::rotate(copy.rbegin(), copy.rbegin() + i, copy.rend());
 
-    const std::vector<int> answer = {1, 2, 3, 4, 5, 6};
+        vic::sorting::merge_sort(copy.begin(), copy.begin() + i, copy.end());
 
-    EXPECT_EQ(vec, answer);
+        EXPECT_EQ(copy, vec);
+    }
+}
+
+TEST(TestMemory, MergeSortFunctor) { 
+// test merge_sort with a custom comparison operator
 }
 
 } // namespace memory
