@@ -8,6 +8,7 @@
 #include "vic/memory/ring_buffer.h"
 
 #include <algorithm>
+#include <numeric>
 #include <random>
 #include <thread>
 #include <vector>
@@ -175,8 +176,9 @@ TEST(TestMemory, RingBuffer)
 
     constexpr std::size_t capacity = 100;
 
-    // verify empty buffer
     RingBuffer<TestStruct, capacity> buffer;
+
+    // verify empty buffer
     ASSERT_EQ(buffer.Capacity(), capacity);
     ASSERT_EQ(buffer.Size(), 0);
     ASSERT_EQ(buffer.Pop(), std::nullopt);
@@ -190,32 +192,33 @@ TEST(TestMemory, RingBuffer)
     ASSERT_EQ(buffer.Size(), 0);
 
     // test with a separate push and pop thread
-    const std::size_t n = 100000;
+    constexpr std::size_t n = 1000000;
 
     std::thread pushThread([&]() {
-        // push n items into buffer
+        // push n items into buffer, with increasing value of a
         for(int i = 0; i < n; ++i)
             while(!buffer.Push({i, 0.}))
-                std::this_thread::yield();
+                std::this_thread::yield(); // yield, because the thread cannot continue right now
     });
 
     int previous = -1;
+    int count = 0;
     std::thread popThread([&]() {
-        // pop items, check that the index of a always increases
+        // pop items, check that the value of a always increases
         while(true)
         {
-            auto item = buffer.Pop();
+            const auto item = buffer.Pop();
             if(item == std::nullopt)
             {
                 std::this_thread::yield();
                 continue;
             }
-            ASSERT_TRUE(item.value().a > previous);
+            if(item.value().a <= previous)
+                break; // count will not be correct
+            count++;
             previous = item.value().a;
             if(previous == n - 1)
-                break;
-
-            std::this_thread::yield();
+                break; // done
         }
     });
 
@@ -223,14 +226,34 @@ TEST(TestMemory, RingBuffer)
     popThread.join();
     EXPECT_EQ(buffer.Size(), 0);
     EXPECT_EQ(previous, n - 1);
+    EXPECT_EQ(count, n);
+
+    // todo: test with non-copy constructible type (unique_ptr?)
+
+    // todo: test with multiple producers/consumers
+}
+
+template <typename TIter>
+void PrintIter(TIter begin, TIter end)
+{
+    std::cout << "[";
+
+    for(auto it = begin; it < end; ++it)
+    {
+        std::cout << *it;
+        if(it != std::prev(end))
+            std::cout << "; ";
+    }
+
+    std::cout << "]" << std::endl;
 }
 
 TEST(TestMemory, MergeSort)
 {
     // construct a vector with increasing numbers
     std::vector<int> answer;
-    for(int i = 0; i < 10; ++i)
-        answer.push_back(i);
+    answer.resize(10);
+    std::iota(answer.begin(), answer.end(), 0);
 
     // make a shuffled copy
     auto values = answer;
@@ -243,15 +266,92 @@ TEST(TestMemory, MergeSort)
     std::sort(values.begin(), midpoint);
     std::sort(midpoint, values.end());
 
-    for(const auto& val : values)
-        std::cout << val << "; ";
-    std::cout << std::endl;
-
     // now combine the two sorted halves
     vic::sorting::merge_sort(values.begin(), midpoint, values.end());
 
     // check values
     EXPECT_EQ(values, answer);
+}
+
+TEST(TestMemory, MergeSort2)
+{
+    std::vector<int> vec = {1, 3, 7, 9, 11, 2, 4, 8, 10, 12}; //
+    PrintIter(vec.begin(), vec.end());
+
+    vic::sorting::merge_sort(vec.begin(), vec.begin() + 5, vec.end());
+    PrintIter(vec.begin(), vec.end());
+
+    const std::vector<int> answer = {1, 2, 3, 4, 7, 8, 9, 10, 11, 12};
+
+    EXPECT_EQ(vec, answer);
+}
+
+TEST(TestMemory, MergeSortEdgeCases)
+{
+    // sort an empty list, should work
+    std::vector<int> vec = {};
+    std::vector<int> answer = {};
+    vic::sorting::merge_sort(vec.begin(), vec.begin(), vec.end());
+    EXPECT_EQ(vec, answer);
+
+    // sort a list with only 1 item in it, for both pivot points
+    vec = {1};
+    answer = {1};
+
+    vic::sorting::merge_sort(vec.begin(), vec.begin(), vec.end());
+    EXPECT_EQ(vec, answer);
+
+    vic::sorting::merge_sort(vec.begin(), vec.begin() + 1, vec.end());
+    EXPECT_EQ(vec, answer);
+
+    // sort the smallist list where work could be done
+    vec = {2, 1};
+    answer = {1, 2};
+    vic::sorting::merge_sort(vec.begin(), vec.begin() + 1, vec.end());
+    EXPECT_EQ(vec, answer);
+
+    // make sure that sorting a sorted array returns the same vector, regardless of pivot
+    vec.resize(100);
+    std::iota(vec.begin(), vec.end(), 0);
+    for(std::size_t i = 0; i < 100; i++)
+    {
+        auto copy = vec;
+        vic::sorting::merge_sort(copy.begin(), copy.begin() + i, copy.end());
+        EXPECT_EQ(copy, vec);
+    }
+}
+
+TEST(TestMemory, MergeSortFailure)
+{
+    // check that merge sorting a vector that does not comply does not get stuck in an infinite loop
+    // note: not really needed, I just wanted to see what the output would be.
+
+    // sooo.. it turns out that the sorting algorithm still works, even if the subvectors are not sorted.
+    // It is not going to be efficient though.
+
+    std::vector<int> vec;
+    vec.resize(10);
+    std::iota(vec.begin(), vec.end(), 0);
+
+    auto reversed = vec;
+    std::reverse(reversed.begin(), reversed.end());
+    for(std::size_t i = 0; i < 10; i++)
+    {
+        auto copy = reversed;
+        vic::sorting::merge_sort(copy.begin(), copy.begin() + i, copy.end());
+    }
+}
+
+TEST(TestMemory, MergeSortRotate)
+{
+    // test the case where we need to rotate
+    std::vector<int> vec = {4, 5, 6, 1, 2, 3};
+
+    vic::sorting::merge_sort(vec.begin(), vec.begin() + 5, vec.end());
+
+    const std::vector<int> answer = {1, 2, 3, 4, 5, 6};
+
+    EXPECT_EQ(vec, answer);
 }
 
 } // namespace memory

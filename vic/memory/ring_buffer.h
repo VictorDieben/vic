@@ -5,61 +5,86 @@
 #include <array>
 #include <mutex>
 #include <optional>
+#include <type_traits>
 
 namespace vic
 {
 namespace memory
 {
 
+// todo: use in RingBuffer
+enum class QueueType
+{
+    SingleProducerSingleConsumer,
+    MultiProducerSingleConsumer,
+    SingleProducerMultiConsumer,
+    MultiProducerMultiConsumer
+};
+
 // Simple implementation of a ring buffer.
-// todo: Head and Tail should have separate mutexes (or be atomic)
-// right now, it is still quite inefficient
-// todo: fix false sharing
+// Could probably be entirely lock free.
+// But that's not worth the headacke.
+// todo: use in place construction/destruction, so items in array are actually destroyed
+// todo: condition variable
+// todo: for single producer / single consumer, the mutexes can be removed
 template <typename T, std::size_t N>
 class RingBuffer
 {
 public:
     static_assert(N > 1);
+    static_assert(std::is_default_constructible_v<T>); // needed for emtpy array
+    static_assert(std::is_copy_constructible_v<T>); // needed for inserting into array (move?)
 
     RingBuffer() = default;
 
-    bool Push(const T& item)
+    bool Push(const T& item) noexcept
     {
-        std::scoped_lock lock{mMutex};
-        std::size_t nextHead = NextIndex(mHead);
+        std::scoped_lock lock{mPushMutex}; // only needed for multi-producer
+        const std::size_t head = mHead; // copy atomic value
+        const std::size_t nextHead = NextIndex(head);
         if(nextHead == mTail)
             return false;
-        mBuffer[mHead] = item;
+        mBuffer[head] = item;
         mHead = nextHead;
         return true;
     }
 
-    template <typename TIter>
-    std::size_t Push(TIter begin, TIter end)
+    std::optional<T> Pop() noexcept
     {
-        std::scoped_lock lock{mMutex};
-        // push items in range, return how many items were pushed
-        return 0;
-    }
-
-    std::optional<T> Pop()
-    {
-        std::scoped_lock lock{mMutex};
-        if(mHead == mTail)
+        std::scoped_lock lock{mPopMutex}; // only needed for multi-consumer
+        const std::size_t tail = mTail;
+        if(mHead == tail)
             return std::nullopt;
 
-        T object = mBuffer[mTail];
-        mTail = NextIndex(mTail);
-        return object;
+        T item = mBuffer[tail];
+        if constexpr(!std::is_trivially_destructible_v<T>)
+            mBuffer[tail] = {}; // reset, only needed if T destructor is non-trivial
+        mTail = NextIndex(tail);
+        return item;
     }
 
     std::size_t Capacity() const { return N; }
-    std::size_t Size() const
+    std::size_t Size() const noexcept
     {
-        std::scoped_lock lock{mMutex}; //
-        return (mHead >= mTail) //
-                   ? mHead - mTail
-                   : (mHead + N) - mTail;
+        std::size_t head;
+        std::size_t tail;
+        {
+            std::scoped_lock lock(mPushMutex, mPopMutex);
+            head = mHead;
+            tail = mTail;
+        }
+        return (head >= tail) //
+                   ? head - tail
+                   : (head + N) - tail;
+    }
+
+    void Clear()
+    {
+        std::scoped_lock lock(mPushMutex, mPopMutex);
+        mHead = 0;
+        mTail = 0;
+        mBuffer = {}; // reset all
+        // todo: replace reset with destruction of in-place objects
     }
 
     static constexpr std::size_t NextIndex(std::size_t i)
@@ -68,13 +93,15 @@ public:
     }
 
 private:
-    alignas(64) std::size_t mHead{0};
-    alignas(64) std::size_t mTail{0};
-    std::array<T, N> mBuffer{};
+    // create two separate mutexes for pushing and popping.
+    // this way, we can use head and tail as atomic values, without worrying about collisions
+    alignas(64) mutable std::mutex mPushMutex;
+    alignas(64) mutable std::mutex mPopMutex;
 
-    // for now, just lock each public function,
-    // we can later try to implement fences etc.
-    mutable std::mutex mMutex;
+    alignas(64) std::atomic<std::size_t> mHead{0};
+    alignas(64) std::atomic<std::size_t> mTail{0};
+
+    std::array<T, N> mBuffer{};
 };
 
 } // namespace memory
