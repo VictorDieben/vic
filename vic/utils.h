@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cassert>
-#include <vector>
-#include <cmath>
 #include <bit>
+#include <cassert>
+#include <cmath>
 #include <cstdint>
+#include <vector>
 
 namespace vic
 {
@@ -221,11 +221,11 @@ public:
 
         ZipIterator() = default;
 
-        reference operator*()
-        {
-            auto val = value_type{}; //
-            return val;
-        }
+        //reference operator*()
+        //{
+        //    auto val = value_type{}; //
+        //    return val;
+        //}
         //pointer operator->()
         //{
         //    return &mValue; //

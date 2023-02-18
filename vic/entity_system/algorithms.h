@@ -1,9 +1,9 @@
 #pragma once
 
+#include "vic/entity_system/definitions.h"
+#include <ranges>
 #include <tuple>
 #include <vector>
-
-#include "vic/entity_system/definitions.h"
 
 namespace vic
 {
@@ -27,22 +27,22 @@ void FilterForeach(TSystem& system, TFunctor functor)
 
     while(it1 != it1End && it2 != it2End && it3 != it3End)
     {
-        if(it1->first == it2->first)
+        if(it1->first < it2->first)
+            it1 = std::next(it1);
+        else if(it2->first < it1->first)
+            it2 = std::next(it2);
+        else // it1 == it2
         {
-            if(it2->first == it3->first)
+            if(it2->first < it3->first)
+                it2 = std::next(it2);
+            else if(it3->first < it2->first)
+                it3 = std::next(it3);
+            else // it2 == it3
             {
                 functor(it1->first, it1->second, it2->second, it3->second);
                 it1 = std::next(it1);
             }
-            else if(it1->first < it3->first)
-                it1 = std::next(it1);
-            else
-                it3 = std::next(it3);
         }
-        else if(it1->first < it2->first)
-            it1 = std::next(it1);
-        else
-            it2 = std::next(it2);
     }
 }
 
@@ -59,15 +59,15 @@ void FilterForeach(TSystem& system, TFunctor functor)
 
     while(it1 != it1End && it2 != it2End)
     {
-        if(it1->first == it2->first)
+        if(it1->first < it2->first)
+            it1 = std::next(it1);
+        else if(it2->first < it1->first)
+            it2 = std::next(it2);
+        else
         {
             functor(it1->first, it1->second, it2->second);
             it1 = std::next(it1);
         }
-        else if(it1->first < it2->first)
-            it1 = std::next(it1);
-        else
-            it2 = std::next(it2);
     }
 }
 
@@ -78,7 +78,7 @@ void FilterForeach(TSystem& system, TFunctor functor)
 
     auto itBegin = system.begin<Type1>();
     const auto itEnd = system.end<Type1>();
-    for(const auto it = itBegin; it != itEnd; ++it)
+    for(auto it = itBegin; it != itEnd; ++it)
     {
         functor(it->first, it->second);
     }
@@ -144,6 +144,14 @@ auto Filter(TSystem& system)
     std::vector<ResultType> result{};
     return Filter<T>(system, result);
 }
+
+// ranges
+
+//template <typename T1, typename T2, typename TSystem>
+//auto Filter(TSystem& system)
+//{
+//    //
+//}
 
 } // namespace entity
 } // namespace vic

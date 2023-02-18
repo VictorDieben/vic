@@ -115,6 +115,12 @@ TEST(TestEntitySystem, Filter)
         EXPECT_TRUE(name.mI % 3 == 0);
     }
 
+    for(const auto& [id, fizzPtr] : Filter<Fizz>(system))
+    {
+        Name& name = system.Get<Name>(id);
+        EXPECT_TRUE(name.mI % 3 == 0);
+    }
+
     // now filter out all objects with both the Fizz and Buzz component
     int sum = 0;
     for(auto [entId, fizzPtr, buzzPtr] : Filter<Fizz, Buzz>(system))
@@ -126,11 +132,11 @@ TEST(TestEntitySystem, Filter)
     }
     EXPECT_EQ(sum, 7);
 
-    //// todo: iterate 3d;
-    //for(auto [entId, namePtr, fizzPtr, buzzPtr] : Filter<Name, Fizz, Buzz>(system))
-    //{
-    //    //
-    //}
+    // iterate 3d;
+    for(auto [entId, namePtr, fizzPtr, buzzPtr] : Filter<Name, Fizz, Buzz>(system))
+    {
+        // no need to do anything, this should just compile
+    }
 
     // todo: const iteration
     const System& refSystem = system;
@@ -149,7 +155,6 @@ TEST(TestEntitySystem, Filter)
 
 TEST(TestEntitySystem, Remove)
 {
-
     struct A
     { };
     struct B
@@ -201,4 +206,29 @@ TEST(TestEntitySystem, 3d)
 
     System system;
     Handle handle = system.NewEntity();
+}
+
+TEST(TestEntitySystem, Insert)
+{
+    struct A
+    {
+        int val;
+    };
+    struct B
+    {
+        double val;
+    };
+
+    using System = vic::entity::EntitySystem<A, B>;
+    using Handle = System::Handle;
+
+    // create some data that we can push into the component system at once.
+    std::vector<std::pair<const vic::entity::EntityId, A>> data;
+    data.push_back({0, {0}});
+    data.push_back({1, {1}});
+
+    System system;
+    system.ComponentSystem<A>::Insert(data.begin(), data.end());
+
+    ASSERT_EQ(system.Size<A>(), 2u);
 }

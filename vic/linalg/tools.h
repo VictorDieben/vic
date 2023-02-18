@@ -131,12 +131,12 @@ constexpr auto Dot(const TMat1& mat1, const TMat2& mat2)
     return val;
 }
 
-// todo: TMatTarget needs to be asignable
+// todo: TMatTarget needs to be assignable
 template <typename TMatTarget, typename TMatSource>
-void Assign(TMatTarget& target,
-                      const TMatSource& source, //
-                      const std::size_t row,
-                      const std::size_t col)
+void Assign(TMatTarget& target, //
+            const TMatSource& source,
+            const std::size_t row,
+            const std::size_t col)
 {
     assert(target.GetRows() >= source.GetRows() + row);
     assert(target.GetColumns() >= source.GetColumns() + col);

@@ -49,7 +49,7 @@ TEST(TestMemory, RefCounted)
         // check getting a reference to the contained object
         TestStruct* ptr = counted.Get();
 
-        // copy the RefCounter, acces data through it,
+        // copy the RefCounter, access data through it,
         // check that refcount is reset after it is destructed.
         {
             memory::RefCounted<TestStruct> copy{counted};
@@ -204,7 +204,7 @@ TEST(TestMemory, RingBuffer)
     int previous = -1;
     int count = 0;
     std::thread popThread([&]() {
-        // pop items, check that the value of a always increases
+        // pop items, check that the value always increases
         while(true)
         {
             const auto item = buffer.Pop();
@@ -304,7 +304,7 @@ TEST(TestMemory, MergeSortEdgeCases)
     vic::sorting::merge_sort(vec.begin(), vec.begin() + 1, vec.end());
     EXPECT_EQ(vec, answer);
 
-    // sort the smallist list where work could be done
+    // sort the smallest list where work could be done
     vec = {2, 1};
     answer = {1, 2};
     vic::sorting::merge_sort(vec.begin(), vec.begin() + 1, vec.end());
@@ -352,6 +352,8 @@ TEST(TestMemory, MergeSortRotate)
     for(std::size_t i = 0; i < 10; i++)
     {
         auto copy = vec;
+
+        // rotate to the right.
         std::rotate(copy.rbegin(), copy.rbegin() + i, copy.rend());
 
         vic::sorting::merge_sort(copy.begin(), copy.begin() + i, copy.end());
@@ -360,8 +362,9 @@ TEST(TestMemory, MergeSortRotate)
     }
 }
 
-TEST(TestMemory, MergeSortFunctor) { 
-// test merge_sort with a custom comparison operator
+TEST(TestMemory, MergeSortFunctor)
+{
+    // test merge_sort with a custom comparison operator
 }
 
 } // namespace memory

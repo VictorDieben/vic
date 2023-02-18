@@ -68,11 +68,7 @@ private:
     std::size_t mRows{0};
     std::size_t mColumns{0};
 
-    void Initialize()
-    {
-        //
-        mData.resize(mRows * mColumns);
-    }
+    void Initialize() { mData.resize(mRows * mColumns); }
 };
 
 template <typename T, std::size_t rows>
@@ -148,9 +144,6 @@ private:
 
     void Initialize() { mData.resize(mRows * columns); }
 };
- 
-
-
 
 template <typename T>
 class VectorDynamic
@@ -161,15 +154,14 @@ public:
     VectorDynamic(std::size_t size) { mData.resize(size); }
     VectorDynamic(const std::vector<T>& data)
         : mData(data)
-    { 
-    }
+    { }
 
     template <typename TMatrix>
     explicit VectorDynamic(const TMatrix& other)
     {
         assert(other.GetColumns() == 1);
         mData.resize(other.GetRows());
-        for (std::size_t i = 0; i < other.GetRows(); ++i)
+        for(std::size_t i = 0; i < other.GetRows(); ++i)
         {
             mData[i] = other.Get(i, 0); // todo: copy underlying std::vector directly
         }
@@ -178,7 +170,7 @@ public:
     // todo: transpose?
     std::size_t GetRows() const { return mData.size(); }
     std::size_t GetColumns() const { return 1; }
-    
+
     T Get(const std::size_t i, const std::size_t j) const
     {
         assert(j == 0);
@@ -190,7 +182,6 @@ public:
         assert(j == 0);
         return mData[i];
     }
-
 
 private:
     std::vector<T> mData;

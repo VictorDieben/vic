@@ -81,6 +81,8 @@ public:
     using iterator = typename decltype(mComponents)::iterator;
     using const_iterator = typename decltype(mComponents)::const_iterator;
 
+    using value_type = std::pair<const EntityId, T>;
+
     T& Add(const EntityId id, const T& component)
     {
         mComponents[id] = component;
@@ -112,6 +114,8 @@ public:
         return true;
     }
 
+    std::size_t Size() const { return mComponents.size(); }
+
     iterator begin() { return mComponents.begin(); }
     iterator end() { return mComponents.end(); }
 
@@ -120,6 +124,20 @@ public:
 
     const_iterator cbegin() const { return mComponents.cbegin(); }
     const_iterator cend() const { return mComponents.cend(); }
+
+    template <typename TIter>
+    void Insert(TIter begin, TIter end)
+    {
+        using TValue = std::iter_value_t<TIter>;
+        static_assert(std::is_same_v<TValue, value_type>);
+
+        // todo: only activate for debug builds:
+        auto prev = begin;
+        for(auto it = std::next(begin); it != end; ++it)
+            assert(prev->first < it->first);
+
+        // todo: insert
+    }
 };
 
 template <typename... TComponents>
@@ -173,6 +191,12 @@ public:
         return ComponentSystem<T>::Remove(id);
     }
 
+    template <typename T>
+    std::size_t Size()
+    {
+        return ComponentSystem<T>::Size();
+    }
+
     // todo: remove list of entities
 
     template <typename T>
@@ -205,6 +229,12 @@ public:
     auto Filter()
     {
         return Filter<T1, T2>(*this);
+    }
+
+    template <typename T, typename TIter>
+    auto Insert(TIter begin, TIter end)
+    {
+        ComponentSystem<T>::Insert(begin, end);
     }
 
 private:

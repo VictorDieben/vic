@@ -263,9 +263,9 @@ TEST(TestLinalg, TestInverseRandom)
     // 600x600; 1 iter;     16.5 [s]
 
     std::default_random_engine g;
-    std::uniform_real_distribution<double> dist(0.01, 100.);
+    std::uniform_real_distribution<double> dist(0.01, 100.); // todo: log norm
 
-    constexpr std::size_t n = 25;
+    constexpr std::size_t n = 50;
     constexpr auto identity = Identity<double, n>{};
 
     // test a bunch of random matrices
@@ -319,11 +319,11 @@ TEST(TestLinalg, TestMatmul4x4Perf)
     std::default_random_engine g;
     std::uniform_real_distribution<double> r(0.01, 100.);
 
-    #ifdef _DEBUG 
-        constexpr uint32_t iters = 100;
-    #else
-        constexpr uint32_t iters = 100000;
-    #endif
+#ifdef _DEBUG
+    constexpr uint32_t iters = 100;
+#else
+    constexpr uint32_t iters = 100000;
+#endif
 
     // release: ~3.3e9 matmuls/sec
     // debug: ~5e5 matmuls/sec

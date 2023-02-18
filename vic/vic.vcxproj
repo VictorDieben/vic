@@ -223,13 +223,14 @@
     <ClInclude Include="linalg\traits.h" />
     <ClInclude Include="linprog\seidel.h" />
     <ClInclude Include="network\udp.h" />
-    <ClInclude Include="utils\Counted.h" />
+    <ClInclude Include="utils\counted.h" />
     <ClInclude Include="utils\math.h" />
     <ClInclude Include="utils\observable.h" />
     <ClInclude Include="utils\ranges.h" />
     <ClInclude Include="utils\sort.h" />
     <ClInclude Include="utils\statemachine.h" />
     <ClInclude Include="utils\timing.h" />
+    <ClInclude Include="utils\unique.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp" />

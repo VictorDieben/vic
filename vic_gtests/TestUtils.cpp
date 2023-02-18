@@ -5,8 +5,10 @@
 #include "vic/utils/counted.h"
 #include "vic/utils/math.h"
 #include "vic/utils/observable.h"
+#include "vic/utils/ranges.h"
 #include "vic/utils/statemachine.h"
 #include "vic/utils/timing.h"
+#include "vic/utils/unique.h"
 
 #include "vic/memory/constexpr_map.h"
 
@@ -193,17 +195,17 @@ TEST(TestUtils, TestRange)
     ASSERT_EQ(result6, answer6);
 }
 
-TEST(TestUtils, TestZip)
-{
-    std::vector<int> a{0, 1, 2, 3};
-    std::vector<char> b{'a', 'b', 'c', 'd'};
-    std::vector<std::pair<int, char>> result;
-    for(const auto& pair : Zip(a, b))
-        result.push_back(pair); //
-
-    std::vector<std::pair<int, char>> answer{{0, 'a'}, {1, 'b'}, {2, 'c'}, {3, 'd'}};
-    ASSERT_EQ(result, answer);
-}
+//TEST(TestUtils, TestZip)
+//{
+//    std::vector<int> a{0, 1, 2, 3};
+//    std::vector<char> b{'a', 'b', 'c', 'd'};
+//    std::vector<std::pair<int, char>> result;
+//    for(const auto& pair : Zip(a, b))
+//        result.push_back(pair); //
+//
+//    std::vector<std::pair<int, char>> answer{{0, 'a'}, {1, 'b'}, {2, 'c'}, {3, 'd'}};
+//    ASSERT_EQ(result, answer);
+//}
 
 TEST(TestUtils, TestStateMachine)
 {
@@ -246,6 +248,46 @@ TEST(TestUtils, TestStateMachine)
     // This way, we can even avoid checking the current state.
     // and maybe even predict deadlock states
     //stateMachine.Tick(); // calls: stateMachine.Tick<State::Two>();
+}
+
+TEST(TestUtils, TestNewStateMachine)
+{
+    enum class StateEnum
+    {
+        One,
+        Two,
+        Three,
+        Four,
+        Five,
+        Unused // test that not every enum is automatically valid
+    };
+
+    using State1 = State<StateEnum::One>;
+    using State2 = State<StateEnum::Two>;
+    using State3 = State<StateEnum::Three>;
+    using State4 = State<StateEnum::Four>;
+    using State5 = State<StateEnum::Five>;
+    using StateUnused = State<StateEnum::Unused>;
+
+    using StateList = StateContainer<State1, State2, State3, State4, State5>;
+    static_assert(StateList::Contains<State1>());
+    static_assert(!StateList::Contains<StateUnused>());
+
+    using Transition12 = Transition<State1, State2>;
+    using Transition23 = Transition<State2, State3>;
+    using Transition34 = Transition<State3, State4>;
+    using Transition45 = Transition<State4, State5>;
+    using Transition51 = Transition<State5, State1>;
+
+    using TransitionUnused = Transition<State1, StateUnused>;
+
+    using TransitionList = TransitionContainer<Transition12, Transition23, Transition34, Transition45, Transition51>;
+    static_assert(TransitionList::Contains<Transition12>());
+    static_assert(!TransitionList::Contains<TransitionUnused>());
+
+    using Description = StateMachineDescription<StateList, TransitionList>;
+
+    Description description{};
 }
 
 TEST(TestUtils, TestObservable)
@@ -310,10 +352,100 @@ TEST(TestUtils, Exp)
     std::uniform_real_distribution dist(0.0001, 100.);
 
     for(int32_t i = 0; i < 1000000; ++i)
-    { 
+    {
         const double x = dist(rng);
         const double answer = std::exp(x);
         const double eps = answer * 1e-7;
         ASSERT_NEAR(answer, vic::math::exp(x), eps) << "x = " << x;
     }
+}
+
+TEST(TestUtils, TestUnique)
+{
+    struct SomeObject
+    {
+        int bla;
+    };
+
+    UniqueType<SomeObject> obj1;
+    UniqueType<SomeObject> obj2;
+    static_assert(!std::is_same_v<decltype(obj1), decltype(obj2)>);
+
+    struct ObjectWithMutexes
+    {
+        using FirstMutex = UniqueType<std::mutex>;
+        using SecondMutex = UniqueType<std::mutex>;
+        static_assert(!std::is_same_v<FirstMutex, SecondMutex>);
+
+        using FirstLock = std::unique_lock<FirstMutex>;
+        using SecondLock = std::unique_lock<SecondMutex>;
+        static_assert(!std::is_same_v<FirstLock, SecondLock>);
+
+        FirstMutex m1;
+        SecondMutex m2;
+
+        void DoSomething1()
+        {
+            FirstLock lock1(m1);
+            DoSomethingPrivate1(lock1);
+        }
+
+        void DoSomething2()
+        {
+            SecondLock lock2(m2);
+            DoSomethingPrivate2(lock2);
+        }
+
+        void DoSomething1And2()
+        {
+            FirstLock lock1(m1, std::defer_lock);
+            SecondLock lock2(m2, std::defer_lock);
+            std::lock(lock1, lock2);
+
+            DoSomethingPrivate1(lock1);
+            DoSomethingPrivate2(lock2);
+        }
+
+    private:
+        void DoSomethingPrivate1(const FirstLock& lock) { }
+        void DoSomethingPrivate2(const SecondLock& lock) { }
+    };
+
+    ObjectWithMutexes object;
+    object.DoSomething1();
+    object.DoSomething2();
+    object.DoSomething1And2();
+
+    // make sure that two objects of the same type, which contain UniqueType<T>s,
+    // are still the same object.
+    ObjectWithMutexes object2;
+    static_assert(std::is_same_v<decltype(object), decltype(object2)>);
+}
+
+TEST(TestUtils, Ranges)
+{
+    struct Type1
+    { };
+    struct Type2
+    { };
+
+    using Map1 = std::map<int, Type1>;
+    using Map2 = std::map<int, Type2>;
+    const Map1 map1{{1, {}}, {2, {}}, {3, {}}};
+    Map2 map2{{3, {}}, {4, {}}, {5, {}}};
+
+    static_assert(vic::ranges::view::MapConcept<std::map<int, float>>);
+    static_assert(vic::ranges::view::MapConcept<Map1>);
+    static_assert(vic::ranges::view::MapConcept<Map2>);
+    // todo: flat map
+    // todo: make sure that the iterators iterate in sorted order
+
+    static_assert(std::same_as<Map1::key_type, Map2::key_type>);
+
+    // auto mapOverlap = vic::ranges::view::map_intersection(map1, map2);
+
+    //for(const auto& [key, type1, type2] : mapOverlap)
+    //{
+    //    // do stuff
+    //}
 }

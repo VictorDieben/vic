@@ -132,6 +132,12 @@ constexpr auto FrobeniusInnerProduct(const TMat& mat)
 
 // todo:
 
+template <typename T>
+concept has_inverse = ConceptMatrix<T> && requires(T mat)
+{
+    InverseImpl<T>(mat);
+};
+
 // Selector for Inverse algorithm
 template <typename TMatrix>
 requires ConceptSquareMatrix<TMatrix>
@@ -148,6 +154,11 @@ constexpr auto Inverse(const TMatrix& matrix)
     // TODO: split Inverse() up into 2 parts:
     // - preconditioner, initial guess, partly dependant on solver
     // - solving algorithm, either iterative/LU-decomposition/something else
+
+    // see:
+    // https://stackoverflow.com/questions/28309164/checking-for-existence-of-an-overloaded-member-function
+
+    //if (has_inverse
 
     if constexpr(std::is_same_v<TMatrix, Identity<typename TMatrix::DataType, TMatrix::GetRows()>>)
     {

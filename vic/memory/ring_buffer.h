@@ -98,6 +98,8 @@ private:
     alignas(64) mutable std::mutex mPushMutex;
     alignas(64) mutable std::mutex mPopMutex;
 
+    // todo: instead of performing the modulus when setting head/tail, do it when reading.
+    // this would solve the aba problem
     alignas(64) std::atomic<std::size_t> mHead{0};
     alignas(64) std::atomic<std::size_t> mTail{0};
 

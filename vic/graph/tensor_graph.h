@@ -149,9 +149,7 @@ public:
         TensorVertexType copy = vert;
         ForeachOutRecursive(copy, functor, 0, mGraph.GetDimensions());
     }
-    //
-    //
-    //
+
     template <typename TFunctor>
     void ForeachValidOut(const TensorVertexId id, TFunctor functor) const
     {

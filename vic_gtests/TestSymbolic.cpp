@@ -11,7 +11,11 @@ namespace symbolic
 
 TEST(TestSymbolic, Initialize)
 {
-    //auto var1 = Variable();
+    auto var1 = Variable("var1");
+    auto var2 = Variable("var2");
+
+    auto add = Add(var1, var2);
+
     //var1.SetName("x");
     //EXPECT_EQ(var1.GetName(), "x");
     //EXPECT_EQ(var1.GetType(), EType::Var);
