@@ -232,3 +232,55 @@ TEST(TestEntitySystem, Insert)
 
     ASSERT_EQ(system.Size<A>(), 2u);
 }
+
+TEST(TestEntitySystem, TryGet)
+{
+    struct A
+    {
+        int val;
+    };
+    using System = vic::entity::EntitySystem<A>;
+    using Handle = System::Handle;
+
+    System system;
+
+    auto firstEnt = system.NewEntity();
+    auto secondEnt = system.NewEntity();
+    secondEnt.Add<A>({5});
+
+    if(auto nonexistantA = firstEnt.TryGet<A>())
+        ASSERT_TRUE(false); // should not be reachable
+
+    if(auto existingA = secondEnt.TryGet<A>())
+        ASSERT_EQ(existingA->val, 5);
+    else
+        ASSERT_TRUE(false); // should not be reachable
+}
+
+TEST(TestEntitySystem, HasAny)
+{
+    struct A
+    {
+        int val;
+    };
+    struct B
+    {
+        int otherVal;
+    };
+    using System = vic::entity::EntitySystem<A, B>;
+    System system;
+
+    auto ent1 = system.NewEntity();
+    ASSERT_FALSE(ent1.HasAny());
+    ent1.Add<A>({});
+    ASSERT_TRUE(ent1.HasAny());
+    ent1.Remove<A>();
+    ASSERT_FALSE(ent1.HasAny());
+    ent1.Add<B>({});
+    ASSERT_TRUE(ent1.HasAny());
+}
+
+TEST(TestEntitySystem, Relabel)
+{
+    //
+}

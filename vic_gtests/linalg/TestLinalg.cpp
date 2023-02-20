@@ -5,6 +5,7 @@
 #include "vic/linalg/inverse.h"
 #include "vic/linalg/matrices.h"
 #include "vic/linalg/matrices_dynamic.h"
+#include "vic/linalg/matrices_sparse.h"
 #include "vic/linalg/traits.h"
 #include "vic/linalg/transpose.h"
 
@@ -362,6 +363,23 @@ TEST(TestLinalg, TestMatmulDefaultType)
     static_assert(std::is_same_v<MatConst, default_matmul_t<MatConst, MatColConst>>);
     static_assert(std::is_same_v<MatConst, default_matmul_t<MatRowConst, MatColConst>>);
     static_assert(std::is_same_v<MatDynamic, default_matmul_t<MatColConst, MatRowConst>>);
+}
+
+TEST(TestLinalg, TestSparse)
+{
+    // try constructing with explicit size
+    MatrixSparse<double> sparse(100, 100);
+    EXPECT_EQ(sparse.GetRows(), 100);
+    EXPECT_EQ(sparse.GetColumns(), 100);
+
+    // try constructing from existing matrix
+    Identity<double, 100> identity100{};
+    MatrixSparse<double> sparseFromIdentiy(identity100);
+    ExpectMatrixEqual(identity100, sparseFromIdentiy);
+
+    constexpr const Matrix<double, 3, 3> mat3({0, 1, 2, 3, 4, 5, 6, 7, 8});
+    MatrixSparse<double> sparseFromMat3(mat3);
+    ExpectMatrixEqual(mat3, sparseFromMat3);
 }
 
 } // namespace linalg

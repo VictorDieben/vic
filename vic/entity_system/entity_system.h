@@ -44,10 +44,23 @@ struct EntityHandle
     }
 
     template <typename T2>
-    bool Has()
+    T2* TryGet()
+    {
+        assert(mSystem && mId);
+        return mSystem->TryGet<T2>(mId);
+    }
+
+    template <typename T2>
+    bool Has() const
     {
         assert(mSystem && mId);
         return mSystem->Has<T2>(mId);
+    }
+
+    bool HasAny() const
+    {
+        assert(mSystem && mId);
+        return mSystem->HasAny(mId);
     }
 
     template <typename T2>
@@ -103,6 +116,15 @@ public:
         return it->second;
     }
 
+    T* TryGet(const EntityId id)
+    {
+        auto it = mComponents.find(id);
+        if(it == mComponents.end())
+            return nullptr;
+        else
+            return &(it->second);
+    }
+
     bool Has(const EntityId id) const { return mComponents.find(id) != mComponents.end(); }
 
     bool Remove(const EntityId id)
@@ -132,11 +154,19 @@ public:
         static_assert(std::is_same_v<TValue, value_type>);
 
         // todo: only activate for debug builds:
-        auto prev = begin;
-        for(auto it = std::next(begin); it != end; ++it)
-            assert(prev->first < it->first);
+        // Verify that the range is sorted
+        if(begin != end)
+        {
+            auto prev = begin;
+            for(auto it = std::next(begin); it != end; ++it)
+                assert(prev->first < it->first);
+        }
 
-        // todo: insert
+        auto hint = begin;
+        for(auto it = begin; it != end; ++it)
+        {
+            auto res = mComponents.insert(*it);
+        }
     }
 };
 
@@ -165,7 +195,10 @@ public:
         return EntityHandle(id, this);
     }
 
-    void RemoveEntity(EntityId id) { RemoveEntityRecursive<TComponents...>(id); }
+    void RemoveEntity(EntityId id)
+    {
+        RemoveEntityRecursive<TComponents...>(id); //
+    }
 
     template <typename T>
     void Add(EntityId id, T item)
@@ -180,9 +213,20 @@ public:
     }
 
     template <typename T>
-    bool Has(EntityId id)
+    T* TryGet(EntityId id)
+    {
+        return ComponentSystem<T>::TryGet(id);
+    }
+
+    template <typename T>
+    bool Has(EntityId id) const
     {
         return ComponentSystem<T>::Has(id);
+    }
+
+    bool HasAny(EntityId id) const
+    {
+        return HasAnyRecursive<TComponents...>(id); //
     }
 
     template <typename T>
@@ -192,7 +236,7 @@ public:
     }
 
     template <typename T>
-    std::size_t Size()
+    std::size_t Size() const
     {
         return ComponentSystem<T>::Size();
     }
@@ -237,6 +281,17 @@ public:
         ComponentSystem<T>::Insert(begin, end);
     }
 
+    void Relabel()
+    {
+        EntityId mNewCounter{1};
+
+        if(HasAny(mNewCounter))
+        { // entity exists
+        }
+        else
+        { }
+    }
+
 private:
     EntityId mEntityCounter{1}; // reserve 0 for emtpy, not sure if I need that
 
@@ -253,6 +308,40 @@ private:
         ComponentSystem<T1>::Remove(id);
         RemoveEntityRecursive<T2, Ts...>(id);
     }
+
+    //
+    //
+    //
+
+    template <typename T>
+    bool HasAnyRecursive(EntityId id) const
+    {
+        return ComponentSystem<T>::Has(id);
+    }
+    template <typename T1, typename T2, typename... Ts>
+    bool HasAnyRecursive(EntityId id) const
+    {
+        if(ComponentSystem<T1>::Has(id))
+            return true;
+        else
+            return HasAnyRecursive<T2, Ts...>(id);
+    }
+
+    //
+    //
+    //
+
+    //template <typename TFunctor, typename T>
+    //void ForeachComponent(TFunctor& functor) const
+    //{
+    //    functor.Do<T>(); //
+    //}
+    //template <typename TFunctor, typename T1, typename T2, typename... Ts>
+    //bool ForeachComponent(TFunctor& functor) const
+    //{
+    //    functor.Do<T1>(); // hacky way to call lambda with template argument
+    //    return ForeachComponent<T2, Ts...>(functor);
+    //}
 };
 
 } // namespace entity

@@ -6,6 +6,8 @@
 #include "vic/linalg/matrices.h"
 #include "vic/linalg/traits.h"
 
+#include "vic/memory/flat_map.h"
+
 #include <vector>
 
 namespace vic

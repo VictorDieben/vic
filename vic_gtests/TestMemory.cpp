@@ -164,6 +164,14 @@ TEST(TestMemory, FlatMap)
         EXPECT_TRUE(key < it->first);
         key = it->first;
     }
+
+    EXPECT_TRUE(map.Relabel(9, 11));
+    EXPECT_EQ(std::prev(map.end())->first, 11);
+
+    EXPECT_TRUE(map.Relabel(7, 3));
+    EXPECT_EQ(map.begin()->first, 3);
+
+    EXPECT_FALSE(map.Relabel(4, 3)); // key 3 already exists
 }
 
 TEST(TestMemory, RingBuffer)

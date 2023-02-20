@@ -186,6 +186,7 @@
     <ClInclude Include="kinematics\translation.h" />
     <ClInclude Include="linalg\algorithms\eigenvalues.h" />
     <ClInclude Include="linalg\matrices_dynamic.h" />
+    <ClInclude Include="linalg\matrices_sparse.h" />
     <ClInclude Include="linalg\solve.h" />
     <ClInclude Include="machine_learning\back_propagation.h" />
     <ClInclude Include="machine_learning\definitions.h" />

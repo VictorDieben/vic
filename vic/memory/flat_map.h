@@ -63,8 +63,23 @@ public:
 
     // Modifiers
     void clear() { mData.clear(); }
-    std::pair<iterator, bool> insert(const value_type& pair) { throw std::runtime_error("not implemented"); }
-    std::pair<iterator, bool> insert(value_type&& pair) { throw std::runtime_error("not implemented"); }
+    std::pair<iterator, bool> insert(const value_type& pair)
+    {
+        const auto& key = pair.first;
+        auto it = find(key);
+        if(it != mData.end())
+            return std::pair(it, false);
+
+        const auto size = mData.size();
+        mData.push_back(pair);
+        if(size != 0 && mData.at(size).first < mData.at(size - 1).first)
+            Sort();
+    }
+    std::pair<iterator, bool> insert(value_type&& pair)
+    {
+        const auto copy = pair;
+        return insert(copy); // tmp
+    }
 
     iterator erase(iterator pos) { return mData.erase(pos); }
     iterator erase(const_iterator pos) { return mData.erase(pos); }
@@ -92,6 +107,35 @@ public:
         return mData.end();
     }
     bool contains(const TKey& key) const { return find(key) != mData.end(); }
+
+    //
+    // Custom, not similar to std::map
+    //
+
+    bool Relabel(const TKey oldKey, const TKey newKey)
+    {
+        if(find(newKey) != mData.end())
+            return false; // newKey already exits, not available
+
+        auto it = find(oldKey);
+        if(it == mData.end())
+            return false; // oldKey does not exist in this map
+
+        // check if we would need to re-sort if we change this label
+        bool needsSort = false;
+        if((it != mData.begin() && newKey < std::prev(it)->first) || //
+           (std::next(it) != mData.end() && std::next(it)->first < newKey))
+        {
+            needsSort = true;
+        }
+
+        it->first = newKey; // change label
+
+        if(needsSort)
+            Sort();
+
+        return true;
+    }
 
 private:
     void Sort()
