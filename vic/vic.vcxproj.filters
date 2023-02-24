@@ -54,7 +54,7 @@
     <ClInclude Include="kinematics\kinematics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="linalg\matrix_view.h">
+    <ClInclude Include="linalg\matrices_view.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="linalg\algorithms\lu_decomposition.h">

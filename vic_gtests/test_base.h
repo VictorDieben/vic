@@ -5,7 +5,7 @@
 #include "vic/linalg/determinant.h"
 #include "vic/linalg/inverse.h"
 #include "vic/linalg/linalg.h"
-#include "vic/linalg/matrix_view.h"
+#include "vic/linalg/matrices_view.h"
 #include "vic/linalg/transpose.h"
 
 using namespace vic::linalg;

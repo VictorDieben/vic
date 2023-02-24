@@ -22,24 +22,25 @@ enum class EOrdering
 };
 
 // gives a hint about the distribution of the elements in a matrix
+// NOTE: try to order these from strongest to weakest type
 enum class EDistribution
 {
-    Diagonal,
     Full,
+    Unknown,
     Sparse,
     UpperTriangular,
     LowerTriangular,
+    Diagonal,
     StrictUpperTriangular,
-    StrictLowerTriangular,
-    Unknown
+    StrictLowerTriangular
 };
 
 enum class ESizeType
 {
-    Dynamic,
+    Constant,
     RowConstant,
     ColConstant,
-    Constant
+    Dynamic
 };
 
 //template <ESizeType size, std::size_t rows, std::size_t cols>
@@ -69,6 +70,9 @@ constexpr ESizeType ToSize()
     else
         return ESizeType::Constant;
 }
+
+constexpr bool IsRowConstant(const ESizeType size) { return size == ESizeType::Constant || size == ESizeType::RowConstant; }
+constexpr bool IsColumnConstant(const ESizeType size) { return size == ESizeType::Constant || size == ESizeType::ColConstant; }
 
 // This helper only compiles if template argument is constexpr std::size_t
 template <std::size_t>

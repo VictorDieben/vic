@@ -154,6 +154,26 @@ TEST(TestLinalg, TestAddDefaultType)
     static constexpr std::size_t rows = 3;
     static constexpr std::size_t cols = 2;
 
+    const std::vector<EDistribution> distributions = {EDistribution::Full, //
+                                                      EDistribution::Sparse, //
+                                                      EDistribution::UpperTriangular, //
+                                                      EDistribution::LowerTriangular, //
+                                                      EDistribution::Diagonal, //
+                                                      EDistribution::StrictUpperTriangular, //
+                                                      EDistribution::StrictLowerTriangular};
+
+    for(auto it = distributions.begin(); it < distributions.end(); ++it)
+    {
+        for(auto it2 = it; it2 < distributions.end(); ++it2)
+        {
+            const auto e1 = AdditionDistribution(*it, *it2);
+            const auto e2 = AdditionDistribution(*it2, *it);
+            ASSERT_EQ(e1, e2); // a + b == b + a
+            ASSERT_NE(e1, EDistribution::Unknown);
+            ASSERT_NE(e2, EDistribution::Unknown);
+        }
+    }
+
     using MatConst = Matrix<value_type, rows, cols>;
     using MatRowConst = MatrixRowConst<value_type, rows>;
     using MatColConst = MatrixColConst<value_type, cols>;

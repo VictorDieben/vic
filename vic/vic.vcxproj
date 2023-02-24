@@ -216,7 +216,7 @@
     <ClInclude Include="linalg\tools.h" />
     <ClInclude Include="linalg\determinant.h" />
     <ClInclude Include="linalg\matrices.h" />
-    <ClInclude Include="linalg\matrix_view.h" />
+    <ClInclude Include="linalg\matrices_view.h" />
     <ClInclude Include="linalg\transpose.h" />
     <ClInclude Include="linalg\inverse.h" />
     <ClInclude Include="linalg\linalg.h" />
