@@ -18,6 +18,23 @@ namespace vic
 namespace linalg
 {
 
+TEST(TestLinalg, Indices)
+{
+    std::default_random_engine g;
+    std::uniform_int_distribution<> randomInt(0, 100);
+
+    for(std::size_t n = 0; n < 100; ++n)
+    {
+        const auto i = randomInt(g);
+        const auto j = randomInt(g);
+        const auto c = randomInt(g) + 100;
+        const auto idx = RowColToIndex(i, j, c);
+        const auto [ni, nj] = IndexToRowCol(idx, c);
+        EXPECT_EQ(i, ni);
+        EXPECT_EQ(j, nj);
+    }
+}
+
 TEST(TestLinalg, HappyFlow)
 {
     constexpr Matrix<double, 4, 4> mat1{};
@@ -47,6 +64,10 @@ TEST(TestLinalg, TestZeros)
 
 TEST(TestLinalg, TestIdentity)
 {
+    static_assert(ConceptIdentity<Identity<double, 1>>);
+    static_assert(ConceptIdentity<Identity<double, 4>>);
+    static_assert(ConceptIdentity<Identity<double, 5>>);
+
     constexpr Identity<double, 4> identity4{};
 
     // make sure we can evaluate identity as constexpr
@@ -316,7 +337,6 @@ TEST(TestLinalg, TestLambdaMatrix)
 
 TEST(TestLinalg, TestMatmul4x4Perf)
 {
-
     std::default_random_engine g;
     std::uniform_real_distribution<double> r(0.01, 100.);
 
@@ -367,6 +387,11 @@ TEST(TestLinalg, TestMatmulDefaultType)
 
 TEST(TestLinalg, TestSparse)
 {
+    static_assert(is_sparse_v<MatrixSparse<double>>);
+    static_assert(is_sparse_v<MatrixSparse<int>>);
+    static_assert(ConceptSparse<MatrixSparse<double>>);
+    static_assert(ConceptSparse<MatrixSparse<int>>);
+
     // try constructing with explicit size
     MatrixSparse<double> sparse(100, 100);
     EXPECT_EQ(sparse.GetRows(), 100);
@@ -380,6 +405,8 @@ TEST(TestLinalg, TestSparse)
     constexpr const Matrix<double, 3, 3> mat3({0, 1, 2, 3, 4, 5, 6, 7, 8});
     MatrixSparse<double> sparseFromMat3(mat3);
     ExpectMatrixEqual(mat3, sparseFromMat3);
+
+    // todo: test/specialize solve
 }
 
 } // namespace linalg

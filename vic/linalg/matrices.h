@@ -23,12 +23,23 @@ constexpr std::size_t RowColToIndex(const std::size_t i, const std::size_t j, co
     return (i * columns) + j; //
 }
 
+constexpr std::pair<std::size_t, std::size_t> IndexToRowCol(const std::size_t index, const std::size_t columns)
+{
+    const auto i = index / columns;
+    const auto j = index - (i * columns);
+    return std::pair(i, j);
+}
+
 // standard constant size matrix (row mayor)
 template <typename T, std::size_t rows, std::size_t columns>
 class Matrix
 {
 public:
     using DataType = T;
+    constexpr static auto Size = ESizeType::Constant;
+    constexpr static auto Ordering = EOrdering::RowMayor;
+    constexpr static auto Distribution = EDistribution::Full;
+
     constexpr Matrix() = default;
 
     constexpr explicit Matrix(const std::size_t verify_rows, const std::size_t verify_columns)
@@ -46,7 +57,8 @@ public:
         : mData(data)
     { }
 
-    template <typename TMat> // requires ConceptMatrix<TMat> //
+    template <typename TMat>
+    requires ConceptMatrix<TMat> //
     constexpr explicit Matrix(const TMat& matrix)
     {
         for(std::size_t i = 0; i < rows; ++i)
@@ -110,6 +122,9 @@ class Zeros
 {
 public:
     constexpr Zeros() = default;
+    constexpr static auto Size = ESizeType::Constant;
+    constexpr static auto Ordering = EOrdering::Any;
+    constexpr static auto Distribution = EDistribution::Full;
 
     constexpr static std::size_t GetRows() { return rows; }
     constexpr static std::size_t GetColumns() { return columns; }
@@ -128,6 +143,9 @@ class Ones
 {
 public:
     constexpr Ones() = default;
+    constexpr static auto Size = ESizeType::Constant;
+    constexpr static auto Ordering = EOrdering::Any;
+    constexpr static auto Distribution = EDistribution::Full;
 
     constexpr static std::size_t GetRows() { return rows; }
     constexpr static std::size_t GetColumns() { return columns; }
@@ -151,6 +169,11 @@ public:
     constexpr static std::size_t GetColumns() { return size; }
 
     using DataType = T;
+    constexpr static auto Size = ESizeType::Constant;
+    constexpr static auto Ordering = EOrdering::Any;
+    constexpr static auto Distribution = EDistribution::Diagonal;
+
+    constexpr static bool TempIsIdentity = true; // todo: remove, std::is_same didnt work
 
     constexpr T Get(const std::size_t i, const std::size_t j) const
     {
@@ -172,6 +195,9 @@ public:
     constexpr static std::size_t GetColumns() { return size; }
 
     using DataType = T;
+    constexpr static auto Size = ESizeType::Constant;
+    constexpr static auto Ordering = EOrdering::Any;
+    constexpr static auto Distribution = EDistribution::Diagonal;
 
     constexpr T Get(const std::size_t i, const std::size_t j) const
     {
@@ -179,7 +205,6 @@ public:
         return i == j ? mValue : T{0};
     }
 
-private:
     const T mValue{0.};
 };
 
@@ -198,7 +223,8 @@ public:
         for(std::size_t i = 0; i < Min(rows, columns); ++i)
             mData[i] = value;
     }
-    template <typename TMat> // requires ConceptMatrix<TMat> // works, but is not c++17
+    template <typename TMat>
+    requires ConceptMatrix<TMat>
     constexpr explicit Diagonal(const TMat& matrix)
     {
         for(std::size_t i = 0; i < Min(rows, columns); ++i)
@@ -209,6 +235,9 @@ public:
     constexpr static std::size_t GetColumns() { return columns; }
 
     using DataType = T;
+    constexpr static auto Size = ESizeType::Constant;
+    constexpr static auto Ordering = EOrdering::Any;
+    constexpr static auto Distribution = EDistribution::Diagonal;
 
     constexpr T Get(const std::size_t i, const std::size_t j) const
     {
@@ -227,12 +256,6 @@ public:
     std::array<T, Min(rows, columns)> mData{};
 };
 
-template <typename T, std::size_t rows, std::size_t columns>
-struct is_diagonal<Diagonal<T, rows, columns>>
-{
-    static constexpr bool value = true;
-};
-
 template <typename TFunctor, std::size_t rows, std::size_t columns>
 class LambdaMatrix
 {
@@ -247,6 +270,9 @@ public:
     constexpr static std::size_t GetColumns() { return columns; }
 
     using DataType = decltype(mFunctor(std::size_t{}, std::size_t{}));
+    constexpr static auto Size = ESizeType::Constant;
+    constexpr static auto Ordering = EOrdering::Any;
+    constexpr static auto Distribution = EDistribution::Full;
 
     constexpr DataType Get(const std::size_t i, const std::size_t j) const
     {

@@ -17,11 +17,25 @@ requires ConceptMatrix<TMatrix>
 class ViewTranspose
 {
 public:
+    using DataType = typename TMatrix::DataType;
+    constexpr static auto Size = (TMatrix::Size == ESizeType::Constant) //
+                                     ? ESizeType::Constant //
+                                     : (TMatrix::Size == ESizeType::Dynamic) //
+                                           ? ESizeType::Dynamic //
+                                           : (TMatrix::Size == ESizeType::RowConstant) //
+                                                 ? ESizeType::ColConstant // note: transpose, so opposite
+                                                 : ESizeType::RowConstant;
+    constexpr static auto Ordering = (TMatrix::Ordering == EOrdering::RowMayor) //
+                                         ? EOrdering::RowMayor //
+                                         : (TMatrix::Ordering == EOrdering::ColumnMayor) ? EOrdering::RowMayor //
+                                                                                         : EOrdering::Unknown;
+
+    constexpr static auto Distribution = TMatrix::Distribution; // todo: upper/lower triangular switches
+
     ViewTranspose(const TMatrix& matrix)
         : mMatrix(matrix)
     { }
 
-    using DataType = typename TMatrix::DataType;
     constexpr static std::size_t GetRows() { return TMatrix::GetColumns(); }
     constexpr static std::size_t GetColumns() { return TMatrix::GetRows(); }
 
@@ -45,6 +59,10 @@ public:
     { }
 
     using DataType = typename TMatrix::DataType;
+    constexpr static auto Size = TMatrix::Size;
+    constexpr static auto Ordering = TMatrix::Ordering;
+    constexpr static auto Distribution = TMatrix::Distribution;
+
     constexpr static std::size_t GetRows() { return TMatrix::GetRows(); }
     constexpr static std::size_t GetColumns() { return TMatrix::GetColumns(); }
 
@@ -58,6 +76,11 @@ template <typename TMat1, typename TMat2>
 requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && is_same_type<TMat1, TMat2>::value //
     class ViewRowStack
 {
+private:
+    // maybe move to somewhere else
+    constexpr static bool RowConst = ConceptConstexprRows<TMat1> && ConceptConstexprRows<TMat2>;
+    constexpr static bool ColConst = ConceptConstexprColumns<TMat1> || ConceptConstexprColumns<TMat2>;
+
 public:
     ViewRowStack(const TMat1& mat1, const TMat2& mat2)
         : mMatrix1(mat1)
@@ -67,6 +90,11 @@ public:
     }
 
     using DataType = typename TMat1::DataType;
+
+    constexpr static auto Size = ToSize<RowConst, ColConst>();
+    constexpr static auto Ordering = EOrdering::Unknown;
+    constexpr static auto Distribution = EDistribution::Unknown;
+
     constexpr static std::size_t GetRows() { return TMat1::GetRows() + TMat2::GetRows(); }
     constexpr static std::size_t GetColumns() { return TMat1::GetColumns(); }
 
@@ -88,6 +116,11 @@ template <typename TMat1, typename TMat2>
 requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && is_same_type<TMat1, TMat2>::value //
     class ViewColumnStack
 {
+private:
+    // maybe move to somewhere else
+    constexpr static bool RowConst = ConceptConstexprRows<TMat1> || ConceptConstexprRows<TMat2>;
+    constexpr static bool ColConst = ConceptConstexprColumns<TMat1> && ConceptConstexprColumns<TMat2>;
+
 public:
     static_assert(std::is_same_v<TMat1::DataType, TMat2::DataType>);
 
@@ -99,6 +132,10 @@ public:
     }
 
     using DataType = typename TMat1::DataType;
+    constexpr static auto Size = ToSize<RowConst, ColConst>();
+    constexpr static auto Ordering = EOrdering::Unknown;
+    constexpr static auto Distribution = EDistribution::Unknown;
+
     constexpr static std::size_t GetRows() { return TMat1::GetRows(); }
     constexpr static std::size_t GetColumns() { return TMat1::GetColumns() + TMat2::GetColumns(); }
 
@@ -122,6 +159,11 @@ template <typename TMat1, typename TMat2>
 requires ConceptSquareMatrix<TMat1> && ConceptSquareMatrix<TMat2> && is_same_type<TMat1, TMat2>::value //
     class ViewBlockDiagonal
 {
+private:
+    // maybe move to somewhere else
+    constexpr static bool RowConst = ConceptConstexprRows<TMat1> && ConceptConstexprRows<TMat2>;
+    constexpr static bool ColConst = ConceptConstexprColumns<TMat1> && ConceptConstexprColumns<TMat2>;
+
 public:
     ViewBlockDiagonal(const TMat1& mat1, const TMat2& mat2)
         : mMatrix1(mat1)
@@ -129,6 +171,10 @@ public:
     { }
 
     using DataType = typename TMat1::DataType;
+    constexpr static auto Size = ToSize<RowConst, ColConst>();
+    constexpr static auto Ordering = EOrdering::Unknown;
+    constexpr static auto Distribution = EDistribution::Unknown;
+
     constexpr static std::size_t GetRows() { return TMat1::GetRows() + TMat2::GetRows(); }
     constexpr static std::size_t GetColumns() { return TMat1::GetColumns() + TMat2::GetColumns(); }
 
@@ -152,9 +198,6 @@ private:
     const TMat2& mMatrix2;
 };
 
-// TODO: blockdiagonal<T..>
-
-// TODO: submatrix
 template <typename TMat, std::size_t rowStart, std::size_t rows, std::size_t colStart, std::size_t cols>
 requires ConceptMatrix<TMat> // && (rowStart + rows <= TMat::Rows()) && (colStart + cols <= TMat::GetColumns())
 class ViewSubMatrix
@@ -165,6 +208,11 @@ public:
     { }
 
     using DataType = typename TMat::DataType;
+    // todo: implement sub matrix for dynamic sizes
+    constexpr static auto Size = ESizeType::Constant;
+    constexpr static auto Ordering = TMat::Ordering;
+    constexpr static auto Distribution = EDistribution::Unknown;
+
     constexpr static std::size_t GetRows() { return rows; }
     constexpr static std::size_t GetColumns() { return cols; }
 
@@ -195,6 +243,10 @@ public:
     { }
 
     using DataType = typename TMatrix::DataType;
+    constexpr static auto Size = TMatrix::Size;
+    constexpr static auto Ordering = TMatrix::Ordering;
+    constexpr static auto Distribution = EDistribution::Unknown; // todo: TriangleType to EDistribution
+
     constexpr static std::size_t GetRows() { return TMatrix::GetRows(); }
     constexpr static std::size_t GetColumns() { return TMatrix::GetColumns(); }
 
@@ -230,6 +282,33 @@ using ViewLowerTriangle = ViewTriangle<TriangleType::Lower, TMatrix>;
 
 template <typename TMatrix>
 using ViewStrictLowerTriangle = ViewTriangle<TriangleType::StrictLower, TMatrix>;
+
+//template <typename TMat>
+//requires ConceptMatrix<TMat>
+//class ViewDiagonalMatrix
+//{
+//public:
+//    ViewDiagonalMatrix(const TMat& mat)
+//        : mMatrix(mat)
+//    { }
+//
+//    using DataType = typename TMat::DataType;
+//    constexpr static auto Ordering = TMat::Unknown;
+//    constexpr static auto Distribution = EDistribution::Diagonal;
+//
+//    constexpr static std::size_t GetRows() { return rows; }
+//    constexpr static std::size_t GetColumns() { return cols; }
+//
+//    constexpr DataType Get(const std::size_t i, const std::size_t j) const
+//    {
+//        if(i == j)
+//            return mMatrix.Get(i, j);
+//        return 0.;
+//    }
+//
+//private:
+//    const TMat& mMatrix;
+//};
 
 } // namespace linalg
 } // namespace vic

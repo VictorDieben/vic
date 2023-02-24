@@ -63,22 +63,46 @@ public:
 
     // Modifiers
     void clear() { mData.clear(); }
+
+    template <bool sort = true>
     std::pair<iterator, bool> insert(const value_type& pair)
     {
-        const auto& key = pair.first;
-        auto it = find(key);
-        if(it != mData.end())
-            return std::pair(it, false);
+        if constexpr(!sort)
+        {
+            // just insert, assume key is unique, let user call sort afterwards
+            const auto size = mData.size();
+            mData.push_back(pair);
+            return std::pair(std::prev(mData.end()), true);
+        }
+        else
+        {
+            // proper insert, check if key exists and resort afterwards
+            const auto& key = pair.first;
+            auto it = find(key);
+            if(it != mData.end())
+                return std::pair(it, false);
 
-        const auto size = mData.size();
-        mData.push_back(pair);
-        if(size != 0 && mData.at(size).first < mData.at(size - 1).first)
-            Sort();
+            const auto size = mData.size();
+            mData.push_back(pair);
+
+            if(size != 0 && mData.at(size).first < mData.at(size - 1).first)
+            {
+                Sort();
+                return std::pair(find(key), true);
+            }
+            else
+            {
+                // insert at end is already sorted, or we do not want to sort
+                return std::pair(std::prev(mData.end()), true);
+            }
+        }
     }
+
+    template <bool sort = true>
     std::pair<iterator, bool> insert(value_type&& pair)
     {
         const auto copy = pair;
-        return insert(copy); // tmp
+        return insert<sort>(copy); // tmp, do proper move later
     }
 
     iterator erase(iterator pos) { return mData.erase(pos); }
@@ -137,13 +161,15 @@ public:
         return true;
     }
 
-private:
+    // call sort after multiple insert<false>()
     void Sort()
     {
         std::sort(mData.begin(),
                   mData.end(), //
                   [&](const auto& item1, const auto& item2) { return item1.first < item2.first; });
     }
+
+private:
 };
 
 } // namespace memory

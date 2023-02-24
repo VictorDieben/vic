@@ -1,9 +1,10 @@
 #include "../pch.h"
 #include "../test_base.h"
 
-#include "vic/linalg/matrices.h"
 #include "vic/linalg/matmul.h"
+#include "vic/linalg/matrices.h"
 #include "vic/linalg/matrices_dynamic.h"
+#include "vic/linalg/matrices_sparse.h"
 #include "vic/linalg/traits.h"
 #include "vic/utils.h"
 
@@ -62,7 +63,7 @@ TEST(TestLinalg, TestMatmul)
     constexpr const auto scalar2 = Matmul(3., mat2);
     ExpectMatrixEqual(scalar2, Matrix<double, 2, 2>({15, 18, 21, 24}));
 
-    // verify types
+    // verify DataTypes
     EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Identity<double, 1>{}, Identity<double, 1>{}))::DataType>));
     EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Identity<double, 1>{}, Identity<float, 1>{}))::DataType>));
     EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Identity<double, 1>{}, Identity<int, 1>{}))::DataType>));
@@ -96,14 +97,14 @@ TEST(TestLinalg, TestMatmulDynamic)
     // todo: verify values
 
     // verify that the dynamic matmul can be called with static matrices
-    
+
     using Tstatic = Matrix<double, 3, 3>;
     const auto mat3x3 = Tstatic{};
-    auto res = MatmulDynamic(mat3x3, mat3x3);
+    auto res = Matmul(mat3x3, mat3x3);
     (void)res;
-    
+
     const auto dyn3x3 = MatrixDynamic<double>{3, 3};
-    auto res2 = MatmulDynamic(dyn3x3, dyn3x3);
+    auto res2 = Matmul(dyn3x3, dyn3x3);
 }
 
 TEST(TestLinalg, TestMatmulMixed)
@@ -113,11 +114,11 @@ TEST(TestLinalg, TestMatmulMixed)
     const auto dyn3x4 = MatrixDynamic<double>{3, 4};
     const auto mat4x5 = Matrix<double, 4, 5>{};
 
-    //const MatrixRowConst<double, 2> mixed2x4d = Matmul(mat2x3, dyn3x4);
-    //const MatrixColConst<double, 2> mixed2x4d = Matmul(mat2x3, dyn3x4);
+    const MatrixRowConst<double, 2> mixed2x4d_1 = Matmul(mat2x3, dyn3x4);
+    const MatrixColConst<double, 5> mixed2x4d_2 = Matmul(dyn3x4, mat4x5);
 
-    auto mat2x5_1 = Matmul(Matmul(mat2x3, dyn3x4), mat4x5);
-    auto mat2x5_2 = Matmul(mat2x3, Matmul(dyn3x4, mat4x5));
+    const Matrix<double, 2, 5> mat2x5_1 = Matmul(Matmul(mat2x3, dyn3x4), mat4x5);
+    const Matrix<double, 2, 5> mat2x5_2 = Matmul(mat2x3, Matmul(dyn3x4, mat4x5));
     // TODO: the two mat2x5 matrices should be static size
 
     ExpectMatrixEqual(mat2x5_1, mat2x5_2); // TODO: just zeros now
@@ -139,6 +140,22 @@ TEST(TestLinalg, TestMultivariate)
     constexpr auto ans6 = Matmul(M, M, M, M, M, M);
     constexpr auto ans7 = Matmul(M, M, M, M, M, M, M);
     ExpectMatrixEqual(ans7, DiagonalConstant<double, 3>(Pow<7>(2.)));
+}
+
+TEST(TestLinalg, TestMatmulSparse)
+{
+    // todo: specialize Matmul for sparse*vec
+    Matrix<double, 2, 2> mat{{0, 1, 2, 3}};
+    MatrixSparse<double> sparse2x2{mat};
+
+    ExpectMatrixEqual(mat, sparse2x2);
+
+    const Matrix<double, 2, 1> vec{{5, 6}};
+
+    const auto res1 = Matmul(mat, vec);
+    const auto res2 = Matmul(sparse2x2, vec);
+
+    ExpectMatrixEqual(res1, res2);
 }
 } // namespace linalg
 } // namespace vic

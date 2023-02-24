@@ -18,7 +18,8 @@ namespace algorithms
 // TODO: Eigenvalues / eigenvectors
 // http://mathreview.uwaterloo.ca/archive/voli/1/panju.pdf
 
-template <typename TMatrix> // requires ConceptSquareMatrix<TMatrix>
+template <typename TMatrix>
+requires ConceptSquareMatrix<TMatrix>
 constexpr auto PowerMethod(const TMatrix& matrix, const double eps = 1E-10)
 {
     using DataType = typename TMatrix::DataType;
@@ -45,7 +46,8 @@ constexpr auto PowerMethod(const TMatrix& matrix, const double eps = 1E-10)
 //
 //
 
-template <typename TMatrix> // requires ConceptSquareMatrix<TMatrix>
+template <typename TMatrix>
+requires ConceptSquareMatrix<TMatrix>
 constexpr auto QRMethod(const TMatrix& matrix, const double eps = 1E-10)
 {
     using DataType = typename TMatrix::DataType;

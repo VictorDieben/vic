@@ -21,6 +21,11 @@ class MatrixDynamic
 {
 public:
     using DataType = T;
+
+    constexpr static auto Size = ESizeType::Dynamic;
+    constexpr static auto Ordering = EOrdering::RowMayor;
+    constexpr static auto Distribution = EDistribution::Full;
+
     MatrixDynamic() = default;
     explicit MatrixDynamic(const std::size_t rows, const std::size_t cols)
         : mRows(rows)
@@ -73,10 +78,16 @@ private:
     void Initialize() { mData.resize(mRows * mColumns); }
 };
 
+// TODO: make ColMajor
 template <typename T, std::size_t rows>
 class MatrixRowConst
 {
 public:
+    using DataType = T;
+    constexpr static auto Size = ESizeType::RowConstant;
+    constexpr static auto Ordering = EOrdering::RowMayor;
+    constexpr static auto Distribution = EDistribution::Full;
+
     MatrixRowConst(const std::size_t columns)
         : mColumns(columns)
     {
@@ -88,14 +99,10 @@ public:
         assert(validate_rows == rows);
         Initialize();
     }
-    using DataType = T;
     constexpr static std::size_t GetRows() { return rows; }
     std::size_t GetColumns() const { return mColumns; }
 
-    T Get(const std::size_t i, const std::size_t j) const
-    {
-        return 0.; // TODO
-    }
+    T Get(const std::size_t i, const std::size_t j) const { return mData.at(RowColToIndex(i, j, GetColumns())); }
 
     T& At(const std::size_t i, const std::size_t j)
     {
@@ -114,6 +121,11 @@ template <typename T, std::size_t columns>
 class MatrixColConst
 {
 public:
+    using DataType = T;
+    constexpr static auto Size = ESizeType::ColConstant;
+    constexpr static auto Ordering = EOrdering::ColumnMayor;
+    constexpr static auto Distribution = EDistribution::Full;
+
     MatrixColConst(const std::size_t rows)
         : mRows(rows)
     {
@@ -125,14 +137,10 @@ public:
         assert(columns == validate_columns);
         Initialize();
     }
-    using DataType = T;
     std::size_t GetRows() const { return mRows; }
     constexpr static std::size_t GetColumns() { return columns; }
 
-    T Get(const std::size_t i, const std::size_t j) const
-    {
-        return 0.; // TODO
-    }
+    T Get(const std::size_t i, const std::size_t j) const { return mData.at(RowColToIndex(i, j, GetColumns())); }
 
     T& At(const std::size_t i, const std::size_t j)
     {
@@ -152,6 +160,10 @@ class VectorDynamic
 {
 public:
     using DataType = T;
+    constexpr static auto Size = ESizeType::Dynamic;
+    constexpr static auto Ordering = EOrdering::RowMayor;
+    constexpr static auto Distribution = EDistribution::Full;
+
     VectorDynamic() = default;
     VectorDynamic(std::size_t size) { mData.resize(size); }
     VectorDynamic(const std::vector<T>& data)
@@ -187,6 +199,65 @@ public:
 
 private:
     std::vector<T> mData;
+};
+
+template <typename T>
+class DiagonalDynamic
+{
+public:
+    using DataType = T;
+    constexpr static auto Size = ESizeType::Dynamic;
+    constexpr static auto Ordering = EOrdering::RowMayor;
+    constexpr static auto Distribution = EDistribution::Diagonal;
+
+    DiagonalDynamic() = default;
+    explicit DiagonalDynamic(const std::size_t rows, const std::size_t cols)
+        : mRows(rows)
+        , mColumns(cols)
+    {
+        mData.resize(std::min(mRows, mColumns));
+    }
+    explicit DiagonalDynamic(const std::size_t rows, const std::size_t cols, const std::vector<T>& data)
+        : mData(data)
+        , mRows(rows)
+        , mColumns(cols)
+    {
+        assert(rows * cols == data.size()); // make sure data is correct length
+    }
+
+    template <typename TMatrix>
+    requires ConceptMatrix<TMatrix>
+    explicit DiagonalDynamic(const TMatrix& other)
+        : mRows(other.GetRows())
+        , mColumns(other.GetColumns())
+    {
+        const auto n = Min(other.GetRows(), other.GetColumns());
+        mData.resize(n);
+        for(std::size_t i = 0; i < n; ++i)
+            mData[i] = other.Get(i, i);
+    }
+
+    // todo: transpose?
+    std::size_t GetRows() const { return mRows; }
+    std::size_t GetColumns() const { return mColumns; }
+
+    T Get(const std::size_t i, const std::size_t j) const
+    {
+        if(i == j)
+            return mData[i];
+        return 0.;
+    }
+
+    T& At(const std::size_t i, const std::size_t j)
+    {
+        assert(i == j);
+        return mData[i];
+    }
+
+private:
+    std::vector<T> mData;
+    std::size_t mRows{0};
+    std::size_t mColumns{0};
 };
 
 } // namespace linalg

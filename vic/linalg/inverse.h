@@ -2,7 +2,7 @@
 
 #include "vic/linalg/matmul.h"
 #include "vic/linalg/matrices.h"
-#include "vic/linalg/matrix_view.h"
+#include "vic/linalg/matrices_view.h"
 #include "vic/linalg/traits.h"
 #include "vic/utils.h"
 
@@ -13,15 +13,26 @@ namespace vic
 namespace linalg
 {
 // inverse of diagonal is 1/<diag value>
-template <typename T, std::size_t size>
-constexpr Diagonal<T, size, size> InverseDiagonal(const typename Diagonal<T, size, size>& matrix)
+template <typename TMat>
+constexpr auto InverseDiagonal(const TMat& matrix)
 {
-    Diagonal<T, size, size> inverse{};
-    for(std::size_t i = 0; i < size; ++i)
+    if constexpr(ConceptConstexprMatrix<TMat>)
     {
-        inverse.At(i, i) = 1. / matrix.Get(i, i);
+        static_assert(is_square_v<TMat>);
+        Diagonal<typename TMat::DataType, TMat::GetRows(), TMat::GetColumns()> inverse{};
+        for(std::size_t i = 0; i < TMat::GetRows(); ++i)
+            inverse.At(i, i) = 1. / matrix.Get(i, i);
+        return inverse;
     }
-    return inverse;
+    else
+    {
+        const auto n = matrix.GetRows();
+        assert(matrix.GetRows() == matrix.GetColumns());
+        DiagonalDynamic<typename TMat::DataType> inverse{n, n};
+        for(std::size_t i = 0; i < n; ++i)
+            inverse.At(i, i) = 1. / matrix.Get(i, i);
+        return inverse;
+    }
 }
 
 // Inverse of rotation is transpose
@@ -140,7 +151,6 @@ concept has_inverse = ConceptMatrix<T> && requires(T mat)
 
 // Selector for Inverse algorithm
 template <typename TMatrix>
-requires ConceptSquareMatrix<TMatrix>
 constexpr auto Inverse(const TMatrix& matrix)
 {
     // TODO: if is:

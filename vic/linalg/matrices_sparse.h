@@ -18,6 +18,12 @@ class MatrixSparse
 {
 public:
     using DataType = T;
+    constexpr static auto Size = ESizeType::Dynamic;
+    constexpr static auto Ordering = EOrdering::RowMayor;
+    constexpr static auto Distribution = EDistribution::Sparse;
+
+    using KeyType = std::pair<std::size_t, std::size_t>;
+
     MatrixSparse() = default;
     MatrixSparse(const std::size_t rows, const std::size_t cols)
         : mRows(rows)
@@ -56,12 +62,29 @@ public:
         return mData[KeyType{i, j}]; // NOTE: creates a new entry if it didn't exist
     }
 
+    void Prune()
+    {
+        // todo: iterate over mData, remove zeros
+    }
+
+    auto begin() { return mData.begin(); }
+    auto end() { return mData.end(); }
+
+    auto begin() const { return mData.begin(); }
+    auto end() const { return mData.end(); }
+
 private:
-    using KeyType = std::pair<std::size_t, std::size_t>;
-    vic::memory::FlatMap<KeyType, DataType> mData{};
+    // vic::memory::FlatMap<KeyType, DataType> mData{};
+    std::map<KeyType, DataType> mData{};
 
     std::size_t mRows{0};
     std::size_t mColumns{0};
+};
+
+template <typename T>
+struct is_sparse<MatrixSparse<T>>
+{
+    static constexpr bool value = true;
 };
 
 } // namespace linalg

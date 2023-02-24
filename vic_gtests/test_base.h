@@ -49,7 +49,7 @@ struct OnEventObject
         , mOnMove(onMove)
         , mOnDestruct(onDestruct)
     { }
-
+    // todo: implement
 private:
     TOnConstruct mOnConstruct;
     TOnCopy mOnCopy;

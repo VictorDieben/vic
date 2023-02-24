@@ -29,6 +29,9 @@ public:
     constexpr static std::size_t GetColumns() { return Columns; }
 
     using DataType = T;
+    constexpr static auto Size = ESizeType::Constant;
+    constexpr static auto Ordering = EOrdering::Any;
+    constexpr static auto Distribution = EDistribution::Full;
 
     constexpr T Get(const std::size_t i, const std::size_t j) const
     {
@@ -91,7 +94,7 @@ template <typename T> // requires ConceptVector<T>
 constexpr auto Norm(const T& vec)
 {
     typename T::DataType sum = 0;
-    for(std::size_t i = 0; i < T::GetRows(); ++i)
+    for(std::size_t i = 0; i < vec.GetRows(); ++i)
     {
         sum += (vec.Get(i, 0) * vec.Get(i, 0));
     }
@@ -103,13 +106,14 @@ constexpr auto Normalize(const T& vec)
 {
     T res{};
     const auto oneOverNorm = 1. / Norm(vec);
-    for(std::size_t i = 0; i < T::GetRows(); ++i)
+    for(std::size_t i = 0; i < vec.GetRows(); ++i)
         res.At(i, 0) = vec.Get(i, 0) * oneOverNorm;
     return res;
 }
 
 // 3d cross product
-template <typename T> // requires ConceptVector<T> &&(T::GetRows() == 3) //
+template <typename T>
+// requires ConceptVector<T> &&(T::GetRows() == 3) //
 constexpr auto Cross(const Vector3<T>& vec1, const Vector3<T>& vec2)
 {
     const double ax = vec1.Get(0), ay = vec1.Get(1), az = vec1.Get(2);
@@ -196,7 +200,8 @@ TMatResult Extract(const TMatInput& source, std::size_t row, std::size_t col)
 }
 
 // mostly used for tests, but also useful outside of it
-template <typename TMat1, typename TMat2> // requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+template <typename TMat1, typename TMat2>
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const double eps = 1e-10)
 {
     if((mat1.GetRows() != mat2.GetRows()) || (mat1.GetColumns() != mat2.GetColumns()))
@@ -209,7 +214,8 @@ constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const double eps = 
 }
 
 // Verify that a matrix is orthogonal (e.g. A.T*A == I)
-template <typename TMat> // requires ConceptMatrix<TMat>
+template <typename TMat>
+requires ConceptMatrix<TMat>
 constexpr auto IsOrthogonal(const TMat& mat, const double eps = 1e-10)
 {
     return IsEqual( //
@@ -218,7 +224,8 @@ constexpr auto IsOrthogonal(const TMat& mat, const double eps = 1e-10)
         eps);
 }
 
-template <typename TMat> // requires ConceptMatrix<TMat>
+template <typename TMat>
+requires ConceptMatrix<TMat>
 constexpr auto Negative(const TMat& mat)
 {
     TMat res{};
@@ -229,7 +236,8 @@ constexpr auto Negative(const TMat& mat)
 }
 
 // 3d cross product
-template <typename TMat> // requires ConceptVector<TMat>
+template <typename TMat>
+requires ConceptVector<TMat>
 constexpr auto Subtract(const TMat& mat1, const TMat& mat2) // calculates mat1-mat2
 {
     TMat res{};

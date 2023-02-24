@@ -11,6 +11,26 @@ namespace vic
 namespace linalg
 {
 
+template <typename TMat1, typename TMat2>
+struct add_result_size
+{
+    static constexpr bool RowConst = ConceptConstexprRows<TMat1> || ConceptConstexprRows<TMat2>;
+    static constexpr bool ColConst = ConceptConstexprColumns<TMat1> || ConceptConstexprColumns<TMat2>;
+
+    constexpr static std::size_t Rows = !RowConst //
+                                            ? 0u //
+                                            : ConceptConstexprRows<TMat1> //
+                                                  ? TMat1::GetRows() //
+                                                  : TMat2::GetRows();
+    constexpr static std::size_t Columns = !ColConst //
+                                               ? 0u //
+                                               : ConceptConstexprColumns<TMat1> //
+                                                     ? TMat1::GetColumns() //
+                                                     : TMat2::GetColumns();
+
+    constexpr static ESizeType Size = ToSize<RowConst, ColConst>();
+};
+
 // selector for default Add(mat1, mat2) return type
 template <typename TMat1, typename TMat2>
 struct default_add
@@ -78,7 +98,8 @@ constexpr auto AddStatic(const TMat1& mat1, const TMat2& mat2)
     return result;
 }
 
-template <typename TMatrix> // requires ConceptMatrix<TMatrix>
+template <typename TMatrix>
+requires ConceptMatrix<TMatrix>
 constexpr auto AddConstant(const TMatrix& matrix, const typename TMatrix::DataType& value)
 {
     Matrix<typename TMatrix::DataType, TMatrix::GetRows(), TMatrix::GetColumns()> result{};

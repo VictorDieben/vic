@@ -10,45 +10,70 @@ namespace vic
 namespace linalg
 {
 
+template <typename TMat1, typename TMat2>
+struct matmul_result_size
+{
+    static constexpr bool RowConst = ConceptConstexprRows<TMat1>;
+    static constexpr bool ColConst = ConceptConstexprColumns<TMat2>;
+
+    // determine if the dimension along which the multiplication happens is constexpr.
+    static constexpr bool MidDimensionConst = ConceptConstexprRows<TMat2> || ConceptConstexprColumns<TMat1>;
+
+private:
+    static constexpr std::size_t GetRows()
+    {
+        if constexpr(RowConst)
+            return TMat1::GetRows();
+        else
+            return 0u;
+    }
+    static constexpr std::size_t GetCols()
+    {
+        if constexpr(ColConst)
+            return TMat2::GetColumns();
+        else
+            return 0u;
+    }
+    static constexpr std::size_t GetMidDimension()
+    {
+        if constexpr(ConceptConstexprRows<TMat2>)
+            return TMat2::GetRows();
+        else if constexpr(ConceptConstexprColumns<TMat1>)
+            return TMat1::GetColumns();
+        else
+            return 0u;
+    }
+
+public:
+    constexpr static std::size_t Rows = GetRows();
+    constexpr static std::size_t Columns = GetCols();
+
+    constexpr static std::size_t MidDimension = GetMidDimension();
+
+    constexpr static auto Size = ToSize<RowConst, ColConst>();
+};
+
 // selector for default Matmul(mat1, mat2) return type
 template <typename TMat1, typename TMat2>
 struct default_matmul
 {
 private:
-    static constexpr bool row_const = ConceptConstexprRows<TMat1>;
-    static constexpr bool col_const = ConceptConstexprColumns<TMat2>;
-
-    static constexpr std::size_t CalculateRows()
-    {
-        if constexpr(ConceptConstexprRows<TMat1>)
-            return TMat1::GetRows();
-        else
-            return 0; // cannot deduce
-    }
-    static constexpr std::size_t CalculateColumns()
-    {
-        if constexpr(ConceptConstexprColumns<TMat2>)
-            return TMat2::GetColumns();
-        else
-            return 0; // cannot deduce
-    }
-    static constexpr std::size_t rows = CalculateRows();
-    static constexpr std::size_t cols = CalculateColumns();
+    using Size = matmul_result_size<TMat1, TMat2>;
 
     using value_type = decltype(typename TMat1::DataType() * typename TMat2::DataType());
 
     // possible results
-    using MatConst = Matrix<value_type, rows, cols>;
-    using MatRowConst = MatrixRowConst<value_type, rows>;
-    using MatColConst = MatrixColConst<value_type, cols>;
+    using MatConst = Matrix<value_type, Size::Rows, Size::Columns>;
+    using MatRowConst = MatrixRowConst<value_type, Size::Rows>;
+    using MatColConst = MatrixColConst<value_type, Size::Columns>;
     using MatDynamic = MatrixDynamic<value_type>;
 
 public:
-    using type = std::conditional_t<row_const && col_const, //
+    using type = std::conditional_t<Size::RowConst && Size::ColConst, //
                                     MatConst, //
-                                    std::conditional_t<row_const, //
+                                    std::conditional_t<Size::RowConst, //
                                                        MatRowConst, //
-                                                       std::conditional_t<col_const, //
+                                                       std::conditional_t<Size::ColConst, //
                                                                           MatColConst, //
                                                                           MatDynamic>>>; //
 };
@@ -64,59 +89,71 @@ constexpr auto MatmulScalar(const TMat& mat, const TFloat& scalar)
     using T = typename TMat::DataType;
     using TRet = decltype(T{} * TFloat());
 
-    constexpr auto rows = TMat::GetRows();
-    constexpr auto cols = TMat::GetColumns();
+    if constexpr(ConceptConstexprMatrix<TMat>)
+    {
+        constexpr auto rows = TMat::GetRows();
+        constexpr auto cols = TMat::GetColumns();
 
-    if constexpr(std::is_same_v<TMat, Zeros<T, rows, cols>>)
-    {
-        return Zeros<T, rows, cols>{};
+        if constexpr(std::is_same_v<TMat, Zeros<T, rows, cols>>)
+        {
+            return Zeros<T, rows, cols>{};
+        }
+        else if constexpr(std::is_same_v<TMat, Identity<T, rows>>)
+        {
+            return Diagonal<T, rows, cols>{scalar};
+        }
+        else if constexpr(std::is_same_v<TMat, Diagonal<T, rows, cols>>)
+        {
+            Diagonal<TRet, rows, cols> result{};
+            for(std::size_t i = 0; i < Min(rows, cols); ++i)
+                result.At(i, i) = mat.Get(i, i) * scalar;
+            return result;
+        }
+        else if constexpr(rows == cols && std::is_same_v<TMat, DiagonalConstant<T, rows>>)
+        {
+            return DiagonalConstant<TRet, rows>{mat.mValue * scalar};
+        }
+        else
+        {
+            Matrix<TRet, rows, cols> result{};
+            for(std::size_t i = 0; i < rows; ++i)
+                for(std::size_t j = 0; j < cols; ++j)
+                    result.At(i, j) = mat.Get(i, j) * scalar;
+            return result;
+        }
     }
-    else if constexpr(std::is_same_v<TMat, Identity<T, rows>>)
+    else if constexpr(TMat::Distribution == EDistribution::Sparse)
     {
-        return Diagonal<T, rows, cols>{scalar};
+        auto copy = mat;
+        for(auto it = copy.begin(); it < copy.end(); ++it)
+            *it = (*it) * scalar;
+        return copy;
     }
-    else if constexpr(std::is_same_v<TMat, Diagonal<T, rows, cols>>)
+    else if constexpr(TMat::Distribution == EDistribution::Diagonal)
     {
-        Diagonal<TRet, rows, cols> result{};
-        for(std::size_t i = 0; i < Min(rows, cols); ++i)
-            result.At(i, i) = mat.Get(i, i) * scalar;
+        DiagonalDynamic<T> result{mat.GetRows(), mat.GetRows()};
+        for(std::size_t i = 0; i < mat.GetRows(); ++i)
+            result.At(i, i) = mat.Get(i, i);
         return result;
     }
     else
     {
-        Matrix<TRet, rows, cols> result{};
-        for(std::size_t i = 0; i < rows; ++i)
-            for(std::size_t j = 0; j < cols; ++j)
-                result.At(i, j) = mat.Get(i, j) * scalar;
-        return result;
+        auto copy = mat;
+        for(std::size_t j = 0; j < copy.GetColumns(); ++j)
+            for(std::size_t i = 0; i < copy.GetRows(); ++i)
+                copy.At(i, j) = mat.Get(i, j) * scalar;
+        return copy;
     }
-}
-
-// multiplication of any 2 matrices of constant size
-template <typename TMat1, typename TMat2, typename TMatRet = default_matmul_t<TMat1, TMat2>>
-requires ConceptConstexprMatrix<TMat1> && ConceptConstexprMatrix<TMat2>
-constexpr auto MatmulStatic(const TMat1& mat1, const TMat2& mat2)
-{
-    // TODO: specialize for certain types of matrix multiplications (e.g. diag*diag)
-
-    static_assert(mat1.GetColumns() == mat2.GetRows());
-    TMatRet result{};
-    for(std::size_t i = 0; i < mat1.GetRows(); ++i)
-        for(std::size_t j = 0; j < mat2.GetColumns(); ++j)
-            for(std::size_t k = 0; k < mat1.GetColumns(); ++k)
-                result.At(i, j) += (mat1.Get(i, k) * mat2.Get(k, j));
-    return result;
 }
 
 // multiplication of any 2 matrices where size is not (fully) known
 template <typename TMat1, typename TMat2, typename TMatRet = default_matmul_t<TMat1, TMat2>>
-// requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
-constexpr auto MatmulDynamic(const TMat1& mat1, const TMat2& mat2)
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+constexpr auto MatmulGeneric(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetColumns() == mat2.GetRows());
 
     TMatRet result{mat1.GetRows(), mat2.GetColumns()};
-    // MatmulLambda(mat1, mat2, result);
 
     for(std::size_t i = 0; i < mat1.GetRows(); ++i)
         for(std::size_t j = 0; j < mat2.GetColumns(); ++j)
@@ -124,6 +161,78 @@ constexpr auto MatmulDynamic(const TMat1& mat1, const TMat2& mat2)
                 result.At(i, j) += (mat1.Get(i, k) * mat2.Get(k, j));
 
     return result;
+}
+
+template <typename TMat1, typename TMat2>
+requires ConceptSparse<TMat1> && ConceptVector<TMat2>
+auto MatmulSparseVec(const TMat1& mat1, const TMat2& mat2)
+{
+    assert(mat1.GetColumns() == mat2.GetRows()); //
+    MatrixDynamic<typename TMat1::DataType> result{mat1.GetRows(), 1};
+    for(auto it = mat1.begin(); it != mat1.end(); ++it)
+    {
+        const auto i = it->first.first;
+        const auto k = it->first.second;
+        const auto val = it->second;
+        result.At(i, 0) += val * mat2.Get(k, 0);
+    }
+    return result;
+}
+
+template <typename TMat1, typename TMat2>
+requires ConceptDiagonal<TMat1> && ConceptDiagonal<TMat2>
+constexpr auto MatmulDiagDiag(const TMat1& mat1, const TMat2& mat2)
+{
+    using MatmulResult = matmul_result_size<TMat1, TMat2>;
+
+    if constexpr(MatmulResult::RowConst && MatmulResult::ColConst)
+    {
+        Diagonal<typename TMat1::DataType, MatmulResult::Rows, MatmulResult::Columns> result;
+        for(std::size_t i = 0; i < MatmulResult::MidDimension; ++i)
+            result.At(i, i) = mat1.Get(i, i) * mat2.Get(i, i);
+        return result;
+    }
+    else
+    {
+        assert(mat1.GetColumns() == mat2.GetRows()); //
+        DiagonalDynamic<typename TMat1::DataType> result{mat1.GetRows(), mat2.GetColumns()};
+        for(std::size_t i = 0; i < Min(mat1.GetColumns(), mat2.GetRows()); ++i)
+            result.At(i, i) = mat1.Get(i, i) * mat2.Get(i, i);
+        return result;
+    }
+}
+
+template <typename TMat1, typename TMat2>
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+constexpr auto MatmulMatrix(const TMat1& mat1, const TMat2& mat2)
+{
+
+    if constexpr(ConceptIdentity<TMat1> && ConceptIdentity<TMat2>) // I * I
+    {
+        static_assert(mat1.GetColumns() == mat2.GetRows());
+        return mat1;
+    }
+    else if constexpr(ConceptIdentity<TMat1>) // I * mat
+    {
+        static_assert(mat1.GetColumns() == mat2.GetRows());
+        return mat2;
+    }
+    else if constexpr(ConceptIdentity<TMat2>) // mat * I
+    {
+        static_assert(mat1.GetColumns() == mat2.GetRows());
+        return mat1;
+    }
+    else if constexpr(ConceptSparse<TMat1> && ConceptVector<TMat2>)
+        return MatmulSparseVec(mat1, mat2);
+
+    else if constexpr(TMat1::Distribution == EDistribution::Diagonal && //
+                      TMat2::Distribution == EDistribution::Diagonal)
+        return MatmulDiagDiag(mat1, mat2);
+    else
+    {
+        // generic case, result is a full matrix (with some constness)
+        return MatmulGeneric<TMat1, TMat2>(mat1, mat2);
+    }
 }
 
 // selector for the correct type of matrix multiplication
@@ -142,16 +251,8 @@ constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2)
     else if constexpr(!isFloat1 && isFloat2)
         return MatmulScalar<TMat1, TMat2>(mat1, mat2);
 
-    else if constexpr(ConceptConstexprMatrix<TMat1> && ConceptConstexprMatrix<TMat2>)
-    {
-        static_assert(mat1.GetColumns() == mat2.GetRows());
-        return MatmulStatic<TMat1, TMat2>(mat1, mat2);
-    }
-    else
-    {
-        assert(mat1.GetColumns() == mat2.GetRows() && "Incompatible dynamic matrix sizes!");
-        return MatmulDynamic(mat1, mat2);
-    }
+    else if constexpr(ConceptMatrix<TMat1> && ConceptMatrix<TMat2>)
+        return MatmulMatrix(mat1, mat2);
 }
 
 // TODO: make a selector for proper algorithms
