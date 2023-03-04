@@ -49,7 +49,7 @@ template <typename T>
 constexpr Matrix3<T> Rotate(const Vector3<T>& vec, const T angle)
 {
     assert(Abs(Norm(vec) - 1.) < 1e-10); // vec should have length 1
-    constexpr Identity<T, 3> identity{};
+    constexpr Identity3<T> identity{};
     const Bracket3<T> b{vec};
     const Matrix3<T> bSquared = Matmul(b, b);
     const Matrix3<T> tmp1 = Matmul(std::sin(angle), b);
@@ -206,7 +206,7 @@ public:
     constexpr Matrix3<T> ToMatrix() const { return mMatrix; }
 
 private:
-    Matrix3<T> mMatrix{Identity3<T>{}};
+    Matrix3<T> mMatrix = ToFull(Identity3<T>{});
 };
 
 template <typename T>

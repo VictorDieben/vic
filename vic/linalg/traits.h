@@ -60,7 +60,7 @@ concept ConceptMatrix = requires(T mat)
     T::Distribution;
     mat.GetRows();
     mat.GetColumns();
-    mat.Get(std::size_t(0), std::size_t(0));
+    mat.Get(Row(0), Col(0));
 };
 
 template <typename T>

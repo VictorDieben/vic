@@ -35,12 +35,18 @@ struct MatrixConst : public MatrixBaseSelector<T, TShape>
     { }
     constexpr T Get(const Row i, const Col j) const
     {
-        assert(((i < GetRows()) && (j < GetColumns())));
+        assert(((i < this->GetRows()) && (j < this->GetColumns())));
         return mData.at(RowMayorRowColToIndex<TShape::cols>(i, j));
+    }
+    constexpr T Get(const Row i) const
+    {
+        assert(i < this->GetRows());
+        static_assert(this->GetColumns() == 1);
+        return mData.at(RowMayorRowColToIndex<TShape::cols>(i, 0));
     }
     constexpr T& At(const Row i, const Col j)
     {
-        assert(((i < GetRows()) && (j < GetColumns())));
+        assert(((i < this->GetRows()) && (j < this->GetColumns())));
         return mData[RowMayorRowColToIndex<TShape::cols>(i, j)];
     }
 
@@ -167,6 +173,19 @@ template <typename T>
 using Vector5 = VectorN<T, 5>;
 template <typename T>
 using Vector6 = VectorN<T, 6>;
+
+template <typename TMat>
+requires ConceptMatrix<TMat>
+constexpr auto ToFull(const TMat& mat)
+{
+    Matrix<typename TMat::DataType, typename TMat::ShapeType> res{mat.GetRows(), mat.GetColumns()};
+
+    for(Row i = 0; i < mat.GetRows(); ++i)
+        for(Col j = 0; j < mat.GetColumns(); ++j)
+            res.At(i, j) = mat.Get(i, j);
+
+    return res;
+}
 
 } // namespace linalg
 } // namespace vic

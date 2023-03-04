@@ -47,30 +47,30 @@ requires ConceptMatrix<TMatrix>
 constexpr auto Transpose(const TMatrix& matrix)
 {
     using ResultDataType = typename TMatrix::DataType;
-    using ResultShape = TransposeResultShape<TMatrix::ShapeType>;
+    using ResultShape = TransposeResultShape<typename TMatrix::ShapeType>;
     constexpr EDistribution ResultDist = TransposeDistribution(TMatrix::Distribution);
 
     if constexpr(ConceptIdentity<TMatrix>)
-        return Identity<ResultDataType, ResultShape>{matrix.GetCols(), matrix.GetRows()};
+        return Identity<ResultDataType, ResultShape>{matrix.GetColumns(), matrix.GetRows()};
 
     else if constexpr(ConceptDiagonal<TMatrix>)
     {
         // constexpr-ness of rows and columns needs to be swapped:
-        Diagonal<ResultDataType, ResultShape> result{matrix.GetCols(), matrix.GetRows()};
-        for(MatrixSize i = 0; i < Min(matrix.GetRows(), matrix.GetCols()); ++i)
-            result.At(i, i) = matrix.At(i, i);
+        Diagonal<ResultDataType, ResultShape> result{matrix.GetColumns(), matrix.GetRows()};
+        for(MatrixSize i = 0; i < Min(matrix.GetRows(), matrix.GetColumns()); ++i)
+            result.At(i, i) = matrix.Get(i, i);
         return matrix;
     }
     else if constexpr(ConceptSparse<TMatrix>)
     {
-        Sparse<ResultDataType, ResultShape> result{matrix.GetCols(), matrix.GetRows()};
+        Sparse<ResultDataType, ResultShape> result{matrix.GetColumns(), matrix.GetRows()};
         for(const auto& [key, value] : matrix)
             result.At(key.second, key.first) = value;
         return result;
     }
     else
     {
-        Matrix<ResultDataType, ResultShape> result{matrix.GetCols(), matrix.GetRows()};
+        Matrix<ResultDataType, ResultShape> result{matrix.GetColumns(), matrix.GetRows()};
         for(Row i = 0; i < matrix.GetRows(); ++i)
             for(Col j = 0; j < matrix.GetColumns(); ++j)
                 result.At(j, i) = matrix.At(i, j);

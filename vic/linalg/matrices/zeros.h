@@ -27,7 +27,7 @@ struct ZerosImpl : public MatrixBaseSelector<T, TShape>
 
     constexpr T Get(const Row i, const Col j) const
     {
-        assert(i < GetRows() && j < GetColumns());
+        assert(i < this->GetRows() && j < this->GetColumns());
         return T{0};
     }
 };

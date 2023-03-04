@@ -128,5 +128,13 @@ TEST(Matrices, InitSparse)
     VerifyMatrix(md);
 }
 
+TEST(Matrices, InitBracket)
+{
+    Vector3<double> vec{};
+    Bracket3<double> bracket{vec};
+    VerifyMatrix(bracket);
+    EXPECT_TRUE(ConceptConstexprMatrix<decltype(bracket)>);
+}
+
 } // namespace linalg
 } // namespace vic

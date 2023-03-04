@@ -16,6 +16,22 @@ namespace linalg
 namespace detail
 {
 
+template <typename TShape>
+constexpr void VerifyShape(const Row rows, const Col cols) noexcept
+{
+    // todo: throwing in a noexcept function should still be possible in a constexpr function.
+    // this way, we can exit if an error is detected
+
+    //#ifdef _DEBUG
+    //    if constexpr(TShape::IsRowConst())
+    //        if constexpr(TShape::rows != rows)
+    //            throw std::logic_error("invalid shape");
+    //    if constexpr(TShape::IsColConst())
+    //        if constexpr(TShape::cols != cols)
+    //            throw std::logic_error("invalid shape");
+    //#endif
+}
+
 template <typename T, typename TShape>
 struct MatrixBaseConst
 {
@@ -23,7 +39,10 @@ struct MatrixBaseConst
     using ShapeType = TShape;
     static_assert(TShape::IsRowConst() && TShape::IsColConst());
     constexpr MatrixBaseConst() = default;
-    constexpr MatrixBaseConst(const Row rows, const Col cols) { assert(TShape::rows == rows && TShape::cols == cols); }
+    constexpr MatrixBaseConst(const Row rows, const Col cols)
+    {
+        VerifyShape<TShape>(rows, cols); //
+    }
 
     constexpr static Row GetRows() { return TShape::rows; }
     constexpr static Col GetColumns() { return TShape::cols; }
@@ -38,7 +57,7 @@ struct MatrixBaseRowConst
     constexpr MatrixBaseRowConst(const Row rows, const Col cols)
         : mColumns(cols)
     {
-        assert(TShape::cols == cols);
+        VerifyShape<TShape>(rows, cols); //
     }
 
     constexpr static Row GetRows() { return TShape::rows; }
@@ -57,7 +76,7 @@ struct MatrixBaseColConst
     constexpr MatrixBaseColConst(const Row rows, const Col cols)
         : mRows(rows)
     {
-        assert(TShape::rows == rows);
+        VerifyShape<TShape>(rows, cols); //
     }
 
     Row GetRows() const { return mRows; }

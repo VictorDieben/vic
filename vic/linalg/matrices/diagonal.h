@@ -35,12 +35,12 @@ struct DiagonalConst : public MatrixBaseSelector<T, TShape>
     { }
     constexpr T Get(const Row i, const Col j) const
     {
-        assert(((i < GetRows()) && (j < GetColumns())));
+        assert(((i < this->GetRows()) && (j < this->GetColumns())));
         return i == j ? mData.at(i) : T{0};
     }
     constexpr T& At(const Row i, const Col j)
     {
-        assert(((i < GetRows()) && (j < GetColumns())));
+        assert(((i < this->GetRows()) && (j < this->GetColumns())));
         assert(i == j); // only diagonal can be set
         return mData[i];
     }
@@ -63,12 +63,12 @@ struct DiagonalRowConst : public MatrixBaseSelector<T, TShape>
     }
     constexpr T Get(const Row i, const Col j) const
     {
-        assert(((i < GetRows()) && (j < GetColumns())));
+        assert(((i < this->GetRows()) && (j < this->GetColumns())));
         return i == j ? mData.at(i) : T{0};
     }
     constexpr T& At(const Row i, const Col j)
     {
-        assert(((i < GetRows()) && (j < GetColumns())));
+        assert(((i < this->GetRows()) && (j < this->GetColumns())));
         assert(i == j); // only diagonal can be set
         return mData[i];
     }
@@ -91,12 +91,12 @@ struct DiagonalColConst : public MatrixBaseSelector<T, TShape>
     }
     constexpr T Get(const Row i, const Col j) const
     {
-        assert(((i < GetRows()) && (j < GetColumns())));
+        assert(((i < this->GetRows()) && (j < this->GetColumns())));
         return i == j ? mData.at(i) : T{0};
     }
     constexpr T& At(const Row i, const Col j)
     {
-        assert(((i < GetRows()) && (j < GetColumns())));
+        assert(((i < this->GetRows()) && (j < this->GetColumns())));
         assert(i == j); // only diagonal can be set
         return mData[i];
     }
@@ -118,12 +118,12 @@ struct DiagonalDynamic : public MatrixBaseSelector<T, TShape>
     }
     constexpr T Get(const Row i, const Col j) const
     {
-        assert(((i < GetRows()) && (j < GetColumns())));
+        assert(((i < this->GetRows()) && (j < this->GetColumns())));
         return i == j ? mData.at(i) : T{0};
     }
     constexpr T& At(const Row i, const Col j)
     {
-        assert(((i < GetRows()) && (j < GetColumns())));
+        assert(((i < this->GetRows()) && (j < this->GetColumns())));
         assert(i == j); // only diagonal can be set
         return mData[i];
     }

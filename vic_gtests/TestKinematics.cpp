@@ -20,88 +20,89 @@ namespace vic
 {
 namespace kinematics
 {
-//
-//TEST(TestKinematics, EulerAngles)
-//{
-//    EXPECT_TRUE(IsEqual(EulerAngles(0., 0., 0.), Identity3<double>{}));
-//
-//    /* Test if EulerAngles treats inputs as rotations about X, Y, Z respectively, in rad. */
-//
-//    // create results for 90 deg rotations over any one axis
-//    Matrix3<double> eulerRx90 = EulerAngles(pi / 2, 0., 0.);
-//    Matrix3<double> eulerRym90 = EulerAngles(0., -pi / 2, 0.);
-//    Matrix3<double> eulerRz90 = EulerAngles(0., 0., pi / 2);
-//    // manually defined answers
-//    Matrix3<double> matRx90({1., 0., 0., 0., 0., -1., 0., 1., 0.});
-//    Matrix3<double> matRym90({0., 0., -1., 0., 1., 0., 1., 0., 0.});
-//    Matrix3<double> matRz90({0., -1., 0., 1., 0., 0., 0., 0., 1.});
-//
-//    EXPECT_TRUE(IsEqual(eulerRx90, matRx90, 1e-10));
-//    EXPECT_TRUE(IsEqual(eulerRym90, matRym90, 1e-10));
-//    EXPECT_TRUE(IsEqual(eulerRz90, matRz90, 1e-10));
-//
-//    /* Test if EulerAngles implements rotations in INTRINSIC x-y-z sequence.
-//     * Intrinsic means that subsequent rotations are fedined in the new intermediade frames
-//     * As opposed to Extrinsic, where all rotations are defined in the original reference frame
-//     * INTRINSIC wrt consecutive-current: Rot(X0,theta)->Rot(Y1, phi)->Rot(Z2, gamma) = R(X,theta)R(Y,phi)R(Z,gamma)
-//     * EXTRINSIC wrt origional:           Rot(X0,theta)->Rot(Y0, phi)->Rot(Z0, gamma) = R(Z,gamma)R(Y,phi)R(X,theta)
-//     */
-//    Matrix3<double> euler = EulerAngles(0., pi / 4, pi / 2.);
-//    Matrix3<double> matIntrinsic({0., -0.70710678118, 0.70710678118, 1., 0., 0., 0., 0.70710678118, 0.70710678118});
-//    Matrix3<double> matExtrinsic({0., -1., 0., 0.70710678118, 0., 0.70710678118, -0.70710678118, 0., 0.70710678118});
-//    EXPECT_TRUE(IsEqual(euler, matIntrinsic, 1e-10));
-//    EXPECT_FALSE(IsEqual(euler, matExtrinsic, 1e-10));
-//
-//    std::default_random_engine g;
-//    std::uniform_real_distribution<double> dist(-100., 100.);
-//
-//    // Test constructing some random euler angle rotations
-//    for(std::size_t i = 0; i < 100; ++i)
-//    {
-//        Matrix3<double> euler = EulerAngles(dist(g), dist(g), dist(g));
-//        Rotation rot{euler};
-//        auto inv = rot.Inverse();
-//        EXPECT_TRUE(IsEqual((rot * inv).ToMatrix(), Identity<double, 3>{}));
-//    }
-//
-//    // TODO: for Sequencial 'sxyz', or: rol alpha around x -> pitch beta around (new) y -> yaw gamma around (newest) z,
-//    // we have to pre-multiply as implemented
-//    // post multiplication (previous version) would perform the rotations around the origional axis (like in a trackball),
-//    // which is not Sequential
-//}
-//
-//TEST(TestKinematics, rotate)
-//{
-//
-//    EXPECT_TRUE(IsEqual(Rotation<double>{}.ToMatrix(), Identity<double, 3>{}));
-//
-//    constexpr Matrix3<double> matrix{Identity3<double>{}};
-//    auto zRotation = Rotate(zAxis, pi / 2.);
-//
-//    // rotating a vector around the z axis for pi/2
-//    auto tmp = Matmul(zRotation, Vector3<double>({1, 0, 0}));
-//    EXPECT_TRUE(IsEqual(tmp, Vector3<double>({0, 1, 0})));
-//
-//    tmp = Matmul(zRotation, Vector3<double>({0, 1, 0}));
-//    EXPECT_TRUE(IsEqual(tmp, Vector3<double>({-1, 0, 0})));
-//
-//    tmp = Matmul(zRotation, Vector3<double>({-1, 0, 0}));
-//    EXPECT_TRUE(IsEqual(tmp, Vector3<double>({0, -1, 0})));
-//
-//    tmp = Matmul(zRotation, Vector3<double>({0, -1, 0}));
-//    EXPECT_TRUE(IsEqual(tmp, Vector3<double>({1, 0, 0})));
-//}
-//
-//TEST(TestKinematics, rotation)
-//{
-//    EXPECT_TRUE(IsEqual(Rotation<double>{}.ToMatrix(), Identity<double, 3>{}));
-//
-//    Rotation r1{Rotate(zAxis, pi / 2.)};
-//    Rotation r1Inverse = r1.Inverse();
-//    Rotation result = r1 * r1Inverse;
-//    EXPECT_TRUE(IsEqual(result.ToMatrix(), Identity<double, 3>{}));
-//}
-//
+
+TEST(TestKinematics, EulerAngles)
+{
+    EXPECT_TRUE(IsEqual(EulerAngles(0., 0., 0.), Identity3<double>{}));
+
+    /* Test if EulerAngles treats inputs as rotations about X, Y, Z respectively, in rad. */
+
+    // create results for 90 deg rotations over any one axis
+    Matrix3<double> eulerRx90 = EulerAngles(pi / 2, 0., 0.);
+    Matrix3<double> eulerRym90 = EulerAngles(0., -pi / 2, 0.);
+    Matrix3<double> eulerRz90 = EulerAngles(0., 0., pi / 2);
+    // manually defined answers
+    Matrix3<double> matRx90({1., 0., 0., 0., 0., -1., 0., 1., 0.});
+    Matrix3<double> matRym90({0., 0., -1., 0., 1., 0., 1., 0., 0.});
+    Matrix3<double> matRz90({0., -1., 0., 1., 0., 0., 0., 0., 1.});
+
+    EXPECT_TRUE(IsEqual(eulerRx90, matRx90, 1e-10));
+    EXPECT_TRUE(IsEqual(eulerRym90, matRym90, 1e-10));
+    EXPECT_TRUE(IsEqual(eulerRz90, matRz90, 1e-10));
+
+    /* Test if EulerAngles implements rotations in INTRINSIC x-y-z sequence.
+     * Intrinsic means that subsequent rotations are fedined in the new intermediade frames
+     * As opposed to Extrinsic, where all rotations are defined in the original reference frame
+     * INTRINSIC wrt consecutive-current: Rot(X0,theta)->Rot(Y1, phi)->Rot(Z2, gamma) = R(X,theta)R(Y,phi)R(Z,gamma)
+     * EXTRINSIC wrt origional:           Rot(X0,theta)->Rot(Y0, phi)->Rot(Z0, gamma) = R(Z,gamma)R(Y,phi)R(X,theta)
+     */
+    Matrix3<double> euler = EulerAngles(0., pi / 4, pi / 2.);
+    Matrix3<double> matIntrinsic({0., -0.70710678118, 0.70710678118, 1., 0., 0., 0., 0.70710678118, 0.70710678118});
+    Matrix3<double> matExtrinsic({0., -1., 0., 0.70710678118, 0., 0.70710678118, -0.70710678118, 0., 0.70710678118});
+    EXPECT_TRUE(IsEqual(euler, matIntrinsic, 1e-10));
+    EXPECT_FALSE(IsEqual(euler, matExtrinsic, 1e-10));
+
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> dist(-100., 100.);
+
+    // Test constructing some random euler angle rotations
+    for(std::size_t i = 0; i < 100; ++i)
+    {
+        Matrix3<double> euler = EulerAngles(dist(g), dist(g), dist(g));
+        Rotation rot{euler};
+        auto inv = rot.Inverse();
+        EXPECT_TRUE(IsEqual((rot * inv).ToMatrix(), Identity3<double>{}));
+    }
+
+    // TODO: for Sequencial 'sxyz', or: rol alpha around x -> pitch beta around (new) y -> yaw gamma around (newest) z,
+    // we have to pre-multiply as implemented
+    // post multiplication (previous version) would perform the rotations around the origional axis (like in a trackball),
+    // which is not Sequential
+}
+
+TEST(TestKinematics, rotate)
+{
+
+    EXPECT_TRUE(IsEqual(Rotation<double>{}.ToMatrix(), Identity3<double>{}));
+
+    constexpr auto matrix = ToFull(Identity3<double>{});
+    auto zRotation = Rotate(zAxis, pi / 2.);
+
+    // rotating a vector around the z axis for pi/2
+    auto tmp = Matmul(zRotation, Vector3<double>({1, 0, 0}));
+    EXPECT_TRUE(IsEqual(tmp, Vector3<double>({0, 1, 0})));
+
+    tmp = Matmul(zRotation, Vector3<double>({0, 1, 0}));
+    EXPECT_TRUE(IsEqual(tmp, Vector3<double>({-1, 0, 0})));
+
+    tmp = Matmul(zRotation, Vector3<double>({-1, 0, 0}));
+    EXPECT_TRUE(IsEqual(tmp, Vector3<double>({0, -1, 0})));
+
+    tmp = Matmul(zRotation, Vector3<double>({0, -1, 0}));
+    EXPECT_TRUE(IsEqual(tmp, Vector3<double>({1, 0, 0})));
+}
+
+TEST(TestKinematics, rotation)
+{
+    const auto rotationMat = Rotation<double>{}.ToMatrix();
+    EXPECT_TRUE(IsEqual(rotationMat, Identity3<double>{}));
+
+    Rotation r1{Rotate(zAxis, pi / 2.)};
+    Rotation r1Inverse = r1.Inverse();
+    Rotation result = r1 * r1Inverse;
+    EXPECT_TRUE(IsEqual(result.ToMatrix(), Identity3<double>{}));
+}
+
 //TEST(TestKinematics, translation)
 //{
 //    EXPECT_TRUE(IsEqual(Translation<double>{}.ToMatrix(), Zeros<double, 3, 1>{}));

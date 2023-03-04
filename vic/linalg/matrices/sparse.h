@@ -31,7 +31,7 @@ public:
 
     T Get(const Row i, const Col j) const
     {
-        assert(((i < GetRows()) && (j < GetColumns())));
+        assert(((i < this->GetRows()) && (j < this->GetColumns())));
 
         const auto it = mData.find(KeyType{i, j});
         if(it == mData.end())
@@ -41,7 +41,7 @@ public:
 
     constexpr T& At(const Row i, const Col j)
     {
-        assert(((i < GetRows()) && (j < GetColumns())));
+        assert(((i < this->GetRows()) && (j < this->GetColumns())));
         return mData[KeyType{i, j}]; // NOTE: creates a new entry if it didn't exist
     }
 

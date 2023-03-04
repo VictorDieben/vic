@@ -18,19 +18,18 @@ namespace linalg
 //// |x1|   | 0  -x3  x2|
 //// |x2| = | x3  0  -x1|
 //// |x3|   |-x2  x1  0 |
-template <typename TVec>
-requires ConceptVector<TVec>
+template <typename T>
 class Bracket3
 {
 public:
-    using DataType = TVec::DataType;
+    using DataType = T;
     using ShapeType = Shape<3, 3>;
 
     constexpr Bracket3() = default;
-    constexpr Bracket3(const TVec& vec)
-        : mVector(vec)
+    constexpr Bracket3(const Vector3<T>& vec)
     {
         assert(vec.GetRows() == 3);
+        mData = {vec.Get(0, 0), vec.Get(1, 0), vec.Get(2, 0)};
     }
 
     constexpr static Row GetRows() { return ShapeType::rows; }
@@ -39,7 +38,7 @@ public:
     constexpr static auto Ordering = EOrdering::Any;
     constexpr static auto Distribution = EDistribution::Full;
 
-    constexpr DataType Get(const std::size_t i, const std::size_t j)
+    constexpr DataType Get(const Row i, const Col j) const
     {
         assert(i < GetRows() && j < GetColumns());
         if(i == j)
@@ -47,24 +46,24 @@ public:
 
         // No need to manually optimize, the compiler is better at it
         if(i == 1 && j == 0)
-            return mVector.mData.at(2);
+            return mData.at(2);
         if(i == 2 && j == 0)
-            return -mVector.mData.at(1);
+            return -mData.at(1);
         if(i == 2 && j == 1)
-            return mVector.mData.at(0);
+            return mData.at(0);
 
         if(i == 0 && j == 1)
-            return -mVector.mData.at(2);
+            return -mData.at(2);
         if(i == 0 && j == 2)
-            return mVector.mData.at(1);
+            return mData.at(1);
         if(i == 1 && j == 2)
-            return -mVector.mData.at(0);
+            return -mData.at(0);
 
         assert(false); // should be unreachable
         return DataType{0};
     }
 
-    TVec mVector{};
+    std::array<T, 3> mData{};
 };
 
 // trace is sum of all diagonal elements
@@ -131,18 +130,23 @@ constexpr auto Cross(const TVec1& vec1, const TVec2& vec2)
                             (ax * by) - (ay * bx)});
 }
 
-//// dot product between two vectors
-//template <typename TMat1, typename TMat2> // requires ConceptVector<TMat1> && ConceptVector<TMat2> && is_same_shape<TMat1, TMat2>::value //
-//constexpr auto Dot(const TMat1& mat1, const TMat2& mat2)
-//{
-//    static_assert(TMat1::GetColumns() == 1 && TMat2::GetColumns() == 1 && TMat1::GetRows() == TMat2::GetRows());
-//    using TRet = decltype((typename TMat1::DataType{}) * (typename TMat2::DataType{}));
-//    TRet val{0};
-//    for(std::size_t i = 0; i < TMat1::GetRows(); ++i)
-//        val += (mat1.Get(i, 0) * mat2.Get(i, 0));
-//    return val;
-//}
-//
+template <typename TShape1, typename TShape2>
+using DotResultShape = Shape<Min(TShape1::rows, TShape2::rows), Min(TShape1::cols, TShape2::cols)>;
+
+// dot product between two vectors
+template <typename TMat1, typename TMat2>
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+constexpr auto Dot(const TMat1& mat1, const TMat2& mat2)
+{
+    assert(mat1.GetRows() == mat2.GetRows() && mat1.GetColumns() == mat2.GetColumns());
+    using TRet = decltype((typename TMat1::DataType{}) * (typename TMat2::DataType{}));
+    TRet val{0};
+    for(Row i = 0; i < mat1.GetRows(); ++i)
+        for(Col j = 0; j < mat1.GetColumns(); ++j)
+            val += (mat1.Get(i, j) * mat2.Get(i, j));
+    return val;
+}
+
 //// todo: TMatTarget needs to be assignable
 //template <typename TMatTarget, typename TMatSource>
 //void Assign(TMatTarget& target, //
