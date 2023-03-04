@@ -16,14 +16,15 @@ namespace detail
 {
 
 template <typename T, typename TShape>
-class MatrixSparse : public MatrixBaseSelector<T, TShape>
+class MatrixSparse : public MatrixBaseSelector<TShape>
 {
 public:
+    using DataType = T;
     constexpr static auto Ordering = EOrdering::RowMayor;
     constexpr static auto Distribution = EDistribution::Sparse;
 
     using KeyType = std::pair<Row, Col>;
-    using MatrixBaseType = MatrixBaseSelector<T, TShape>;
+    using MatrixBaseType = MatrixBaseSelector<TShape>;
 
     MatrixSparse(const Row rows, const Col cols)
         : MatrixBaseType(rows, cols)
@@ -65,8 +66,7 @@ private:
 } // namespace detail
 
 template <typename T, typename TShape>
-using Sparse = TypeSelector<T, //
-                            TShape,
+using Sparse = TypeSelector<TShape, //
                             detail::MatrixSparse<T, TShape>,
                             detail::MatrixSparse<T, TShape>,
                             detail::MatrixSparse<T, TShape>,

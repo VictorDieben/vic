@@ -16,8 +16,9 @@ namespace detail
 {
 
 template <typename T, typename TShape>
-struct DiagonalConst : public MatrixBaseSelector<T, TShape>
+struct DiagonalConst : public MatrixBaseSelector<TShape>
 {
+    using DataType = T;
     constexpr static auto Ordering = EOrdering::Any;
     constexpr static auto Distribution = EDistribution::Diagonal;
 
@@ -25,12 +26,12 @@ struct DiagonalConst : public MatrixBaseSelector<T, TShape>
 
     DiagonalConst() = default;
     constexpr DiagonalConst(const Row rows, const Col cols)
-        : MatrixBaseSelector<T, TShape>(TShape::rows, TShape::cols)
+        : MatrixBaseSelector<TShape>(TShape::rows, TShape::cols)
     {
         assert(TShape::rows == rows && TShape::cols == cols);
     }
     constexpr DiagonalConst(const std::array<T, DiagSize>& data)
-        : MatrixBaseSelector<T, TShape>(TShape::rows, TShape::cols)
+        : MatrixBaseSelector<TShape>(TShape::rows, TShape::cols)
         , mData(data)
     { }
     constexpr T Get(const Row i, const Col j) const
@@ -50,13 +51,14 @@ private:
 };
 
 template <typename T, typename TShape>
-struct DiagonalRowConst : public MatrixBaseSelector<T, TShape>
+struct DiagonalRowConst : public MatrixBaseSelector<TShape>
 {
+    using DataType = T;
     constexpr static auto Ordering = EOrdering::Any;
     constexpr static auto Distribution = EDistribution::Diagonal;
 
     explicit DiagonalRowConst(const Row rows, const Col cols)
-        : MatrixBaseSelector<T, TShape>(rows, cols)
+        : MatrixBaseSelector<TShape>(rows, cols)
     {
         assert(TShape::rows == rows);
         mData.resize(Min(TShape::rows, cols));
@@ -78,13 +80,14 @@ private:
 };
 
 template <typename T, typename TShape>
-struct DiagonalColConst : public MatrixBaseSelector<T, TShape>
+struct DiagonalColConst : public MatrixBaseSelector<TShape>
 {
+    using DataType = T;
     constexpr static auto Ordering = EOrdering::Any;
     constexpr static auto Distribution = EDistribution::Diagonal;
 
     explicit DiagonalColConst(const Row rows, const Col cols)
-        : MatrixBaseSelector<T, TShape>(rows, cols)
+        : MatrixBaseSelector<TShape>(rows, cols)
     {
         assert(TShape::cols == cols);
         mData.resize(Min(TShape::cols, rows));
@@ -106,13 +109,14 @@ private:
 };
 
 template <typename T, typename TShape>
-struct DiagonalDynamic : public MatrixBaseSelector<T, TShape>
+struct DiagonalDynamic : public MatrixBaseSelector<TShape>
 {
+    using DataType = T;
     constexpr static auto Ordering = EOrdering::Any;
     constexpr static auto Distribution = EDistribution::Diagonal;
 
     explicit DiagonalDynamic(const Row rows, const Col cols)
-        : MatrixBaseSelector<T, TShape>(rows, cols)
+        : MatrixBaseSelector<TShape>(rows, cols)
     {
         mData.resize(Min(rows, cols));
     }
@@ -135,8 +139,7 @@ private:
 } // namespace detail
 
 template <typename T, typename TShape>
-using Diagonal = TypeSelector<T, //
-                              TShape,
+using Diagonal = TypeSelector<TShape, //
                               detail::DiagonalConst<T, TShape>,
                               detail::DiagonalRowConst<T, TShape>,
                               detail::DiagonalColConst<T, TShape>,

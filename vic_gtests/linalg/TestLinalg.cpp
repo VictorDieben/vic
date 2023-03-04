@@ -17,7 +17,11 @@ namespace linalg
 {
 
 template <typename T, typename TShape>
-using TestTypeSelector = TypeSelector<T, TShape, int, uint32_t, float, double>;
+using TestTypeSelector = TypeSelector<TShape, //
+                                      int,
+                                      uint32_t,
+                                      float,
+                                      double>;
 
 TEST(TestLinalg, Definitions)
 {

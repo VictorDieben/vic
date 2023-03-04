@@ -11,8 +11,9 @@ namespace detail
 {
 
 template <typename T, typename TShape>
-struct IdentityImpl : public MatrixBaseSelector<T, TShape>
+struct IdentityImpl : public MatrixBaseSelector<TShape>
 {
+    using DataType = T;
     constexpr static auto Ordering = EOrdering::Any;
     constexpr static auto Distribution = EDistribution::Diagonal;
 
@@ -20,7 +21,7 @@ struct IdentityImpl : public MatrixBaseSelector<T, TShape>
 
     constexpr IdentityImpl() = default;
     constexpr IdentityImpl(const Row rows, const Col cols)
-        : MatrixBaseSelector<T, TShape>(rows, cols)
+        : MatrixBaseSelector<TShape>(rows, cols)
     { }
 
     constexpr T Get(const Row i, const Col j) const

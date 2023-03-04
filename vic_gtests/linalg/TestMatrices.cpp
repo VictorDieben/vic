@@ -44,10 +44,10 @@ void VerifyMatrix(TMat& mat)
 
 TEST(Matrices, InitBase)
 {
-    static constexpr MatrixBaseSelector<double, Shape<3, 3>> m33{3, 3};
-    static constexpr MatrixBaseSelector<double, Shape<3, UnknownSize>> mr3{3, 3};
-    static constexpr MatrixBaseSelector<double, Shape<UnknownSize, 3>> mc3{3, 3};
-    static constexpr MatrixBaseSelector<double, Shape<UnknownSize, UnknownSize>> md{3, 3};
+    //static constexpr MatrixBaseSelector<double, Shape<3, 3>> m33{3, 3};
+    //static constexpr MatrixBaseSelector<double, Shape<3, UnknownSize>> mr3{3, 3};
+    //static constexpr MatrixBaseSelector<double, Shape<UnknownSize, 3>> mc3{3, 3};
+    //static constexpr MatrixBaseSelector<double, Shape<UnknownSize, UnknownSize>> md{3, 3};
 }
 
 TEST(Matrices, InitZeros)

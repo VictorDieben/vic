@@ -67,7 +67,7 @@ using ColConstShape = Shape<UnknownSize, cols>;
 
 using UnknownShape = Shape<UnknownSize, UnknownSize>;
 
-template <typename T, typename TShape, typename TConst, typename TRowConst, typename TColConst, typename TDynamic>
+template <typename TShape, typename TConst, typename TRowConst, typename TColConst, typename TDynamic>
 using TypeSelector = std::conditional_t<TShape::IsRowConst() && TShape::IsColConst(), //
                                         TConst, //
                                         std::conditional_t<TShape::IsRowConst(), //

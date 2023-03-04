@@ -32,10 +32,9 @@ constexpr void VerifyShape(const Row rows, const Col cols) noexcept
     //#endif
 }
 
-template <typename T, typename TShape>
+template <typename TShape>
 struct MatrixBaseConst
 {
-    using DataType = T;
     using ShapeType = TShape;
     static_assert(TShape::IsRowConst() && TShape::IsColConst());
     constexpr MatrixBaseConst() = default;
@@ -48,10 +47,9 @@ struct MatrixBaseConst
     constexpr static Col GetColumns() { return TShape::cols; }
 };
 
-template <typename T, typename TShape>
+template <typename TShape>
 struct MatrixBaseRowConst
 {
-    using DataType = T;
     using ShapeType = TShape;
     static_assert(TShape::IsRowConst() && !TShape::IsColConst());
     constexpr MatrixBaseRowConst(const Row rows, const Col cols)
@@ -67,10 +65,9 @@ protected:
     const Col mColumns{0};
 };
 
-template <typename T, typename TShape>
+template <typename TShape>
 struct MatrixBaseColConst
 {
-    using DataType = T;
     using ShapeType = TShape;
     static_assert(!TShape::IsRowConst() && TShape::IsColConst());
     constexpr MatrixBaseColConst(const Row rows, const Col cols)
@@ -86,10 +83,9 @@ protected:
     const Row mRows{0};
 };
 
-template <typename T, typename TShape>
+template <typename TShape>
 struct MatrixBaseDynamic
 {
-    using DataType = T;
     using ShapeType = TShape;
     static_assert(!TShape::IsRowConst() && !TShape::IsColConst());
     constexpr MatrixBaseDynamic(const Row rows, const Col cols)
@@ -107,13 +103,12 @@ protected:
 
 } // namespace detail
 
-template <typename T, typename TShape>
-using MatrixBaseSelector = TypeSelector<T, //
-                                        TShape,
-                                        detail::MatrixBaseConst<T, TShape>,
-                                        detail::MatrixBaseRowConst<T, TShape>,
-                                        detail::MatrixBaseColConst<T, TShape>,
-                                        detail::MatrixBaseDynamic<T, TShape>>;
+template <typename TShape>
+using MatrixBaseSelector = TypeSelector<TShape, //
+                                        detail::MatrixBaseConst<TShape>,
+                                        detail::MatrixBaseRowConst<TShape>,
+                                        detail::MatrixBaseColConst<TShape>,
+                                        detail::MatrixBaseDynamic<TShape>>;
 
 } // namespace linalg
 } // namespace vic

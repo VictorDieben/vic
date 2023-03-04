@@ -13,8 +13,9 @@ namespace detail
 {
 
 template <typename T, typename TShape>
-struct ZerosImpl : public MatrixBaseSelector<T, TShape>
+struct ZerosImpl : public MatrixBaseSelector<TShape>
 {
+    using DataType = T;
     constexpr static auto Ordering = EOrdering::Any;
     constexpr static auto Distribution = EDistribution::Unknown;
 
@@ -22,7 +23,7 @@ struct ZerosImpl : public MatrixBaseSelector<T, TShape>
 
     constexpr ZerosImpl() = default;
     constexpr ZerosImpl(const Row rows, const Col cols)
-        : MatrixBaseSelector<T, TShape>(rows, cols)
+        : MatrixBaseSelector<TShape>(rows, cols)
     { }
 
     constexpr T Get(const Row i, const Col j) const

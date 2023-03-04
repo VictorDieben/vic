@@ -19,16 +19,17 @@ namespace detail
 {
 
 template <typename T, typename TShape>
-struct MatrixConst : public MatrixBaseSelector<T, TShape>
+struct MatrixConst : public MatrixBaseSelector<TShape>
 {
-    using MatrixBase = MatrixBaseSelector<T, TShape>;
+    using DataType = T;
+    using MatrixBase = MatrixBaseSelector<TShape>;
     constexpr static auto Ordering = EOrdering::RowMayor;
     constexpr static auto Distribution = EDistribution::Full;
     constexpr static MatrixSize ArraySize = MatrixBase::GetRows() * MatrixBase::GetColumns();
 
     MatrixConst() = default;
     constexpr MatrixConst(const Row rows, const Col cols)
-        : MatrixBaseSelector<T, TShape>(rows, cols)
+        : MatrixBaseSelector<TShape>(rows, cols)
     { }
     constexpr MatrixConst(const std::array<T, ArraySize>& data)
         : mData(data)
@@ -55,13 +56,14 @@ private:
 };
 
 template <typename T, typename TShape>
-struct MatrixRowConst : public MatrixBaseSelector<T, TShape>
+struct MatrixRowConst : public MatrixBaseSelector<TShape>
 {
-    using MatrixBase = MatrixBaseSelector<T, TShape>;
+    using DataType = T;
+    using MatrixBase = MatrixBaseSelector<TShape>;
     constexpr static auto Ordering = EOrdering::ColumnMayor;
     constexpr static auto Distribution = EDistribution::Full;
     MatrixRowConst(const Row rows, const Col cols)
-        : MatrixBaseSelector<T, TShape>(rows, cols)
+        : MatrixBaseSelector<TShape>(rows, cols)
     {
         assert(TShape::rows == rows);
         mData.resize(this->GetRows() * this->GetColumns());
@@ -82,12 +84,13 @@ private:
 };
 
 template <typename T, typename TShape>
-struct MatrixColConst : public MatrixBaseSelector<T, TShape>
+struct MatrixColConst : public MatrixBaseSelector<TShape>
 {
+    using DataType = T;
     constexpr static auto Ordering = EOrdering::RowMayor;
     constexpr static auto Distribution = EDistribution::Full;
     MatrixColConst(const Row rows, const Col cols)
-        : MatrixBaseSelector<T, TShape>(rows, cols)
+        : MatrixBaseSelector<TShape>(rows, cols)
     {
         assert(TShape::cols == cols);
         mData.resize(this->GetRows() * this->GetColumns());
@@ -108,12 +111,13 @@ private:
 };
 
 template <typename T, typename TShape>
-struct MatrixDynamic : public MatrixBaseSelector<T, TShape>
+struct MatrixDynamic : public MatrixBaseSelector<TShape>
 {
+    using DataType = T;
     constexpr static auto Ordering = EOrdering::RowMayor;
     constexpr static auto Distribution = EDistribution::Full;
     MatrixDynamic(const Row rows, const Col cols)
-        : MatrixBaseSelector<T, TShape>(rows, cols)
+        : MatrixBaseSelector<TShape>(rows, cols)
     {
         mData.resize(this->GetRows() * this->GetColumns());
     }
@@ -135,8 +139,7 @@ private:
 } // namespace detail
 
 template <typename T, typename TShape>
-using Matrix = TypeSelector<T, //
-                            TShape,
+using Matrix = TypeSelector<TShape, //
                             detail::MatrixConst<T, TShape>,
                             detail::MatrixRowConst<T, TShape>,
                             detail::MatrixColConst<T, TShape>,
