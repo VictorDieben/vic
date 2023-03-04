@@ -2,10 +2,7 @@
 
 #include "vic/kinematics/kinematics.h"
 
-#include "vic/linalg/add.h"
-#include "vic/linalg/matmul.h"
-#include "vic/linalg/tools.h"
-#include "vic/linalg/transpose.h"
+#include "vic/linalg/linalg.h"
 #include "vic/utils.h"
 
 #include <cassert>
@@ -15,40 +12,41 @@ namespace vic
 namespace kinematics
 {
 
-template <typename T, std::size_t rows, std::size_t cols>
-constexpr T Sum(const Matrix<T, rows, cols>& mat)
+template <typename TMatrix>
+constexpr auto Sum(const TMatrix& mat)
 {
-    T sum = 0;
-    for(std::size_t i = 0; i < rows; ++i)
-        for(std::size_t j = 0; j < cols; ++j)
+    typename TMatrix::DataType sum = 0;
+    for(std::size_t i = 0; i < mat.GetRows(); ++i)
+        for(std::size_t j = 0; j < mat.GetColumns(); ++j)
             sum += mat.Get(i, j);
     return sum;
 }
 
-template <typename T, std::size_t rows>
-constexpr Matrix<T, rows, 1> Dot(const Matrix<T, rows, 1>& v1, const Matrix<T, rows, 1>& v2)
+template <typename TMat1, typename TMat2>
+constexpr auto Dot(const TMat1& v1, const TMat2& v2)
 {
-    Matrix<T, rows, 1> res;
-    for(std::size_t i = 0; i < rows; ++i)
+    assert(v1.GetRows() == v2.GetRows());
+    TMat1 res;
+    for(std::size_t i = 0; i < v1.GetRows(); ++i)
         res.At(i, 0) = v1.Get(i, 0) * v2.Get(i, 0);
     return res;
 }
 
-template <typename T, std::size_t rows>
-constexpr T Norm(const Matrix<T, rows, 1>& vec)
+template <typename TMatrix>
+constexpr auto Norm(const TMatrix& vec)
 {
     return std::sqrt(Sum(Dot(vec, vec)));
 }
 
-template <typename T, std::size_t rows>
-constexpr Matrix<T, rows, 1> Normalize(const Matrix<T, rows, 1>& vec)
+template <typename TMatrix>
+constexpr auto Normalize(const TMatrix& vec)
 {
     const auto norm = Norm(vec);
-    return Matmul(vec, T{1} / norm);
+    return Matmul(vec, 1. / norm);
 }
 
 template <typename T>
-constexpr Matrix<T, 3, 3> Rotate(const Vector3<T>& vec, const T angle)
+constexpr Matrix3<T> Rotate(const Vector3<T>& vec, const T angle)
 {
     assert(Abs(Norm(vec) - 1.) < 1e-10); // vec should have length 1
     constexpr Identity<T, 3> identity{};
@@ -60,13 +58,13 @@ constexpr Matrix<T, 3, 3> Rotate(const Vector3<T>& vec, const T angle)
 }
 
 template <typename T>
-constexpr Matrix<T, 3, 3> EulerAngles(const T alpha, const T beta, const T gamma)
+constexpr Matrix3<T> EulerAngles(const T alpha, const T beta, const T gamma)
 {
     return Matmul(Rotate(xAxis, alpha), Rotate(yAxis, beta), Rotate(zAxis, gamma)); // intrinsic x->y'->z''
 }
 
 template <typename T>
-constexpr Matrix<T, 3, 3> Quaternion(T w, T x, const T y, const T z)
+constexpr Matrix3<T> Quaternion(T w, T x, const T y, const T z)
 {
     Matrix<T, 3, 3> R;
     R.At(0, 0) = 2 * (w * w + x * x) - 1;
@@ -85,13 +83,13 @@ constexpr Matrix<T, 3, 3> Quaternion(T w, T x, const T y, const T z)
 }
 
 template <typename T>
-constexpr Matrix<T, 3, 3> Quaternion(std::vector<T> wxyz)
+constexpr Matrix3<T> Quaternion(std::vector<T> wxyz)
 {
     return Quaternion(wxyz[0], wxyz[1], wxyz[2], wxyz[3]);
 }
 
 template <typename T>
-constexpr std::vector<T> RotToQuaternion(Matrix<T, 3, 3> R)
+constexpr std::vector<T> RotToQuaternion(const Matrix3<T>& R)
 {
     std::vector<T> wxyz;
     auto trace = Trace(R);
@@ -143,9 +141,9 @@ constexpr std::vector<T> RotToQuaternion(Matrix<T, 3, 3> R)
  *    @return A valid rotation matrix
  */
 template <typename T>
-constexpr Matrix<T, 3, 3> Vec6ToRot(const Vector6<T>& Rep)
+constexpr Matrix3<T> Vec6ToRot(const Vector6<T>& Rep)
 {
-    Matrix<T, 3, 3> X; // [b1 | b2 | b3]
+    Matrix3<T> X; // [b1 | b2 | b3]
 
     Vector3<T> a1 = Extract<Vector3<T>, 0, 0>(Rep);
     Vector3<T> a2 = Extract<Vector3<T>, 3, 0>(Rep);
@@ -169,7 +167,7 @@ constexpr Matrix<T, 3, 3> Vec6ToRot(const Vector6<T>& Rep)
  *                Essentially, the last column is dropped.
  */
 template <typename T>
-constexpr Vector6<T> RotToVec6(Matrix<T, 3, 3>& X)
+constexpr Vector6<T> RotToVec6(const Matrix3<T>& X)
 {
     Vector6<T> Rep;
     //     [0 1 2
@@ -194,7 +192,7 @@ public:
     using DataType = T;
 
     constexpr Rotation() = default;
-    explicit constexpr Rotation(const Matrix<T, 3, 3>& rotation)
+    explicit constexpr Rotation(const Matrix3<T>& rotation)
         : mMatrix(rotation)
     { }
 
@@ -205,10 +203,10 @@ public:
         return Rotation(Matmul(r1.mMatrix, r2.mMatrix)); //
     }
 
-    constexpr Matrix<T, 3, 3> ToMatrix() const { return mMatrix; }
+    constexpr Matrix3<T> ToMatrix() const { return mMatrix; }
 
 private:
-    Matrix<T, 3, 3> mMatrix{Identity<T, 3>{}};
+    Matrix3<T> mMatrix{Identity3<T>{}};
 };
 
 template <typename T>

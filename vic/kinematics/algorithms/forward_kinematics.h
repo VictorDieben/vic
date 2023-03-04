@@ -81,7 +81,7 @@ std::vector<Transformation<T>> ForwardKinematics2(ForwardRobot<T>& robot, //
 TODO: migrate to linalg/tools.h ?and refactor to class? 
 */
 template <typename T>
-Matrix<T, 4, 4> Bracket6(const std::array<T, 6>& vec)
+Matrix4<T> Bracket6(const std::array<T, 6>& vec)
 {
     const Matrix<T, 4, 4> vec_tilde({0, -vec[2], vec[1], vec[3], vec[2], 0, -vec[0], vec[4], -vec[1], vec[0], 0, vec[5], 0, 0, 0, 0});
     return vec_tilde;
@@ -93,7 +93,7 @@ Matrix<T, 4, 4> Bracket6(const std::array<T, 6>& vec)
  * twist_transformed = Adjoint(H) * twist
  */
 template <typename T>
-Matrix<T, 6, 6> Adjoint(const Transformation<T>& transform)
+Matrix6<T> Adjoint(const Transformation<T>& transform)
 {
     const Matrix<T, 6, 6> adjoint; // assume initialised with zeros
     Rotation R = transform.GetRotation();

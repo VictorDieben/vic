@@ -1,11 +1,22 @@
 #pragma once
 
-//#include "vic/linalg/add.h"
-//#include "vic/linalg/inverse.h"
-#include "vic/linalg/matrices.h"
-#include "vic/linalg/matrices_dynamic.h"
-#include "vic/linalg/matrices_sparse.h"
-#include "vic/linalg/traits.h"
+#include "definitions.h"
+#include "index.h"
+#include "traits.h"
+//
+#include "matrices/diagonal.h"
+#include "matrices/identity.h"
+#include "matrices/matrix.h"
+#include "matrices/sparse.h"
+#include "matrices/zeros.h"
+//
+#include "algorithms/add.h"
+#include "algorithms/determinant.h"
+#include "algorithms/matmul.h"
+#include "algorithms/solve.h"
+#include "algorithms/transpose.h"
+//
+#include "tools.h"
 
 namespace vic
 {

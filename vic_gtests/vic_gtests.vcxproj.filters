@@ -29,6 +29,7 @@
     <ClCompile Include="TestImages.cpp" />
     <ClCompile Include="TestNetwork.cpp" />
     <ClCompile Include="TestMachineLearning.cpp" />
+    <ClCompile Include="linalg\TestMatrices.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

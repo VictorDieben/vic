@@ -23,7 +23,7 @@ requires ConceptSquareMatrix<TMatrix>
 constexpr auto PowerMethod(const TMatrix& matrix, const double eps = 1E-10)
 {
     using DataType = typename TMatrix::DataType;
-    constexpr std::size_t n = TMatrix::GetRows();
+    constexpr Row n = TMatrix::GetRows();
 
     // todo: good initial guess
     auto v = Vector<DataType, n>{1. / static_cast<double>(n)};

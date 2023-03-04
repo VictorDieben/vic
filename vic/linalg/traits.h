@@ -1,5 +1,6 @@
 #pragma once
 
+#include "definitions.h"
 #include <cstddef>
 #include <type_traits>
 
@@ -9,54 +10,6 @@ namespace vic
 {
 namespace linalg
 {
-
-// an enum that declares in what order the matrix elements are listed
-// todo: make diagonal ordering?
-enum class EOrdering
-{
-    Any, // ordering is not relevant
-    RowMayor,
-    ColumnMayor,
-    Custom,
-    Unknown
-};
-
-// gives a hint about the distribution of the elements in a matrix
-// NOTE: try to order these from strongest to weakest type
-enum class EDistribution
-{
-    Full,
-    Unknown,
-    Sparse,
-    UpperTriangular,
-    LowerTriangular,
-    Diagonal,
-    StrictUpperTriangular,
-    StrictLowerTriangular
-};
-
-enum class ESizeType
-{
-    Constant,
-    RowConstant,
-    ColConstant,
-    Dynamic
-};
-
-//template <ESizeType size, std::size_t rows, std::size_t cols>
-//struct Size
-//{
-//    static constexpr ESizeType SizeType = size;
-//    static constexpr std::size_t Rows = rows;
-//    static constexpr std::size_t Columns = cols;
-//};
-//template <std::size_t rows, std::size_t cols>
-//using ConstSize = Size<ESizeType::Constant, rows, cols>;
-//template <std::size_t rows>
-//using RowConstSize = Size<ESizeType::RowConstant, rows, 0u>;
-//template <std::size_t cols>
-//using ColConstSize = Size<ESizeType::ColConstant, 0u, cols>;
-//using DynamicSize = Size<ESizeType::Dynamic, 0u, 0u>;
 
 template <bool RowConst, bool ColConst>
 constexpr ESizeType ToSize()
@@ -102,7 +55,7 @@ concept ConceptMatrix = requires(T mat)
     //T{0u, 0u};
     // TODO: check that these statements have the correct return type
     typename T::DataType;
-    T::Size;
+    typename T::ShapeType;
     T::Ordering;
     T::Distribution;
     mat.GetRows();
@@ -111,7 +64,7 @@ concept ConceptMatrix = requires(T mat)
 };
 
 template <typename T>
-concept ConceptSparse = requires(T mat)
+concept ConceptSparse = ConceptMatrix<T> && requires(T mat)
 {
     typename T::KeyType;
     T::Distribution == EDistribution::Sparse;
@@ -132,12 +85,21 @@ template <typename T>
 concept ConceptConstexprMatrix = ConceptMatrix<T> && ConceptConstexprRows<T> && ConceptConstexprColumns<T>;
 
 template <typename T>
-concept ConceptIdentity = ConceptConstexprMatrix<T> && requires(T mat)
+concept ConceptIdentity = ConceptMatrix<T> && requires(T mat)
 {
-    T::Distribution == EDistribution::Diagonal;
-    T::GetRows() == T::GetColumns();
-    T::TempIsIdentity == true; // todo: remove this boolean
-    //std::same_as<T, Identity<typename T::DataType, T::GetRows()>>;
+    T::TempIsIdentity == true; // todo: remove this boolean, find better solution
+};
+
+template <typename T>
+concept ConceptZeros = ConceptMatrix<T> && requires(T mat)
+{
+    T::TempIsZeros == true; // todo: remove this boolean, find better solution
+};
+
+template <typename T>
+concept ConceptAssignable = ConceptMatrix<T> && requires(T mat)
+{
+    {mat.At(Row{}, Col{}) = 1.};
 };
 
 template <typename T>

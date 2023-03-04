@@ -30,25 +30,13 @@
     <ClInclude Include="linalg\linalg.h">
       <Filter>Header Files\linalg</Filter>
     </ClInclude>
-    <ClInclude Include="linalg\matmul.h">
-      <Filter>Header Files\linalg</Filter>
-    </ClInclude>
     <ClInclude Include="linalg\traits.h">
-      <Filter>Header Files\linalg</Filter>
-    </ClInclude>
-    <ClInclude Include="linalg\add.h">
       <Filter>Header Files\linalg</Filter>
     </ClInclude>
     <ClInclude Include="linprog\seidel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="network\udp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="linalg\transpose.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="linalg\determinant.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="kinematics\kinematics.h">
@@ -58,9 +46,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="linalg\algorithms\lu_decomposition.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="linalg\matrices.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="linalg\tools.h">
@@ -85,9 +70,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="memory\garbage_collector.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="linalg\matrices_dynamic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="graph\traits.h">
@@ -237,7 +219,46 @@
     <ClInclude Include="utils\unique.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="linalg\matrices_sparse.h">
+    <ClInclude Include="linalg\definitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\matrices\identity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\matrices\zeros.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\matrices\diagonal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\matrices\matrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\index.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\matrices\sparse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\matrices\base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\algorithms\add.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\algorithms\matmul.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\algorithms\solve.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\algorithms\inverse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\algorithms\determinant.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\algorithms\transpose.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

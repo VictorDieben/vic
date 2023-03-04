@@ -1,42 +1,31 @@
 #pragma once
 
-#include "linalg.h"
-#include "traits.h"
-#include "vic/linalg/add.h"
-#include "vic/linalg/matrices.h"
-#include "vic/linalg/matrices_dynamic.h"
+#include "vic/linalg/algorithms/inverse.h"
+#include "vic/linalg/linalg.h"
 #include "vic/utils.h"
+
 #include <algorithm>
 
 namespace vic
 {
 namespace linalg
 {
-// Solving a matrix equation means solving the equation A*x = b, without calculating A^-1.
+// Solving a system means solving the equation A*x = b, without calculating A^-1.
 // Generally, this means calculating a partial inverse (the inverse of the diagonal for instance)
 
-// todo: matrix view that returns the original matrix, except for the values on the diagonal.
-// Those are inverted (1/val)
-//template <typename TMat>
-//class JacobiPseudoInverseView
-//{
-//public:
-//    JacobiPseudoInverseView(const TMat& mat) { }
-//
-//private:
-//};
-
 // https://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/linAlg34.pdf
-template <typename TMatrix, typename TVector> // requires ConceptSquareMatrix<TMatrix>
-auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const double eps = 1E-10)
+
+template <typename TMatrix, typename TVector>
+requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
 {
-    const std::size_t n = matrix.GetRows();
-    const DiagonalDynamic<typename TMatrix::DataType> D{matrix};
+    const MatrixSize n = matrix.GetRows();
+    const auto D = ToDiagonal(matrix);
     const auto Dinv = InverseDiagonal(D);
 
     // const auto lPlusU = Add(matrix, Matmul(-1., D)); // (L+U) == matrix - diagonal
     auto lPlusU = matrix;
-    for(std::size_t i = 0; i < n; ++i)
+    for(MatrixSize i = 0; i < n; ++i)
         lPlusU.At(i, i) = 0.;
     if constexpr(ConceptSparse<decltype(lPlusU)>)
         lPlusU.Prune();
@@ -61,12 +50,12 @@ auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const doubl
         auto x_new = Matmul(Dinv, sum);
 
         double largestDiff = 0.;
-        for(std::size_t i = 0; i < n; ++i)
+        for(MatrixSize i = 0; i < n; ++i)
             largestDiff = Max(largestDiff, Abs(x.Get(i, 0) - x_new.Get(i, 0)));
         x = x_new;
 
         std::cout << "SolveJacobiMethod(): i = " << i << "; diff = " << largestDiff << std::endl;
-        if(largestDiff < 1.e-12)
+        if(largestDiff < eps)
         {
             std::cout << "SolveJacobiMethod(): i = " << i << "; Done!" << std::endl;
             break;

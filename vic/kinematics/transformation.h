@@ -4,9 +4,7 @@
 #include "vic/kinematics/rotation.h"
 #include "vic/kinematics/translation.h"
 
-#include "vic/linalg/matmul.h"
-#include "vic/linalg/tools.h"
-#include "vic/linalg/transpose.h"
+#include "vic/linalg/linalg.h"
 #include "vic/utils.h"
 
 namespace vic
@@ -27,14 +25,14 @@ public:
         Assign<0, 3>(mMatrix, translation.ToMatrix());
         // 3,3 already set to 1 by default constructor
     }
-    explicit Transformation(const Matrix<T, 3, 3>& rotation, //
+    explicit Transformation(const Matrix3<T>& rotation, //
                             const Vector3<T>& translation)
     {
         Assign<0, 0>(mMatrix, rotation);
         Assign<0, 3>(mMatrix, translation);
         // 3,3 already set to 1 by default constructor
     }
-    constexpr Transformation(const Matrix<T, 4, 4>& matrix)
+    constexpr Transformation(const Matrix4<T>& matrix)
         : mMatrix(matrix)
     { }
 
@@ -45,19 +43,19 @@ public:
     }
 
     // not const ref, other types of transformations might not have them in memory
-    Rotation<T> GetRotation() const { return Rotation{Extract<Matrix<T, 3, 3>, 0, 0>(mMatrix)}; }
+    Rotation<T> GetRotation() const { return Rotation{Extract<Matrix3<T>, 0, 0>(mMatrix)}; }
     Translation<T> GetTranslation() const { return Translation{Extract<Vector3<T>, 0, 3>(mMatrix)}; }
-    constexpr Matrix<T, 4, 4> ToMatrix() const { return mMatrix; }
+    constexpr Matrix4<T> ToMatrix() const { return mMatrix; }
 
     Transformation<T> Inverse() const
     {
-        const auto inv = Transpose(Extract<Matrix<T, 3, 3>, 0, 0>(mMatrix));
+        const auto inv = Transpose(Extract<Matrix3<T>, 0, 0>(mMatrix));
         const auto trans = Matmul(-1., inv, Extract<Vector3<T>, 0, 3>(mMatrix));
         return Transformation<T>{inv, trans};
     }
 
 private:
-    Matrix<T, 4, 4> mMatrix{Identity<T, 4>{}};
+    Matrix4<T> mMatrix{Identity4<T>{}};
 };
 
 } // namespace kinematics

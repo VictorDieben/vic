@@ -3,10 +3,7 @@
 #include "vic/geometry/geometry.h"
 #include "vic/utils.h"
 
-#include "vic/linalg/add.h"
-#include "vic/linalg/matrices.h"
-#include "vic/linalg/tools.h"
-#include "vic/linalg/transpose.h"
+#include "vic/linalg/linalg.h"
 
 #include <optional>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vic/linalg/matrices.h"
+#include "vic/linalg/matrices/matrix.h"
 
 namespace vic
 {

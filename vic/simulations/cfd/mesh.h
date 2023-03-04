@@ -2,7 +2,7 @@
 
 #include "vic/geometry/algorithms/algorithms.h"
 #include "vic/geometry/geometry.h"
-#include "vic/linalg/matrices.h"
+#include "vic/linalg/linalg.h"
 #include "vic/utils.h"
 
 // paper by Jos Stam: Real-Time fluid dynamics for Games:

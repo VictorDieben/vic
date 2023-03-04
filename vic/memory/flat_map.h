@@ -43,8 +43,15 @@ public:
         if(it != mData.end())
             return it->second;
         mData.push_back({key, mapped_type{}});
-        Sort();
-        return find(key)->second;
+        const auto n = mData.size();
+        // only sort if we need to
+        if(n > 1 && mData.at(n - 1).first < mData.at(n - 2).first)
+        {
+            Sort();
+            return find(key)->second;
+        }
+        else
+            return mData.back().second;
     }
 
     // Iterators
@@ -160,6 +167,8 @@ public:
 
         return true;
     }
+
+    auto Reserve(const std::size_t size) { mData.reserve(size); }
 
     // call sort after multiple insert<false>()
     void Sort()

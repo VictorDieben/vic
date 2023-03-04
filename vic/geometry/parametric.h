@@ -3,7 +3,7 @@
 #include <array>
 #include <cstddef>
 
-#include "vic/linalg/matrices.h"
+#include "vic/linalg/matrices/matrix.h"
 
 namespace vic
 {
@@ -15,7 +15,7 @@ template <typename T, std::size_t dims>
 struct BCurve
 {
 public:
-    using ControlPoint = linalg::Vector<T, dims>;
+    using ControlPoint = linalg::VectorN<T, dims>;
     std::array<ControlPoint, 4> mControlPoints{};
 };
 
@@ -24,7 +24,7 @@ template <typename T, std::size_t dims>
 struct BSurface
 {
 public:
-    using ControlPoint = linalg::Vector<T, dims>;
+    using ControlPoint = linalg::VectorN<T, dims>;
     std::array<ControlPoint, 4> mControlPoints{};
 };
 

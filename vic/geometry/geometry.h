@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vic/linalg/matrices.h"
+#include "vic/linalg/matrices/matrix.h"
 
 // This file defines shapes such as triangles, squares, circles, spheres, etc.
 namespace vic
@@ -11,10 +11,10 @@ namespace geom
 // TODO: use definitions from linalg.h?
 
 template <typename T, std::size_t dims>
-using Point = vic::linalg::Matrix<T, dims, 1>;
+using Point = vic::linalg::MatrixMxN<T, dims, 1>;
 
 template <typename T, std::size_t dims>
-using Direction = vic::linalg::Matrix<T, dims, 1>;
+using Direction = vic::linalg::MatrixMxN<T, dims, 1>;
 
 template <typename T, std::size_t dims>
 struct Line // pos + (dir * x)
