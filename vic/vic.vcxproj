@@ -198,6 +198,7 @@
     <ClInclude Include="linalg\matrices\identity.h" />
     <ClInclude Include="linalg\matrices\matrix.h" />
     <ClInclude Include="linalg\matrices\sparse.h" />
+    <ClInclude Include="linalg\matrices\stack.h" />
     <ClInclude Include="linalg\matrices\zeros.h" />
     <ClInclude Include="linalg\solve.h" />
     <ClInclude Include="machine_learning\back_propagation.h" />

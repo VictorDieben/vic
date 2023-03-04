@@ -136,5 +136,12 @@ TEST(Matrices, InitBracket)
     EXPECT_TRUE(ConceptConstexprMatrix<decltype(bracket)>);
 }
 
+TEST(Matrices, InitRowStack)
+{
+    constexpr Matrix3<double> mat1;
+    constexpr Matrix3<double> mat2;
+    RowStack<decltype(mat1), decltype(mat2)> rowStack{mat1, mat2};
+}
+
 } // namespace linalg
 } // namespace vic

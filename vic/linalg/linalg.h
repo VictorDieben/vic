@@ -8,6 +8,7 @@
 #include "matrices/identity.h"
 #include "matrices/matrix.h"
 #include "matrices/sparse.h"
+#include "matrices/stack.h"
 #include "matrices/zeros.h"
 //
 #include "algorithms/add.h"

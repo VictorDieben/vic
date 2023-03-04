@@ -261,6 +261,9 @@
     <ClInclude Include="linalg\algorithms\transpose.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="linalg\matrices\stack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">
