@@ -23,8 +23,15 @@ constexpr EDistribution MatmulDistribution(const EDistribution first, const EDis
     else if(first == EDistribution::Sparse)
         return EDistribution::Full;
 
+    else if(first == EDistribution::Diagonal)
+    {
+        if(second == EDistribution::Diagonal)
+            return EDistribution::Diagonal;
+        else
+            return EDistribution::Full;
+    }
     else
-        return EDistribution::Unknown;
+        return EDistribution::Full;
 }
 
 template <typename TShape1, typename TShape2>
@@ -35,9 +42,9 @@ constexpr auto MatmulDiagonal(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetColumns() == mat2.GetRows());
     using TValue = decltype(typename TMat1::DataType() * typename TMat2::DataType());
-    using shape = MatmulResultShape<TMat1::ShapeType, TMat2::ShapeType>;
+    using TShape = MatmulResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>;
 
-    Diagonal<TValue, shape> result{mat1.GetRows(), mat2.GetColumns()};
+    Diagonal<TValue, TShape> result{mat1.GetRows(), mat2.GetColumns()};
     for(MatrixSize i = 0; i < Min(result.GetRows(), result.GetColumns()); ++i)
         result.At(i, i) = mat1.Get(i, i) * mat2.Get(i, i);
 

@@ -24,6 +24,8 @@ struct DiagonalConst : public MatrixBaseSelector<TShape>
 
     constexpr static MatrixSize DiagSize = Min(TShape::rows, TShape::cols);
 
+    constexpr static bool TempIsDiagonal = true; // todo: find better solution
+
     DiagonalConst() = default;
     constexpr DiagonalConst(const Row rows, const Col cols)
         : MatrixBaseSelector<TShape>(TShape::rows, TShape::cols)
@@ -57,6 +59,8 @@ struct DiagonalRowConst : public MatrixBaseSelector<TShape>
     constexpr static auto Ordering = EOrdering::Any;
     constexpr static auto Distribution = EDistribution::Diagonal;
 
+    constexpr static bool TempIsDiagonal = true; // todo: find better solution
+
     explicit DiagonalRowConst(const Row rows, const Col cols)
         : MatrixBaseSelector<TShape>(rows, cols)
     {
@@ -85,6 +89,8 @@ struct DiagonalColConst : public MatrixBaseSelector<TShape>
     using DataType = T;
     constexpr static auto Ordering = EOrdering::Any;
     constexpr static auto Distribution = EDistribution::Diagonal;
+
+    constexpr static bool TempIsDiagonal = true; // todo: find better solution
 
     explicit DiagonalColConst(const Row rows, const Col cols)
         : MatrixBaseSelector<TShape>(rows, cols)
@@ -115,6 +121,8 @@ struct DiagonalDynamic : public MatrixBaseSelector<TShape>
     constexpr static auto Ordering = EOrdering::Any;
     constexpr static auto Distribution = EDistribution::Diagonal;
 
+    constexpr static bool TempIsDiagonal = true; // todo: find better solution
+
     explicit DiagonalDynamic(const Row rows, const Col cols)
         : MatrixBaseSelector<TShape>(rows, cols)
     {
@@ -138,7 +146,7 @@ private:
 
 } // namespace detail
 
-template <typename T, typename TShape>
+template <typename T, typename TShape = Shape<UnknownSize, UnknownSize>>
 using Diagonal = TypeSelector<TShape, //
                               detail::DiagonalConst<T, TShape>,
                               detail::DiagonalRowConst<T, TShape>,

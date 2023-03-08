@@ -33,7 +33,7 @@ struct IdentityImpl : public MatrixBaseSelector<TShape>
 
 } // namespace detail
 
-template <typename T, typename TShape>
+template <typename T, typename TShape = UnknownShape>
 using Identity = detail::IdentityImpl<T, TShape>; // No need for type selector yet
 
 template <typename T, Row rows, Col cols>

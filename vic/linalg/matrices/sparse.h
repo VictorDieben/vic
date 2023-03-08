@@ -65,8 +65,8 @@ private:
 
 } // namespace detail
 
-template <typename T, typename TShape>
-using Sparse = TypeSelector<TShape, //
+template <typename T, typename TShape = Shape<UnknownSize, UnknownSize>>
+using Sparse = TypeSelector<TShape, // todo: specific types for different shapes
                             detail::MatrixSparse<T, TShape>,
                             detail::MatrixSparse<T, TShape>,
                             detail::MatrixSparse<T, TShape>,

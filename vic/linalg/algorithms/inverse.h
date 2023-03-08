@@ -19,7 +19,10 @@ requires ConceptMatrix<TMat>
 constexpr auto InverseDiagonal(const TMat& matrix)
 {
     assert(matrix.GetRows() == matrix.GetColumns());
-    Matrix<typename TMat::DataType, InverseResultShape<typename TMat::ShapeType>> inverse{matrix.GetRows(), matrix.GetColumns()};
+
+    using ResultType = typename TMat::DataType;
+    using ResultShape = InverseResultShape<typename TMat::ShapeType>;
+    Diagonal<typename TMat::DataType, ResultShape> inverse{matrix.GetRows(), matrix.GetColumns()};
     const auto n = Min(matrix.GetRows(), matrix.GetColumns());
     for(MatrixSize i = 0; i < n; ++i)
         inverse.At(i, i) = 1. / matrix.Get(i, i);
@@ -28,12 +31,38 @@ constexpr auto InverseDiagonal(const TMat& matrix)
 
 template <typename TMat>
 requires ConceptMatrix<TMat>
-constexpr auto InverseHotellingBodewig(const TMat& matrix)
+constexpr auto InverseHotellingBodewig(const TMat& A, const double eps = 1E-12)
 {
-    assert(matrix.GetRows() == matrix.GetColumns());
-    Matrix<typename TMat::DataType, InverseResultShape<typename TMat::ShapeType>> inverse{matrix.GetRows(), matrix.GetColumns()};
+    // Hotelling-Bodewig algorithm: V_n+1 = V_n * (2*I - A*V_n)
+    assert(A.GetRows() == A.GetColumns());
+    constexpr MatrixSize n = A.GetRows();
 
-    // todo
+    using ResultType = typename TMat::DataType;
+    using ResultShape = InverseResultShape<typename TMat::ShapeType>;
+
+    const auto identity = Identity<ResultType, ResultShape>{A.GetRows(), A.GetColumns()};
+    const auto twoI = Matmul(2., identity);
+
+    auto inverse = ToFull(InverseDiagonal(ToDiagonal(A))); // initial guess
+
+    uint32_t iter = 0;
+    double largestDiff = 0.;
+    for(; iter < 1000; ++iter)
+    {
+        const auto tmp1 = Matmul(A, inverse);
+        const auto tmp2 = Matmul(-1., tmp1);
+        inverse = Matmul(inverse, Add(twoI, tmp2));
+
+        // todo: helper for largest (abs) element in matrix
+        const auto diffMatrix = Subtract(tmp1, identity);
+        largestDiff = 0.;
+        for(Row i = 0; i < n; ++i)
+            for(Col j = 0; j < n; ++j)
+                largestDiff = Max(largestDiff, Abs(diffMatrix.Get(i, j)));
+        if(largestDiff < eps)
+            break;
+    }
+    // std::cout << "InverseHotellingBodewig(): iter = " << iter << "; diff = " << largestDiff << "; Done!" << std::endl;
 
     return inverse;
 }

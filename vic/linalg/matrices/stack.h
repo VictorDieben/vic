@@ -33,6 +33,7 @@ requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 struct RowStackImpl : public MatrixBaseSelector<typename RowStackResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>>
 {
     using DataType = TMat1::DataType;
+    using MatrixBase = MatrixBaseSelector<typename RowStackResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>>;
     constexpr static bool TempIsRowStack = true;
 
     constexpr static auto Ordering = EOrdering::Any;
@@ -41,11 +42,13 @@ struct RowStackImpl : public MatrixBaseSelector<typename RowStackResultShape<typ
     constexpr RowStackImpl(const TMat1& mat1, const TMat2& mat2)
         : mMat1(mat1)
         , mMat2(mat2)
-    { }
+    {
+        // assert(mat1.GetColumns() == mat2.GetColumns());
+    }
 
     constexpr DataType Get(const Row i, const Col j) const
     {
-        assert(i < this->GetRows() && j < this->GetColumns());
+        assert(i < MatrixBase::GetRows() && j < MatrixBase::GetColumns());
         if(i < mMat1.GetRows())
             return mMat1.Get(i, j);
         else
@@ -55,7 +58,7 @@ struct RowStackImpl : public MatrixBaseSelector<typename RowStackResultShape<typ
     // todo: at should only be available if either submatrix has it
     constexpr DataType& At(const Row i, const Col j)
     {
-        assert(i < this->GetRows() && j < this->GetColumns());
+        assert(i < MatrixBase::GetRows() && j < MatrixBase::GetColumns());
         if(i < mMat1.GetRows())
             return mMat1.At(i, j);
         else
@@ -70,6 +73,13 @@ struct RowStackImpl : public MatrixBaseSelector<typename RowStackResultShape<typ
 
 template <typename TMat1, typename TMat2>
 using RowStack = detail::RowStackImpl<TMat1, TMat2>;
+
+template <typename TMat1, typename TMat2>
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+constexpr auto ToRowStack(const TMat1& mat1, const TMat2& mat2)
+{
+    return RowStack<TMat1, TMat2>{mat1, mat2}; //
+}
 
 } // namespace linalg
 } // namespace vic

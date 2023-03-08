@@ -2,7 +2,6 @@
 #include "pch.h"
 
 #include "vic/linalg/linalg.h"
-#include "vic/linalg/tools.h"
 
 #include <random>
 
@@ -44,10 +43,10 @@ void VerifyMatrix(TMat& mat)
 
 TEST(Matrices, InitBase)
 {
-    //static constexpr MatrixBaseSelector<double, Shape<3, 3>> m33{3, 3};
-    //static constexpr MatrixBaseSelector<double, Shape<3, UnknownSize>> mr3{3, 3};
-    //static constexpr MatrixBaseSelector<double, Shape<UnknownSize, 3>> mc3{3, 3};
-    //static constexpr MatrixBaseSelector<double, Shape<UnknownSize, UnknownSize>> md{3, 3};
+    static constexpr MatrixBaseSelector<Shape<3, 3>> m33{3, 3};
+    static constexpr MatrixBaseSelector<Shape<3, UnknownSize>> mr3{3, 3};
+    static constexpr MatrixBaseSelector<Shape<UnknownSize, 3>> mc3{3, 3};
+    static constexpr MatrixBaseSelector<Shape<UnknownSize, UnknownSize>> md{3, 3};
 }
 
 TEST(Matrices, InitZeros)
@@ -138,9 +137,17 @@ TEST(Matrices, InitBracket)
 
 TEST(Matrices, InitRowStack)
 {
-    constexpr Matrix3<double> mat1;
-    constexpr Matrix3<double> mat2;
-    RowStack<decltype(mat1), decltype(mat2)> rowStack{mat1, mat2};
+    // stack two stack sized matrices, check that result is constexpr
+    constexpr Matrix3<double> mat33;
+    constexpr auto rowStack1 = ToRowStack(mat33, mat33);
+    EXPECT_TRUE(ConceptConstexprMatrix<decltype(rowStack1)>);
+
+    // stack one matrix with dynamic colsize and one with static colsize, check that result is constexpr
+    constexpr Zeros<double, Shape<3, UnknownSize>> zeros3d{3, 3};
+    constexpr auto rowStack2 = ToRowStack(mat33, zeros3d);
+    EXPECT_TRUE(ConceptConstexprMatrix<decltype(rowStack2)>);
+
+    // todo: check values
 }
 
 } // namespace linalg

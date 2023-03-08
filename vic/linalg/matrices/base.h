@@ -62,7 +62,7 @@ struct MatrixBaseRowConst
     Col GetColumns() const { return mColumns; }
 
 protected:
-    const Col mColumns{0};
+    Col mColumns{0};
 };
 
 template <typename TShape>
@@ -80,7 +80,7 @@ struct MatrixBaseColConst
     constexpr static Col GetColumns() { return TShape::cols; }
 
 protected:
-    const Row mRows{0};
+    Row mRows{0};
 };
 
 template <typename TShape>
@@ -97,8 +97,8 @@ struct MatrixBaseDynamic
     Col GetColumns() const { return mColumns; }
 
 protected:
-    const Row mRows{0};
-    const Col mColumns{0};
+    Row mRows{0};
+    Col mColumns{0};
 };
 
 } // namespace detail

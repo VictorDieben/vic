@@ -35,7 +35,7 @@ template <typename T>
 concept ConceptConstexprRows = requires
 {
     T::GetRows();
-    requires std::is_same_v<std::size_t, decltype(T::GetRows())>;
+    requires std::is_same_v<Row, decltype(T::GetRows())>;
     typename ConstexprSizeHelper<T::GetRows()>;
 };
 
@@ -43,7 +43,7 @@ template <typename T>
 concept ConceptConstexprColumns = requires
 {
     T::GetColumns();
-    requires std::is_same_v<std::size_t, decltype(T::GetColumns())>;
+    requires std::is_same_v<Col, decltype(T::GetColumns())>;
     typename ConstexprSizeHelper<T::GetColumns()>;
 };
 
@@ -77,6 +77,7 @@ concept ConceptSparse = ConceptMatrix<T> && requires(T mat)
 template <typename T>
 concept ConceptDiagonal = ConceptMatrix<T> && requires(T mat)
 {
+    T::TempIsDiagonal == true; // todo: remove this boolean, find better solution
     T::Distribution == EDistribution::Diagonal;
 };
 
@@ -94,6 +95,12 @@ template <typename T>
 concept ConceptZeros = ConceptMatrix<T> && requires(T mat)
 {
     T::TempIsZeros == true; // todo: remove this boolean, find better solution
+};
+
+template <typename T>
+concept ConceptSymmetric = ConceptMatrix<T> && requires(T mat)
+{
+    T::TempIsSymmetric == true; // todo: remove this boolean, find better solution
 };
 
 template <typename T>

@@ -188,6 +188,7 @@
     <ClInclude Include="linalg\algorithms\determinant.h" />
     <ClInclude Include="linalg\algorithms\eigenvalues.h" />
     <ClInclude Include="linalg\algorithms\inverse.h" />
+    <ClInclude Include="linalg\algorithms\least_squares.h" />
     <ClInclude Include="linalg\algorithms\matmul.h" />
     <ClInclude Include="linalg\algorithms\solve.h" />
     <ClInclude Include="linalg\algorithms\transpose.h" />
@@ -197,10 +198,10 @@
     <ClInclude Include="linalg\matrices\diagonal.h" />
     <ClInclude Include="linalg\matrices\identity.h" />
     <ClInclude Include="linalg\matrices\matrix.h" />
+    <ClInclude Include="linalg\matrices\ones.h" />
     <ClInclude Include="linalg\matrices\sparse.h" />
     <ClInclude Include="linalg\matrices\stack.h" />
     <ClInclude Include="linalg\matrices\zeros.h" />
-    <ClInclude Include="linalg\solve.h" />
     <ClInclude Include="machine_learning\back_propagation.h" />
     <ClInclude Include="machine_learning\definitions.h" />
     <ClInclude Include="machine_learning\layer.h" />

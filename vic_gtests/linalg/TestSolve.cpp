@@ -107,5 +107,17 @@ TEST(TestSolve, JacobiLargeSparse)
     //    std::cout << "done" << std::endl;
 }
 
+TEST(TestSolve, SimpleConjugateGradient)
+{
+    Matrix2<double> mat{{4, 1, 1, 3}}; //
+    Vector2<double> vec{{1, 2}};
+
+    const auto solution = Vector2<double>{{0.0909, 0.6364}};
+
+    const auto answer = SolveConjugateGradient(mat, vec);
+
+    EXPECT_TRUE(IsEqual(solution, answer, 1e-4));
+}
+
 } // namespace linalg
 } // namespace vic

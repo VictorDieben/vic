@@ -59,21 +59,22 @@ constexpr auto Transpose(const TMatrix& matrix)
         Diagonal<ResultDataType, ResultShape> result{matrix.GetColumns(), matrix.GetRows()};
         for(MatrixSize i = 0; i < Min(matrix.GetRows(), matrix.GetColumns()); ++i)
             result.At(i, i) = matrix.Get(i, i);
-        return matrix;
+        return result;
     }
     else if constexpr(ConceptSparse<TMatrix>)
     {
         Sparse<ResultDataType, ResultShape> result{matrix.GetColumns(), matrix.GetRows()};
         for(const auto& [key, value] : matrix)
-            result.At(key.second, key.first) = value;
+            result.At(key.second, key.first) = value; // todo: add all values to list, sort manually, then insert
         return result;
     }
     else
     {
+        // todo: swap ordering? (row mayer <-> col mayor)
         Matrix<ResultDataType, ResultShape> result{matrix.GetColumns(), matrix.GetRows()};
         for(Row i = 0; i < matrix.GetRows(); ++i)
             for(Col j = 0; j < matrix.GetColumns(); ++j)
-                result.At(j, i) = matrix.At(i, j);
+                result.At(j, i) = matrix.Get(i, j);
         return result;
     }
 }

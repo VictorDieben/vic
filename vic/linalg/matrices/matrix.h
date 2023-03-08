@@ -36,18 +36,18 @@ struct MatrixConst : public MatrixBaseSelector<TShape>
     { }
     constexpr T Get(const Row i, const Col j) const
     {
-        assert(((i < this->GetRows()) && (j < this->GetColumns())));
+        assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData.at(RowMayorRowColToIndex<TShape::cols>(i, j));
     }
     constexpr T Get(const Row i) const
     {
-        assert(i < this->GetRows());
-        static_assert(this->GetColumns() == 1);
+        assert(i < MatrixBase::GetRows());
+        static_assert(MatrixBase::GetColumns() == 1);
         return mData.at(RowMayorRowColToIndex<TShape::cols>(i, 0));
     }
     constexpr T& At(const Row i, const Col j)
     {
-        assert(((i < this->GetRows()) && (j < this->GetColumns())));
+        assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[RowMayorRowColToIndex<TShape::cols>(i, j)];
     }
 
@@ -66,16 +66,16 @@ struct MatrixRowConst : public MatrixBaseSelector<TShape>
         : MatrixBaseSelector<TShape>(rows, cols)
     {
         assert(TShape::rows == rows);
-        mData.resize(this->GetRows() * this->GetColumns());
+        mData.resize(MatrixBase::GetRows() * MatrixBase::GetColumns());
     }
     constexpr T Get(const Row i, const Col j) const
     {
-        assert(((i < this->GetRows()) && (j < this->GetColumns())));
+        assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData.at(ColMayorRowColToIndex<TShape::rows>(i, j));
     }
     constexpr T& At(const Row i, const Col j)
     {
-        assert(((i < this->GetRows()) && (j < this->GetColumns())));
+        assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[ColMayorRowColToIndex<TShape::rows>(i, j)];
     }
 
@@ -87,22 +87,24 @@ template <typename T, typename TShape>
 struct MatrixColConst : public MatrixBaseSelector<TShape>
 {
     using DataType = T;
+    using MatrixBase = MatrixBaseSelector<TShape>;
+
     constexpr static auto Ordering = EOrdering::RowMayor;
     constexpr static auto Distribution = EDistribution::Full;
     MatrixColConst(const Row rows, const Col cols)
         : MatrixBaseSelector<TShape>(rows, cols)
     {
         assert(TShape::cols == cols);
-        mData.resize(this->GetRows() * this->GetColumns());
+        mData.resize(MatrixBase::GetRows() * MatrixBase::GetColumns());
     }
     constexpr T Get(const Row i, const Col j) const
     {
-        assert(((i < this->GetRows()) && (j < this->GetColumns())));
+        assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData.at(RowMayorRowColToIndex<TShape::cols>(i, j));
     }
     constexpr T& At(const Row i, const Col j)
     {
-        assert(((i < this->GetRows()) && (j < this->GetColumns())));
+        assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[RowMayorRowColToIndex<TShape::cols>(i, j)];
     }
 
@@ -114,22 +116,24 @@ template <typename T, typename TShape>
 struct MatrixDynamic : public MatrixBaseSelector<TShape>
 {
     using DataType = T;
+    using MatrixBase = MatrixBaseSelector<TShape>;
+
     constexpr static auto Ordering = EOrdering::RowMayor;
     constexpr static auto Distribution = EDistribution::Full;
     MatrixDynamic(const Row rows, const Col cols)
         : MatrixBaseSelector<TShape>(rows, cols)
     {
-        mData.resize(this->GetRows() * this->GetColumns());
+        mData.resize(MatrixBase::GetRows() * MatrixBase::GetColumns());
     }
     constexpr T Get(const Row i, const Col j) const
     {
-        assert(((i < this->GetRows()) && (j < this->GetColumns())));
-        return mData.at(RowMayorRowColToIndex(i, j, this->GetColumns()));
+        assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
+        return mData.at(RowMayorRowColToIndex(i, j, MatrixBase::GetColumns()));
     }
     constexpr T& At(const Row i, const Col j)
     {
-        assert(((i < this->GetRows()) && (j < this->GetColumns())));
-        return mData[RowMayorRowColToIndex(i, j, this->GetColumns())];
+        assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
+        return mData[RowMayorRowColToIndex(i, j, MatrixBase::GetColumns())];
     }
 
 private:
@@ -138,12 +142,19 @@ private:
 
 } // namespace detail
 
-template <typename T, typename TShape>
+template <typename T, typename TShape = Shape<UnknownSize, UnknownSize>>
 using Matrix = TypeSelector<TShape, //
                             detail::MatrixConst<T, TShape>,
                             detail::MatrixRowConst<T, TShape>,
                             detail::MatrixColConst<T, TShape>,
                             detail::MatrixDynamic<T, TShape>>;
+
+// todo: Vector
+
+template <typename T, Row rowSize = UnknownSize>
+using Vector = std::conditional_t<rowSize == UnknownSize, //
+                                  detail::MatrixDynamic<T, Shape<rowSize, 1u>>,
+                                  detail::MatrixColConst<T, Shape<rowSize, 1u>>>;
 
 template <typename T, Row rows, Col cols>
 using MatrixMxN = detail::MatrixConst<T, Shape<rows, cols>>;

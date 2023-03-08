@@ -30,6 +30,9 @@
     <ClCompile Include="TestNetwork.cpp" />
     <ClCompile Include="TestMachineLearning.cpp" />
     <ClCompile Include="linalg\TestMatrices.cpp" />
+    <ClCompile Include="linalg\TestInverse.cpp" />
+    <ClCompile Include="linalg\TestTranspose.cpp" />
+    <ClCompile Include="linalg\TestLeastSquares.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

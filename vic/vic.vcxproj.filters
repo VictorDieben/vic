@@ -111,9 +111,6 @@
     <ClInclude Include="units\units.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="linalg\solve.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="linalg\algorithms\eigenvalues.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -262,6 +259,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="linalg\matrices\stack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\algorithms\least_squares.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\matrices\ones.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,7 +1,11 @@
 #pragma once
 
+#include "vic/linalg/matrices/ones.h"
+#include "vic/linalg/matrices/zeros.h"
+
 #include "vic/linalg/algorithms/inverse.h"
 #include "vic/linalg/linalg.h"
+#include "vic/linalg/tools.h"
 #include "vic/utils.h"
 
 #include <algorithm>
@@ -13,12 +17,62 @@ namespace linalg
 // Solving a system means solving the equation A*x = b, without calculating A^-1.
 // Generally, this means calculating a partial inverse (the inverse of the diagonal for instance)
 
+template <typename TMatrix, typename TVector>
+requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+auto SolveConjugateGradient(const TMatrix& A, const TVector& b, const double eps = 1E-12)
+{
+    // CG will only work if matrix is symmetric (A.T == A), and positive definite (output is positive for any positive vector)
+
+    // todo: verify at runtime?
+    // assert(ConceptSymmetric<TMatrix>);
+    // assert(ConceptPositiveDefinite<TMatrix>);
+
+    using DataType = typename TMatrix::DataType;
+    using squareShape = SquareShape<typename TMatrix::ShapeType>;
+
+    constexpr MatrixSize n = Min(Min(squareShape::rows, squareShape::cols), TVector::ShapeType::rows);
+
+    auto x = To<Matrix<DataType, Shape<n, 1>>>(Matmul(0.1, ToOnes(b)));
+
+    auto bHat = Matmul(A, x);
+    auto r = Subtract(b, bHat); // residual
+    auto p = r;
+
+    DataType rsold = Matmul(Transpose(r), r).Get(0, 0);
+
+    for(uint32_t i = 0; i < Min(A.GetRows(), A.GetColumns()); ++i)
+    {
+        const auto Ap = Matmul(A, p);
+
+        const DataType alpha = rsold / Matmul(Transpose(p), Ap).Get(0, 0);
+
+        const auto xTemp = Add(x, Matmul(alpha, p));
+        x = xTemp; // avoid aliasing issues
+
+        const auto rn = Subtract(r, Matmul(alpha, Ap));
+
+        auto rsnew = Matmul(Transpose(rn), rn).Get(0, 0);
+
+        if(Sqrt(rsnew) < eps)
+            break;
+
+        const auto pTemp = Add(rn, Matmul(rsnew / rsold, p));
+        p = pTemp;
+        rsold = rsnew;
+    }
+
+    return x;
+}
+
 // https://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/linAlg34.pdf
 
 template <typename TMatrix, typename TVector>
 requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
 auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
 {
+    assert(matrix.GetRows() == matrix.GetColumns());
+    // TODO: verify that matrix is diagonally dominant / positive definite
+
     const MatrixSize n = matrix.GetRows();
     const auto D = ToDiagonal(matrix);
     const auto Dinv = InverseDiagonal(D);
@@ -33,8 +87,6 @@ auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const doubl
     // make an initial estimate by inversing diagonal
     //auto x = Matmul(0.1, Matmul(Dinv, vector));
     auto x = Matmul(Dinv, vector);
-
-    // TODO: verify that matrix is diagonally dominant
 
     // x_i+1 = D^-1 * (b - (L+U)*x)
     for(std::size_t i = 0; i < 1000; ++i)
@@ -52,7 +104,7 @@ auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const doubl
         double largestDiff = 0.;
         for(MatrixSize i = 0; i < n; ++i)
             largestDiff = Max(largestDiff, Abs(x.Get(i, 0) - x_new.Get(i, 0)));
-        x = x_new;
+        x = To<decltype(x)>(x_new);
 
         std::cout << "SolveJacobiMethod(): i = " << i << "; diff = " << largestDiff << std::endl;
         if(largestDiff < eps)
@@ -67,7 +119,7 @@ auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const doubl
 
 // Selector for Inverse algorithm
 template <typename TMatrix, typename TVector>
-requires ConceptSquareMatrix<TMatrix>
+requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
 constexpr auto Solve(const TMatrix& matrix, const TVector& vector)
 {
     return SolveJacobiMethod(matrix, vector); //

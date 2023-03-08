@@ -66,6 +66,10 @@ public:
     std::array<T, 3> mData{};
 };
 
+// declare that a matrix is square. if we either now the rows or the cols, we know the other too
+template <typename TShape>
+using SquareShape = Shape<Min(TShape::rows, TShape::cols), Min(TShape::rows, TShape::cols)>;
+
 // trace is sum of all diagonal elements
 template <typename TMat>
 requires ConceptSquareMatrix<TMat>
@@ -232,23 +236,55 @@ constexpr auto IsOrthogonal(const TMat& mat, const double eps = 1e-10)
 {
     if(mat.GetRows() != mat.GetColumns())
         return false;
-    Identity<typename TMat::DataType, UnknownShape> identity{mat.GetRows(), mat.GetColumns()};
+    Identity<typename TMat::DataType> identity{mat.GetRows(), mat.GetColumns()};
     return IsEqual(Matmul(Transpose(mat), mat), identity, eps);
 }
 
 template <typename TMat>
-//requires ConceptMatrix<TMat>
-constexpr auto Negative(const TMat& mat)
-{
-    return Matmul(-1., mat);
-}
+requires ConceptMatrix<TMat>
+constexpr auto Negative(const TMat& mat) { return Matmul(-1., mat); }
 
 // 3d cross product
 template <typename TMat1, typename TMat2>
-//requires ConceptVector<TMat1> && ConceptVector<TMat2>
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto Subtract(const TMat1& mat1, const TMat2& mat2)
 {
-    return Add(mat1, Negative(mat2));
+    return Add(mat1, Negative(mat2)); //
+}
+
+template <typename TTarget, typename TSource>
+requires ConceptMatrix<TSource> && ConceptMatrix<TTarget>
+constexpr auto To(const TSource& mat)
+{
+    // todo: check if user made a specialization
+
+    // todo: sparse
+
+    if constexpr(ConceptIdentity<TTarget>)
+    {
+        return Identity<typename TSource::DataType, typename TSource::ShapeType>{mat.GetRows(), mat.GetColumns()};
+    }
+    else if constexpr(ConceptZeros<TTarget>)
+    {
+        return Zeros<typename TSource::DataType, typename TSource::ShapeType>{mat.GetRows(), mat.GetColumns()};
+    }
+    else if constexpr(ConceptDiagonal<TTarget>)
+    {
+        static_assert(ConceptAssignable<TTarget>);
+        TTarget res{mat.GetRows(), mat.GetColumns()};
+        for(MatrixSize i = 0; i < Min(mat.GetRows(), mat.GetColumns()); ++i)
+            res.At(i, i) = mat.Get(i, i);
+        return res;
+    }
+    else
+    {
+        static_assert(ConceptAssignable<TTarget>);
+        TTarget res{mat.GetRows(), mat.GetColumns()};
+        for(Row i = 0; i < mat.GetRows(); ++i)
+            for(Col j = 0; j < mat.GetColumns(); ++j)
+                res.At(i, j) = mat.Get(i, j);
+        return res;
+    }
 }
 
 } // namespace linalg

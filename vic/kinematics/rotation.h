@@ -196,7 +196,8 @@ public:
         : mMatrix(rotation)
     { }
 
-    Rotation Inverse() const { return Rotation{Transpose(mMatrix)}; }
+    // todo: remove ToFull
+    constexpr Rotation<T> Inverse() const { return Rotation<T>(ToFull(Transpose(mMatrix))); }
 
     friend Rotation operator*(const Rotation& r1, const Rotation& r2)
     {
