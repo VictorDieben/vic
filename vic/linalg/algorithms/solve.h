@@ -27,30 +27,32 @@ auto SolveConjugateGradient(const TMatrix& A, const TVector& b, const double eps
     // assert(ConceptSymmetric<TMatrix>);
     // assert(ConceptPositiveDefinite<TMatrix>);
 
+    assert(A.GetRows() == A.GetColumns() && //
+           A.GetColumns() == b.GetRows() && //
+           b.GetColumns() == 1);
+
     using DataType = typename TMatrix::DataType;
-    using squareShape = SquareShape<typename TMatrix::ShapeType>;
 
-    constexpr MatrixSize n = Min(Min(squareShape::rows, squareShape::cols), TVector::ShapeType::rows);
+    // only valid matrix shape is square, if we know either row or col size, we know both
+    using MatrixShape = SquareShape<typename TMatrix::ShapeType>;
+    using ResultShape = Shape<MatrixShape::rows, 1>;
 
-    auto x = To<Matrix<DataType, Shape<n, 1>>>(Matmul(0.1, ToOnes(b)));
+    auto x = To<Matrix<DataType, ResultShape>>(Matmul(0.1, ToOnes(b)));
 
     auto bHat = Matmul(A, x);
     auto r = Subtract(b, bHat); // residual
-    auto p = r;
+    auto p = r; // search direction
 
     DataType rsold = Matmul(Transpose(r), r).Get(0, 0);
 
-    for(uint32_t i = 0; i < Min(A.GetRows(), A.GetColumns()); ++i)
+    uint32_t i = 0;
+    for(; i < Min(A.GetRows(), A.GetColumns()); ++i)
     {
         const auto Ap = Matmul(A, p);
-
         const DataType alpha = rsold / Matmul(Transpose(p), Ap).Get(0, 0);
-
         const auto xTemp = Add(x, Matmul(alpha, p));
         x = xTemp; // avoid aliasing issues
-
         const auto rn = Subtract(r, Matmul(alpha, Ap));
-
         auto rsnew = Matmul(Transpose(rn), rn).Get(0, 0);
 
         if(Sqrt(rsnew) < eps)

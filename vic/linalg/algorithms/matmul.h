@@ -38,6 +38,7 @@ template <typename TShape1, typename TShape2>
 using MatmulResultShape = Shape<TShape1::rows, TShape2::cols>;
 
 template <typename TMat1, typename TMat2>
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto MatmulDiagonal(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetColumns() == mat2.GetRows());
@@ -52,6 +53,51 @@ constexpr auto MatmulDiagonal(const TMat1& mat1, const TMat2& mat2)
 }
 
 template <typename TMat1, typename TMat2>
+requires ConceptRowStack<TMat1> && ConceptVector<TMat2>
+constexpr auto MatmulRowStack(const TMat1& mat1, const TMat2& mat2)
+{
+    // todo: if mat2 is a vector, perform the two sub-multiplications separately,
+    // if mat2 is a matrix, construct a new stack matrix as the answer?
+    assert(mat1.GetColumns() == mat2.GetRows());
+    using TValue = decltype(typename TMat1::DataType() * typename TMat2::DataType());
+
+    const auto res1 = Matmul(mat1.mMat1, mat2);
+    const auto res2 = Matmul(mat1.mMat2, mat2);
+
+    // todo: stack more efficiently?
+    return ToFull(ToRowStack(res1, res2));
+}
+
+template <typename TMat, typename TVec>
+requires ConceptColStack<TMat> && ConceptVector<TVec>
+constexpr auto MatmulColStack(const TMat& mat, const TVec& vec)
+{
+    // todo: if mat2 is a vector, perform the two sub-multiplications separately,
+    // if mat2 is a matrix, construct a new stack matrix as the answer?
+    assert(mat.GetColumns() == vec.GetRows());
+    using TValue = decltype(typename TMat::DataType() * typename TVec::DataType());
+
+    // todo: some kind of Split() or Extract() function
+
+    VectorN<TValue, decltype(mat.mMat1)::ShapeType::cols> vec1{mat.mMat1.GetRows(), 1};
+    const Row mat1Rows = mat.mMat1.GetRows();
+    for(uint32_t i = 0; i < mat1Rows; ++i)
+        vec1.At(i, 0) = vec.Get(i, 0);
+
+    VectorN<TValue, decltype(mat.mMat2)::ShapeType::cols> vec2{mat.mMat2.GetRows(), 1};
+    const Row mat2Rows = mat.mMat2.GetRows();
+    for(uint32_t i = 0; i < mat2Rows; ++i)
+        vec2.At(i, 0) = vec.Get(mat1Rows + i, 0);
+
+    const auto res1 = Matmul(mat.mMat1, vec1);
+    const auto res2 = Matmul(mat.mMat2, vec2);
+
+    // todo: stack more efficiently?
+    return ToFull(Add(res1, res2));
+}
+
+template <typename TMat1, typename TMat2>
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto MatmulFull(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetColumns() == mat2.GetRows());
@@ -69,19 +115,26 @@ constexpr auto MatmulFull(const TMat1& mat1, const TMat2& mat2)
 }
 
 template <typename TMat, typename TValue>
+requires ConceptMatrix<TMat>
 constexpr auto MatmulConstant(const TMat& mat, const TValue& value)
 {
-    using TRes = decltype(typename TMat::DataType{} * TValue{});
+    using TResType = decltype(typename TMat::DataType{} * TValue{});
+    using TResShape = typename TMat::ShapeType;
+
+    if constexpr(ConceptZeros<TMat>)
+    {
+        return Zeros<TResType, TResShape>{mat.GetRows(), mat.GetColumns()};
+    }
     if constexpr(TMat::Distribution == EDistribution::Diagonal)
     {
-        Diagonal<TRes, typename TMat::ShapeType> result{mat.GetRows(), mat.GetColumns()};
+        Diagonal<TResType, TResShape> result{mat.GetRows(), mat.GetColumns()};
         for(MatrixSize i = 0; i < Min(mat.GetRows(), mat.GetColumns()); ++i)
             result.At(i, i) = mat.Get(i, i) * value;
         return result;
     }
     else
     {
-        Matrix<TRes, typename TMat::ShapeType> result{mat.GetRows(), mat.GetColumns()};
+        Matrix<TResType, TResShape> result{mat.GetRows(), mat.GetColumns()};
         for(Row i = 0; i < result.GetRows(); ++i)
             for(Col j = 0; j < result.GetColumns(); ++j)
                 result.At(i, j) = mat.Get(i, j) * value;
@@ -95,8 +148,27 @@ requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto MatmulMatrix(const TMat1& mat1, const TMat2& mat2)
 {
     constexpr auto distribution = MatmulDistribution(TMat1::Distribution, TMat2::Distribution);
-
-    if constexpr(distribution == EDistribution::Diagonal)
+    if constexpr(ConceptZeros<TMat1> || ConceptZeros<TMat2>)
+    {
+        using ResulType = decltype(typename TMat1::DataType() * typename TMat2::DataType());
+        using ResultShape = MatmulResultShape<TMat1, TMat2>;
+        return Zeros<ResulType, ResultShape>{mat1.GetRows(), mat2.GetColumns()};
+    }
+    else if constexpr(ConceptIdentity<TMat1> || ConceptIdentity<TMat2>)
+    {
+        if constexpr(ConceptIdentity<TMat1>)
+            return mat2;
+        else // TMat2 is identity
+            return mat1;
+    }
+    else if constexpr(ConceptStack<TMat1> && ConceptVector<TMat2>)
+    {
+        if constexpr(ConceptRowStack<TMat1>)
+            return MatmulRowStack(mat1, mat2);
+        else
+            return MatmulColStack(mat1, mat2);
+    }
+    else if constexpr(distribution == EDistribution::Diagonal)
         return MatmulDiagonal(mat1, mat2);
     else
         return MatmulFull(mat1, mat2);

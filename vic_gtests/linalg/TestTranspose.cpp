@@ -12,8 +12,8 @@ namespace linalg
 TEST(TestAlgorithms, Transpose)
 {
     // Test the Shape, Constexpr-ness and value of Transpose()
-    constexpr IdentityMxN<double, 2, 2> identity2 = Transpose(IdentityMxN<double, 2, 2>{});
-    EXPECT_TRUE(IsEqual(identity2, IdentityMxN<double, 2, 2>{}));
+    constexpr Identity2<double> identity2 = Transpose(Identity2<double>{});
+    EXPECT_TRUE(IsEqual(identity2, Identity2<double>{}));
 
     constexpr auto diag = DiagonalMxN<double, 2, 2>(std::array{1., 2.});
     constexpr DiagonalMxN<double, 2, 2> diagT = Transpose(diag);

@@ -7,6 +7,8 @@
 
 #include "vic/utils.h"
 
+#include <random>
+
 namespace vic
 {
 namespace linalg
@@ -284,6 +286,28 @@ constexpr auto To(const TSource& mat)
             for(Col j = 0; j < mat.GetColumns(); ++j)
                 res.At(i, j) = mat.Get(i, j);
         return res;
+    }
+}
+
+template <typename TMat>
+void RandomFill(TMat& mat)
+{
+    if constexpr(ConceptAssignable<TMat>)
+    {
+        std::default_random_engine g;
+        std::uniform_real_distribution<double> randomValue(-1., 1.);
+
+        if constexpr(TMat::Distribution == EDistribution::Diagonal)
+        {
+            for(MatrixSize i = 0; i < Min(mat.GetRows(), mat.GetColumns()); ++i)
+                mat.At(i, i) = randomValue(g);
+        }
+        else if constexpr(TMat::Distribution == EDistribution::Full)
+        {
+            for(Row i = 0; i < mat.GetRows(); ++i)
+                for(Col j = 0; j < mat.GetColumns(); ++j)
+                    mat.At(i, j) = randomValue(g);
+        }
     }
 }
 

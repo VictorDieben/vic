@@ -1,8 +1,7 @@
 #pragma once
 
-#include "pch.h"
-
 #include "vic/linalg/linalg.h"
+#include <random>
 
 using namespace vic::linalg;
 

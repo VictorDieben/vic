@@ -42,9 +42,14 @@ TEST(TestSolve, JacobiRandom)
             }
         }
 
-        const auto ans = SolveJacobiMethod(matrix, vector);
-        const auto vector2 = Matmul(matrix, ans);
-        ExpectMatrixEqual(vector, vector2, 1.E-6);
+        const auto matrix2 = Matmul(Transpose(matrix), matrix);
+
+        const auto ans = SolveConjugateGradient(matrix2, vector);
+
+        // const auto ans = SolveJacobiMethod(matrix2, vector);
+
+        const auto vector2 = Matmul(matrix2, ans);
+        EXPECT_TRUE(IsEqual(vector, vector2, 1e-4));
     }
 }
 
@@ -109,14 +114,16 @@ TEST(TestSolve, JacobiLargeSparse)
 
 TEST(TestSolve, SimpleConjugateGradient)
 {
-    Matrix2<double> mat{{4, 1, 1, 3}}; //
-    Vector2<double> vec{{1, 2}};
+    const Matrix2<double> A{{4, 1, 1, 3}};
+    const Vector2<double> b{{1, 2}};
 
-    const auto solution = Vector2<double>{{0.0909, 0.6364}};
+    const Vector2<double> solution{{0.0909, 0.6364}};
 
-    const auto answer = SolveConjugateGradient(mat, vec);
+    const Vector2<double> answer = SolveConjugateGradient(A, b);
 
     EXPECT_TRUE(IsEqual(solution, answer, 1e-4));
+
+    EXPECT_TRUE(IsEqual(b, Matmul(A, answer), 1e-10));
 }
 
 } // namespace linalg

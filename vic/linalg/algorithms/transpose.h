@@ -48,14 +48,16 @@ constexpr auto Transpose(const TMatrix& matrix)
 {
     using ResultDataType = typename TMatrix::DataType;
     using ResultShape = TransposeResultShape<typename TMatrix::ShapeType>;
-    constexpr EDistribution ResultDist = TransposeDistribution(TMatrix::Distribution);
+
+    // todo: use this
+    // constexpr EDistribution ResultDist = TransposeDistribution(TMatrix::Distribution);
 
     if constexpr(ConceptIdentity<TMatrix>)
+    {
         return Identity<ResultDataType, ResultShape>{matrix.GetColumns(), matrix.GetRows()};
-
+    }
     else if constexpr(ConceptDiagonal<TMatrix>)
     {
-        // constexpr-ness of rows and columns needs to be swapped:
         Diagonal<ResultDataType, ResultShape> result{matrix.GetColumns(), matrix.GetRows()};
         for(MatrixSize i = 0; i < Min(matrix.GetRows(), matrix.GetColumns()); ++i)
             result.At(i, i) = matrix.Get(i, i);
@@ -64,8 +66,10 @@ constexpr auto Transpose(const TMatrix& matrix)
     else if constexpr(ConceptSparse<TMatrix>)
     {
         Sparse<ResultDataType, ResultShape> result{matrix.GetColumns(), matrix.GetRows()};
+        // todo: add all values to list, sort manually, then insert
+        // todo: if RowMayor, make ColMayor
         for(const auto& [key, value] : matrix)
-            result.At(key.second, key.first) = value; // todo: add all values to list, sort manually, then insert
+            result.At(key.second, key.first) = value;
         return result;
     }
     else

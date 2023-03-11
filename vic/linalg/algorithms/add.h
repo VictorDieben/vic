@@ -69,6 +69,7 @@ template <typename TShape1, typename TShape2>
 using AddResultShape = Shape<Min(TShape1::rows, TShape2::rows), Min(TShape1::cols, TShape2::cols)>;
 
 template <typename TMat1, typename TMat2>
+requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> // note: _not_ diagonal, this way you can add the diagonal of two non-diagonal matrices
 constexpr auto AddDiagonal(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetRows() == mat2.GetRows() && mat1.GetColumns() == mat2.GetColumns());
@@ -101,7 +102,8 @@ template <typename TMat, typename TValue>
 constexpr auto AddConstant(const TMat& mat, const TValue& value)
 {
     // todo: specialize for different matrix types
-    Matrix<TValue, TMat::ShapeType> result{mat.GetRows(), mat.GetColumns()};
+    using TRes = decltype(typename TMat::DataType() + TValue{});
+    Matrix<TRes, typename TMat::ShapeType> result{mat.GetRows(), mat.GetColumns()};
     for(Row i = 0; i < result.GetRows(); ++i)
         for(Col j = 0; j < result.GetColumns(); ++j)
             result.At(i, j) = mat.Get(i, j) + value;
@@ -113,6 +115,11 @@ requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto AddMatrix(const TMat1& mat1, const TMat2& mat2)
 {
     constexpr auto distribution = AdditionDistribution(TMat1::Distribution, TMat2::Distribution);
+
+    // todo: specialize for:
+    // - sparse
+    // - zeros
+    // - identity
 
     if constexpr(distribution == EDistribution::Diagonal)
         return AddDiagonal(mat1, mat2);

@@ -144,12 +144,42 @@ TEST(TestLinalg, TestMatmulSparse)
 
     ExpectMatrixEqual(mat, sparse2x2);
 
-    const MatrixMxN<double, 2, 1> vec{{5, 6}};
+    const Vector2<double> vec{{5, 6}};
 
     const auto res1 = Matmul(mat, vec);
     const auto res2 = Matmul(sparse2x2, vec);
 
     ExpectMatrixEqual(res1, res2);
+}
+
+TEST(TestLinalg, TestMatmulStack)
+{
+    for(uint32_t i = 0; i < 10; ++i)
+    {
+        auto mat1 = Matrix3<double>{};
+        auto mat2 = Matrix3<double>{};
+        auto vec3 = Vector3<double>{};
+        auto vec6 = Vector6<double>{};
+
+        RandomFill(mat1);
+        RandomFill(mat2);
+        RandomFill(vec3);
+        RandomFill(vec6);
+
+        { // test rowstack
+            const auto rowstack = ToRowStack(mat1, mat2);
+            const auto res1 = MatmulFull(rowstack, vec3);
+            const auto res2 = MatmulRowStack(rowstack, vec3);
+            EXPECT_TRUE(IsEqual(res1, res2));
+        }
+
+        { // test colstack
+            const auto colstack = ToColStack(mat1, mat2);
+            const auto res1 = MatmulFull(colstack, vec6);
+            const auto res2 = MatmulColStack(colstack, vec6);
+            EXPECT_TRUE(IsEqual(res1, res2));
+        }
+    }
 }
 
 } // namespace linalg

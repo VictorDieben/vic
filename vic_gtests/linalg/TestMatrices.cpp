@@ -11,28 +11,6 @@ namespace linalg
 {
 
 template <typename TMat>
-void RandomFill(TMat& mat)
-{
-    if constexpr(ConceptAssignable<TMat>)
-    {
-        std::default_random_engine g;
-        std::uniform_real_distribution<double> randomValue(-1., 1.);
-
-        if constexpr(TMat::Distribution == EDistribution::Diagonal)
-        {
-            for(MatrixSize i = 0; i < Min(mat.GetRows(), mat.GetColumns()); ++i)
-                mat.At(i, i) = randomValue(g);
-        }
-        else if constexpr(TMat::Distribution == EDistribution::Full)
-        {
-            for(Row i = 0; i < mat.GetRows(); ++i)
-                for(Col j = 0; j < mat.GetColumns(); ++j)
-                    mat.At(i, j) = randomValue(g);
-        }
-    }
-}
-
-template <typename TMat>
 void VerifyMatrix(TMat& mat)
 {
     EXPECT_TRUE(ConceptMatrix<TMat>);
@@ -137,17 +115,41 @@ TEST(Matrices, InitBracket)
 
 TEST(Matrices, InitRowStack)
 {
-    // stack two stack sized matrices, check that result is constexpr
+    // stack two constexpr sized matrices, check that result is constexpr
     constexpr Matrix3<double> mat33;
     constexpr auto rowStack1 = ToRowStack(mat33, mat33);
     EXPECT_TRUE(ConceptConstexprMatrix<decltype(rowStack1)>);
 
     // stack one matrix with dynamic colsize and one with static colsize, check that result is constexpr
     constexpr Zeros<double, Shape<3, UnknownSize>> zeros3d{3, 3};
-    constexpr auto rowStack2 = ToRowStack(mat33, zeros3d);
+    const auto rowStack2 = ToRowStack(mat33, zeros3d);
     EXPECT_TRUE(ConceptConstexprMatrix<decltype(rowStack2)>);
 
-    // todo: check values
+    const auto rowstack = ToRowStack(Vector1<double>{{1.}}, Vector1<double>{{2.}});
+    EXPECT_TRUE(IsEqual(rowstack, Vector2<double>{{1., 2.}}));
+    EXPECT_DOUBLE_EQ(rowstack.Get(0, 0), 1.);
+    EXPECT_DOUBLE_EQ(rowstack.Get(1, 0), 2.);
+}
+
+TEST(Matrices, InitColStack)
+{
+    // stack two constexpr sized matrices, check that result is constexpr
+    constexpr Matrix3<double> mat33;
+    constexpr auto colStack1 = ToColStack(mat33, mat33);
+    EXPECT_TRUE(ConceptConstexprMatrix<decltype(colStack1)>);
+
+    // stack one matrix with dynamic rowsize and one with static rowsize, check that result is constexpr
+    constexpr Zeros<double, Shape<UnknownSize, 3>> zeros3d{3, 3};
+    const auto colStack2 = ToColStack(mat33, zeros3d);
+    EXPECT_TRUE(ConceptConstexprMatrix<decltype(colStack2)>);
+
+    const auto dynamic = ToColStack(zeros3d, zeros3d);
+    EXPECT_FALSE(ConceptConstexprMatrix<decltype(dynamic)>);
+
+    const auto colstack = ToColStack(Matrix1<double>{{1.}}, Matrix1<double>{{2.}});
+    EXPECT_TRUE(IsEqual(colstack, Matrix<double, Shape<1, 2>>{{1., 2.}}));
+    EXPECT_DOUBLE_EQ(colstack.Get(0, 0), 1.);
+    EXPECT_DOUBLE_EQ(colstack.Get(0, 1), 2.);
 }
 
 } // namespace linalg

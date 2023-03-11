@@ -40,6 +40,7 @@
     <ClInclude Include="test_base.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="linalg\TestAdd.cpp" />
     <ClCompile Include="linalg\TestAlgorithms.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../pch.h</PrecompiledHeaderFile>

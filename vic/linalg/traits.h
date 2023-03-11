@@ -104,6 +104,21 @@ concept ConceptSymmetric = ConceptMatrix<T> && requires(T mat)
 };
 
 template <typename T>
+concept ConceptRowStack = ConceptMatrix<T> && requires(T mat)
+{
+    T::TempIsRowStack == true; // todo: remove this boolean, find better solution
+};
+
+template <typename T>
+concept ConceptColStack = ConceptMatrix<T> && requires(T mat)
+{
+    T::TempIsColStack == true; // todo: remove this boolean, find better solution
+};
+
+template <typename T>
+concept ConceptStack = ConceptColStack<T> || ConceptRowStack<T>;
+
+template <typename T>
 concept ConceptAssignable = ConceptMatrix<T> && requires(T mat)
 {
     {mat.At(Row{}, Col{}) = 1.};
