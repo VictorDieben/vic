@@ -14,6 +14,10 @@ namespace vic
 {
 namespace linalg
 {
+
+template <typename TMatrix, typename TVector>
+using SolveResultShape = Shape<Min(Min(TMatrix::ShapeType::rows, TMatrix::ShapeType::cols), TVector::ShapeType::rows), 1>;
+
 // Solving a system means solving the equation A*x = b, without calculating A^-1.
 // Generally, this means calculating a partial inverse (the inverse of the diagonal for instance)
 
@@ -114,6 +118,58 @@ auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const doubl
             std::cout << "SolveJacobiMethod(): i = " << i << "; Done!" << std::endl;
             break;
         }
+    }
+
+    return x;
+}
+
+template <typename TMatrix, typename TVector>
+requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+auto SolveUpperTriangular(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
+{
+    // Solve the system A * x = b; assuming A is upper triangular.
+    // if the matrix is not, the function treats it as if it is.
+    // Values on the diagonal need to be non-0.
+
+    assert(matrix.GetRows() == matrix.GetColumns() && matrix.GetColumns() == vector.GetRows());
+    using TResultShape = SolveResultShape<TMatrix, TVector>;
+    using TValue = typename TMatrix::DataType;
+
+    const auto n = matrix.GetRows();
+
+    Matrix<TValue, TResultShape> x{matrix.GetRows(), 1u};
+
+    for(int r = n - 1; r >= 0; --r)
+    {
+        TValue sum = 0.;
+        for(Col c = r + 1; c < n; ++c)
+            sum += matrix.Get(r, c) * x.Get(c, 0);
+
+        x.At(r, 0) = (vector.Get(r, 0) - sum) / matrix.Get(r, r);
+    }
+
+    return x;
+}
+
+template <typename TMatrix, typename TVector>
+requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+auto SolveLowerTriangular(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
+{
+    assert(matrix.GetRows() == matrix.GetColumns() && matrix.GetColumns() == vector.GetRows());
+    using TResultShape = SolveResultShape<TMatrix, TVector>;
+    using TValue = typename TMatrix::DataType;
+
+    Matrix<TValue, TResultShape> x{matrix.GetRows(), 1u};
+
+    const auto n = matrix.GetRows();
+
+    for(Row r = 0; r < n; ++r)
+    {
+        TValue sum = 0.;
+        for(Col c = 0; c < r; ++c)
+            sum += matrix.Get(r, c) * x.Get(c, 0);
+
+        x.At(r, 0) = (vector.Get(r, 0) - sum) / matrix.Get(r, r);
     }
 
     return x;
