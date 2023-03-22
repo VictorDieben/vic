@@ -48,6 +48,7 @@ constexpr auto LeastSquares(const TMatrix& A, const TVector& b)
     const auto bHat = Matmul(At, b);
 
     const auto xHat = SolveConjugateGradient(AtA, bHat);
+    // const auto xHat = SolveJacobiMethod(AtA, bHat);
 
     return xHat;
 }

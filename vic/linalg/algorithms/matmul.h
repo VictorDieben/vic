@@ -3,6 +3,7 @@
 #include "vic/linalg/definitions.h"
 #include "vic/linalg/matrices/diagonal.h"
 #include "vic/linalg/matrices/matrix.h"
+#include "vic/linalg/matrices/zeros.h"
 #include "vic/linalg/traits.h"
 
 #include <vic/utils.h>
@@ -36,6 +37,25 @@ constexpr EDistribution MatmulDistribution(const EDistribution first, const EDis
 
 template <typename TShape1, typename TShape2>
 using MatmulResultShape = Shape<TShape1::rows, TShape2::cols>;
+
+template <typename TMat1, typename TMat2>
+requires ConceptMatrix<TMat1> && ConceptVector<TMat2>
+constexpr auto MatmulDiagonalVector(const TMat1& mat1, const TMat2& mat2)
+{
+    // multiplication between square diagonal and vector
+    assert(mat1.GetRows() == mat1.GetColumns());
+    assert(mat1.GetColumns() == mat2.GetRows());
+    assert(mat2.GetColumns() == 1u);
+
+    using TValue = decltype(typename TMat1::DataType() * typename TMat2::DataType());
+    using TShape = MatmulResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>;
+
+    Diagonal<TValue, TShape> result{mat1.GetRows(), mat2.GetColumns()};
+    for(MatrixSize i = 0; i < Min(result.GetRows(), result.GetColumns()); ++i)
+        result.At(i, 0) = mat1.Get(i, i) * mat2.Get(i, 0);
+
+    return result;
+}
 
 template <typename TMat1, typename TMat2>
 requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
@@ -118,7 +138,7 @@ template <typename TMat, typename TValue>
 requires ConceptMatrix<TMat>
 constexpr auto MatmulConstant(const TMat& mat, const TValue& value)
 {
-    using TResType = decltype(typename TMat::DataType{} * TValue{});
+    using TResType = decltype(typename TMat::DataType() * TValue());
     using TResShape = typename TMat::ShapeType;
 
     if constexpr(ConceptZeros<TMat>)

@@ -152,5 +152,21 @@ TEST(Matrices, InitColStack)
     EXPECT_DOUBLE_EQ(colstack.Get(0, 1), 2.);
 }
 
+TEST(Matrices, InitTriDiagonal)
+{
+    constexpr Matrix3<double> mat33{{1, 2, 0, 3, 4, 5, 0, 6, 7}};
+
+    constexpr auto tri3 = ToTriDiagonal(mat33);
+    static_assert(ConceptMatrix<decltype(tri3)>);
+    EXPECT_TRUE(IsEqual(mat33, tri3));
+
+    const auto d33 = To<Matrix<double, UnknownShape>>(mat33);
+    EXPECT_TRUE(IsEqual(mat33, d33));
+
+    const auto trid3 = ToTriDiagonal(d33);
+    static_assert(ConceptMatrix<decltype(trid3)>);
+    EXPECT_TRUE(IsEqual(d33, trid3));
+}
+
 } // namespace linalg
 } // namespace vic

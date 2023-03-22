@@ -10,6 +10,7 @@
 #include "matrices/ones.h"
 #include "matrices/sparse.h"
 #include "matrices/stack.h"
+#include "matrices/tridiagonal.h"
 #include "matrices/zeros.h"
 //
 #include "algorithms/add.h"

@@ -24,9 +24,6 @@
     <ClInclude Include="Emulator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="linalg\inverse.h">
-      <Filter>Header Files\linalg</Filter>
-    </ClInclude>
     <ClInclude Include="linalg\linalg.h">
       <Filter>Header Files\linalg</Filter>
     </ClInclude>
@@ -265,6 +262,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="linalg\matrices\ones.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="linalg\matrices\tridiagonal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

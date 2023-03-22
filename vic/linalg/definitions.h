@@ -36,7 +36,8 @@ enum class EDistribution
     LowerTriangular,
     Diagonal,
     StrictUpperTriangular,
-    StrictLowerTriangular
+    StrictLowerTriangular,
+    TriDiagonal
 };
 
 enum class ESizeType

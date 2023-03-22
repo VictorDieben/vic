@@ -201,6 +201,7 @@
     <ClInclude Include="linalg\matrices\ones.h" />
     <ClInclude Include="linalg\matrices\sparse.h" />
     <ClInclude Include="linalg\matrices\stack.h" />
+    <ClInclude Include="linalg\matrices\tridiagonal.h" />
     <ClInclude Include="linalg\matrices\zeros.h" />
     <ClInclude Include="machine_learning\back_propagation.h" />
     <ClInclude Include="machine_learning\definitions.h" />
@@ -228,7 +229,6 @@
     <ClInclude Include="linalg\algorithms\lu_decomposition.h" />
     <ClInclude Include="linalg\tools.h" />
     <ClInclude Include="linalg\matrices_view.h" />
-    <ClInclude Include="linalg\inverse.h" />
     <ClInclude Include="linalg\linalg.h" />
     <ClInclude Include="linalg\traits.h" />
     <ClInclude Include="linprog\seidel.h" />

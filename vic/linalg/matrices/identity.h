@@ -21,8 +21,9 @@ struct IdentityImpl : public MatrixBaseSelector<TShape>
     constexpr static auto Ordering = EOrdering::Any;
     constexpr static auto Distribution = EDistribution::Diagonal;
 
-    constexpr static bool TempIsIdentity = true; // todo: find better solution
-    constexpr static bool TempIsDiagonal = true; // todo: find better solution
+    // todo: find better solution
+    constexpr static bool TempIsIdentity = true;
+    constexpr static bool TempIsDiagonal = true;
 
     constexpr IdentityImpl() = default; // todo: only allowed for constexpr size
     constexpr IdentityImpl(const Row rows, const Col cols)

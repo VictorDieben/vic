@@ -68,7 +68,7 @@ public:
     std::array<T, 3> mData{};
 };
 
-// declare that a matrix is square. if we either now the rows or the cols, we know the other too
+// declare that a matrix is square. if we either know the rows or the cols, we know the other too
 template <typename TShape>
 using SquareShape = Shape<Min(TShape::rows, TShape::cols), Min(TShape::rows, TShape::cols)>;
 
@@ -220,7 +220,7 @@ constexpr auto Dot(const TMat1& mat1, const TMat2& mat2)
 // mostly used for tests, but also useful outside of it
 template <typename TMat1, typename TMat2>
 requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
-constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const double eps = 1e-10)
+constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const typename TMat1::DataType eps = 1e-10)
 {
     if((mat1.GetRows() != mat2.GetRows()) || (mat1.GetColumns() != mat2.GetColumns()))
         return false;

@@ -120,32 +120,33 @@ TEST(TestSolve, SimpleConjugateGradient)
 
     const Vector2<double> solution{{0.0909, 0.6364}};
 
-    const Vector2<double> answer = SolveConjugateGradient(A, b);
+    const Vector2<double> x = SolveConjugateGradient(A, b);
 
-    EXPECT_TRUE(IsEqual(solution, answer, 1e-4));
+    EXPECT_TRUE(IsEqual(solution, x, 1e-4));
 
-    EXPECT_TRUE(IsEqual(b, Matmul(A, answer), 1e-10));
+    EXPECT_TRUE(IsEqual(b, Matmul(A, x), 1e-10));
 }
 
 TEST(TestSolve, UpperTriangular)
 {
-    const Matrix3<double> A{{1, 2, 3, 0, 4, 5, 0, 0, 6}};
-    const Vector3<double> b{{1, 2, 3}};
+    // note: compile time matrix solving \o/
+    static constexpr const Matrix3<double> A{{1, 2, 3, 0, 4, 5, 0, 0, 6}};
+    static constexpr const Vector3<double> b{{1, 2, 3}};
 
-    const auto result = SolveUpperTriangular(A, b);
+    static constexpr const auto x = SolveUpperTriangular(A, b);
 
-    const auto tmp = Matmul(A, result);
+    static constexpr const auto tmp = Matmul(A, x);
     EXPECT_TRUE(IsEqual(b, tmp));
 }
 
 TEST(TestSolve, LowerTriangular)
 {
-    const Matrix3<double> A{{1, 0, 0, 2, 3, 0, 4, 5, 6}};
-    const Vector3<double> b{{1, 2, 3}};
+    static constexpr const Matrix3<double> A{{1, 0, 0, 2, 3, 0, 4, 5, 6}};
+    static constexpr const Vector3<double> b{{1, 2, 3}};
 
-    const auto result = SolveLowerTriangular(A, b);
+    static constexpr const auto x = SolveLowerTriangular(A, b);
 
-    const auto tmp = Matmul(A, result);
+    static constexpr const auto tmp = Matmul(A, x);
     EXPECT_TRUE(IsEqual(b, tmp));
 }
 

@@ -56,38 +56,52 @@ private:
 
 TEST(TestAlgorithms, LeastSquares)
 {
-    constexpr auto nPolynomials = 3;
-    constexpr auto nMeasurements = 5;
+    constexpr auto nPolynomials = 10;
+    constexpr auto nMeasurements = 30;
 
     std::default_random_engine g;
     std::uniform_real_distribution<double> dist(0., 1.);
 
-    const auto c = std::array{dist(g), dist(g), dist(g), dist(g), dist(g), dist(g), dist(g), dist(g), dist(g), dist(g)};
+    auto c = Vector<double>{nPolynomials, 1};
+    for(Row i = 0; i < c.GetRows(); ++i)
+        c.At(i, 0) = dist(g);
+
+    auto A = Matrix<double>{nMeasurements, nPolynomials};
 
     auto b = Vector<double>{nMeasurements, 1};
-    auto mat = Matrix<double>{nMeasurements, nPolynomials};
 
-    std::vector<double> xs{};
+    std::vector<double> mx{};
     for(uint32_t im = 0; im < nMeasurements; ++im)
-        xs.push_back(dist(g));
-    std::sort(xs.begin(), xs.end());
+        mx.push_back(dist(g));
+    std::sort(mx.begin(), mx.end());
 
     for(uint32_t im = 0; im < nMeasurements; ++im)
     {
-        const double x = xs.at(im);
+        const double mi = mx.at(im);
 
         for(uint32_t ip = 0; ip < nPolynomials; ++ip)
-            mat.At(im, ip) = Power<double>(x, ip);
+            A.At(im, ip) = Power<double>(mi, ip);
 
         double sum = 0;
         for(uint32_t ip = 0; ip < nPolynomials; ++ip)
-            sum += mat.Get(im, ip) * c.at(im);
+            sum += A.Get(im, ip) * c.At(ip, 0);
+
         b.At(im, 0) = sum;
     }
 
-    const auto cHat = LeastSquares(mat, b);
+    const auto xHat = LeastSquares(A, b);
+    const auto bHat = Matmul(A, xHat);
+    EXPECT_TRUE(IsEqual(b, bHat, 1e-6));
+}
 
-    // EXPECT_TRUE(IsEqual(c, cHat, 1e-6));
+TEST(TestAlgorithms, LeastSquaresSimple)
+{
+    auto b = Vector3<double>{{6., 0., 0.}};
+    auto mat = Matrix<double, Shape<3, 2>>{{0., 1., 1., 1., 2., 1.}};
+
+    const auto xHat = LeastSquares(mat, b);
+
+    EXPECT_TRUE(IsEqual(xHat, Vector2<double>{{-3., 5.}}, 1e-10));
 }
 
 } // namespace linalg

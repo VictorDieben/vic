@@ -32,8 +32,8 @@
     <ClCompile Include="linalg\TestMatrices.cpp" />
     <ClCompile Include="linalg\TestInverse.cpp" />
     <ClCompile Include="linalg\TestTranspose.cpp" />
-    <ClCompile Include="linalg\TestLeastSquares.cpp" />
     <ClCompile Include="linalg\TestAdd.cpp" />
+    <ClCompile Include="linalg\TestLeastSquares.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
