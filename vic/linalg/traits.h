@@ -81,6 +81,15 @@ concept ConceptDiagonal = ConceptMatrix<T> && requires(T mat)
     T::Distribution == EDistribution::Diagonal;
 };
 
+template <typename T>
+concept ConceptTriDiagonal = ConceptMatrix<T> && requires(T mat)
+{
+    T::TempIsTriDiagonal == true; // todo: remove this boolean, find better solution
+    mat.A();
+    mat.B();
+    mat.C();
+};
+
 // TODO: implement, check that GetRows() and GetColumns() are constexpr
 template <typename T>
 concept ConceptConstexprMatrix = ConceptMatrix<T> && ConceptConstexprRows<T> && ConceptConstexprColumns<T>;

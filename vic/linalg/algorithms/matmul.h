@@ -38,6 +38,46 @@ constexpr EDistribution MatmulDistribution(const EDistribution first, const EDis
 template <typename TShape1, typename TShape2>
 using MatmulResultShape = Shape<TShape1::rows, TShape2::cols>;
 
+// todo: TriDiagonal x vector
+template <typename TMat, typename TVec>
+requires ConceptTriDiagonal<TMat> && ConceptVector<TVec>
+constexpr auto MatmulTriDiagVector(const TMat& mat, const TVec& vec)
+{
+    // multiplication between square diagonal and vector
+    assert(mat.GetRows() == mat.GetColumns());
+    assert(mat.GetColumns() == vec.GetRows());
+    assert(vec.GetColumns() == 1u);
+
+    using TValue = decltype(typename TMat::DataType() * typename TVec::DataType());
+    using TShape = MatmulResultShape<typename TMat::ShapeType, typename TVec::ShapeType>;
+
+    Matrix<TValue, TShape> result{mat.GetRows(), 1};
+
+    // Note: separate indices to help with loop unrolling
+    MatrixSize ia = 0;
+    for(const auto& a : mat.A())
+    {
+        result.At(ia + 1, 0) = a * vec.Get(ia, 0);
+        ia++;
+    }
+
+    MatrixSize ib = 0;
+    for(const auto& b : mat.B())
+    {
+        result.At(ib, 0) += b * vec.Get(ib, 0);
+        ib++;
+    }
+
+    MatrixSize ic = 0;
+    for(const auto& c : mat.C())
+    {
+        result.At(ic, 0) += c * vec.Get(ic + 1, 0);
+        ic++;
+    }
+
+    return result;
+}
+
 template <typename TMat1, typename TMat2>
 requires ConceptMatrix<TMat1> && ConceptVector<TMat2>
 constexpr auto MatmulDiagonalVector(const TMat1& mat1, const TMat2& mat2)
@@ -50,7 +90,7 @@ constexpr auto MatmulDiagonalVector(const TMat1& mat1, const TMat2& mat2)
     using TValue = decltype(typename TMat1::DataType() * typename TMat2::DataType());
     using TShape = MatmulResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>;
 
-    Diagonal<TValue, TShape> result{mat1.GetRows(), mat2.GetColumns()};
+    Matrix<TValue, TShape> result{mat1.GetRows(), mat2.GetColumns()};
     for(MatrixSize i = 0; i < Min(result.GetRows(), result.GetColumns()); ++i)
         result.At(i, 0) = mat1.Get(i, i) * mat2.Get(i, 0);
 
@@ -162,7 +202,7 @@ constexpr auto MatmulConstant(const TMat& mat, const TValue& value)
     }
 }
 
-// selector for the correct type of matrix multiplication
+// selector for the most efficient type of matrix multiplication
 template <typename TMat1, typename TMat2>
 requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto MatmulMatrix(const TMat1& mat1, const TMat2& mat2)
@@ -188,8 +228,10 @@ constexpr auto MatmulMatrix(const TMat1& mat1, const TMat2& mat2)
         else
             return MatmulColStack(mat1, mat2);
     }
-    else if constexpr(distribution == EDistribution::Diagonal)
+    else if constexpr(ConceptDiagonal<TMat1> && ConceptVector<TMat2>)
         return MatmulDiagonal(mat1, mat2);
+    else if constexpr(ConceptTriDiagonal<TMat1> && ConceptVector<TMat2>)
+        return MatmulTriDiagVector(mat1, mat2);
     else
         return MatmulFull(mat1, mat2);
 }

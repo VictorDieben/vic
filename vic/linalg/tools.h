@@ -244,7 +244,10 @@ constexpr auto IsOrthogonal(const TMat& mat, const double eps = 1e-10)
 
 template <typename TMat>
 requires ConceptMatrix<TMat>
-constexpr auto Negative(const TMat& mat) { return Matmul(-1., mat); }
+constexpr auto Negative(const TMat& mat)
+{
+    return Matmul(-1., mat); //
+}
 
 // 3d cross product
 template <typename TMat1, typename TMat2>
@@ -309,6 +312,74 @@ void RandomFill(TMat& mat)
                     mat.At(i, j) = randomValue(g);
         }
     }
+}
+//
+//// todo: TMatTarget needs to be assignable
+//template <typename TMatTarget, typename TMatSource>
+//constexpr auto Extract(const TMatSource& source, const std::size_t row, const std::size_t col)
+//{
+//    assert(target.GetRows() >= source.GetRows() + row);
+//    assert(target.GetColumns() >= source.GetColumns() + col);
+//
+//    for(std::size_t i = 0; i < source.GetRows(); ++i)
+//    {
+//        for(std::size_t j = 0; j < source.GetColumns(); ++j)
+//        {
+//            target.At(row + i, col + j) = source.At(i, j);
+//        }
+//    }
+//}
+
+constexpr std::pair<Row, Row> RowSplitSizes(const Row original, const Row firstSize, const Row secondSize)
+{
+    assert(firstSize != UnknownSize || secondSize != UnknownSize); // impossible to deduce anything
+
+    if(original == UnknownSize)
+        return std::pair{firstSize, secondSize};
+
+    if(firstSize != UnknownSize && secondSize != UnknownSize)
+    {
+        assert(original == firstSize + secondSize);
+        return std::pair{firstSize, secondSize};
+    }
+    else if(firstSize == UnknownSize)
+    {
+        assert(original < secondSize);
+        return std::pair{original - secondSize, secondSize};
+    }
+    else // if(secondSize == UnknownSize)
+    {
+        assert(original < firstSize);
+        return std::pair{firstSize, original - firstSize};
+    }
+}
+
+template <typename TMat1, typename TMat2, typename TMatInput>
+// requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && ConceptMatrix<TMatInput>
+constexpr auto RowSplit(const TMatInput& mat, const Row row)
+{
+    using TValue = typename TMatInput::DataType();
+    constexpr const Col colSize = TMatInput::GetColumns();
+
+    TMat1 mat1{row, colSize};
+    TMat2 mat2{mat.GetRows() - row, mat.GetColumns()};
+
+    return std::pair{mat1, mat2};
+}
+
+template <Row rowSize1, Row rowSize2, typename TMat>
+requires ConceptMatrix<TMat>
+constexpr auto RowSplit(const TMat& mat)
+{
+    using TValue = typename TMat::DataType;
+    constexpr const Col colSize = TMat::GetColumns();
+
+    // constexpr auto r1_r2 = RowSplitSizes(TMat::ShapeType::rows, rowSize1
+
+    using TPart1 = Matrix<TValue, Shape<rowSize1, colSize>>;
+    using TPart2 = Matrix<TValue, Shape<rowSize2, colSize>>;
+
+    return RowSplit<TPart1, TPart2, TMat>(mat, 2);
 }
 
 } // namespace linalg

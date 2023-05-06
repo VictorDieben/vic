@@ -182,5 +182,26 @@ TEST(TestLinalg, TestMatmulStack)
     }
 }
 
+TEST(TestLinalg, TestMatmulTriDiagonal)
+{
+    constexpr auto test = MatmulTriDiagVector(ToTriDiagonal(Identity6<double>{}), Vector6<double>{});
+
+    auto mat6 = Matrix6<double>{};
+    RandomFill(mat6);
+
+    // convert matrix to tri-diag, then back to full to extract tri-diagonal
+    auto tri6 = ToTriDiagonal(mat6);
+    auto mat6_tri = ToFull(tri6);
+
+    EXPECT_TRUE(IsEqual(tri6, mat6_tri));
+
+    auto vec6 = Vector6<double>{};
+    RandomFill(vec6);
+
+    const auto res1 = MatmulTriDiagVector(tri6, vec6);
+    const auto res2 = MatmulFull(mat6_tri, vec6);
+    EXPECT_TRUE(IsEqual(res1, res2));
+}
+
 } // namespace linalg
 } // namespace vic

@@ -30,10 +30,11 @@ struct EntityHandle
     EntityId Id() const { return mId; }
 
     template <typename T2>
-    void Add(const T2 component)
+    EntityHandle<T>& Add(const T2 component)
     {
         assert(mSystem && mId);
         mSystem->Add<T2>(mId, component);
+        return *this; // return this, so you can chain adds
     }
 
     template <typename T2>

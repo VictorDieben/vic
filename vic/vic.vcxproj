@@ -172,7 +172,15 @@
     <ClInclude Include="geometry\geometry.h" />
     <ClInclude Include="geometry\parametric.h" />
     <ClInclude Include="graph\algorithms.h" />
+    <ClInclude Include="graph\algorithms\a_star.h" />
+    <ClInclude Include="graph\algorithms\dijkstra.h" />
+    <ClInclude Include="graph\algorithms\floyd_warshall.h" />
+    <ClInclude Include="graph\algorithms\m_star.h" />
+    <ClInclude Include="graph\definitions.h" />
     <ClInclude Include="graph\graph.h" />
+    <ClInclude Include="graph\graph_types\adjecency_list.h" />
+    <ClInclude Include="graph\graph_types\base.h" />
+    <ClInclude Include="graph\graph_types\cartesian_product_graph.h" />
     <ClInclude Include="graph\iterators.h" />
     <ClInclude Include="graph\tensor_graph.h" />
     <ClInclude Include="graph\traits.h" />
@@ -239,6 +247,7 @@
     <ClInclude Include="utils\ranges.h" />
     <ClInclude Include="utils\sort.h" />
     <ClInclude Include="utils\statemachine.h" />
+    <ClInclude Include="utils\templates.h" />
     <ClInclude Include="utils\timing.h" />
     <ClInclude Include="utils\unique.h" />
   </ItemGroup>

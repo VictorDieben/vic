@@ -1,5 +1,7 @@
 #pragma once
 
+#include "definitions.h"
+
 namespace vic
 {
 namespace graph
@@ -41,6 +43,24 @@ concept ConceptTensorGraph = ConceptGraph<T> && requires(T graph)
     T::TensorVertexIdType;
     T::TensorEdgeIdType;
 };
+
+template <typename TVertex>
+struct vertex_index
+{
+    using type = uint64_t;
+};
+
+template <typename TVertex>
+using vertex_index_t = vertex_index<TVertex>::type;
+
+template <typename TEdge>
+struct edge_index
+{
+    using type = uint64_t;
+};
+
+template <typename TEdge>
+using edge_index_t = edge_index<TEdge>::type;
 
 } // namespace graph
 } // namespace vic

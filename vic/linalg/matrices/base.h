@@ -73,7 +73,7 @@ struct MatrixBaseColConst
     constexpr MatrixBaseColConst(const Row rows, const Col cols)
         : mRows(rows)
     {
-        VerifyShape<TShape>(rows, cols); //
+        VerifyShape<TShape>(rows, cols);
     }
 
     Row GetRows() const { return mRows; }

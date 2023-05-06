@@ -267,6 +267,33 @@
     <ClInclude Include="linalg\matrices\tridiagonal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="graph\definitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="graph\graph_types\adjecency_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="graph\graph_types\cartesian_product_graph.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="graph\graph_types\base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="graph\algorithms\dijkstra.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="graph\algorithms\floyd_warshall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="graph\algorithms\a_star.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="graph\algorithms\m_star.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\templates.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

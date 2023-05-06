@@ -146,7 +146,7 @@ auto ConstructStarGraph(const std::size_t arms)
 
 TEST(TestGraph, TestFloydWarshall)
 {
-    const std::size_t nx = 25, ny = 25;
+    const std::size_t nx = 100, ny = 100;
     TestGraph graph = ConstructGridGraph(nx, ny);
 
     ASSERT_EQ(graph.GetNumVertices(), nx * ny);

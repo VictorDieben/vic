@@ -197,12 +197,63 @@ constexpr auto SolveDiagonal(const TMatrix& matrix, const TVector& vector, const
     return x;
 }
 
+// todo: thomas algorithm for tridiagonal matrices:
+// http://www.industrial-maths.com/ms6021_thomas.pdf
+
+template <typename TMatrix, typename TVector>
+requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+constexpr auto SolveThomasAlgorithm(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
+{
+    // Solve using Thomas algorithm (for tri-diagonal matrices)
+
+    assert(matrix.GetRows() == matrix.GetColumns() && matrix.GetColumns() == vector.GetRows());
+    using TResultShape = SolveResultShape<TMatrix, TVector>;
+    using TValue = typename TMatrix::DataType;
+    using TResultType = Matrix<TValue, TResultShape>;
+
+    const MatrixSize n = matrix.GetRows();
+    assert(n >= 2);
+
+    TResultType gamma{vector.GetRows(), vector.GetColumns()};
+    TResultType rho{vector.GetRows(), vector.GetColumns()};
+
+    // first row, only normalize
+    const auto b0 = matrix.Get(0, 0);
+    gamma.At(0, 0) = matrix.Get(0, 1) / b0;
+    rho.At(0, 0) = vector.Get(0, 0) / b0;
+
+    // middle rows
+    for(Row i = 1; i < n - 1; ++i)
+    {
+        const auto ai = matrix.Get(i, i - 1);
+        const auto gamma_m1 = gamma.Get(i - 1, 0);
+        const auto bi = matrix.Get(i, i) - (ai * gamma_m1);
+        gamma.At(i, 0) = matrix.Get(i, i + 1) / bi;
+
+        const auto rho_m1 = rho.Get(i - 1, 0);
+        rho.At(i, 0) = vector.Get(i, 0) - (ai * rho_m1);
+    }
+
+    // todo: last row, here we don't need to set gamma
+    //const auto last = n - 1;
+    //const auto ai = matrix.Get(last, last - 1);
+    //const auto gamma_m1 = gamma.Get(i - 1, 0);
+    //const auto bi = matrix.Get(i, i) - (ai * gamma_m1);
+
+    //const auto rho_m1 = rho.Get(last - 1, 0);
+    //rho.At(last, 0) = vector.Get(last, 0) - (ai * rho_m1);
+
+    TResultType x{n, 1u};
+
+    return x;
+}
+
 // Selector for Inverse algorithm
 template <typename TMatrix, typename TVector>
 requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
 constexpr auto Solve(const TMatrix& matrix, const TVector& vector)
 {
-    return SolveJacobiMethod(matrix, vector); //
+    return SolveJacobiMethod(matrix, vector); // todo: select
 }
 
 } // namespace linalg

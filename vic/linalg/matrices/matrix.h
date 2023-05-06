@@ -149,8 +149,6 @@ using Matrix = TypeSelector<TShape, //
                             detail::MatrixColConst<T, TShape>,
                             detail::MatrixDynamic<T, TShape>>;
 
-// todo: Vector
-
 template <typename T, Row rowSize = UnknownSize>
 using Vector = std::conditional_t<rowSize == UnknownSize, //
                                   detail::MatrixDynamic<T, Shape<rowSize, 1u>>,

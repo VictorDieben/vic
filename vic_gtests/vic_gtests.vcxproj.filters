@@ -34,6 +34,8 @@
     <ClCompile Include="linalg\TestTranspose.cpp" />
     <ClCompile Include="linalg\TestAdd.cpp" />
     <ClCompile Include="linalg\TestLeastSquares.cpp" />
+    <ClCompile Include="linalg\TestTools.cpp" />
+    <ClCompile Include="graph\AdjecencyGraph.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />

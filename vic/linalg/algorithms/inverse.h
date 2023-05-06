@@ -12,7 +12,8 @@ namespace linalg
 {
 
 template <typename TShape>
-using InverseResultShape = Shape<Min(TShape::rows, TShape::cols), Min(TShape::rows, TShape::cols)>;
+using InverseResultShape = SquareShape<TShape>;
+//using InverseResultShape = Shape<Min(TShape::rows, TShape::cols), Min(TShape::rows, TShape::cols)>;
 
 template <typename TMat>
 requires ConceptMatrix<TMat>

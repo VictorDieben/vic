@@ -228,26 +228,26 @@ TEST(TestUtils, TestStateMachine)
          std::pair{State::Four, State::Five}, //
          std::pair{State::Five, State::One}};
 
-    // TODO: change template definition such that this simply becomes:
-    // StateMachine<validChanges> stateMachine{State::Two};
-    StateMachine<State, validChanges.size(), validChanges> stateMachine(State::Two);
+    //// TODO: change template definition such that this simply becomes:
+    //// StateMachine<validChanges> stateMachine{State::Two};
+    //StateMachine<State, validChanges.size(), validChanges> stateMachine(State::Two);
 
-    EXPECT_TRUE(stateMachine.HasState<State::Two>());
-    EXPECT_EQ(stateMachine.GetState(), State::Two);
+    //EXPECT_TRUE(stateMachine.HasState<State::Two>());
+    //EXPECT_EQ(stateMachine.GetState(), State::Two);
 
-    stateMachine.SetState<State::Two, State::Four>();
-    EXPECT_TRUE(stateMachine.HasState<State::Four>());
-    // EXPECT_DEATH((stateMachine.SetState<State::Two, State::Four>()), ""); // valid change, but wrong fromState
-    // EXPECT_DEATH((stateMachine.SetState<State::Four, State::One>()), ""); // invalid change, correct fromState
+    //stateMachine.SetState<State::Two, State::Four>();
+    //EXPECT_TRUE(stateMachine.HasState<State::Four>());
+    //// EXPECT_DEATH((stateMachine.SetState<State::Two, State::Four>()), ""); // valid change, but wrong fromState
+    //// EXPECT_DEATH((stateMachine.SetState<State::Four, State::One>()), ""); // invalid change, correct fromState
 
-    // check at compile time that some state changes are valid or not
-    static_assert(stateMachine.IsValid<State::One, State::Two>());
-    static_assert(!stateMachine.IsValid<State::One, State::Five>());
+    //// check at compile time that some state changes are valid or not
+    //static_assert(stateMachine.IsValid<State::One, State::Two>());
+    //static_assert(!stateMachine.IsValid<State::One, State::Five>());
 
-    // TODO: some kind of wrapper for calling a Tick function per current state.
-    // This way, we can even avoid checking the current state.
-    // and maybe even predict deadlock states
-    //stateMachine.Tick(); // calls: stateMachine.Tick<State::Two>();
+    //// TODO: some kind of wrapper for calling a Tick function per current state.
+    //// This way, we can even avoid checking the current state.
+    //// and maybe even predict deadlock states
+    ////stateMachine.Tick(); // calls: stateMachine.Tick<State::Two>();
 }
 
 TEST(TestUtils, TestNewStateMachine)

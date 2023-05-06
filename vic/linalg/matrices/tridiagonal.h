@@ -13,6 +13,9 @@ namespace linalg
 {
 namespace detail
 {
+// [b1 c1 0 ]
+// [a1 b2 c2]
+// [0  a2 b3]
 
 template <typename T, typename TShape>
 class TriDiagonalConst : public MatrixBaseSelector<TShape>
@@ -60,6 +63,10 @@ public:
         assert(i == j);
         return mB[i];
     }
+
+    constexpr const auto& A() const { return mA; }
+    constexpr const auto& B() const { return mB; }
+    constexpr const auto& C() const { return mC; }
 
 private:
     static constexpr MatrixSize mDiagonalSize = TShape::rows;
@@ -120,7 +127,13 @@ public:
         return mB[i];
     }
 
+    const auto& A() const { return mA; }
+    const auto& B() const { return mB; }
+    const auto& C() const { return mC; }
+
 private:
+    // todo: give the user access to these objects,
+    // it can be very useful to iterate over them directly
     std::vector<T> mA{};
     std::vector<T> mB{};
     std::vector<T> mC{};

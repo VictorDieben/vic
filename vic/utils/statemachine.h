@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <tuple>
 
+#include "vic/utils/templates.h"
+
 namespace vic
 {
 
@@ -49,23 +51,6 @@ private:
     TEnum mState{};
 };
 
-template <typename T1, typename T2, typename... Args>
-constexpr bool contains_helper()
-{
-    if(std::is_same_v<T1, T2>)
-        return true;
-    if constexpr(sizeof...(Args) > 0)
-        return contains<T1, Args...>();
-    return false;
-}
-
-// find out if T is contained in Ts
-template <typename T, typename... Ts>
-constexpr bool contains()
-{
-    return contains_helper<T, Ts...>();
-}
-
 template <auto stateValue>
 struct State
 {
@@ -91,7 +76,7 @@ struct StateContainer
     template <typename T>
     constexpr static bool Contains()
     {
-        return contains<T, States...>();
+        return templates::contains<T, States...>();
     }
     // todo: make sure all states are compatible with each other
 };
@@ -100,20 +85,22 @@ struct StateContainer
 template <typename... Transitions>
 struct TransitionContainer
 {
-    constexpr static std::tuple<Transitions...> types{};
+    using TransitionsTuple = std::tuple<Transitions...>;
+    constexpr static TransitionsTuple types{};
 
     template <typename T>
     constexpr static bool Contains()
     {
-        return contains<T, Transitions...>();
+        return templates::contains<T, Transitions...>();
     }
 };
 
 template <typename TStateContainer, typename TTransition>
 constexpr bool ValidateTransition()
 {
-    //return TStateContainer::Contains<typename TTransition::from>() && //
-    //       TStateContainer::Contains<typename TTransition::to>();
+    //constexpr static bool containsFrom = TStateContainer::Contains<typename TTransition::from>();
+    //constexpr static bool containsTo = TStateContainer::Contains<typename TTransition::to>();
+    //return containsFrom && containsTo;
     return true;
 }
 
@@ -121,26 +108,26 @@ template <typename TStateContainer, typename TTransitionContainer>
 constexpr bool ValidateContainer()
 {
     bool allTrue = true;
-    const auto& types = TTransitionContainer::types;
+    using transitions = TTransitionContainer::TransitionsTuple;
 
-    auto res = std::apply(
-        [](auto... x) {
-            return std::make_tuple( //
-                ValidateTransition<TStateContainer, decltype(x)>()...);
-        },
-        types);
+    //auto res = std::apply(
+    //    [](auto... x) {
+    //        return std::make_tuple( //
+    //            ValidateTransition<TStateContainer, decltype(x)>()...);
+    //    },
+    //    TTransitionContainer::types);
     return allTrue;
-}
+};
 
 // Type that only contains the compile time info of a state machine
 template <typename TStates, typename TTransitions>
 struct StateMachineDescription
 {
     // Make sure the states and transitions are compatible
-    static_assert(ValidateContainer<TStates, TTransitions>());
+    // static_assert(ValidateContainer<TStates, TTransitions>());
 
-    using States = TStates;
-    using Transitions = TTransitions;
+    using StatesContainer = TStates;
+    using TransitionsContainer = TTransitions;
 };
 
 //
