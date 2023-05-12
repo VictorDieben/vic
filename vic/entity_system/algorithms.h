@@ -7,7 +7,7 @@
 
 namespace vic
 {
-namespace entity
+namespace ecs
 {
 // 3d
 template <typename T1, typename T2, typename T3, typename TSystem, typename TFunctor>
@@ -153,5 +153,5 @@ auto Filter(TSystem& system)
 //    //
 //}
 
-} // namespace entity
+} // namespace ecs
 } // namespace vic

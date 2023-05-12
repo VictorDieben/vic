@@ -26,7 +26,7 @@ struct DiagonalConst : public MatrixBaseSelector<TShape>
 
     constexpr static bool TempIsDiagonal = true; // todo: find better solution
 
-    DiagonalConst() = default;
+    constexpr DiagonalConst() = default;
     constexpr DiagonalConst(const Row rows, const Col cols)
         : MatrixBaseSelector<TShape>(TShape::rows, TShape::cols)
     {

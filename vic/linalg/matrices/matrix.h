@@ -27,7 +27,7 @@ struct MatrixConst : public MatrixBaseSelector<TShape>
     constexpr static auto Distribution = EDistribution::Full;
     constexpr static MatrixSize ArraySize = MatrixBase::GetRows() * MatrixBase::GetColumns();
 
-    MatrixConst() = default;
+    constexpr MatrixConst() = default;
     constexpr MatrixConst(const Row rows, const Col cols)
         : MatrixBaseSelector<TShape>(rows, cols)
     { }

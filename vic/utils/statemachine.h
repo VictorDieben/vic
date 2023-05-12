@@ -76,7 +76,7 @@ struct StateContainer
     template <typename T>
     constexpr static bool Contains()
     {
-        return templates::contains<T, States...>();
+        return templates::Contains<T, States...>();
     }
     // todo: make sure all states are compatible with each other
 };
@@ -91,17 +91,16 @@ struct TransitionContainer
     template <typename T>
     constexpr static bool Contains()
     {
-        return templates::contains<T, Transitions...>();
+        return templates::Contains<T, Transitions...>();
     }
 };
 
 template <typename TStateContainer, typename TTransition>
 constexpr bool ValidateTransition()
 {
-    //constexpr static bool containsFrom = TStateContainer::Contains<typename TTransition::from>();
-    //constexpr static bool containsTo = TStateContainer::Contains<typename TTransition::to>();
-    //return containsFrom && containsTo;
-    return true;
+    constexpr static bool containsFrom = TStateContainer::template Contains<typename TTransition::from>();
+    constexpr static bool containsTo = TStateContainer::template Contains<typename TTransition::to>();
+    return containsFrom && containsTo;
 }
 
 template <typename TStateContainer, typename TTransitionContainer>
@@ -124,7 +123,7 @@ template <typename TStates, typename TTransitions>
 struct StateMachineDescription
 {
     // Make sure the states and transitions are compatible
-    // static_assert(ValidateContainer<TStates, TTransitions>());
+    static_assert(ValidateContainer<TStates, TTransitions>() && "Invalid description; not all transitions are composed of existing states");
 
     using StatesContainer = TStates;
     using TransitionsContainer = TTransitions;

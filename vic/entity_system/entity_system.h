@@ -8,10 +8,11 @@
 #include "vic/entity_system/algorithms.h"
 #include "vic/entity_system/definitions.h"
 #include "vic/memory/flat_map.h"
+#include "vic/utils/templates.h"
 
 namespace vic
 {
-namespace entity
+namespace ecs
 {
 
 template <typename T>
@@ -172,13 +173,15 @@ public:
 };
 
 template <typename... TComponents>
-class EntitySystem : public ComponentSystem<TComponents>...
+class ECS : public ComponentSystem<TComponents>...
 {
 public:
-    // todo: better way to define EntityHandle(decltype(*this))
-    using Handle = EntityHandle<EntitySystem<TComponents...>>;
+    static_assert(templates::IsUnique<TComponents...>() && "Component list is not Unique!");
 
-    EntitySystem() = default;
+    // todo: better way to define EntityHandle(decltype(*this))
+    using Handle = EntityHandle<ECS<TComponents...>>;
+
+    ECS() = default;
 
     Handle NewEntity()
     {
@@ -204,24 +207,28 @@ public:
     template <typename T>
     void Add(EntityId id, T item)
     {
+        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
         ComponentSystem<T>::Add(id, item);
     }
 
     template <typename T>
     T& Get(EntityId id)
     {
+        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
         return ComponentSystem<T>::Get(id);
     }
 
     template <typename T>
     T* TryGet(EntityId id)
     {
+        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
         return ComponentSystem<T>::TryGet(id);
     }
 
     template <typename T>
     bool Has(EntityId id) const
     {
+        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
         return ComponentSystem<T>::Has(id);
     }
 
@@ -233,12 +240,14 @@ public:
     template <typename T>
     bool Remove(EntityId id)
     {
+        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
         return ComponentSystem<T>::Remove(id);
     }
 
     template <typename T>
     std::size_t Size() const
     {
+        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
         return ComponentSystem<T>::Size();
     }
 
@@ -247,24 +256,28 @@ public:
     template <typename T>
     auto begin()
     {
+        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
         return ComponentSystem<T>::begin();
     }
 
     template <typename T>
     auto end()
     {
+        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
         return ComponentSystem<T>::end();
     }
 
     template <typename T>
     auto begin() const
     {
+        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
         return ComponentSystem<T>::cbegin();
     }
 
     template <typename T>
     auto end() const
     {
+        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
         return ComponentSystem<T>::cend();
     }
 
@@ -273,12 +286,15 @@ public:
     template <typename T1, typename T2>
     auto Filter()
     {
+        static_assert(templates::Contains<T1, TComponents...>() && "Unknown component T1");
+        static_assert(templates::Contains<T2, TComponents...>() && "Unknown component T2");
         return Filter<T1, T2>(*this);
     }
 
     template <typename T, typename TIter>
     auto Insert(TIter begin, TIter end)
     {
+        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
         ComponentSystem<T>::Insert(begin, end);
     }
 
@@ -287,10 +303,17 @@ public:
         EntityId mNewCounter{1};
 
         if(HasAny(mNewCounter))
-        { // entity exists
+        { // Entity exists
         }
         else
-        { }
+        { // Entity without components, can be removed
+        }
+    }
+
+    template <typename T>
+    static constexpr bool ContainsComponent()
+    {
+        return templates::Contains<T, TComponents...>();
     }
 
 private:
@@ -345,5 +368,21 @@ private:
     //}
 };
 
-} // namespace entity
+template <typename TEcs, typename... TComponents>
+class System
+{
+public:
+    using ECSType = TEcs;
+
+    static_assert((TEcs::template ContainsComponent<std::remove_cv_t<TComponents>>() && ...) && "ECS does not contain all required components!");
+
+    System(TEcs& system)
+        : mSystem(system)
+    { }
+
+private:
+    TEcs& mSystem;
+};
+
+} // namespace ecs
 } // namespace vic

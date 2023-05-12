@@ -4,7 +4,7 @@
 
 namespace vic
 {
-namespace entity
+namespace ecs
 {
 
 using EntityId = uint64_t;

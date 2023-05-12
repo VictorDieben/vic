@@ -287,7 +287,8 @@ TEST(TestUtils, TestNewStateMachine)
 
     using Description = StateMachineDescription<StateList, TransitionList>;
 
-    Description description{};
+    NewStateMachine<Description> newStateMachine;
+    (void)newStateMachine;
 }
 
 TEST(TestUtils, TestObservable)
@@ -448,4 +449,36 @@ TEST(TestUtils, Ranges)
     //{
     //    // do stuff
     //}
+}
+
+TEST(TestUtils, Templates_Contains)
+{
+    static_assert(!templates::Contains<double>());
+
+    static_assert(templates::Contains<double, double>());
+    static_assert(templates::Contains<double, int, double>());
+    static_assert(!templates::Contains<double, int>());
+    static_assert(!templates::Contains<double, int, uint16_t>());
+}
+
+TEST(TestUtils, Templates_IsUnique)
+{
+    static_assert(templates::IsUnique<>());
+    static_assert(templates::IsUnique<double>());
+    static_assert(templates::IsUnique<double, int>());
+    static_assert(templates::IsUnique<double, uint16_t, int>());
+    static_assert(templates::IsUnique<double, float, uint16_t, int>());
+
+    static_assert(!templates::IsUnique<double, double>());
+    static_assert(!templates::IsUnique<double, uint16_t, double>());
+    static_assert(!templates::IsUnique<double, uint16_t, float, double>());
+    static_assert(!templates::IsUnique<double, double, uint16_t, float>());
+    static_assert(!templates::IsUnique<double, double, double, double>());
+    static_assert(!templates::IsUnique<int, double, uint16_t, double>());
+}
+
+TEST(TestUtils, Templates_Unique)
+{
+    //
+    // static_assert(std::is_same_v<std::tuple<double>, typename templates::to_unique<double>::tuple_type>);
 }

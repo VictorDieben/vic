@@ -11,7 +11,7 @@ using namespace vic;
 TEST(TestEntitySystem, Startup)
 {
     // create a system, add an entity, add components to that entity, retrieve them
-    using System = vic::entity::EntitySystem<int, float, std::string>;
+    using System = vic::ecs::ECS<int, float, std::string>;
     using Handle = System::Handle;
 
     System system;
@@ -47,7 +47,7 @@ TEST(TestEntitySystem, ComponentSystem)
     {
         uint64_t val;
     };
-    using ComponentSystem = vic::entity::ComponentSystem<TestType>;
+    using ComponentSystem = vic::ecs::ComponentSystem<TestType>;
     ComponentSystem components{};
 
     for(std::size_t i = 0; i < 10; ++i)
@@ -57,7 +57,7 @@ TEST(TestEntitySystem, ComponentSystem)
     const ComponentSystem& refComponents = components;
     EXPECT_EQ(refComponents.Get(1).val, 1u);
 
-    std::optional<vic::entity::EntityId> previous;
+    std::optional<vic::ecs::EntityId> previous;
     for(const auto& comp : refComponents)
     {
         EXPECT_EQ(comp.first, comp.second.val);
@@ -90,7 +90,7 @@ TEST(TestEntitySystem, Filter)
         std::string buzzName{};
     };
 
-    using System = vic::entity::EntitySystem<Name, Fizz, Buzz>;
+    using System = vic::ecs::ECS<Name, Fizz, Buzz>;
     using Handle = System::Handle;
 
     System system;
@@ -164,7 +164,7 @@ TEST(TestEntitySystem, Remove)
     struct D
     { };
 
-    using System = vic::entity::EntitySystem<A, B, C, D>;
+    using System = vic::ecs::ECS<A, B, C, D>;
     using Handle = System::Handle;
 
     System system;
@@ -201,7 +201,7 @@ TEST(TestEntitySystem, 3d)
     struct D
     { };
 
-    using System = vic::entity::EntitySystem<A, B, C, D>;
+    using System = vic::ecs::ECS<A, B, C, D>;
     using Handle = System::Handle;
 
     System system;
@@ -219,11 +219,11 @@ TEST(TestEntitySystem, Insert)
         double val;
     };
 
-    using System = vic::entity::EntitySystem<A, B>;
+    using System = vic::ecs::ECS<A, B>;
     using Handle = System::Handle;
 
     // create some data that we can push into the component system at once.
-    std::vector<std::pair<const vic::entity::EntityId, A>> data;
+    std::vector<std::pair<const vic::ecs::EntityId, A>> data;
     data.push_back({0, {0}});
     data.push_back({1, {1}});
 
@@ -239,7 +239,7 @@ TEST(TestEntitySystem, TryGet)
     {
         int val;
     };
-    using System = vic::entity::EntitySystem<A>;
+    using System = vic::ecs::ECS<A>;
     using Handle = System::Handle;
 
     System system;
@@ -267,7 +267,7 @@ TEST(TestEntitySystem, HasAny)
     {
         int otherVal;
     };
-    using System = vic::entity::EntitySystem<A, B>;
+    using System = vic::ecs::ECS<A, B>;
     System system;
 
     auto ent1 = system.NewEntity();
@@ -278,9 +278,40 @@ TEST(TestEntitySystem, HasAny)
     ASSERT_FALSE(ent1.HasAny());
     ent1.Add<B>({});
     ASSERT_TRUE(ent1.HasAny());
+
+    ASSERT_TRUE(System::ContainsComponent<A>());
+    ASSERT_TRUE(System::ContainsComponent<B>());
+    ASSERT_FALSE(System::ContainsComponent<int>());
+    ASSERT_FALSE(System::ContainsComponent<double>());
 }
 
 TEST(TestEntitySystem, Relabel)
 {
     //
+}
+
+TEST(TestEntitySystem, System)
+{
+    struct A
+    {
+        int val;
+    };
+    struct B
+    {
+        int otherVal;
+    };
+    using MyEcs = vic::ecs::ECS<A, B>;
+    MyEcs ecs;
+
+    // define a system that only requires a component A
+    vic::ecs::System<MyEcs, A> system1(ecs);
+
+    // define a system that requires both A and B
+    vic::ecs::System<MyEcs, A, B> system2(ecs);
+
+    // define a system that needs a const A, and a normal B
+    vic::ecs::System<MyEcs, const A, B> system3(ecs);
+
+    // failure:
+    // vic::ecs::System<ECS, double> system_failure(ecs);
 }
