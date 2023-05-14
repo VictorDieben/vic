@@ -51,7 +51,7 @@ TEST(TestEntitySystem, ComponentSystem)
     ComponentSystem components{};
 
     for(std::size_t i = 0; i < 10; ++i)
-        components.Add(i, TestType{static_cast<uint64_t>(i)});
+        components.Add(i, static_cast<uint64_t>(i));
 
     // create a const ref to the system, try to read from there
     const ComponentSystem& refComponents = components;
@@ -99,13 +99,13 @@ TEST(TestEntitySystem, Filter)
     {
         auto ent = system.NewEntity();
 
-        ent.Add<Name>({std::to_string(i), int(i)});
+        ent.Add<Name>(std::to_string(i), int(i));
 
         if(i % 3 == 0)
-            ent.Add<Fizz>({});
+            ent.Add<Fizz>();
 
         if(i % 5 == 0)
-            ent.Add<Buzz>({});
+            ent.Add<Buzz>();
     }
 
     // iterate 1d
@@ -131,6 +131,8 @@ TEST(TestEntitySystem, Filter)
         sum++;
     }
     EXPECT_EQ(sum, 7);
+
+    // todo: filter all objects with a Fizz _or_ Buzz component
 
     // iterate 3d;
     for(auto [entId, namePtr, fizzPtr, buzzPtr] : Filter<Name, Fizz, Buzz>(system))
@@ -169,25 +171,32 @@ TEST(TestEntitySystem, Remove)
 
     System system;
     Handle handle = system.NewEntity();
+    EXPECT_FALSE(handle.HasAny());
 
     EXPECT_FALSE(handle.Has<A>() || handle.Has<B>() || handle.Has<C>() || handle.Has<D>());
 
-    handle.Add<A>({});
-    handle.Add<B>({});
-    handle.Add<C>({});
-    handle.Add<D>({});
+    handle.Add<A>();
+
+    EXPECT_TRUE(handle.HasAny());
+
+    handle.Add<B>();
+    handle.Add<C>();
+    handle.Add<D>();
 
     EXPECT_TRUE(handle.Has<A>() && handle.Has<B>() && handle.Has<C>() && handle.Has<D>());
+    EXPECT_TRUE(handle.HasAny());
 
     handle.Remove<A>();
 
     EXPECT_TRUE(handle.Has<B>() && handle.Has<C>() && handle.Has<D>());
     EXPECT_FALSE(handle.Has<A>());
+    EXPECT_TRUE(handle.HasAny());
 
     system.RemoveEntity(handle);
 
     // todo: invalidate handle?
     EXPECT_FALSE(handle.Has<A>() || handle.Has<B>() || handle.Has<C>() || handle.Has<D>());
+    EXPECT_FALSE(handle.HasAny());
 }
 
 TEST(TestEntitySystem, 3d)
@@ -246,7 +255,7 @@ TEST(TestEntitySystem, TryGet)
 
     auto firstEnt = system.NewEntity();
     auto secondEnt = system.NewEntity();
-    secondEnt.Add<A>({5});
+    secondEnt.Add<A>(5);
 
     if(auto nonexistantA = firstEnt.TryGet<A>())
         ASSERT_TRUE(false); // should not be reachable
@@ -272,11 +281,11 @@ TEST(TestEntitySystem, HasAny)
 
     auto ent1 = system.NewEntity();
     ASSERT_FALSE(ent1.HasAny());
-    ent1.Add<A>({});
+    ent1.Add<A>();
     ASSERT_TRUE(ent1.HasAny());
     ent1.Remove<A>();
     ASSERT_FALSE(ent1.HasAny());
-    ent1.Add<B>({});
+    ent1.Add<B>();
     ASSERT_TRUE(ent1.HasAny());
 
     ASSERT_TRUE(System::ContainsComponent<A>());
@@ -288,6 +297,29 @@ TEST(TestEntitySystem, HasAny)
 TEST(TestEntitySystem, Relabel)
 {
     //
+}
+
+TEST(TestEntitySystem, ChainAdds)
+{
+    struct A
+    {
+        int val;
+    };
+    struct B
+    {
+        int otherVal;
+    };
+
+    using MyEcs = vic::ecs::ECS<A, B>;
+    MyEcs ecs;
+    auto newEnt = ecs.NewEntity();
+
+    newEnt //
+        .Add<A>(1)
+        .Add<B>(2);
+
+    EXPECT_TRUE(newEnt.Has<A>() && newEnt.Get<A>().val == 1);
+    EXPECT_TRUE(newEnt.Has<B>() && newEnt.Get<B>().otherVal == 2);
 }
 
 TEST(TestEntitySystem, System)

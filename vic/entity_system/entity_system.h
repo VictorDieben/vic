@@ -30,11 +30,11 @@ struct EntityHandle
     operator EntityId() const { return mId; }
     EntityId Id() const { return mId; }
 
-    template <typename T2>
-    EntityHandle<T>& Add(const T2 component)
+    template <typename TComponent>
+    EntityHandle<T>& Add(auto&&... args)
     {
         assert(mSystem && mId);
-        mSystem->Add<T2>(mId, component);
+        mSystem->Add<TComponent>(mId, std::forward<decltype(args)>(args)...);
         return *this; // return this, so you can chain adds
     }
 
@@ -98,9 +98,9 @@ public:
 
     using value_type = std::pair<const EntityId, T>;
 
-    T& Add(const EntityId id, const T& component)
+    T& Add(EntityId id, auto&&... args)
     {
-        mComponents[id] = component;
+        mComponents[id] = T{args...};
         return mComponents[id];
     }
 
@@ -201,14 +201,14 @@ public:
 
     void RemoveEntity(EntityId id)
     {
-        RemoveEntityRecursive<TComponents...>(id); //
+        (ComponentSystem<TComponents>::Remove(id), ...); //
     }
 
     template <typename T>
-    void Add(EntityId id, T item)
+    void Add(EntityId id, auto&&... args)
     {
         static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
-        ComponentSystem<T>::Add(id, item);
+        ComponentSystem<T>::Add(id, std::forward<decltype(args)>(args)...);
     }
 
     template <typename T>
@@ -234,7 +234,7 @@ public:
 
     bool HasAny(EntityId id) const
     {
-        return HasAnyRecursive<TComponents...>(id); //
+        return (ComponentSystem<TComponents>::Has(id) || ...); //
     }
 
     template <typename T>
@@ -318,42 +318,6 @@ public:
 
 private:
     EntityId mEntityCounter{1}; // reserve 0 for emtpy, not sure if I need that
-
-    // todo: set of occupied entity ids?
-
-    template <typename T>
-    void RemoveEntityRecursive(EntityId id)
-    {
-        ComponentSystem<T>::Remove(id);
-    }
-    template <typename T1, typename T2, typename... Ts>
-    void RemoveEntityRecursive(EntityId id)
-    {
-        ComponentSystem<T1>::Remove(id);
-        RemoveEntityRecursive<T2, Ts...>(id);
-    }
-
-    //
-    //
-    //
-
-    template <typename T>
-    bool HasAnyRecursive(EntityId id) const
-    {
-        return ComponentSystem<T>::Has(id);
-    }
-    template <typename T1, typename T2, typename... Ts>
-    bool HasAnyRecursive(EntityId id) const
-    {
-        if(ComponentSystem<T1>::Has(id))
-            return true;
-        else
-            return HasAnyRecursive<T2, Ts...>(id);
-    }
-
-    //
-    //
-    //
 
     //template <typename TFunctor, typename T>
     //void ForeachComponent(TFunctor& functor) const
