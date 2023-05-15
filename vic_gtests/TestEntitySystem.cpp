@@ -1,8 +1,6 @@
 #include "pch.h"
 
-#include "vic/entity_system/entity_system.h"
-
-#include "vic/entity_system/algorithms.h"
+#include "vic/entity_system/ecs.h"
 
 #include <optional>
 
@@ -50,7 +48,8 @@ TEST(TestEntitySystem, ComponentSystem)
     using ComponentSystem = vic::ecs::ComponentSystem<TestType>;
     ComponentSystem components{};
 
-    for(std::size_t i = 0; i < 10; ++i)
+    const std::size_t first = 1;
+    for(std::size_t i = first; i < 10; ++i)
         components.Add(i, static_cast<uint64_t>(i));
 
     // create a const ref to the system, try to read from there
@@ -62,18 +61,17 @@ TEST(TestEntitySystem, ComponentSystem)
     {
         EXPECT_EQ(comp.first, comp.second.val);
         if(previous) // check increasing order
-        {
             EXPECT_TRUE(previous.value() < comp.first);
-            previous = comp.first;
-        }
+
+        previous = comp.first;
     }
 
     // test removing an item
-    EXPECT_TRUE(components.Has(0));
-    EXPECT_TRUE(components.Remove(0));
-    EXPECT_FALSE(components.Has(0));
-    EXPECT_FALSE(components.Remove(0)); // cannot remove an item that is already removed
-    EXPECT_FALSE(components.Has(0));
+    EXPECT_TRUE(components.Has(first));
+    EXPECT_TRUE(components.Remove(first));
+    EXPECT_FALSE(components.Has(first));
+    EXPECT_FALSE(components.Remove(first)); // cannot remove an item that is already removed
+    EXPECT_FALSE(components.Has(first));
 }
 
 TEST(TestEntitySystem, Filter)
@@ -346,4 +344,63 @@ TEST(TestEntitySystem, System)
 
     // failure:
     // vic::ecs::System<ECS, double> system_failure(ecs);
+}
+
+TEST(TestEntitySystem, CrossRef)
+{
+    // todo: make a CrossRef<TComponent, ...> type,
+    // which is essentially just an EntityId,
+    // but with component types assosiated to it.
+    // in a debug build, Whenever the entity id is dereferenced,
+    // it should be verified that the entity has the associated components
+}
+
+TEST(TestEntitySystem, Collection)
+{
+    struct Item
+    {
+        std::string description;
+    };
+    struct Backpack : public vic::ecs::Collection<Item>
+    {
+        using base = typename vic::ecs::Collection<Item>;
+        using base::base;
+    };
+
+    static_assert(!vic::ecs::ConceptCollection<Item>);
+    static_assert(vic::ecs::ConceptCollection<Backpack>);
+
+    using MyEcs = vic::ecs::ECS<Item, Backpack>;
+    MyEcs ecs;
+
+    auto sword = ecs.NewEntity();
+    sword.Add<Item>("sword");
+
+    auto shield = ecs.NewEntity();
+    shield.Add<Item>("shield");
+
+    auto backpack = ecs.NewEntity();
+    backpack.Add<Backpack>(sword, shield);
+
+    EXPECT_TRUE(backpack.Get<Backpack>().Verify(ecs));
+
+    // add an entity without the Item component, check that Verify fails
+    auto rain = ecs.NewEntity();
+    backpack.Get<Backpack>().Insert(rain);
+    EXPECT_FALSE(backpack.Get<Backpack>().Verify(ecs));
+
+    // remove the item, check that it succeeds again
+    backpack.Get<Backpack>().Remove(rain);
+    EXPECT_TRUE(backpack.Get<Backpack>().Verify(ecs));
+
+    // todo: fast iteration over the sorted items in the collection
+    std::set<vic::ecs::EntityId> ids;
+    for(const auto& itemId : backpack.Get<Backpack>())
+        ids.insert(itemId);
+    const std::set<vic::ecs::EntityId> answer{sword.Id(), shield.Id()};
+    EXPECT_EQ(ids, answer);
+
+    // copy backpack into a vector of entity ids.
+    const auto items = std::vector{backpack.Get<Backpack>().begin(), backpack.Get<Backpack>().end()};
+    EXPECT_EQ(items.size(), 2u);
 }

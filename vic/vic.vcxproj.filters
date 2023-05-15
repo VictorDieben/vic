@@ -294,6 +294,12 @@
     <ClInclude Include="utils\templates.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="entity_system\ecs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="entity_system\collection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

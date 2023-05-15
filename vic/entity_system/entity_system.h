@@ -207,28 +207,28 @@ public:
     template <typename T>
     void Add(EntityId id, auto&&... args)
     {
-        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         ComponentSystem<T>::Add(id, std::forward<decltype(args)>(args)...);
     }
 
     template <typename T>
     T& Get(EntityId id)
     {
-        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::Get(id);
     }
 
     template <typename T>
     T* TryGet(EntityId id)
     {
-        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::TryGet(id);
     }
 
     template <typename T>
     bool Has(EntityId id) const
     {
-        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::Has(id);
     }
 
@@ -240,14 +240,14 @@ public:
     template <typename T>
     bool Remove(EntityId id)
     {
-        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::Remove(id);
     }
 
     template <typename T>
     std::size_t Size() const
     {
-        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::Size();
     }
 
@@ -256,28 +256,28 @@ public:
     template <typename T>
     auto begin()
     {
-        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::begin();
     }
 
     template <typename T>
     auto end()
     {
-        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::end();
     }
 
     template <typename T>
     auto begin() const
     {
-        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::cbegin();
     }
 
     template <typename T>
     auto end() const
     {
-        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::cend();
     }
 
@@ -286,15 +286,15 @@ public:
     template <typename T1, typename T2>
     auto Filter()
     {
-        static_assert(templates::Contains<T1, TComponents...>() && "Unknown component T1");
-        static_assert(templates::Contains<T2, TComponents...>() && "Unknown component T2");
+        static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
+        static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
         return Filter<T1, T2>(*this);
     }
 
     template <typename T, typename TIter>
     auto Insert(TIter begin, TIter end)
     {
-        static_assert(templates::Contains<T, TComponents...>() && "Unknown component T");
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         ComponentSystem<T>::Insert(begin, end);
     }
 
@@ -344,7 +344,7 @@ public:
         : mSystem(system)
     { }
 
-private:
+protected:
     TEcs& mSystem;
 };
 
