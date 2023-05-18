@@ -6,6 +6,21 @@
 
 using namespace vic;
 
+struct A
+{ };
+struct B
+{ };
+struct C
+{ };
+struct D
+{ };
+struct E
+{ };
+struct F
+{ };
+struct G
+{ };
+
 TEST(TestEntitySystem, Startup)
 {
     // create a system, add an entity, add components to that entity, retrieve them
@@ -155,14 +170,6 @@ TEST(TestEntitySystem, Filter)
 
 TEST(TestEntitySystem, Remove)
 {
-    struct A
-    { };
-    struct B
-    { };
-    struct C
-    { };
-    struct D
-    { };
 
     using System = vic::ecs::ECS<A, B, C, D>;
     using Handle = System::Handle;
@@ -199,15 +206,6 @@ TEST(TestEntitySystem, Remove)
 
 TEST(TestEntitySystem, 3d)
 {
-    struct A
-    { };
-    struct B
-    { };
-    struct C
-    { };
-    struct D
-    { };
-
     using System = vic::ecs::ECS<A, B, C, D>;
     using Handle = System::Handle;
 
@@ -242,23 +240,23 @@ TEST(TestEntitySystem, Insert)
 
 TEST(TestEntitySystem, TryGet)
 {
-    struct A
+    struct Component
     {
         int val;
     };
-    using System = vic::ecs::ECS<A>;
+    using System = vic::ecs::ECS<Component>;
     using Handle = System::Handle;
 
     System system;
 
     auto firstEnt = system.NewEntity();
     auto secondEnt = system.NewEntity();
-    secondEnt.Add<A>(5);
+    secondEnt.Add<Component>(5);
 
-    if(auto nonexistantA = firstEnt.TryGet<A>())
+    if(auto nonexistantA = firstEnt.TryGet<Component>())
         ASSERT_TRUE(false); // should not be reachable
 
-    if(auto existingA = secondEnt.TryGet<A>())
+    if(auto existingA = secondEnt.TryGet<Component>())
         ASSERT_EQ(existingA->val, 5);
     else
         ASSERT_TRUE(false); // should not be reachable
@@ -266,28 +264,28 @@ TEST(TestEntitySystem, TryGet)
 
 TEST(TestEntitySystem, HasAny)
 {
-    struct A
+    struct ComponentA
     {
         int val;
     };
-    struct B
+    struct ComponentB
     {
         int otherVal;
     };
-    using System = vic::ecs::ECS<A, B>;
+    using System = vic::ecs::ECS<ComponentA, ComponentB>;
     System system;
 
     auto ent1 = system.NewEntity();
     ASSERT_FALSE(ent1.HasAny());
-    ent1.Add<A>();
+    ent1.Add<ComponentA>();
     ASSERT_TRUE(ent1.HasAny());
-    ent1.Remove<A>();
+    ent1.Remove<ComponentA>();
     ASSERT_FALSE(ent1.HasAny());
-    ent1.Add<B>();
+    ent1.Add<ComponentB>();
     ASSERT_TRUE(ent1.HasAny());
 
-    ASSERT_TRUE(System::ContainsComponent<A>());
-    ASSERT_TRUE(System::ContainsComponent<B>());
+    ASSERT_TRUE(System::ContainsComponent<ComponentA>());
+    ASSERT_TRUE(System::ContainsComponent<ComponentB>());
     ASSERT_FALSE(System::ContainsComponent<int>());
     ASSERT_FALSE(System::ContainsComponent<double>());
 }
@@ -299,48 +297,48 @@ TEST(TestEntitySystem, Relabel)
 
 TEST(TestEntitySystem, ChainAdds)
 {
-    struct A
+    struct ComponentA
     {
         int val;
     };
-    struct B
+    struct ComponentB
     {
         int otherVal;
     };
 
-    using MyEcs = vic::ecs::ECS<A, B>;
+    using MyEcs = vic::ecs::ECS<ComponentA, ComponentB>;
     MyEcs ecs;
     auto newEnt = ecs.NewEntity();
 
     newEnt //
-        .Add<A>(1)
-        .Add<B>(2);
+        .Add<ComponentA>(1)
+        .Add<ComponentB>(2);
 
-    EXPECT_TRUE(newEnt.Has<A>() && newEnt.Get<A>().val == 1);
-    EXPECT_TRUE(newEnt.Has<B>() && newEnt.Get<B>().otherVal == 2);
+    EXPECT_TRUE(newEnt.Has<ComponentA>() && newEnt.Get<ComponentA>().val == 1);
+    EXPECT_TRUE(newEnt.Has<ComponentB>() && newEnt.Get<ComponentB>().otherVal == 2);
 }
 
 TEST(TestEntitySystem, System)
 {
-    struct A
+    struct ComponentA
     {
         int val;
     };
-    struct B
+    struct ComponentB
     {
         int otherVal;
     };
-    using MyEcs = vic::ecs::ECS<A, B>;
+    using MyEcs = vic::ecs::ECS<ComponentA, ComponentB>;
     MyEcs ecs;
 
     // define a system that only requires a component A
-    vic::ecs::System<MyEcs, A> system1(ecs);
+    vic::ecs::System<MyEcs, ComponentA> system1(ecs);
 
     // define a system that requires both A and B
-    vic::ecs::System<MyEcs, A, B> system2(ecs);
+    vic::ecs::System<MyEcs, ComponentA, ComponentB> system2(ecs);
 
     // define a system that needs a const A, and a normal B
-    vic::ecs::System<MyEcs, const A, B> system3(ecs);
+    vic::ecs::System<MyEcs, const ComponentA, ComponentB> system3(ecs);
 
     // failure:
     // vic::ecs::System<ECS, double> system_failure(ecs);
@@ -407,15 +405,6 @@ TEST(TestEntitySystem, Collection)
 
 TEST(TestEntitySystem, ParallelSystems)
 {
-    struct A
-    { };
-    struct B
-    { };
-    struct C
-    { };
-    struct D
-    { };
-
     using ECS = vic::ecs::ECS<A, B, C, D>;
     ECS ecs;
 
@@ -441,4 +430,30 @@ TEST(TestEntitySystem, ParallelSystems)
     using System_AB = vic::ecs::System<ECS, A, B>;
 
     EXPECT_TRUE(System_AB::IsBlockedBy<SystemConstA>());
+}
+
+TEST(TestEntitySystem, ExecuteSystems)
+{
+    using ECS = vic::ecs::ECS<A, B, C, D, E, F, G>;
+    ECS ecs;
+
+    // system1 blocks all components
+    using System1 = vic::ecs::System<ECS, A, B, C, D, E, F, G>;
+    System1 sys1{ecs};
+
+    using System2 = vic::ecs::System<ECS, const A, C>;
+    System2 sys2{ecs};
+
+    using System3 = vic::ecs::System<ECS, const B, D>;
+    System3 sys3{ecs};
+
+    using System4 = vic::ecs::System<ECS, const C, const D, E>;
+    System4 sys4{ecs};
+
+    using System5 = vic::ecs::System<ECS, const A, const B, const C, const D, const E, F, G>;
+    System5 sys5{ecs};
+
+    vic::ecs::SystemExecutor executor{&sys1, &sys2, &sys3, &sys4, &sys5};
+
+    executor.Run();
 }
