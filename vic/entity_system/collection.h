@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 namespace vic
 {
 namespace ecs

@@ -404,3 +404,41 @@ TEST(TestEntitySystem, Collection)
     const auto items = std::vector{backpack.Get<Backpack>().begin(), backpack.Get<Backpack>().end()};
     EXPECT_EQ(items.size(), 2u);
 }
+
+TEST(TestEntitySystem, ParallelSystems)
+{
+    struct A
+    { };
+    struct B
+    { };
+    struct C
+    { };
+    struct D
+    { };
+
+    using ECS = vic::ecs::ECS<A, B, C, D>;
+    ECS ecs;
+
+    using SystemConstA = vic::ecs::System<ECS, const A>;
+
+    EXPECT_TRUE(SystemConstA::ContainsComponent<const A>());
+    EXPECT_FALSE(SystemConstA::ContainsComponent<A>());
+
+    using SystemNonConstA = vic::ecs::System<ECS, A>;
+
+    EXPECT_FALSE(SystemNonConstA::ContainsComponent<const A>());
+    EXPECT_TRUE(SystemNonConstA::ContainsComponent<A>());
+
+    EXPECT_TRUE(SystemNonConstA::IsBlockedBy<SystemNonConstA>());
+    EXPECT_TRUE(SystemConstA::IsBlockedBy<SystemNonConstA>());
+    EXPECT_TRUE(SystemNonConstA::IsBlockedBy<SystemConstA>());
+    EXPECT_FALSE(SystemConstA::IsBlockedBy<SystemConstA>());
+
+    using System_cAB = vic::ecs::System<ECS, const A, B>;
+
+    EXPECT_FALSE(System_cAB::IsBlockedBy<SystemConstA>());
+
+    using System_AB = vic::ecs::System<ECS, A, B>;
+
+    EXPECT_TRUE(System_AB::IsBlockedBy<SystemConstA>());
+}

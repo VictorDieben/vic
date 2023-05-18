@@ -344,6 +344,46 @@ public:
         : mSystem(system)
     { }
 
+    template <typename T>
+    static constexpr bool ContainsComponent()
+    {
+        return templates::Contains<T, TComponents...>();
+    }
+
+protected:
+    // annoying small protected segment for helper function
+
+    template <typename TOtherSystem, typename TComponent>
+    constexpr static bool IsBlockedByHelper()
+    {
+        using TBase = std::remove_cv_t<TComponent>;
+        if constexpr(std::is_const_v<TComponent>)
+        {
+            // other system cannot contain a non-const version of TComponent
+            constexpr bool containtsT = (TOtherSystem::template ContainsComponent<TBase>());
+            return containtsT;
+        }
+        else
+        {
+            // if we have a non-const version, other system should not contain TComponent at all
+            constexpr bool containsConstT = TOtherSystem::template ContainsComponent<TBase const>();
+            constexpr bool containsNonConstT = TOtherSystem::template ContainsComponent<TBase>();
+            return containsConstT || containsNonConstT;
+        }
+    }
+
+public:
+    template <typename TOtherSystem>
+    constexpr static bool IsBlockedBy()
+    {
+        // todo: check that ECS type is the same?
+        // for each component type,
+        // if we use a const view, check that TSystem does not write to it (non-const)
+        // if we use a non-const view, the other system cannot have this component at all
+
+        return ((IsBlockedByHelper<TOtherSystem, TComponents>() || ...));
+    }
+
 protected:
     TEcs& mSystem;
 };
