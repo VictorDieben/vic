@@ -312,22 +312,37 @@ public:
 
     EntityId Minimum() const
     {
-        return {}; // std::min({sizeof(TComponents)...});
+        return std::min({ComponentSystem<TComponents>::Minimum()...}); //
     }
 
     EntityId Maximum() const
     {
-        return {}; // (..., func(args));
+        return std::max({ComponentSystem<TComponents>::Maximum()...}); //
     }
 
-    // filter entities that have two specific components
-    // todo: filter on 3 or more? combine one filter with another?
+    // todo: Filter with buffer arguments
+    template <typename T>
+    auto Filter()
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return algorithms::Filter<T>(*this);
+    }
+
     template <typename T1, typename T2>
     auto Filter()
     {
         static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
         static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
-        return Filter<T1, T2>(*this);
+        return algorithms::Filter<T1, T2>(*this);
+    }
+
+    template <typename T1, typename T2, typename T3>
+    auto Filter()
+    {
+        static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
+        static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
+        static_assert(templates::Contains<T3, TComponents...>(), "Unknown component T3");
+        return algorithms::Filter<T1, T2, T3>(*this);
     }
 
     template <typename T, typename TIter>

@@ -9,6 +9,9 @@ namespace vic
 {
 namespace ecs
 {
+
+namespace algorithms
+{
 // 3d
 template <typename T1, typename T2, typename T3, typename TSystem, typename TFunctor>
 void FilterForeach(TSystem& system, TFunctor functor)
@@ -153,5 +156,6 @@ auto Filter(TSystem& system)
 //    //
 //}
 
+} // namespace algorithms
 } // namespace ecs
 } // namespace vic

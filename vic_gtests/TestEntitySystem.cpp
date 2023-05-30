@@ -91,6 +91,8 @@ TEST(TestEntitySystem, ComponentSystem)
 
 TEST(TestEntitySystem, Filter)
 {
+    using namespace vic::ecs::algorithms;
+
     struct Name
     {
         std::string mName{};
@@ -128,7 +130,7 @@ TEST(TestEntitySystem, Filter)
         EXPECT_TRUE(name.mI % 3 == 0);
     }
 
-    for(const auto& [id, fizzPtr] : Filter<Fizz>(system))
+    for(const auto& [id, fizzPtr] : vic::ecs::algorithms::Filter<Fizz>(system))
     {
         Name& name = system.Get<Name>(id);
         EXPECT_TRUE(name.mI % 3 == 0);
@@ -170,6 +172,7 @@ TEST(TestEntitySystem, Filter)
 
 TEST(TestEntitySystem, Remove)
 {
+    using namespace vic::ecs::algorithms;
 
     using System = vic::ecs::ECS<A, B, C, D>;
     using Handle = System::Handle;
@@ -206,11 +209,19 @@ TEST(TestEntitySystem, Remove)
 
 TEST(TestEntitySystem, 3d)
 {
-    using System = vic::ecs::ECS<A, B, C, D>;
-    using Handle = System::Handle;
+    using ECS = vic::ecs::ECS<A, B, C, D>;
 
-    System system;
-    Handle handle = system.NewEntity();
+    ECS ecs;
+    ecs.NewEntity().Add<A>();
+    ecs.NewEntity().Add<A>().Add<B>();
+    ecs.NewEntity().Add<A>().Add<B>().Add<C>();
+
+    auto f1 = ecs.Filter<A>();
+    EXPECT_EQ(f1.size(), 3u);
+    auto f2 = ecs.Filter<A, B>();
+    EXPECT_EQ(f2.size(), 2u);
+    auto f3 = ecs.Filter<A, B, C>();
+    EXPECT_EQ(f3.size(), 1u);
 }
 
 TEST(TestEntitySystem, Insert)
@@ -325,10 +336,13 @@ TEST(TestEntitySystem, Relabel)
     EXPECT_EQ(ecs.ComponentSystem<B>::Minimum(), 5);
     EXPECT_EQ(ecs.ComponentSystem<B>::Maximum(), 5);
 
-    //EXPECT_EQ(ecs.Minimum(), 4u);
-    //EXPECT_EQ(ecs.Maximum(), 1000u);
+    EXPECT_EQ(ecs.Minimum(), 4u);
+    EXPECT_EQ(ecs.Maximum(), count);
 
     ecs.Relabel();
+
+    EXPECT_EQ(ecs.Minimum(), 1u);
+    EXPECT_EQ(ecs.Maximum(), nItems);
 
     std::vector<vic::ecs::EntityId> newIds;
     for(vic::ecs::EntityId i = 1; i < count; ++i)
@@ -524,6 +538,4 @@ TEST(TestEntitySystem, ForeachComponentType)
     ecs.ForeachComponentType(lambda);
 
     EXPECT_EQ(componentTypeCount, 7);
-
-    EXPECT_TRUE(false);
 }
