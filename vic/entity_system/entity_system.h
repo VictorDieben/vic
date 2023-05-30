@@ -174,6 +174,7 @@ public:
 
     bool Relabel(const EntityId from, const EntityId to)
     {
+        // todo: this should really only ever be called from the ecs itself
         if(from == to)
             return true; // no need to do anything when relabeling to the same label
 
@@ -186,6 +187,7 @@ public:
             return false; // cannot relabel to an existing name
 
         // todo: this can be optimized for sorted lists (flat map), if we know that the order will not change
+        // todo: move? not needed for pod
         mComponents[to] = mComponents.at(from);
         mComponents.erase(from);
         return true;
@@ -354,20 +356,18 @@ public:
 
     void Relabel()
     {
-        // todo: can be optimized:
-        // - no need to construct vector
-        // - we're doing lots of repeated lookups
-        std::vector<EntityId> existingIds;
-        for(EntityId i = 1; i <= 10; ++i)
-            if(HasAny(i))
-                existingIds.push_back(i);
-
-        mEntityCounter = 1;
-        for(const auto& oldId : existingIds)
+        const auto min = Minimum();
+        const auto max = Maximum();
+        EntityId newCounter{1};
+        for(EntityId i = Minimum(); i <= Maximum(); ++i)
         {
-            (ComponentSystem<TComponents>::Relabel(oldId, mEntityCounter), ...);
-            mEntityCounter++;
+            if(HasAny(i))
+            {
+                (ComponentSystem<TComponents>::Relabel(i, newCounter), ...);
+                newCounter++;
+            }
         }
+        mEntityCounter = newCounter;
     }
 
     template <typename T>
@@ -385,18 +385,6 @@ public:
 
 private:
     EntityId mEntityCounter{1}; // reserve 0 for emtpy, not sure if I need that
-
-    //template <typename TFunctor, typename T>
-    //void ForeachComponent(TFunctor& functor) const
-    //{
-    //    functor.Do<T>(); //
-    //}
-    //template <typename TFunctor, typename T1, typename T2, typename... Ts>
-    //bool ForeachComponent(TFunctor& functor) const
-    //{
-    //    functor.Do<T1>(); // hacky way to call lambda with template argument
-    //    return ForeachComponent<T2, Ts...>(functor);
-    //}
 };
 
 template <typename TEcs, typename... TComponents>

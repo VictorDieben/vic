@@ -310,7 +310,7 @@ TEST(TestEntitySystem, Relabel)
 
     Ecs ecs;
 
-    for(std::size_t i = 1; i < count; ++i)
+    for(std::size_t i = 1; i <= count; ++i)
     {
         auto ent = ecs.NewEntity();
         if(i % 4 == 0)
@@ -327,17 +327,17 @@ TEST(TestEntitySystem, Relabel)
     }
 
     std::vector<vic::ecs::EntityId> existingIds;
-    for(vic::ecs::EntityId i = 1; i < count; ++i)
+    for(vic::ecs::EntityId i = 1; i <= count; ++i)
         if(ecs.HasAny(i))
             existingIds.push_back(i);
 
     const auto nItems = existingIds.size();
 
     EXPECT_EQ(ecs.ComponentSystem<B>::Minimum(), 5);
-    EXPECT_EQ(ecs.ComponentSystem<B>::Maximum(), 5);
+    EXPECT_EQ(ecs.ComponentSystem<B>::Maximum(), 10);
 
     EXPECT_EQ(ecs.Minimum(), 4u);
-    EXPECT_EQ(ecs.Maximum(), count);
+    EXPECT_EQ(ecs.Maximum(), 10u);
 
     ecs.Relabel();
 
@@ -345,13 +345,13 @@ TEST(TestEntitySystem, Relabel)
     EXPECT_EQ(ecs.Maximum(), nItems);
 
     std::vector<vic::ecs::EntityId> newIds;
-    for(vic::ecs::EntityId i = 1; i < count; ++i)
+    for(vic::ecs::EntityId i = 1; i <= count; ++i)
         if(ecs.HasAny(i))
             newIds.push_back(i);
 
     EXPECT_EQ(existingIds.size(), newIds.size());
 
-    for(vic::ecs::EntityId i = 1; i < count; ++i)
+    for(vic::ecs::EntityId i = 1; i <= count; ++i)
         EXPECT_EQ(ecs.HasAny(i), i < nItems + 1) << "Entity " << i << (ecs.HasAny(i) ? " exists" : " does not exist");
 }
 
