@@ -248,6 +248,7 @@
     <ClInclude Include="utils\math.h" />
     <ClInclude Include="utils\observable.h" />
     <ClInclude Include="utils\ranges.h" />
+    <ClInclude Include="utils\serialize.h" />
     <ClInclude Include="utils\sort.h" />
     <ClInclude Include="utils\statemachine.h" />
     <ClInclude Include="utils\templates.h" />

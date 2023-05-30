@@ -123,7 +123,7 @@ template <typename TStates, typename TTransitions>
 struct StateMachineDescription
 {
     // Make sure the states and transitions are compatible
-    static_assert(ValidateContainer<TStates, TTransitions>() && "Invalid description; not all transitions are composed of existing states");
+    static_assert(ValidateContainer<TStates, TTransitions>(), "Invalid description; not all transitions are composed of existing states");
 
     using StatesContainer = TStates;
     using TransitionsContainer = TTransitions;

@@ -292,7 +292,53 @@ TEST(TestEntitySystem, HasAny)
 
 TEST(TestEntitySystem, Relabel)
 {
-    //
+    const std::size_t count = 10;
+
+    using Ecs = vic::ecs::ECS<A, B, C, D>;
+    using Handle = Ecs::Handle;
+
+    Ecs ecs;
+
+    for(std::size_t i = 1; i < count; ++i)
+    {
+        auto ent = ecs.NewEntity();
+        if(i % 4 == 0)
+            ent.Add<A>();
+
+        if(i % 5 == 0)
+            ent.Add<B>();
+
+        if(i % 6 == 0)
+            ent.Add<C>();
+
+        if(i % 12 == 0)
+            ent.Add<D>();
+    }
+
+    std::vector<vic::ecs::EntityId> existingIds;
+    for(vic::ecs::EntityId i = 1; i < count; ++i)
+        if(ecs.HasAny(i))
+            existingIds.push_back(i);
+
+    const auto nItems = existingIds.size();
+
+    EXPECT_EQ(ecs.ComponentSystem<B>::Minimum(), 5);
+    EXPECT_EQ(ecs.ComponentSystem<B>::Maximum(), 5);
+
+    //EXPECT_EQ(ecs.Minimum(), 4u);
+    //EXPECT_EQ(ecs.Maximum(), 1000u);
+
+    ecs.Relabel();
+
+    std::vector<vic::ecs::EntityId> newIds;
+    for(vic::ecs::EntityId i = 1; i < count; ++i)
+        if(ecs.HasAny(i))
+            newIds.push_back(i);
+
+    EXPECT_EQ(existingIds.size(), newIds.size());
+
+    for(vic::ecs::EntityId i = 1; i < count; ++i)
+        EXPECT_EQ(ecs.HasAny(i), i < nItems + 1) << "Entity " << i << (ecs.HasAny(i) ? " exists" : " does not exist");
 }
 
 TEST(TestEntitySystem, ChainAdds)
@@ -437,9 +483,10 @@ TEST(TestEntitySystem, ExecuteSystems)
     using ECS = vic::ecs::ECS<A, B, C, D, E, F, G>;
     ECS ecs;
 
-    // system1 blocks all components
     using System1 = vic::ecs::System<ECS, A, B, C, D, E, F, G>;
     System1 sys1{ecs};
+
+    // system1 blocks all components
 
     using System2 = vic::ecs::System<ECS, const A, C>;
     System2 sys2{ecs};
@@ -447,8 +494,12 @@ TEST(TestEntitySystem, ExecuteSystems)
     using System3 = vic::ecs::System<ECS, const B, D>;
     System3 sys3{ecs};
 
+    // 2 and 3 can run simultaneously
+
     using System4 = vic::ecs::System<ECS, const C, const D, E>;
     System4 sys4{ecs};
+
+    // 4 depends on 2 and 3 (and 1)
 
     using System5 = vic::ecs::System<ECS, const A, const B, const C, const D, const E, F, G>;
     System5 sys5{ecs};
@@ -456,4 +507,23 @@ TEST(TestEntitySystem, ExecuteSystems)
     vic::ecs::SystemExecutor executor{&sys1, &sys2, &sys3, &sys4, &sys5};
 
     executor.Run();
+}
+
+TEST(TestEntitySystem, ForeachComponentType)
+{
+    using ECS = vic::ecs::ECS<A, B, C, D, E, F, G>;
+    ECS ecs;
+
+    std::size_t componentTypeCount = 0;
+
+    auto lambda = [&]<typename T>() {
+        componentTypeCount++;
+        std::cout << typeid(T).name() << ": size = " << ecs.ComponentSystem<T>::Size() << std::endl;
+    };
+
+    ecs.ForeachComponentType(lambda);
+
+    EXPECT_EQ(componentTypeCount, 7);
+
+    EXPECT_TRUE(false);
 }

@@ -6,6 +6,7 @@
 #include "vic/utils/math.h"
 #include "vic/utils/observable.h"
 #include "vic/utils/ranges.h"
+#include "vic/utils/serialize.h"
 #include "vic/utils/statemachine.h"
 #include "vic/utils/timing.h"
 #include "vic/utils/unique.h"
@@ -481,4 +482,9 @@ TEST(TestUtils, Templates_Unique)
 {
     //
     // static_assert(std::is_same_v<std::tuple<double>, typename templates::to_unique<double>::tuple_type>);
+}
+
+TEST(TestUtils, Serialize)
+{
+    //
 }

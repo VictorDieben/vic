@@ -303,6 +303,9 @@
     <ClInclude Include="entity_system\system_executor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="utils\serialize.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

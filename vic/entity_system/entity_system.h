@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <map>
 #include <tuple>
@@ -84,8 +85,8 @@ private:
     // todo: think about optimized map container (specialized for many/few large/small objects?)
     // a flat map (like boost::flat_map) might be a better solution,
     // as we really need fast iteration, but don't really care about insert/remove
-    // std::map<EntityId, T> mComponents{};
-    vic::memory::FlatMap<EntityId, T> mComponents{};
+    std::map<EntityId, T> mComponents{};
+    // vic::memory::FlatMap<EntityId, T> mComponents{};
 
 public:
     // todo: make a custom component system, that does not rely on std::map
@@ -170,13 +171,41 @@ public:
             auto res = mComponents.insert(*it);
         }
     }
+
+    bool Relabel(const EntityId from, const EntityId to)
+    {
+        if(from == to)
+            return true; // no need to do anything when relabeling to the same label
+
+        auto it1 = mComponents.find(from);
+        if(it1 == mComponents.end())
+            return false; // item to relabel cannot be found
+
+        auto it2 = mComponents.find(to);
+        if(it2 != mComponents.end())
+            return false; // cannot relabel to an existing name
+
+        // todo: this can be optimized for sorted lists (flat map), if we know that the order will not change
+        mComponents[to] = mComponents.at(from);
+        mComponents.erase(from);
+        return true;
+    }
+
+    EntityId Minimum() const { return mComponents.size() == 0 ? std::numeric_limits<EntityId>::max() : mComponents.begin()->first; }
+    EntityId Maximum() const { return mComponents.size() == 0 ? std::numeric_limits<EntityId>::min() : std::prev(mComponents.end())->first; }
+
+    //template <typename TFunctor>
+    //void Foreach(TFunctor functor)
+    //{
+    //    //
+    //}
 };
 
 template <typename... TComponents>
 class ECS : public ComponentSystem<TComponents>...
 {
 public:
-    static_assert(templates::IsUnique<TComponents...>() && "Component list is not Unique!");
+    static_assert(templates::IsUnique<TComponents...>(), "Component list is not Unique!");
 
     // todo: better way to define EntityHandle(decltype(*this))
     using Handle = EntityHandle<ECS<TComponents...>>;
@@ -281,6 +310,16 @@ public:
         return ComponentSystem<T>::cend();
     }
 
+    EntityId Minimum() const
+    {
+        return {}; // std::min({sizeof(TComponents)...});
+    }
+
+    EntityId Maximum() const
+    {
+        return {}; // (..., func(args));
+    }
+
     // filter entities that have two specific components
     // todo: filter on 3 or more? combine one filter with another?
     template <typename T1, typename T2>
@@ -300,13 +339,19 @@ public:
 
     void Relabel()
     {
-        EntityId mNewCounter{1};
+        // todo: can be optimized:
+        // - no need to construct vector
+        // - we're doing lots of repeated lookups
+        std::vector<EntityId> existingIds;
+        for(EntityId i = 1; i <= 10; ++i)
+            if(HasAny(i))
+                existingIds.push_back(i);
 
-        if(HasAny(mNewCounter))
-        { // Entity exists
-        }
-        else
-        { // Entity without components, can be removed
+        mEntityCounter = 1;
+        for(const auto& oldId : existingIds)
+        {
+            (ComponentSystem<TComponents>::Relabel(oldId, mEntityCounter), ...);
+            mEntityCounter++;
         }
     }
 
@@ -314,6 +359,13 @@ public:
     static constexpr bool ContainsComponent()
     {
         return templates::Contains<T, TComponents...>();
+    }
+
+    template <typename TFunctor>
+    void ForeachComponentType(TFunctor functor)
+    {
+        // call functor with each of the component types as template argument
+        (functor.template operator()<TComponents>(), ...);
     }
 
 private:
@@ -338,7 +390,7 @@ class System
 public:
     using ECSType = TEcs;
 
-    static_assert((TEcs::template ContainsComponent<std::remove_cv_t<TComponents>>() && ...) && "ECS does not contain all required components!");
+    static_assert((TEcs::template ContainsComponent<std::remove_cv_t<TComponents>>() && ...), "ECS does not contain all required components!");
 
     System(TEcs& system)
         : mSystem(system)
@@ -366,7 +418,7 @@ protected:
         else
         {
             // if we have a non-const version, other system should not contain TComponent at all
-            constexpr bool containsConstT = TOtherSystem::template ContainsComponent<TBase const>();
+            constexpr bool containsConstT = TOtherSystem::template ContainsComponent<const TBase>();
             constexpr bool containsNonConstT = TOtherSystem::template ContainsComponent<TBase>();
             return containsConstT || containsNonConstT;
         }
