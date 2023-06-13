@@ -368,11 +368,7 @@ TEST(TestEntitySystem, ChainAdds)
 
     using MyEcs = vic::ecs::ECS<ComponentA, ComponentB>;
     MyEcs ecs;
-    auto newEnt = ecs.NewEntity();
-
-    newEnt //
-        .Add<ComponentA>(1)
-        .Add<ComponentB>(2);
+    auto newEnt = ecs.NewEntity().Add<ComponentA>(1).Add<ComponentB>(2);
 
     EXPECT_TRUE(newEnt.Has<ComponentA>() && newEnt.Get<ComponentA>().val == 1);
     EXPECT_TRUE(newEnt.Has<ComponentB>() && newEnt.Get<ComponentB>().otherVal == 2);

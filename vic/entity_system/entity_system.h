@@ -32,11 +32,11 @@ struct EntityHandle
     EntityId Id() const { return mId; }
 
     template <typename TComponent>
-    EntityHandle<T>& Add(auto&&... args)
+    EntityHandle<T> Add(auto&&... args)
     {
         assert(mSystem && mId);
         mSystem->Add<TComponent>(mId, std::forward<decltype(args)>(args)...);
-        return *this; // return this, so you can chain adds
+        return *this; // return copy of self
     }
 
     template <typename T2>
