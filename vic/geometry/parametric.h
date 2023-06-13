@@ -9,6 +9,8 @@ namespace vic
 {
 namespace geom
 {
+// todo:
+// https://www.youtube.com/watch?v=jvPPXbo87ds&t=446s
 
 // bezier curve, 4 control points, cubic polynomial
 template <typename T, std::size_t dims>

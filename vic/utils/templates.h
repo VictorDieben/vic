@@ -59,5 +59,29 @@ struct to_unique
     using tuple_type = typename to_unique_helper<Ts...>::tuple_type;
 };
 
+//
+//
+//
+
+template <typename T, typename U, typename... Us>
+constexpr auto GetIndex()
+{
+    if constexpr(is_same_v<T, U>)
+    {
+        return 0;
+    }
+    else
+    {
+        if constexpr(sizeof...(Us) > 0)
+        {
+            return 1 + getIndex<T, Us...>();
+        }
+        else
+        {
+            return -1; // use -1 as "does not exist"
+        }
+    }
+}
+
 } // namespace templates
 } // namespace vic

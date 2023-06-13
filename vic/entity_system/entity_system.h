@@ -383,6 +383,15 @@ public:
         (functor.template operator()<TComponents>(), ...);
     }
 
+    template <typename T>
+    static constexpr int GetIndex()
+    {
+        return templates::GetIndex<T, TComponents...>();
+    }
+
+    template <int index>
+    using NthType = decltype(std::get<index>(std::tuple<TComponents...>));
+
 private:
     EntityId mEntityCounter{1}; // reserve 0 for emtpy, not sure if I need that
 };

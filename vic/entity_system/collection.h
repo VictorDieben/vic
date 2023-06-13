@@ -17,8 +17,8 @@ public:
     constexpr static bool TempIsCollection = true; // todo: find better solution
 
     Collection() = default;
-    Collection(auto&&... args)
-        : mItems{std::forward<decltype(args)>(args)...}
+    Collection(std::initializer_list<EntityId> args)
+        : mItems{std::forward<decltype(args)>(args)}
     { }
 
     template <typename TEcs>
@@ -36,8 +36,8 @@ public:
     auto begin() const { return mItems.cbegin(); }
     auto end() const { return mItems.cend(); }
 
-    auto Insert(const EntityId id) { mItems.insert(id); }
-    auto Remove(const EntityId id) { mItems.erase(id); }
+    auto Insert(const EntityId id) { return mItems.insert(id); }
+    auto Remove(const EntityId id) { return mItems.erase(id); }
     bool Has(const EntityId id) const { return mItems.contains(id); }
 
 private:
