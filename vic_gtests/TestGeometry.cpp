@@ -688,58 +688,6 @@ TEST(TestGeom, GroupPairsOfTwo)
     ASSERT_TRUE(false);
 }
 
-bool IsClosed(const vic::mesh::TriMesh& mesh)
-{
-    // Use Euler-Poincare characteristic, to determine of the triangle mesh is a closed 2d manifold
-
-    // verify that the mesh is closed, by checking that all edges occur exactly twice.
-    // we could extend it to also require opposite directions, so all surfaces have the same normal
-    using namespace vic::mesh;
-
-    std::map<std::pair<MeshIndex, MeshIndex>, int> edges;
-    auto addEdge = [&](const MeshIndex v1, const MeshIndex v2) {
-        if(v1 < v2)
-            edges[{v1, v2}] += 1;
-        else
-            edges[{v2, v1}] += 1;
-    };
-
-    for(const auto& tri : mesh.tris)
-    {
-        const auto& [v0, v1, v2] = tri;
-        addEdge(v0, v1);
-        addEdge(v1, v2);
-        addEdge(v2, v0);
-    }
-
-    for(const auto& [key, value] : edges)
-        if(value != 2)
-            return false;
-
-    return true;
-}
-
-bool IsClosed(const vic::mesh::EdgeMesh& mesh)
-{
-    std::vector<uint8_t> in;
-    in.resize(mesh.vertices.size());
-
-    std::vector<uint8_t> out;
-    out.resize(mesh.vertices.size());
-
-    for(const auto& edge : mesh.edges)
-    {
-        in[edge.first] += 1;
-        out[edge.second] += 1;
-    }
-
-    for(std::size_t i = 0; i < mesh.vertices.size(); ++i)
-        if(in[i] != 1 || out[i] != 1)
-            return false;
-
-    return true;
-}
-
 TEST(TestGeom, MeshUvSphere)
 {
     const double radius = .5;
@@ -813,14 +761,27 @@ TEST(TestGeom, Subdivide)
 TEST(TestGeom, MeshCircle)
 {
     const double radius = 1.5;
-    const EdgeMesh edges = GenerateCircle(radius, 16);
+    const EdgeMesh edges = GenerateCircle(radius, 16u);
 
     EXPECT_TRUE(IsClosed(edges));
+
+    for(const auto& vertex : edges.vertices)
+        EXPECT_NEAR(vic::linalg::Norm(vertex), radius, 1e-14);
 }
 
 TEST(TestGeom, Revolve)
 {
-    //
+    const std::size_t n = 16;
+
+    EdgeMesh mesh;
+    mesh.vertices = {Vertex{{1., 0., -.1}}, //
+                     Vertex{{1., 0., .1}}};
+    mesh.edges = {{0, 1}};
+
+    const TriMesh revolvedMesh = Revolve(mesh, n, false);
+
+    EXPECT_EQ(revolvedMesh.vertices.size(), 2 * n);
+    EXPECT_EQ(revolvedMesh.tris.size(), 2 * n);
 }
 
 TEST(TestGeom, EulerPoincare)

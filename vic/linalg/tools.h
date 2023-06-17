@@ -398,5 +398,19 @@ constexpr auto RowSplit(const TMat& mat)
     return RowSplit<TPart1, TPart2, TMat>(mat, 2);
 }
 
+// todo: util?
+
+template <typename T>
+constexpr Matrix3<T> Rotate(const Vector3<T>& vec, const T angle)
+{
+    assert(Abs(Norm(vec) - 1.) < 1e-10); // vec should have length 1
+    constexpr Identity3<T> identity{};
+    const Bracket3<T> b{vec};
+    const Matrix3<T> bSquared = Matmul(b, b);
+    const Matrix3<T> tmp1 = Matmul(std::sin(angle), b);
+    const Matrix3<T> tmp2 = Matmul(1. - std::cos(angle), bSquared);
+    return Add(identity, tmp1, tmp2);
+}
+
 } // namespace linalg
 } // namespace vic

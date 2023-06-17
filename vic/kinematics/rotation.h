@@ -60,7 +60,7 @@ constexpr Matrix3<T> Rotate(const Vector3<T>& vec, const T angle)
 template <typename T>
 constexpr Matrix3<T> EulerAngles(const T alpha, const T beta, const T gamma)
 {
-    return Matmul(Rotate(xAxis, alpha), Rotate(yAxis, beta), Rotate(zAxis, gamma)); // intrinsic x->y'->z''
+    return Matmul(vic::linalg::Rotate(xAxis, alpha), vic::linalg::Rotate(yAxis, beta), vic::linalg::Rotate(zAxis, gamma)); // intrinsic x->y'->z''
 }
 
 template <typename T>

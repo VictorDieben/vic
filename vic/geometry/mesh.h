@@ -15,20 +15,13 @@ namespace mesh
 {
 
 using Vertex = vic::geom::Point<double, 3>;
+using Normal = vic::geom::Point<double, 3>;
+using UV = vic::geom::Point<double, 2>;
+
 using MeshIndex = uint32_t;
 using Edge = std::pair<MeshIndex, MeshIndex>;
 using Tri = std::tuple<MeshIndex, MeshIndex, MeshIndex>;
-
-// todo:
-//struct Tri
-//{
-//    std::array<MeshIndex, 3> vertices;
-//
-//    MeshIndex First() const { return vertices.at(0); }
-//    MeshIndex Second() const { return vertices.at(1); }
-//    MeshIndex Third() const { return vertices.at(2); }
-//    MeshIndex Get(const std::size_t i) const { return vertices.at(i); }
-//};
+using Quad = std::tuple<MeshIndex, MeshIndex, MeshIndex>;
 
 Vertex ToVertex(const double x, const double y, const double z)
 {
@@ -49,6 +42,64 @@ struct TriMesh
     std::vector<Vertex> vertices;
     std::vector<Tri> tris;
 };
+
+struct UVTriMesh
+{
+    std::vector<UV> uvs;
+    std::vector<Tri> tris;
+};
+
+bool IsClosed(const vic::mesh::TriMesh& mesh)
+{
+    // Use Euler-Poincare characteristic, to determine of the triangle mesh is a closed 2d manifold
+
+    // verify that the mesh is closed, by checking that all edges occur exactly twice.
+    // we could extend it to also require opposite directions, so all surfaces have the same normal
+    using namespace vic::mesh;
+
+    std::map<std::pair<MeshIndex, MeshIndex>, int> edges;
+    auto addEdge = [&](const MeshIndex v1, const MeshIndex v2) {
+        if(v1 < v2)
+            edges[{v1, v2}] += 1;
+        else
+            edges[{v2, v1}] += 1;
+    };
+
+    for(const auto& tri : mesh.tris)
+    {
+        const auto& [v0, v1, v2] = tri;
+        addEdge(v0, v1);
+        addEdge(v1, v2);
+        addEdge(v2, v0);
+    }
+
+    for(const auto& [key, value] : edges)
+        if(value != 2)
+            return false;
+
+    return true;
+}
+
+bool IsClosed(const vic::mesh::EdgeMesh& mesh)
+{
+    std::vector<uint8_t> in;
+    in.resize(mesh.vertices.size());
+
+    std::vector<uint8_t> out;
+    out.resize(mesh.vertices.size());
+
+    for(const auto& edge : mesh.edges)
+    {
+        in[edge.first] += 1;
+        out[edge.second] += 1;
+    }
+
+    for(std::size_t i = 0; i < mesh.vertices.size(); ++i)
+        if(in[i] != 1 || out[i] != 1)
+            return false;
+
+    return true;
+}
 
 template <typename T>
 TriMesh GenerateCube(const vic::geom::AABB<T, 3>& box)
@@ -280,15 +331,15 @@ TriMesh Subdivide(const TriMesh& mesh)
 }
 
 template <typename T>
-EdgeMesh GenerateCircle(const T radius, const std::size_t n)
+EdgeMesh GenerateCircle(const T radius, const uint32_t n)
 {
     EdgeMesh result;
 
-    for(std::size_t i = 0; i < n; ++i)
+    for(MeshIndex i = 0; i < n; ++i)
     {
         const auto ratio = (double)i / (double)n;
-        const double x = std::sin(ratio * 2. * std::numbers::pi);
-        const double y = std::cos(ratio * 2. * std::numbers::pi);
+        const double x = radius * std::sin(ratio * 2. * std::numbers::pi);
+        const double y = radius * std::cos(ratio * 2. * std::numbers::pi);
         result.vertices.push_back(ToVertex(x, y, 0.));
         result.edges.push_back({i, (i + 1) % n});
     }
@@ -297,28 +348,60 @@ EdgeMesh GenerateCircle(const T radius, const std::size_t n)
 }
 
 TriMesh Revolve(const EdgeMesh& mesh, //
-                const Vertex& upVector,
-                const std::size_t n)
+                const std::size_t n,
+                const bool close) // determines if a vertex is added at the bottom and top (only for open curves)
 {
+    static constexpr Vertex zAxis{{0, 0, 1}};
+
+    const auto stepSize = mesh.vertices.size();
+
+    // revolve around z axis
     TriMesh result;
+
+    result.vertices = mesh.vertices;
+
+    for(MeshIndex ring = 0; ring < n; ++ring)
+    {
+        const auto zRotation = vic::linalg::Rotate(zAxis, ((double)ring / ((double)ring + 1.)) * std::numbers::pi * 2.);
+        for(const auto& vertex : mesh.vertices)
+            result.vertices.push_back(Matmul(zRotation, vertex));
+    }
+
+    for(MeshIndex ring = 0; ring < n; ++ring)
+    {
+        const auto nextRing = (ring + 1) % n;
+        for(const auto& edge : mesh.edges)
+        {
+            const MeshIndex ia = edge.first + (ring * stepSize);
+            const MeshIndex ib = edge.second + (ring * stepSize);
+            const MeshIndex ic = edge.first + (nextRing * stepSize);
+            const MeshIndex id = edge.second + (nextRing * stepSize);
+            result.tris.push_back(Tri{ia, ib, ic});
+            result.tris.push_back(Tri{ic, ib, id});
+        }
+    }
+
+    // todo: if close == true, find all open vertices, close the mesh on them
+
     return result;
 }
 
 template <typename T>
 TriMesh GenerateTorus(const T R, //
                       const T r,
-                      const std::size_t nR,
-                      const std::size_t nr)
+                      const uint32_t nR,
+                      const uint32_t nr)
 {
     TriMesh result;
 
     auto circleMesh = GenerateCircle(r, nr);
 
-    // circleMesh will be in the xy plane, in order to revolve, we need to switch x and z coords
+    // circleMesh will be in the xy plane, in order to revolve, we need to switch y and z coords
+    // todo: rotate mesh using a helper
     for(auto& vertex : circleMesh.vertices)
-        vertex = ToVertex(vertex.Get(0, 0), vertex.Get(1, 0), vertex.Get(2, 0));
+        vertex = ToVertex(R + vertex.Get(0, 0), vertex.Get(2, 0), vertex.Get(1, 0));
 
-    return result;
+    return Revolve(circleMesh, nR, false);
 }
 
 } // namespace mesh

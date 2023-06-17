@@ -76,7 +76,7 @@ TEST(TestKinematics, rotate)
     EXPECT_TRUE(IsEqual(Rotation<double>{}.ToMatrix(), Identity3<double>{}));
 
     constexpr auto matrix = ToFull(Identity3<double>{});
-    auto zRotation = Rotate(zAxis, pi / 2.);
+    auto zRotation = vic::linalg::Rotate(zAxis, pi / 2.);
 
     // rotating a vector around the z axis for pi/2
     auto tmp = Matmul(zRotation, Vector3<double>({1, 0, 0}));
@@ -97,7 +97,7 @@ TEST(TestKinematics, rotation)
     const auto rotationMat = Rotation<double>{}.ToMatrix();
     EXPECT_TRUE(IsEqual(rotationMat, Identity3<double>{}));
 
-    Rotation r1{Rotate(zAxis, pi / 2.)};
+    Rotation r1{vic::linalg::Rotate(zAxis, pi / 2.)};
     Rotation r1Inverse = r1.Inverse();
     Rotation result = r1 * r1Inverse;
     EXPECT_TRUE(IsEqual(result.ToMatrix(), Identity3<double>{}));
