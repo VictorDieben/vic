@@ -173,6 +173,7 @@
     <ClInclude Include="geometry\algorithms\intersections.h" />
     <ClInclude Include="geometry\algorithms\interval_heap.h" />
     <ClInclude Include="geometry\geometry.h" />
+    <ClInclude Include="geometry\mesh.h" />
     <ClInclude Include="geometry\parametric.h" />
     <ClInclude Include="graph\algorithms.h" />
     <ClInclude Include="graph\algorithms\a_star.h" />

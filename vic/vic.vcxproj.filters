@@ -306,6 +306,9 @@
     <ClInclude Include="utils\serialize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="geometry\mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

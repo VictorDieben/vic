@@ -153,6 +153,22 @@ constexpr auto Dot(const TMat1& mat1, const TMat2& mat2)
     return val;
 }
 
+// todo: make a more general algorithm that can also work with different types of input matrices
+template <typename TMat>
+requires ConceptMatrix<TMat>
+constexpr TMat ElementWiseMultiply(const TMat& mat1, const TMat& mat2)
+{
+    assert(mat1.GetRows() == mat2.GetRows() && mat1.GetColumns() == mat2.GetColumns());
+
+    TMat result(mat1.GetRows(), mat1.GetColumns());
+
+    for(Row i = 0; i < mat1.GetRows(); ++i)
+        for(Col j = 0; j < mat1.GetColumns(); ++j)
+            result.At(i, j) = mat1.Get(i, j) * mat2.Get(i, j);
+
+    return result;
+}
+
 //// todo: TMatTarget needs to be assignable
 //template <typename TMatTarget, typename TMatSource>
 //void Assign(TMatTarget& target, //

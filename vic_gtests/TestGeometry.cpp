@@ -12,6 +12,7 @@
 #include "vic/linalg/tools.h"
 
 #include "vic/geometry/algorithms/balanced_aabb_tree.h"
+#include "vic/geometry/mesh.h"
 
 #include "vic/utils/timing.h"
 #include <format>
@@ -25,6 +26,7 @@ namespace geom
 {
 
 using namespace vic::linalg;
+using namespace vic::mesh;
 
 TEST(TestGeom, Initialization)
 {
@@ -684,6 +686,146 @@ TEST(TestGeom, GroupPairsOfTwo)
     std::cout << "sum of volumes: " << sum << std::endl;
 
     ASSERT_TRUE(false);
+}
+
+bool IsClosed(const vic::mesh::TriMesh& mesh)
+{
+    // Use Euler-Poincare characteristic, to determine of the triangle mesh is a closed 2d manifold
+
+    // verify that the mesh is closed, by checking that all edges occur exactly twice.
+    // we could extend it to also require opposite directions, so all surfaces have the same normal
+    using namespace vic::mesh;
+
+    std::map<std::pair<MeshIndex, MeshIndex>, int> edges;
+    auto addEdge = [&](const MeshIndex v1, const MeshIndex v2) {
+        if(v1 < v2)
+            edges[{v1, v2}] += 1;
+        else
+            edges[{v2, v1}] += 1;
+    };
+
+    for(const auto& tri : mesh.tris)
+    {
+        const auto& [v0, v1, v2] = tri;
+        addEdge(v0, v1);
+        addEdge(v1, v2);
+        addEdge(v2, v0);
+    }
+
+    for(const auto& [key, value] : edges)
+        if(value != 2)
+            return false;
+
+    return true;
+}
+
+bool IsClosed(const vic::mesh::EdgeMesh& mesh)
+{
+    std::vector<uint8_t> in;
+    in.resize(mesh.vertices.size());
+
+    std::vector<uint8_t> out;
+    out.resize(mesh.vertices.size());
+
+    for(const auto& edge : mesh.edges)
+    {
+        in[edge.first] += 1;
+        out[edge.second] += 1;
+    }
+
+    for(std::size_t i = 0; i < mesh.vertices.size(); ++i)
+        if(in[i] != 1 || out[i] != 1)
+            return false;
+
+    return true;
+}
+
+TEST(TestGeom, MeshUvSphere)
+{
+    const double radius = .5;
+
+    const MeshIndex nu = 4; // horizontal number of surfaces
+    const MeshIndex nv = 4; // verticl number of surfaces
+    TriMesh uvMesh = vic::mesh::GenerateUVSphere<double>(radius, nu, nv);
+
+    EXPECT_EQ(uvMesh.vertices.size(), (4 * 4) + 2);
+    for(const auto& vertex : uvMesh.vertices)
+        EXPECT_NEAR(vic::linalg::Norm(vertex), radius, 1e-14);
+
+    // todo:
+    // EXPECT_TRUE(IsClosed(mesh));
+}
+
+TEST(TestGeom, MeshCubeSphere)
+{
+    const double radius = .5;
+
+    auto mesh = GenerateCubeSphere(radius, 2);
+    EXPECT_TRUE(IsClosed(mesh));
+
+    for(const auto& vertex : mesh.vertices)
+        EXPECT_NEAR(vic::linalg::Norm(vertex), radius, 1e-14);
+}
+
+TEST(TestGeom, MeshCube)
+{
+    const AABB<double, 3> bbox{Interval<double>{1, 2}, Interval<double>{1, 2}, Interval<double>{1, 2}};
+
+    const auto cubeMesh = GenerateCube(bbox);
+    EXPECT_TRUE(IsClosed(cubeMesh));
+
+    const auto subdividedCube = Subdivide(cubeMesh);
+    EXPECT_TRUE(IsClosed(subdividedCube));
+}
+
+TEST(TestGeom, MeshCone)
+{
+    const auto mesh = GenerateCone(1., 2., 8);
+    EXPECT_TRUE(IsClosed(mesh));
+
+    const auto subdividedMesh = Subdivide(mesh);
+    EXPECT_TRUE(IsClosed(subdividedMesh));
+}
+
+TEST(TestGeom, MeshTorus)
+{
+    const auto mesh = GenerateTorus(1., .25, 16, 8);
+    EXPECT_TRUE(IsClosed(mesh));
+
+    const auto subdividedMesh = Subdivide(mesh);
+    EXPECT_TRUE(IsClosed(subdividedMesh));
+}
+
+TEST(TestGeom, Subdivide)
+{
+    TriMesh triMesh;
+    triMesh.vertices = {ToVertex(0., 0., 0.), //
+                        ToVertex(1., 0., 0.),
+                        ToVertex(0., 1., 0.)};
+    triMesh.tris = {Tri{0, 1, 2}};
+
+    auto subdivided = Subdivide(triMesh);
+
+    EXPECT_EQ(subdivided.vertices.size(), 6);
+    EXPECT_EQ(subdivided.tris.size(), 4);
+}
+
+TEST(TestGeom, MeshCircle)
+{
+    const double radius = 1.5;
+    const EdgeMesh edges = GenerateCircle(radius, 16);
+
+    EXPECT_TRUE(IsClosed(edges));
+}
+
+TEST(TestGeom, Revolve)
+{
+    //
+}
+
+TEST(TestGeom, EulerPoincare)
+{
+    //
 }
 
 } // namespace geom

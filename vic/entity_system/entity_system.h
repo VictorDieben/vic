@@ -31,6 +31,8 @@ struct EntityHandle
     operator EntityId() const { return mId; }
     EntityId Id() const { return mId; }
 
+    operator bool() const { return (mId != 0) && (mSystem != nullptr); }
+
     template <typename TComponent>
     EntityHandle<T> Add(auto&&... args)
     {
