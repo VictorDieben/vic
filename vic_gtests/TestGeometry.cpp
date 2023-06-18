@@ -713,6 +713,20 @@ TEST(TestGeom, MeshCubeSphere)
 
     for(const auto& vertex : mesh.vertices)
         EXPECT_NEAR(vic::linalg::Norm(vertex), radius, 1e-14);
+
+    const auto triNormals = GenerateTriNormals(mesh);
+    for(const auto& normal : triNormals)
+        EXPECT_NEAR(vic::linalg::Norm(normal), 1., 1e-14);
+
+    const auto vertexNormals = GenerateVertexNormals(mesh, triNormals);
+    for(const auto& normal : vertexNormals)
+        EXPECT_NEAR(vic::linalg::Norm(normal), 1., 1e-14);
+
+    const auto uvs = GenerateVertexUVsPolar(mesh, Vertex{{0., 0., 0.}});
+    for(const auto& uv : uvs)
+    {
+        // todo: check that uv is within [0; 1]
+    }
 }
 
 TEST(TestGeom, MeshCube)

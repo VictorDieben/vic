@@ -308,7 +308,6 @@ TriMesh Subdivide(const TriMesh& mesh)
     }
 
     // iterate over all triangles in the original mesh. perform subdivision
-
     for(const auto& tri : mesh.tris)
     {
         const auto& [v0, v1, v2] = tri;
@@ -353,7 +352,7 @@ TriMesh Revolve(const EdgeMesh& mesh, //
 {
     static constexpr Vertex zAxis{{0, 0, 1}};
 
-    const auto stepSize = mesh.vertices.size();
+    const MeshIndex stepSize = (MeshIndex)mesh.vertices.size();
 
     // revolve around z axis
     TriMesh result;
@@ -369,7 +368,7 @@ TriMesh Revolve(const EdgeMesh& mesh, //
 
     for(MeshIndex ring = 0; ring < n; ++ring)
     {
-        const auto nextRing = (ring + 1) % n;
+        const MeshIndex nextRing = (ring + 1) % n;
         for(const auto& edge : mesh.edges)
         {
             const MeshIndex ia = edge.first + (ring * stepSize);
@@ -402,6 +401,64 @@ TriMesh GenerateTorus(const T R, //
         vertex = ToVertex(R + vertex.Get(0, 0), vertex.Get(2, 0), vertex.Get(1, 0));
 
     return Revolve(circleMesh, nR, false);
+}
+
+std::vector<Normal> GenerateTriNormals(const TriMesh& mesh)
+{
+    using namespace vic::linalg;
+
+    std::vector<Normal> normals;
+    normals.reserve(mesh.tris.size());
+
+    for(const auto& tri : mesh.tris)
+    {
+        const auto [ia, ib, ic] = tri;
+        const auto ab = Subtract(mesh.vertices.at(ib), mesh.vertices.at(ia));
+        const auto ac = Subtract(mesh.vertices.at(ic), mesh.vertices.at(ia));
+
+        normals.push_back(Normalize(Cross(ab, ac)));
+    }
+
+    return normals;
+}
+
+std::vector<Normal> GenerateVertexNormals(const TriMesh& mesh, const std::vector<Normal>& triNormals)
+{
+    // Generate the vertex normals, based on the average of all the tri normals that use the vertex
+    std::vector<Normal> normals;
+    normals.resize(mesh.vertices.size());
+
+    // combine the normals of each triangle touching the vertex
+    for(std::size_t i = 0; i < mesh.tris.size(); ++i)
+    {
+        const auto& triNormal = triNormals.at(i);
+        const auto [ia, ib, ic] = mesh.tris.at(i);
+
+        normals.at(ia) = Add(normals.at(ia), triNormal);
+        normals.at(ib) = Add(normals.at(ib), triNormal);
+        normals.at(ic) = Add(normals.at(ic), triNormal);
+    }
+
+    // normalize the resulting normal
+    for(auto& normal : normals)
+        normal = Normalize(normal);
+
+    return normals;
+}
+
+std::vector<UV> GenerateVertexUVsPolar(const TriMesh& mesh, const Vertex& origin)
+{
+    std::vector<UV> uvs;
+    uvs.reserve(mesh.vertices.size());
+
+    // todo: convert the polar coordinates of each vertex to a 2d value between 0 and 1
+
+    for(const auto& vertex : mesh.vertices)
+    {
+        const auto direction = Subtract(vertex, origin);
+    }
+
+    return uvs;
 }
 
 } // namespace mesh
