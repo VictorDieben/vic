@@ -694,7 +694,7 @@ TEST(TestGeom, MeshUvSphere)
 
     const MeshIndex nu = 4; // horizontal number of surfaces
     const MeshIndex nv = 4; // verticl number of surfaces
-    TriMesh uvMesh = vic::mesh::GenerateUVSphere<double>(radius, nu, nv);
+    TriMesh<double> uvMesh = vic::mesh::GenerateUVSphere<double>(radius, nu, nv);
 
     EXPECT_EQ(uvMesh.vertices.size(), (4 * 4) + 2);
     for(const auto& vertex : uvMesh.vertices)
@@ -722,7 +722,7 @@ TEST(TestGeom, MeshCubeSphere)
     for(const auto& normal : vertexNormals)
         EXPECT_NEAR(vic::linalg::Norm(normal), 1., 1e-14);
 
-    const auto uvs = GenerateVertexUVsPolar(mesh, Vertex{{0., 0., 0.}});
+    const auto uvs = GenerateVertexUVsPolar<double>(mesh, Vertex<double>{{0., 0., 0.}});
     for(const auto& uv : uvs)
     {
         // todo: check that uv is within [0; 1]
@@ -760,7 +760,7 @@ TEST(TestGeom, MeshTorus)
 
 TEST(TestGeom, Subdivide)
 {
-    TriMesh triMesh;
+    TriMesh<double> triMesh;
     triMesh.vertices = {ToVertex(0., 0., 0.), //
                         ToVertex(1., 0., 0.),
                         ToVertex(0., 1., 0.)};
@@ -787,9 +787,9 @@ TEST(TestGeom, Revolve)
 {
     const std::size_t n = 16;
 
-    EdgeMesh mesh;
-    mesh.vertices = {Vertex{{1., 0., -.1}}, //
-                     Vertex{{1., 0., .1}}};
+    EdgeMesh<double> mesh;
+    mesh.vertices = {Vertex<double>{{1., 0., -.1}}, //
+                     Vertex<double>{{1., 0., .1}}};
     mesh.edges = {{0, 1}};
 
     const TriMesh revolvedMesh = Revolve(mesh, n, false);

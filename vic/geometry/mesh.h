@@ -14,42 +14,52 @@ namespace vic
 namespace mesh
 {
 
-using Vertex = vic::geom::Point<double, 3>;
-using Normal = vic::geom::Point<double, 3>;
-using UV = vic::geom::Point<double, 2>;
+template <typename T>
+using Vertex = vic::geom::Point<T, 3>;
+
+template <typename T>
+using Normal = vic::geom::Point<T, 3>;
+
+template <typename T>
+using UV = vic::geom::Point<T, 2>;
 
 using MeshIndex = uint32_t;
 using Edge = std::pair<MeshIndex, MeshIndex>;
 using Tri = std::tuple<MeshIndex, MeshIndex, MeshIndex>;
 using Quad = std::tuple<MeshIndex, MeshIndex, MeshIndex>;
 
-Vertex ToVertex(const double x, const double y, const double z)
+template <typename T>
+Vertex<T> ToVertex(const T x, const T y, const T z)
 {
     // helper, linalg vecs don't have this constructor
-    return Vertex{{x, y, z}};
+    return Vertex<T>{{x, y, z}};
 }
 
+template <typename T>
 struct EdgeMesh
 {
-    std::vector<Vertex> vertices;
+    std::vector<Vertex<T>> vertices;
     std::vector<Edge> edges;
 };
 
 // todo: this is a tri mesh (each tri points to 3 indices in the vertex vector)
 // also make different types of meshes
+template <typename T>
 struct TriMesh
 {
-    std::vector<Vertex> vertices;
+    std::vector<Vertex<T>> vertices;
     std::vector<Tri> tris;
 };
 
+template <typename T>
 struct UVTriMesh
 {
-    std::vector<UV> uvs;
+    std::vector<UV<T>> uvs;
     std::vector<Tri> tris;
 };
 
-bool IsClosed(const vic::mesh::TriMesh& mesh)
+template <typename T>
+bool IsClosed(const vic::mesh::TriMesh<T>& mesh)
 {
     // Use Euler-Poincare characteristic, to determine of the triangle mesh is a closed 2d manifold
 
@@ -80,7 +90,8 @@ bool IsClosed(const vic::mesh::TriMesh& mesh)
     return true;
 }
 
-bool IsClosed(const vic::mesh::EdgeMesh& mesh)
+template <typename T>
+bool IsClosed(const vic::mesh::EdgeMesh<T>& mesh)
 {
     std::vector<uint8_t> in;
     in.resize(mesh.vertices.size());
@@ -102,7 +113,7 @@ bool IsClosed(const vic::mesh::EdgeMesh& mesh)
 }
 
 template <typename T>
-TriMesh GenerateCube(const vic::geom::AABB<T, 3>& box)
+TriMesh<T> GenerateCube(const vic::geom::AABB<T, 3>& box)
 {
     const auto lx = box.intervals.at(0).min;
     const auto ux = box.intervals.at(0).max;
@@ -111,19 +122,19 @@ TriMesh GenerateCube(const vic::geom::AABB<T, 3>& box)
     const auto lz = box.intervals.at(2).min;
     const auto uz = box.intervals.at(2).max;
 
-    TriMesh result;
+    TriMesh<T> result;
     result.vertices.reserve(8);
     result.tris.reserve(12);
 
-    result.vertices.push_back(Vertex{{lx, ly, lz}}); // 0
-    result.vertices.push_back(Vertex{{ux, ly, lz}}); // 1
-    result.vertices.push_back(Vertex{{lx, uy, lz}}); // 2
-    result.vertices.push_back(Vertex{{ux, uy, lz}}); // 3
+    result.vertices.push_back(Vertex<T>{{lx, ly, lz}}); // 0
+    result.vertices.push_back(Vertex<T>{{ux, ly, lz}}); // 1
+    result.vertices.push_back(Vertex<T>{{lx, uy, lz}}); // 2
+    result.vertices.push_back(Vertex<T>{{ux, uy, lz}}); // 3
 
-    result.vertices.push_back(Vertex{{lx, ly, uz}}); // 4
-    result.vertices.push_back(Vertex{{ux, ly, uz}}); // 5
-    result.vertices.push_back(Vertex{{lx, uy, uz}}); // 6
-    result.vertices.push_back(Vertex{{ux, uy, uz}}); // 7
+    result.vertices.push_back(Vertex<T>{{lx, ly, uz}}); // 4
+    result.vertices.push_back(Vertex<T>{{ux, ly, uz}}); // 5
+    result.vertices.push_back(Vertex<T>{{lx, uy, uz}}); // 6
+    result.vertices.push_back(Vertex<T>{{ux, uy, uz}}); // 7
 
     result.tris.push_back(Tri{0, 1, 2}); // bottom
     result.tris.push_back(Tri{2, 1, 3});
@@ -142,7 +153,7 @@ TriMesh GenerateCube(const vic::geom::AABB<T, 3>& box)
 }
 
 template <typename T>
-TriMesh GenerateCubeSphere(const T radius, const uint32_t subdivisions)
+TriMesh<T> GenerateCubeSphere(const T radius, const uint32_t subdivisions)
 {
     // todo: name
     vic::geom::Interval<T> interval{-1., 1.};
@@ -163,15 +174,15 @@ TriMesh GenerateCubeSphere(const T radius, const uint32_t subdivisions)
 }
 
 template <typename T>
-TriMesh GenerateUVSphere(const T rad, //
-                         const MeshIndex nu,
-                         const MeshIndex nv)
+TriMesh<T> GenerateUVSphere(const T rad, //
+                            const MeshIndex nu,
+                            const MeshIndex nv)
 {
     // simple uv sphere mesh
-    Vertex top{{0., 0., rad}};
-    Vertex bottom{{0., 0., -rad}};
+    Vertex<T> top{{0., 0., rad}};
+    Vertex<T> bottom{{0., 0., -rad}};
 
-    std::vector<Vertex> vertices;
+    std::vector<Vertex<T>> vertices;
 
     for(MeshIndex iu = 0; iu < nu; ++iu)
     {
@@ -187,7 +198,7 @@ TriMesh GenerateUVSphere(const T rad, //
             // calculate the scaling of x and y
             const auto scale = std::sqrt((rad * rad) - (z * z));
 
-            vertices.push_back(Vertex({x * scale, y * scale, z}));
+            vertices.push_back(Vertex<T>({x * scale, y * scale, z}));
         }
     }
     vertices.push_back(bottom);
@@ -234,15 +245,15 @@ TriMesh GenerateUVSphere(const T rad, //
 }
 
 template <typename T>
-TriMesh GenerateCone(const T rad, //
-                     const T height,
-                     const MeshIndex n)
+TriMesh<T> GenerateCone(const T rad, //
+                        const T height,
+                        const MeshIndex n)
 {
     // simple uv sphere mesh
-    const Vertex top = ToVertex(0., 0., height);
-    const Vertex bottom = ToVertex(0., 0., 0.);
+    const Vertex<T> top = ToVertex(0., 0., height);
+    const Vertex<T> bottom = ToVertex(0., 0., 0.);
 
-    TriMesh mesh{};
+    TriMesh<T> mesh{};
     mesh.vertices.reserve(n + 2);
     mesh.tris.reserve(n * 2);
 
@@ -251,7 +262,7 @@ TriMesh GenerateCone(const T rad, //
         const auto ratio = (double)i / (double)n;
         const auto x = rad * std::sin(ratio * 2. * std::numbers::pi);
         const auto y = rad * std::cos(ratio * 2. * std::numbers::pi);
-        mesh.vertices.push_back(Vertex{{x, y, 0.}});
+        mesh.vertices.push_back(Vertex<T>{{x, y, 0.}});
     }
     mesh.vertices.push_back(top);
     mesh.vertices.push_back(bottom);
@@ -269,7 +280,8 @@ TriMesh GenerateCone(const T rad, //
     return mesh;
 }
 
-TriMesh Subdivide(const TriMesh& mesh)
+template <typename T>
+TriMesh<T> Subdivide(const TriMesh<T>& mesh)
 {
     using namespace vic::linalg;
 
@@ -293,7 +305,7 @@ TriMesh Subdivide(const TriMesh& mesh)
     }
 
     // initialize result
-    TriMesh result;
+    TriMesh<T> result;
     result.vertices = mesh.vertices;
     result.tris.reserve(mesh.tris.size() * 4);
 
@@ -330,9 +342,9 @@ TriMesh Subdivide(const TriMesh& mesh)
 }
 
 template <typename T>
-EdgeMesh GenerateCircle(const T radius, const uint32_t n)
+EdgeMesh<T> GenerateCircle(const T radius, const uint32_t n)
 {
-    EdgeMesh result;
+    EdgeMesh<T> result;
 
     for(MeshIndex i = 0; i < n; ++i)
     {
@@ -346,16 +358,17 @@ EdgeMesh GenerateCircle(const T radius, const uint32_t n)
     return result;
 }
 
-TriMesh Revolve(const EdgeMesh& mesh, //
-                const std::size_t n,
-                const bool close) // determines if a vertex is added at the bottom and top (only for open curves)
+template <typename T>
+TriMesh<T> Revolve(const EdgeMesh<T>& mesh, //
+                   const std::size_t n,
+                   const bool close) // determines if a vertex is added at the bottom and top (only for open curves)
 {
-    static constexpr Vertex zAxis{{0, 0, 1}};
+    static constexpr Vertex<T> zAxis{{0, 0, 1}};
 
     const MeshIndex stepSize = (MeshIndex)mesh.vertices.size();
 
     // revolve around z axis
-    TriMesh result;
+    TriMesh<T> result;
 
     result.vertices = mesh.vertices;
 
@@ -386,12 +399,12 @@ TriMesh Revolve(const EdgeMesh& mesh, //
 }
 
 template <typename T>
-TriMesh GenerateTorus(const T R, //
-                      const T r,
-                      const uint32_t nR,
-                      const uint32_t nr)
+TriMesh<T> GenerateTorus(const T R, //
+                         const T r,
+                         const uint32_t nR,
+                         const uint32_t nr)
 {
-    TriMesh result;
+    TriMesh<T> result;
 
     auto circleMesh = GenerateCircle(r, nr);
 
@@ -403,11 +416,12 @@ TriMesh GenerateTorus(const T R, //
     return Revolve(circleMesh, nR, false);
 }
 
-std::vector<Normal> GenerateTriNormals(const TriMesh& mesh)
+template <typename T>
+std::vector<Normal<T>> GenerateTriNormals(const TriMesh<T>& mesh)
 {
     using namespace vic::linalg;
 
-    std::vector<Normal> normals;
+    std::vector<Normal<T>> normals;
     normals.reserve(mesh.tris.size());
 
     for(const auto& tri : mesh.tris)
@@ -422,10 +436,11 @@ std::vector<Normal> GenerateTriNormals(const TriMesh& mesh)
     return normals;
 }
 
-std::vector<Normal> GenerateVertexNormals(const TriMesh& mesh, const std::vector<Normal>& triNormals)
+template <typename T>
+std::vector<Normal<T>> GenerateVertexNormals(const TriMesh<T>& mesh, const std::vector<Normal<T>>& triNormals)
 {
     // Generate the vertex normals, based on the average of all the tri normals that use the vertex
-    std::vector<Normal> normals;
+    std::vector<Normal<T>> normals;
     normals.resize(mesh.vertices.size());
 
     // combine the normals of each triangle touching the vertex
@@ -446,17 +461,16 @@ std::vector<Normal> GenerateVertexNormals(const TriMesh& mesh, const std::vector
     return normals;
 }
 
-std::vector<UV> GenerateVertexUVsPolar(const TriMesh& mesh, const Vertex& origin)
+template <typename T>
+std::vector<UV<T>> GenerateVertexUVsPolar(const TriMesh<T>& mesh, const Vertex<T>& origin)
 {
-    std::vector<UV> uvs;
+    std::vector<UV<T>> uvs;
     uvs.reserve(mesh.vertices.size());
 
     // todo: convert the polar coordinates of each vertex to a 2d value between 0 and 1
 
     for(const auto& vertex : mesh.vertices)
-    {
         const auto direction = Subtract(vertex, origin);
-    }
 
     return uvs;
 }
