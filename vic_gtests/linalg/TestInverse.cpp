@@ -35,7 +35,12 @@ TEST(TestLinalg, TestInverseRandom)
     std::uniform_real_distribution<double> dist(-.1, 0.1);
     std::uniform_real_distribution<double> diagDist(1., 5.);
 
+#ifdef _DEBUG
+    constexpr std::size_t n = 25;
+#else
     constexpr std::size_t n = 100;
+#endif
+
     constexpr auto identity = IdentityN<double, n>{};
 
     // test a bunch of random matrices

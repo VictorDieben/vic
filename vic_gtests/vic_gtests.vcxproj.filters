@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="test.cpp" />
-    <ClCompile Include="pch.cpp" />
     <ClCompile Include="TestEntitySystem.cpp" />
     <ClCompile Include="TestEventQueue.cpp" />
     <ClCompile Include="TestGraph.cpp" />
@@ -38,7 +37,6 @@
     <ClCompile Include="graph\AdjecencyGraph.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h" />
     <ClInclude Include="test_base.h" />
     <ClInclude Include="linalg\TestTraits.cpp" />
   </ItemGroup>

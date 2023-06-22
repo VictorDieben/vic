@@ -1,12 +1,14 @@
 #pragma once
 
+#include "gtest/gtest.h"
+
 #include "vic/linalg/linalg.h"
 #include <random>
 
 using namespace vic::linalg;
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 void ExpectMatrixEqual(const TMat1& mat1, const TMat2& mat2, const double tol = 1E-10)
 {
     ASSERT_EQ(mat1.GetRows(), mat2.GetRows());

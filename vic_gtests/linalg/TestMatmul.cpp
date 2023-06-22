@@ -1,5 +1,7 @@
 #include "gtest/gtest.h"
 
+#include "../test_base.h"
+
 #include "vic/utils.h"
 
 #include "vic/linalg/linalg.h"

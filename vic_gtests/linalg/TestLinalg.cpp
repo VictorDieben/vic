@@ -1,5 +1,7 @@
-#include "../test_base.h"
+
 #include "gtest/gtest.h"
+
+#include "../test_base.h"
 
 #include "vic/linalg/algorithms/add.h"
 #include "vic/linalg/algorithms/matmul.h"
