@@ -1,5 +1,5 @@
-#include "../pch.h"
 #include "../test_base.h"
+#include "gtest/gtest.h"
 
 #include "vic/linalg/matrices.h"
 #include "vic/linalg/matrices_dynamic.h"

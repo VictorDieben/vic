@@ -37,11 +37,11 @@ namespace detail
 template <typename T>
 constexpr T pow_recursive(const T x, std::size_t n) noexcept
 {
-    if constexpr(n == 0)
+    if(n == 0)
         return T(1); // todo: move outside of recursive function
-    else if constexpr(n == 1)
+    else if(n == 1)
         return x;
-    else if constexpr(n % 2 == 0)
+    else if(n % 2 == 0)
     {
         const T tmp = exp_recursive<T, n / 2>(x);
         return tmp * tmp;
@@ -89,6 +89,11 @@ constexpr T exp(const T x) noexcept
     // we need to calculate the maximum power of x before it gets to close to infinity
     // return detail::exp_recursive<T, 0, 100>(x, 1.);
     return detail::exp_recursive<T, 1, 1.>(x, 1.);
+}
+template <typename T>
+int sign(T val)
+{
+    return (T(0) < val) - (val < T(0));
 }
 
 } // namespace math

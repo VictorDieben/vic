@@ -1,4 +1,6 @@
-#include "pch.h"
+
+#include "gtest/gtest.h"
+
 //
 //#pragma comment(lib, "ws2_32.lib")
 //#pragma comment(lib, "wsock32.lib")

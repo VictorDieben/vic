@@ -1,4 +1,5 @@
-#include "pch.h"
+
+#include "gtest/gtest.h"
 
 #include "vic/graph/algorithms.h"
 #include "vic/graph/graph.h"

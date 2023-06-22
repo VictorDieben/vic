@@ -2,6 +2,7 @@
 
 #include "vic/geometry/geometry.h"
 #include "vic/linalg/linalg.h"
+#include "vic/utils/math.h"
 
 #include <array>
 #include <cmath>
@@ -18,7 +19,7 @@ template <typename T>
 using Vertex = vic::geom::Point<T, 3>;
 
 template <typename T>
-using Normal = vic::geom::Point<T, 3>;
+using Normal = vic::geom::Direction<T, 3>;
 
 template <typename T>
 using UV = vic::geom::Point<T, 2>;
@@ -462,6 +463,31 @@ std::vector<Normal<T>> GenerateVertexNormals(const TriMesh<T>& mesh, const std::
 }
 
 template <typename T>
+std::tuple<T, T, T> ToSphericalCoordinates(const Vertex<T>& direction)
+{
+    const T x = direction.Get(0, 0);
+    const T y = direction.Get(1, 0);
+    const T z = direction.Get(2, 0);
+
+    const T radius = vic::linalg::Norm(direction);
+    const T inclination = std::acos(z / radius);
+    const T azimuth = vic::math::sign(y) * std::sqrt(x / ((x * x) + (y * y)));
+
+    return std::tuple(radius, inclination, azimuth);
+}
+
+template <typename T>
+Vertex<T> FromSphericalCoordinates(const T radius, const T inclination, const T azimuth)
+{
+    const T sinInclination = std::sin(inclination);
+
+    const T x = radius * sinInclination * std::cos(azimuth);
+    const T y = radius * sinInclination * std::sin(azimuth);
+    const T z = radius * std::cos(inclination);
+    return Vertex<T>{{x, y, z}};
+}
+
+template <typename T>
 std::vector<UV<T>> GenerateVertexUVsPolar(const TriMesh<T>& mesh, const Vertex<T>& origin)
 {
     std::vector<UV<T>> uvs;
@@ -470,7 +496,11 @@ std::vector<UV<T>> GenerateVertexUVsPolar(const TriMesh<T>& mesh, const Vertex<T
     // todo: convert the polar coordinates of each vertex to a 2d value between 0 and 1
 
     for(const auto& vertex : mesh.vertices)
+    {
         const auto direction = Subtract(vertex, origin);
+        const auto [r, inclination, azimuth] = ToSphericalCoordinates(direction);
+        uvs.push_back(UV<double>{{inclination / std::numbers::pi, azimuth / (2. * std::numbers::pi)}}); // todo: scale to [0; 1]
+    }
 
     return uvs;
 }

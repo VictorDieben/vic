@@ -1,5 +1,8 @@
+#include "gtest/gtest.h"
+
 #include "../test_base.h"
-#include "pch.h"
+
+#include "gtest/gtest.h"
 
 #include "vic/linalg/linalg.h"
 

@@ -1,4 +1,5 @@
-#include "pch.h"
+
+#include "gtest/gtest.h"
 
 #include "vic/memory/tree.h"
 

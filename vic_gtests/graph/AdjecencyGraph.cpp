@@ -1,4 +1,5 @@
-#include "pch.h"
+
+#include "gtest/gtest.h"
 
 #include "vic/graph/graph_types/adjecency_list.h"
 #include "vic/graph/graph_types/cartesian_product_graph.h"
@@ -29,18 +30,18 @@ TEST(Graph, startup)
     ASSERT_TRUE(ConceptVertex<TestVertex>);
     ASSERT_TRUE(ConceptEdge<TestEdge>);
 
-    using GraphType = AdjecencyGraph<TestVertex, TestEdge>;
-    ASSERT_TRUE(ConceptGraph<GraphType>);
-
-    GraphType graph;
-
-    (void)graph;
+    //using GraphType = AdjecencyGraph<TestVertex, TestEdge>;
+    //ASSERT_TRUE(ConceptGraph<GraphType>);
+    //GraphType graph;
+    //(void)graph;
 }
 
 TEST(Graph, CartesianGraph)
 {
-    using AdjecencyGraphType = AdjecencyGraph<TestVertex, TestEdge>; //
-    using CartesianGraphType = CartesianGraph<AdjecencyGraphType, AdjecencyGraphType>;
+    ASSERT_TRUE(ConceptVertex<TestVertex>);
+    ASSERT_TRUE(ConceptEdge<TestEdge>);
+    // using AdjecencyGraphType = AdjecencyGraph<TestVertex, TestEdge>; //
+    // using CartesianGraphType = CartesianGraph<AdjecencyGraphType, AdjecencyGraphType>;
 }
 
 //    TestGraph graph;

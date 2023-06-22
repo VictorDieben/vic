@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vic/graph/graph_types/base.h"
+#include "vic/graph/traits.h"
 
 #include <vector>
 
@@ -10,7 +11,7 @@ namespace graph
 {
 
 template <typename TVertex, typename TEdge>
-requires ConceptVertex<TVertex> && ConceptEdge<TEdge>
+    requires ConceptVertex<TVertex> && ConceptEdge<TEdge>
 class AdjecencyGraph
 {
 public:

@@ -22,7 +22,7 @@ using SolveResultShape = Shape<Min(Min(TMatrix::ShapeType::rows, TMatrix::ShapeT
 // Generally, this means calculating a partial inverse (the inverse of the diagonal for instance)
 
 template <typename TMatrix, typename TVector>
-requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+    requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
 auto SolveConjugateGradient(const TMatrix& A, const TVector& b, const double eps = 1E-14)
 {
     // CG will only work if matrix is symmetric (A.T == A), and positive definite (output is positive for any positive vector)
@@ -75,7 +75,7 @@ auto SolveConjugateGradient(const TMatrix& A, const TVector& b, const double eps
 // https://www.robots.ox.ac.uk/~sjrob/Teaching/EngComp/linAlg34.pdf
 
 template <typename TMatrix, typename TVector>
-requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+    requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
 auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
 {
     assert(matrix.GetRows() == matrix.GetColumns());
@@ -114,10 +114,10 @@ auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const doubl
             largestDiff = Max(largestDiff, Abs(x.Get(i, 0) - x_new.Get(i, 0)));
         x = To<decltype(x)>(x_new);
 
-        std::cout << "SolveJacobiMethod(): i = " << i << "; diff = " << largestDiff << std::endl;
+        // std::cout << "SolveJacobiMethod(): i = " << i << "; diff = " << largestDiff << std::endl;
         if(largestDiff < eps)
         {
-            std::cout << "SolveJacobiMethod(): i = " << i << "; Done!" << std::endl;
+            // std::cout << "SolveJacobiMethod(): i = " << i << "; Done!" << std::endl;
             break;
         }
     }
@@ -126,7 +126,7 @@ auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const doubl
 }
 
 template <typename TMatrix, typename TVector>
-requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+    requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
 constexpr auto SolveUpperTriangular(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
 {
     // Solve the system A * x = b; assuming A is upper triangular.
@@ -154,7 +154,7 @@ constexpr auto SolveUpperTriangular(const TMatrix& matrix, const TVector& vector
 }
 
 template <typename TMatrix, typename TVector>
-requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+    requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
 constexpr auto SolveLowerTriangular(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
 {
     assert(matrix.GetRows() == matrix.GetColumns() && matrix.GetColumns() == vector.GetRows());
@@ -178,7 +178,7 @@ constexpr auto SolveLowerTriangular(const TMatrix& matrix, const TVector& vector
 }
 
 template <typename TMatrix, typename TVector>
-requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+    requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
 constexpr auto SolveDiagonal(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
 {
     // Solve as if matrix is diagonal, even if it is actually not
@@ -201,7 +201,7 @@ constexpr auto SolveDiagonal(const TMatrix& matrix, const TVector& vector, const
 // http://www.industrial-maths.com/ms6021_thomas.pdf
 
 template <typename TMatrix, typename TVector>
-requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+    requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
 constexpr auto SolveThomasAlgorithm(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
 {
     // Solve using Thomas algorithm (for tri-diagonal matrices)
@@ -250,7 +250,7 @@ constexpr auto SolveThomasAlgorithm(const TMatrix& matrix, const TVector& vector
 
 // Selector for Inverse algorithm
 template <typename TMatrix, typename TVector>
-requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+    requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
 constexpr auto Solve(const TMatrix& matrix, const TVector& vector)
 {
     return SolveJacobiMethod(matrix, vector); // todo: select

@@ -1,5 +1,5 @@
 
-#include "pch.h"
+#include "gtest/gtest.h"
 
 #include "vic/memory/event_queue.h"
 
@@ -25,18 +25,18 @@ TEST(TestEventQueue, Startup)
     int val = 0;
 
     EventListener<MyEvent> listener(queue, //
-                                          [&](const MyEvent& event) {
-                                              std::cout << "tadaaa: " << event.mText << std::endl; //
-                                              EXPECT_EQ(val, 0);
-                                              val++;
-                                          });
+                                    [&](const MyEvent& event) {
+                                        std::cout << "tadaaa: " << event.mText << std::endl; //
+                                        EXPECT_EQ(val, 0);
+                                        val++;
+                                    });
 
     EventListener<MyOtherEvent> otherListener(queue, //
-                                                    [&](const MyOtherEvent& event) {
-                                                        std::cout << "tadaaa: " << event.mOtherText << std::endl; //
-                                                        EXPECT_EQ(val, 1);
-                                                        val++;
-                                                    });
+                                              [&](const MyOtherEvent& event) {
+                                                  std::cout << "tadaaa: " << event.mOtherText << std::endl; //
+                                                  EXPECT_EQ(val, 1);
+                                                  val++;
+                                              });
 
     queue.EmplaceBack<MyEvent>();
     queue.EmplaceBack<MyOtherEvent>();

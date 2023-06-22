@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <type_traits>
 
 namespace vic
 {
@@ -66,7 +67,7 @@ struct to_unique
 template <typename T, typename U, typename... Us>
 constexpr auto GetIndex()
 {
-    if constexpr(is_same_v<T, U>)
+    if constexpr(std::is_same_v<T, U>)
     {
         return 0;
     }
