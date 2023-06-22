@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <map>
+#include <ranges>
 #include <tuple>
 #include <vector>
 
@@ -151,6 +152,19 @@ public:
 
     const_iterator cbegin() const { return mComponents.cbegin(); }
     const_iterator cend() const { return mComponents.cend(); }
+
+    iterator lower_bound(const EntityId id)
+    {
+        return mComponents.lower_bound(id); //
+    }
+
+    iterator lower_bound_with_hint(const EntityId id, iterator hint)
+    {
+        return std::lower_bound(hint, //
+                                mComponents.end(),
+                                id,
+                                [](const auto& item, const EntityId value) { return item.first < value; });
+    }
 
     template <typename TIter>
     void Insert(TIter begin, TIter end)
@@ -350,6 +364,21 @@ public:
     }
 
     template <typename T, typename TIter>
+    auto Iterate(TIter begin, TIter end)
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return algorithms::Iterate<T>(*this, begin, end);
+    }
+
+    //template <typename T1, typename T2, typename TIter>
+    //auto Iterate(TIter begin, TIter end)
+    //{
+    //    static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
+    //    static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
+    //    return algorithms::Iterate(*this, begin, end);
+    //}
+
+    template <typename T, typename TIter>
     auto Insert(TIter begin, TIter end)
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
@@ -406,8 +435,8 @@ public:
 
     static_assert((TEcs::template ContainsComponent<std::remove_cv_t<TComponents>>() && ...), "ECS does not contain all required components!");
 
-    System(TEcs& system)
-        : mSystem(system)
+    System(TEcs& ecs)
+        : mEcs(ecs)
     { }
 
     template <typename T>
@@ -451,7 +480,7 @@ public:
     }
 
 protected:
-    TEcs& mSystem;
+    TEcs& mEcs;
 };
 
 } // namespace ecs

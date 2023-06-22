@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vic/entity_system/definitions.h"
+#include <cassert>
 #include <ranges>
 #include <tuple>
 #include <vector>
@@ -155,6 +156,26 @@ auto Filter(TSystem& system)
 //{
 //    //
 //}
+
+template <typename TComponent, typename TEcs, typename TIter>
+auto Iterate(TEcs& ecs, TIter begin, TIter end)
+{
+    // todo: check if range is sorted in debug?
+    assert(std::is_sorted(begin, end));
+
+    // todo: pass placeholder vector, or turn into std::range
+    using ResultType = std::pair<EntityId, TComponent*>;
+    std::vector<ResultType> result;
+    auto hint = ecs.begin<TComponent>();
+    for(auto it = begin; it != end; ++it)
+    {
+        auto cur = ecs.ComponentSystem<TComponent>::lower_bound_with_hint(*it, hint);
+        if(cur->first == *it)
+            result.push_back({cur->first, &(cur->second)});
+        hint = cur;
+    }
+    return result;
+}
 
 } // namespace algorithms
 } // namespace ecs

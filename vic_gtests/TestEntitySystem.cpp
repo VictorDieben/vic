@@ -6,6 +6,8 @@
 
 using namespace vic;
 
+using namespace vic::ecs;
+
 struct A
 { };
 struct B
@@ -87,6 +89,73 @@ TEST(TestEntitySystem, ComponentSystem)
     EXPECT_FALSE(components.Has(first));
     EXPECT_FALSE(components.Remove(first)); // cannot remove an item that is already removed
     EXPECT_FALSE(components.Has(first));
+}
+
+TEST(TestEntitySystem, LowerBound)
+{
+    using ComponentSystem = vic::ecs::ComponentSystem<A>;
+    ComponentSystem components{};
+
+    for(std::size_t i = 1; i <= 10; ++i)
+        if(i != 6)
+            components.Add(i);
+
+    auto it_5 = components.lower_bound(EntityId{5});
+    EXPECT_EQ(it_5->first, EntityId{5});
+
+    EXPECT_EQ(components.lower_bound(EntityId{6})->first, EntityId{7});
+
+    EXPECT_EQ(components.lower_bound_with_hint(EntityId{5}, components.begin())->first, EntityId{5});
+    EXPECT_EQ(components.lower_bound_with_hint(EntityId{5}, it_5)->first, EntityId{5});
+
+    // find the first item with id 6 or higher (which is 7), start looking from 5
+    EXPECT_EQ(components.lower_bound_with_hint(EntityId{6}, components.begin())->first, EntityId{7});
+    EXPECT_EQ(components.lower_bound_with_hint(EntityId{6}, it_5)->first, EntityId{7});
+}
+
+TEST(TestEntitySystem, Iterate)
+{
+    using Ecs = ECS<A, B, C>;
+    using Handle = Ecs::Handle;
+    Ecs ecs;
+
+    for(std::size_t i = 1; i < 100; ++i)
+    {
+        auto handle = ecs.NewEntity();
+        const auto id = handle.Id();
+
+        if((id % 2) == 0)
+            handle.Add<A>();
+        if((id % 3) == 0)
+            handle.Add<B>();
+        if((id % 4) == 0)
+            handle.Add<C>();
+    }
+
+    const auto entities = std::vector<EntityId>{1, 2, 3, 4};
+
+    const auto iterationA = ecs.Iterate<A>(entities.begin(), entities.end());
+
+    EXPECT_EQ(iterationA.size(), 2u);
+    for(const auto [entityId, aPtr] : iterationA)
+        EXPECT_TRUE(ecs.Has<A>(entityId));
+
+    const auto iterationB = ecs.Iterate<B>(entities.begin(), entities.end());
+    EXPECT_EQ(iterationB.size(), 1u);
+    for(const auto [entityId, bPtr] : iterationB)
+        EXPECT_TRUE(ecs.Has<B>(entityId));
+
+    const auto entitiesC = std::vector<EntityId>{4, 8, 12, 16, 20, 24, 28, 32};
+    const auto iterationC = ecs.Iterate<C>(entitiesC.begin(), entitiesC.end());
+    EXPECT_EQ(entitiesC.size(), iterationC.size());
+    for(const auto [entityId, cPtr] : iterationC)
+        EXPECT_TRUE(ecs.Has<C>(entityId));
+
+    std::set<EntityId> entitySet{2, 4, 6};
+    const auto setIteration = ecs.Iterate<A>(entitySet.begin(), entitySet.end());
+    EXPECT_EQ(setIteration.size(), 3);
+    for(const auto [entityId, aPtr] : setIteration)
+        EXPECT_TRUE(ecs.Has<A>(entityId));
 }
 
 TEST(TestEntitySystem, Filter)
