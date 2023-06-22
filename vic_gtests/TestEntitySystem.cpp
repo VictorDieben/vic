@@ -116,13 +116,14 @@ TEST(TestEntitySystem, LowerBound)
 TEST(TestEntitySystem, Iterate)
 {
     using Ecs = ECS<A, B, C>;
-    using Handle = Ecs::Handle;
     Ecs ecs;
 
+    std::vector<EntityId> allIds;
     for(std::size_t i = 1; i < 100; ++i)
     {
         auto handle = ecs.NewEntity();
         const auto id = handle.Id();
+        allIds.push_back(id);
 
         if((id % 2) == 0)
             handle.Add<A>();
@@ -133,9 +134,7 @@ TEST(TestEntitySystem, Iterate)
     }
 
     const auto entities = std::vector<EntityId>{1, 2, 3, 4};
-
     const auto iterationA = ecs.Iterate<A>(entities.begin(), entities.end());
-
     EXPECT_EQ(iterationA.size(), 2u);
     for(const auto [entityId, aPtr] : iterationA)
         EXPECT_TRUE(ecs.Has<A>(entityId));
@@ -156,6 +155,15 @@ TEST(TestEntitySystem, Iterate)
     EXPECT_EQ(setIteration.size(), 3);
     for(const auto [entityId, aPtr] : setIteration)
         EXPECT_TRUE(ecs.Has<A>(entityId));
+
+    // todo: iterate 2d
+    const auto iteration2d = ecs.Iterate2d<A, B>(allIds.begin(), allIds.end());
+    EXPECT_EQ(iteration2d.size(), allIds.size()); // todo: decide when we want to add items
+    for(const auto& [id, aPtr, bPtr] : iteration2d)
+    {
+        EXPECT_EQ(aPtr != nullptr, ecs.Has<A>(id));
+        EXPECT_EQ(bPtr != nullptr, ecs.Has<B>(id));
+    }
 }
 
 TEST(TestEntitySystem, Filter)

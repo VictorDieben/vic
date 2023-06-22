@@ -158,14 +158,18 @@ auto Filter(TSystem& system)
 //}
 
 template <typename TComponent, typename TEcs, typename TIter>
-auto Iterate(TEcs& ecs, TIter begin, TIter end)
+auto Iterate(TEcs& ecs, const TIter begin, const TIter end)
 {
     // todo: check if range is sorted in debug?
     assert(std::is_sorted(begin, end));
 
     // todo: pass placeholder vector, or turn into std::range
     using ResultType = std::pair<EntityId, TComponent*>;
+
     std::vector<ResultType> result;
+    if constexpr(std::contiguous_iterator<TIter>)
+        result.reserve(std::distance(begin, end));
+
     auto hint = ecs.begin<TComponent>();
     for(auto it = begin; it != end; ++it)
     {
@@ -173,6 +177,39 @@ auto Iterate(TEcs& ecs, TIter begin, TIter end)
         if(cur->first == *it)
             result.push_back({cur->first, &(cur->second)});
         hint = cur;
+    }
+    return result;
+}
+
+template <typename T1, typename T2, typename TEcs, typename TIter>
+auto Iterate2d(TEcs& ecs, const TIter begin, const TIter end)
+{
+    // todo: check if range is sorted in debug?
+    assert(std::is_sorted(begin, end));
+
+    // todo: pass placeholder vector, or turn into std::range
+    using ResultType = std::tuple<EntityId, T1*, T2*>;
+
+    std::vector<ResultType> result;
+    if constexpr(std::contiguous_iterator<TIter>)
+        result.reserve(std::distance(begin, end));
+
+    auto hint1 = ecs.begin<T1>();
+    auto hint2 = ecs.begin<T2>();
+    const auto it1End = ecs.end<T1>();
+    const auto it2End = ecs.end<T2>();
+    for(auto it = begin; it != end; ++it)
+    {
+        const EntityId id = *it;
+
+        hint1 = ecs.ComponentSystem<T1>::lower_bound_with_hint(id, hint1);
+        T1* t1Ptr = (hint1 != it1End) && (hint1->first == id) ? &(hint1->second) : nullptr;
+
+        hint2 = ecs.ComponentSystem<T2>::lower_bound_with_hint(id, hint2);
+        T2* t2Ptr = (hint2 != it2End) && (hint2->first == id) ? &(hint2->second) : nullptr;
+
+        // todo: when do we want to add the item, if they both exist, only 1, or simply always?
+        result.push_back({id, t1Ptr, t2Ptr});
     }
     return result;
 }
