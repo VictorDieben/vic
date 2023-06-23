@@ -25,7 +25,7 @@ using TestTypeSelector = TypeSelector<TShape, //
                                       float,
                                       double>;
 
-TEST(TestLinalg, Definitions)
+TEST(Linalg, Definitions)
 {
     EXPECT_EQ(1u, Row{1u});
     EXPECT_EQ(1u, Col{1u});
@@ -36,7 +36,7 @@ TEST(TestLinalg, Definitions)
     EXPECT_TRUE((std::is_same_v<TestTypeSelector<double, Shape<UnknownSize, UnknownSize>>, double>));
 }
 
-TEST(TestLinalg, Indices)
+TEST(Linalg, Indices)
 {
     std::default_random_engine g;
     std::uniform_int_distribution<> randomInt(0, 100);
@@ -55,7 +55,7 @@ TEST(TestLinalg, Indices)
     }
 }
 
-//TEST(TestLinalg, HappyFlow)
+//TEST(Linalg, HappyFlow)
 //{
 //    constexpr Matrix<double, 4, 4> mat1{};
 //    constexpr Identity<double, 4> identity1{};
@@ -72,7 +72,7 @@ TEST(TestLinalg, Indices)
 //    EXPECT_FALSE((is_same_type_v<Matrix<float, 4, 4>, Diagonal<double, 4, 4>>));
 //}
 //
-//TEST(TestLinalg, TestZeros)
+//TEST(Linalg, TestZeros)
 //{
 //    constexpr Zeros<double, 4, 4> zeros4x4{};
 //    for(std::size_t i = 0; i < 4; ++i)
@@ -82,7 +82,7 @@ TEST(TestLinalg, Indices)
 //    EXPECT_DEATH(zeros4x4.Get(0, 4), "");
 //}
 //
-//TEST(TestLinalg, TestIdentity)
+//TEST(Linalg, TestIdentity)
 //{
 //    static_assert(ConceptIdentity<Identity<double, 1>>);
 //    static_assert(ConceptIdentity<Identity<double, 4>>);
@@ -104,7 +104,7 @@ TEST(TestLinalg, Indices)
 //    EXPECT_DEATH(identity4.Get(0, 4), "");
 //}
 //
-//TEST(TestLinalg, TestMatrix)
+//TEST(Linalg, TestMatrix)
 //{
 //    constexpr const Matrix<double, 3, 3> all2s(2.);
 //    for(std::size_t i = 0; i < 3; ++i)
@@ -127,7 +127,7 @@ TEST(TestLinalg, Indices)
 //    constexpr auto mat3b = Matrix<double, 4, 4>(Diagonal<double, 4, 4>({1, 2, 3, 4}));
 //}
 //
-//TEST(TestLinalg, TestDiagonal)
+//TEST(Linalg, TestDiagonal)
 //{
 //    EXPECT_TRUE((ConceptSquareMatrix<Diagonal<double, 4, 4>>));
 //
@@ -168,7 +168,7 @@ TEST(TestLinalg, Indices)
 //                EXPECT_DOUBLE_EQ(diag3.Get(i, j), 0.);
 //}
 //
-//TEST(TestLinalg, TestAddDefaultType)
+//TEST(Linalg, TestAddDefaultType)
 //{
 //    using value_type = double;
 //    static constexpr std::size_t rows = 3;
@@ -212,7 +212,7 @@ TEST(TestLinalg, Indices)
 //    static_assert(std::is_same_v<MatConst, default_add_t<MatColConst, MatRowConst>>);
 //}
 //
-//TEST(TestLinalg, TestAddMatrix)
+//TEST(Linalg, TestAddMatrix)
 //{
 //    constexpr double value = 1.0;
 //
@@ -233,7 +233,7 @@ TEST(TestLinalg, Indices)
 //    ExpectMatrixEqual(res, Matrix<double, 2, 2>({6, 8, 10, 12}));
 //}
 //
-//TEST(TestLinalg, TestAddConstant)
+//TEST(Linalg, TestAddConstant)
 //{
 //    constexpr Matrix<double, 4, 4> res1 = Add(Identity<double, 4>{}, Identity<double, 4>{});
 //    for(std::size_t i = 0; i < 4; ++i)
@@ -241,7 +241,7 @@ TEST(TestLinalg, Indices)
 //            EXPECT_DOUBLE_EQ(res1.Get(i, j), i == j ? 2. : 0.);
 //}
 //
-//TEST(TestLinalg, TestAddMultivariate)
+//TEST(Linalg, TestAddMultivariate)
 //{
 //    constexpr auto I4 = Identity<double, 4>{};
 //    constexpr auto add2 = Add(I4, I4);
@@ -253,7 +253,7 @@ TEST(TestLinalg, Indices)
 //    ExpectMatrixEqual(add7, DiagonalConstant<double, 4>{7});
 //}
 //
-//TEST(TestLinalg, TestDeterminant)
+//TEST(Linalg, TestDeterminant)
 //{
 //    constexpr auto identityDetD = Determinant(Identity<double, 100>{});
 //    EXPECT_EQ(identityDetD, 1.0);
@@ -276,7 +276,7 @@ TEST(TestLinalg, Indices)
 //    // Determinant(Matrix<int, 3, 4>{});
 //}
 //
-//TEST(TestLinalg, TestInverseTranspose)
+//TEST(Linalg, TestInverseTranspose)
 //{
 //    constexpr Identity<double, 5> identity{};
 //    constexpr auto identityTranspose = Transpose(identity);
@@ -304,7 +304,7 @@ TEST(TestLinalg, Indices)
 //    // TODO: Check block diagonal matrix inverse is inverse per block
 //}
 //
-//TEST(TestLinalg, TestInverseDiagonal)
+//TEST(Linalg, TestInverseDiagonal)
 //{
 //    constexpr auto diag1 = Diagonal<double, 3, 3>({1, 2, 3});
 //    constexpr Diagonal<double, 3, 3> diagInv1 = InverseDiagonal(diag1);
@@ -313,7 +313,7 @@ TEST(TestLinalg, Indices)
 //    EXPECT_TRUE(IsEqual(Matmul(diag1, diagInv2), Identity<double, 3>{}));
 //}
 //
-//TEST(TestLinalg, TestInverseRandom)
+//TEST(Linalg, TestInverseRandom)
 //{
 //    // NOTE: these numbers are inside gtest context, including construction of random matrix etc.
 //    // Not representative of actual performance
@@ -345,7 +345,7 @@ TEST(TestLinalg, Indices)
 //    }
 //}
 //
-//TEST(TestLinalg, TestBracket3)
+//TEST(Linalg, TestBracket3)
 //{
 //    constexpr Vector3<double> vec({1, 2, 3});
 //    constexpr auto bracket = Bracket3(vec);
@@ -355,17 +355,17 @@ TEST(TestLinalg, Indices)
 //    constexpr auto bSquared = Matmul(bracket, bracket);
 //}
 //
-//TEST(TestLinalg, TestBracket6)
+//TEST(Linalg, TestBracket6)
 //{
 //    // TODO
 //}
 //
-//TEST(TestLinalg, TestLieBracket)
+//TEST(Linalg, TestLieBracket)
 //{
 //    // TODO
 //}
 //
-//TEST(TestLinalg, TestLambdaMatrix)
+//TEST(Linalg, TestLambdaMatrix)
 //{
 //    constexpr auto lambda = [](const std::size_t i, const std::size_t j) {
 //        return (i == j) ? 1. : 0.; //
@@ -375,7 +375,7 @@ TEST(TestLinalg, Indices)
 //    ExpectMatrixEqual(mat, Identity<double, 3>{}, 1E-14);
 //}
 //
-//TEST(TestLinalg, TestMatmul4x4Perf)
+//TEST(Linalg, TestMatmul4x4Perf)
 //{
 //    std::default_random_engine g;
 //    std::uniform_real_distribution<double> r(0.01, 100.);
@@ -401,7 +401,7 @@ TEST(TestLinalg, Indices)
 //    }
 //}
 //
-//TEST(TestLinalg, TestMatmulDefaultType)
+//TEST(Linalg, TestMatmulDefaultType)
 //{
 //    using value_type = double;
 //    static constexpr std::size_t rows = 3;
@@ -425,7 +425,7 @@ TEST(TestLinalg, Indices)
 //    static_assert(std::is_same_v<MatDynamic, default_matmul_t<MatColConst, MatRowConst>>);
 //}
 //
-//TEST(TestLinalg, TestSparse)
+//TEST(Linalg, TestSparse)
 //{
 //    static_assert(is_sparse_v<MatrixSparse<double>>);
 //    static_assert(is_sparse_v<MatrixSparse<int>>);

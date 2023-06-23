@@ -2,6 +2,10 @@
 
 #include "vic/Emulator.h"
 
+namespace vic
+{
+namespace emulation
+{
 TEST(TestEmulator, Startup)
 {
     //using Tmem = Memory<256>;
@@ -18,3 +22,6 @@ TEST(TestEmulator, Startup)
 
     //emulator.Run(prog);
 }
+
+} // namespace emulation
+} // namespace vic

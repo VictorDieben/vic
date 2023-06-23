@@ -13,7 +13,7 @@ namespace vic
 namespace linalg
 {
 
-TEST(TestAdd, AddSimple)
+TEST(Add, AddSimple)
 {
     constexpr const Identity2<double> i2{};
     constexpr const Diagonal2<double> d2 = Add(i2, i2);
@@ -42,7 +42,7 @@ TEST(TestAdd, AddSimple)
     // todo: sparse
 }
 
-TEST(TestAdd, AddDiagonal)
+TEST(Add, AddDiagonal)
 {
     constexpr const Matrix2<double> m2{{1., 2., 3., 4.}};
     constexpr const Diagonal2<double> d2 = AddDiagonal(m2, m2); // note: only adds the diagonals

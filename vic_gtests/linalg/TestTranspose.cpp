@@ -10,7 +10,7 @@ namespace vic
 namespace linalg
 {
 
-TEST(TestAlgorithms, Transpose)
+TEST(Algorithms, Transpose)
 {
     // Test the Shape, Constexpr-ness and value of Transpose()
     constexpr Identity2<double> identity2 = Transpose(Identity2<double>{});
@@ -37,7 +37,7 @@ TEST(TestAlgorithms, Transpose)
     EXPECT_TRUE(IsEqual(rowConst2, matT));
 }
 
-TEST(TestAlgorithms, InverseDiag)
+TEST(Algorithms, InverseDiag)
 {
     constexpr auto diag = DiagonalMxN<double, 3, 3>({1., 2., 3.});
     constexpr DiagonalMxN<double, 3, 3> diagInv = InverseDiagonal(diag);

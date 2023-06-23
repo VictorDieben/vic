@@ -258,7 +258,7 @@ private:
     using CostType = decltype(mEdgeCostFunctor(TensorVertexType{}, TensorVertexType{}));
     struct HeapObject
     {
-        TensorVertexId vertex;
+        TensorVertexId vertex{};
         CostType f{std::numeric_limits<CostType>::max()};
     };
     struct ExploredObject

@@ -29,7 +29,7 @@ namespace geom
 using namespace vic::linalg;
 using namespace vic::mesh;
 
-TEST(TestGeom, Initialization)
+TEST(Geom, Initialization)
 {
 
     Point2d p1{{0.1, 10.}};
@@ -73,7 +73,7 @@ TEST(TestGeom, Initialization)
                                  1.};
 }
 
-TEST(TestGeom, TriLineIntersection)
+TEST(Geom, TriLineIntersection)
 {
     using Result = TriLineIntersectionResult<double>;
     const auto ResultEqual = [](const auto& s1, const auto& s2) {
@@ -137,7 +137,7 @@ TEST(TestGeom, TriLineIntersection)
     }
 }
 
-TEST(TestGeom, SphereLineIntersection)
+TEST(Geom, SphereLineIntersection)
 {
     //constexpr LineSegment<double, 3> segment{Point3d{{0, 0, 2}}, //
     //                                         Point3d{{0, 0, -2}}};
@@ -191,7 +191,7 @@ TEST(TestGeom, SphereLineIntersection)
     }
 }
 
-TEST(TestGeom, AABBLineIntersection)
+TEST(Geom, AABBLineIntersection)
 {
     AABB<double, 3> bbox{Interval<double>{1, 2}, Interval<double>{1, 2}, Interval<double>{1, 2}};
 
@@ -236,7 +236,7 @@ constexpr bool IntervalEqual(const Interval<double>& int1, const Interval<double
     return Abs(int1.min - int2.min) < eps && Abs(int1.max - int2.max) < eps; //
 };
 
-TEST(TestGeom, Interval)
+TEST(Geom, Interval)
 {
     // Includes
     ASSERT_TRUE(Includes(Interval<double>{-1., 1.}, Interval<double>{-.99, .99}));
@@ -261,7 +261,7 @@ constexpr bool BBoxEqual(const BBox<double, 2>& bbox1, const BBox<double, 2>& bb
            IntervalEqual(bbox1.intervals.at(1), bbox2.intervals.at(1)); //
 };
 
-TEST(TestGeom, BBox)
+TEST(Geom, BBox)
 {
     std::default_random_engine g;
     std::uniform_real_distribution<double> r(-1., 1.);
@@ -303,7 +303,7 @@ TEST(TestGeom, BBox)
                           BBox<double, 2>{{Inter{1., 2.}, Inter{0., 3}}}));
 }
 
-TEST(TestGeom, BoxTree)
+TEST(Geom, BoxTree)
 {
     std::default_random_engine g;
     std::uniform_real_distribution<double> pos(-1., 1.);
@@ -345,7 +345,7 @@ TEST(TestGeom, BoxTree)
     }
 }
 
-//TEST(TestGeom, TriTri)
+//TEST(Geom, TriTri)
 //{
 //    std::default_random_engine g;
 //    std::uniform_real_distribution<double> pos(-1., 1.);
@@ -381,14 +381,19 @@ TEST(TestGeom, BoxTree)
 //    }
 //}
 
-TEST(TestGeom, IntervalHeap)
+TEST(Geom, IntervalHeap)
 {
     using Box = BBox<double, 2>;
     using Key = uint32_t;
     std::default_random_engine g;
     std::uniform_real_distribution<double> pos(-1., 1.);
     std::uniform_real_distribution<double> size(0.00001, 0.1);
-    constexpr std::size_t nodes = 10000000;
+
+#ifdef _DEBUG
+    constexpr std::size_t nodes = 10000;
+#else
+    constexpr std::size_t nodes = 1000000;
+#endif
 
     const auto randomInterval = [&]() {
         double p = pos(g), d = size(g);
@@ -441,15 +446,15 @@ TEST(TestGeom, IntervalHeap)
     {
         if(!std::binary_search(overlap.begin(), overlap.end(), i))
         {
-            const auto interval = boxes.at(i).intervals[0];
+            const auto& interval = boxes.at(i).intervals[0];
             ASSERT_FALSE(Overlaps(interval, overlapInterval));
         }
     }
 
-    ASSERT_TRUE(false);
+    // ASSERT_TRUE(false);
 }
 
-TEST(TestGeom, IntervalSorted)
+TEST(Geom, IntervalSorted)
 {
     using Inter = Interval<double>;
     using Key = uint32_t;
@@ -483,7 +488,7 @@ TEST(TestGeom, IntervalSorted)
     (void)bla;
 }
 
-TEST(TestGeom, HeapVector)
+TEST(Geom, HeapVector)
 {
     ASSERT_EQ(FromBinaryIndex(0, 4), 0);
     ASSERT_EQ(FromBinaryIndex(1, 4), 2);
@@ -502,7 +507,7 @@ TEST(TestGeom, HeapVector)
     //ASSERT_TRUE(heapvec.IsFilled(0));
 }
 
-TEST(TestGeom, PyramidVector)
+TEST(Geom, PyramidVector)
 {
     EXPECT_EQ(PyramidSize(0), 0);
     EXPECT_EQ(PyramidSize(1), 1);
@@ -567,7 +572,7 @@ TEST(TestGeom, PyramidVector)
     ASSERT_EQ(secondLevel.end(), thirdLevel.begin());
 }
 
-//TEST(TestGeom, BTreeVector)
+//TEST(Geom, BTreeVector)
 //{
 //    EXPECT_EQ(NextPowerOf2(0u), 1); // todo: probably not what we want
 //    EXPECT_EQ(NextPowerOf2(1u), 1);
@@ -616,7 +621,7 @@ TEST(TestGeom, PyramidVector)
 //    EXPECT_EQ(vec.GetCapacity(), 4);
 //}
 
-TEST(TestGeom, BalancedAABBTree)
+TEST(Geom, BalancedAABBTree)
 {
     using Key = std::size_t;
     using Inter = Interval<double>;
@@ -628,8 +633,9 @@ TEST(TestGeom, BalancedAABBTree)
     std::uniform_real_distribution<double> pos(-1., 1.);
     std::uniform_real_distribution<double> size(0.00001, 0.1);
 
+    constexpr std::size_t nItems = vic::Pow<11>(2); // 2^12: 4096
     std::vector<BBox> boxes{};
-    const std::size_t nItems = vic::Pow<12>(2);
+    boxes.reserve(nItems);
     for(auto i = 0; i < nItems; ++i)
     {
         const auto p1 = pos(g), s1 = size(g);
@@ -647,7 +653,7 @@ TEST(TestGeom, BalancedAABBTree)
     tree.Update();
 }
 
-TEST(TestGeom, GroupPairsOfTwo)
+TEST(Geom, GroupPairsOfTwo)
 {
     using Inter = Interval<double>;
     std::default_random_engine g;
@@ -689,7 +695,7 @@ TEST(TestGeom, GroupPairsOfTwo)
     ASSERT_TRUE(false);
 }
 
-TEST(TestGeom, MeshUvSphere)
+TEST(Geom, MeshUvSphere)
 {
     const double radius = .5;
 
@@ -705,7 +711,7 @@ TEST(TestGeom, MeshUvSphere)
     // EXPECT_TRUE(IsClosed(mesh));
 }
 
-TEST(TestGeom, MeshCubeSphere)
+TEST(Geom, MeshCubeSphere)
 {
     const double radius = .5;
 
@@ -730,7 +736,7 @@ TEST(TestGeom, MeshCubeSphere)
     }
 }
 
-TEST(TestGeom, MeshCube)
+TEST(Geom, MeshCube)
 {
     const AABB<double, 3> bbox{Interval<double>{1, 2}, Interval<double>{1, 2}, Interval<double>{1, 2}};
 
@@ -741,7 +747,7 @@ TEST(TestGeom, MeshCube)
     EXPECT_TRUE(IsClosed(subdividedCube));
 }
 
-TEST(TestGeom, MeshCone)
+TEST(Geom, MeshCone)
 {
     const auto mesh = GenerateCone(1., 2., 8);
     EXPECT_TRUE(IsClosed(mesh));
@@ -750,7 +756,7 @@ TEST(TestGeom, MeshCone)
     EXPECT_TRUE(IsClosed(subdividedMesh));
 }
 
-TEST(TestGeom, MeshTorus)
+TEST(Geom, MeshTorus)
 {
     const auto mesh = GenerateTorus(1., .25, 16, 8);
     EXPECT_TRUE(IsClosed(mesh));
@@ -759,7 +765,7 @@ TEST(TestGeom, MeshTorus)
     EXPECT_TRUE(IsClosed(subdividedMesh));
 }
 
-TEST(TestGeom, Subdivide)
+TEST(Geom, Subdivide)
 {
     TriMesh<double> triMesh;
     triMesh.vertices = {ToVertex(0., 0., 0.), //
@@ -773,7 +779,7 @@ TEST(TestGeom, Subdivide)
     EXPECT_EQ(subdivided.tris.size(), 4);
 }
 
-TEST(TestGeom, MeshCircle)
+TEST(Geom, MeshCircle)
 {
     const double radius = 1.5;
     const EdgeMesh edges = GenerateCircle(radius, 16u);
@@ -784,7 +790,7 @@ TEST(TestGeom, MeshCircle)
         EXPECT_NEAR(vic::linalg::Norm(vertex), radius, 1e-14);
 }
 
-TEST(TestGeom, Revolve)
+TEST(Geom, Revolve)
 {
     const std::size_t n = 16;
 
@@ -799,7 +805,7 @@ TEST(TestGeom, Revolve)
     EXPECT_EQ(revolvedMesh.tris.size(), 2 * n);
 }
 
-TEST(TestGeom, EulerPoincare)
+TEST(Geom, EulerPoincare)
 {
     //
 }

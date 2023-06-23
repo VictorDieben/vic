@@ -9,6 +9,7 @@
 #include "vic/memory/ring_buffer.h"
 
 #include <algorithm>
+#include <deque>
 #include <numeric>
 #include <random>
 #include <thread>
@@ -175,7 +176,7 @@ TEST(TestMemory, FlatMap)
     EXPECT_FALSE(map.Relabel(4, 3)); // key 3 already exists
 }
 
-TEST(TestMemory, RingBuffer)
+TEST(TestMemory, ArrayRingBuffer)
 {
     struct TestStruct
     {
@@ -185,7 +186,7 @@ TEST(TestMemory, RingBuffer)
 
     constexpr std::size_t capacity = 100;
 
-    RingBuffer<TestStruct, capacity> buffer;
+    ArrayRingBuffer<TestStruct, capacity> buffer;
 
     // verify empty buffer
     ASSERT_EQ(buffer.Capacity(), capacity);
@@ -193,7 +194,7 @@ TEST(TestMemory, RingBuffer)
     ASSERT_EQ(buffer.Pop(), std::nullopt);
 
     // put in 1 item, verify value
-    buffer.Push({1, 1.});
+    buffer.TryPush({1, 1.});
     ASSERT_EQ(buffer.Size(), 1);
     auto item = buffer.Pop();
     ASSERT_NE(item, std::nullopt);
@@ -206,7 +207,7 @@ TEST(TestMemory, RingBuffer)
     std::thread pushThread([&]() {
         // push n items into buffer, with increasing value of a
         for(int i = 0; i < n; ++i)
-            while(!buffer.Push({i, 0.}))
+            while(!buffer.TryPush({i, 0.}))
                 std::this_thread::yield(); // yield, because the thread cannot continue right now
     });
 
@@ -240,6 +241,83 @@ TEST(TestMemory, RingBuffer)
     // todo: test with non-copy constructible type (unique_ptr?)
 
     // todo: test with multiple producers/consumers
+}
+
+TEST(TestMemory, RingBuffer)
+{
+    struct MyType
+    {
+        int a;
+    };
+    RingBuffer<MyType> buffer; // <[]>
+    EXPECT_EQ(buffer.size(), 0);
+
+    buffer.push_back(MyType{1}); // <[1]>
+    EXPECT_EQ(buffer.size(), 1);
+    EXPECT_EQ(buffer.front().a, 1);
+    EXPECT_EQ(buffer.back().a, 1);
+
+    buffer.push_back(MyType{2}); // <[1, 2]>
+    EXPECT_EQ(buffer.size(), 2);
+    EXPECT_EQ(buffer.front().a, 1);
+    EXPECT_EQ(buffer.back().a, 2);
+
+    buffer.push_back(MyType{3}); // <[1, 2, 3]>
+    EXPECT_EQ(buffer.size(), 3);
+    EXPECT_EQ(buffer.front().a, 1);
+    EXPECT_EQ(buffer.back().a, 3);
+
+    buffer.pop_back(); // <., [2, 3]>
+    EXPECT_EQ(buffer.size(), 2);
+    EXPECT_EQ(buffer.front().a, 2);
+    EXPECT_EQ(buffer.back().a, 3);
+
+    buffer.pop_back(); // <., ., [3]>
+    EXPECT_EQ(buffer.size(), 1);
+    EXPECT_EQ(buffer.front().a, 3);
+    EXPECT_EQ(buffer.back().a, 3);
+
+    buffer.push_back(MyType{4}); // <., ., [3, 4]>
+    EXPECT_EQ(buffer.size(), 2);
+    EXPECT_EQ(buffer.front().a, 3);
+    EXPECT_EQ(buffer.back().a, 4);
+
+    buffer.push_back(MyType{5}); // <5], ., [3, 4,>
+    EXPECT_EQ(buffer.size(), 3);
+    EXPECT_EQ(buffer.front().a, 3);
+    EXPECT_EQ(buffer.back().a, 5);
+
+    buffer.push_back(MyType{6}); // <5, 6], [3, 4,>
+    EXPECT_EQ(buffer.size(), 4);
+    EXPECT_EQ(buffer.front().a, 3);
+    EXPECT_EQ(buffer.back().a, 6);
+
+    // default size is 4, so next push_back will perform a reallocation
+    buffer.push_back(MyType{7}); // <[3, 4, 5, 6, 7], ., ., .>
+    EXPECT_EQ(buffer.size(), 5);
+    EXPECT_EQ(buffer.front().a, 3);
+    EXPECT_EQ(buffer.back().a, 7);
+
+    // after reallocation, a push_front will add an item to the back of the list
+    buffer.push_front(MyType{2}); // <3, 4, 5, 6, 7], ., ., [2, >
+    EXPECT_EQ(buffer.size(), 6);
+    EXPECT_EQ(buffer.front().a, 2);
+    EXPECT_EQ(buffer.back().a, 7);
+
+    // todo: construct an std::deque. Perform the same operations on a ringbuffer and queue, check that they agree.
+    buffer.clear();
+    std::deque<MyType> verification;
+    for(std::size_t step = 0; step < 99; ++step)
+    {
+        // todo: push some items to front or back
+
+        // todo: pop some items from front or back
+
+        // todo: verify that both lists agree
+        ASSERT_EQ(buffer.size(), verification.size());
+        for(std::size_t i = 0; i < buffer.size(); ++i)
+            ASSERT_EQ(buffer.at(i).a, verification.at(i).a);
+    }
 }
 
 template <typename TIter>

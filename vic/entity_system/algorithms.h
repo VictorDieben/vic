@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vic/entity_system/definitions.h"
+#include <algorithm>
 #include <cassert>
 #include <ranges>
 #include <tuple>

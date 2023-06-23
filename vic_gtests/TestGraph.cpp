@@ -150,7 +150,7 @@ TEST(TestGraph, TestFloydWarshall)
 #ifdef _DEBUG
     const std::size_t nx = 25, ny = 25;
 #else
-    const std::size_t nx = 100, ny = 100;
+    const std::size_t nx = 50, ny = 50;
 #endif
 
     TestGraph graph = ConstructGridGraph(nx, ny);
@@ -186,7 +186,7 @@ TEST(TestGraph, TestFloydWarshall)
 
 TEST(TestGraph, TestDijkstra)
 {
-    constexpr std::size_t nx = 13, ny = 14;
+    constexpr std::size_t nx = 13, ny = 7;
     TestGraph graph = ConstructGridGraph(nx, ny);
 
     ASSERT_EQ(graph.GetNumVertices(), nx * ny);

@@ -4,9 +4,10 @@
 
 #include <optional>
 
-using namespace vic;
-
-using namespace vic::ecs;
+namespace vic
+{
+namespace ecs
+{
 
 struct A
 { };
@@ -612,3 +613,6 @@ TEST(TestEntitySystem, ForeachComponentType)
 
     EXPECT_EQ(componentTypeCount, 7);
 }
+
+} // namespace ecs
+} // namespace vic

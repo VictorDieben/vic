@@ -17,9 +17,10 @@
 #include <random>
 #include <thread>
 
-using namespace vic;
+namespace vic::utils
+{
 
-TEST(TestUtils, TestPow)
+TEST(Utils, TestPow)
 {
     constexpr auto res = Pow<2>(3); // check constexpr
 
@@ -39,7 +40,7 @@ TEST(TestUtils, TestPow)
     EXPECT_NEAR(Pow<6>(pi), pi * pi * pi * pi * pi * pi, tol);
 }
 
-TEST(TestUtils, TestTimer)
+TEST(Utils, TestTimer)
 {
     CTimer timer;
     timer.Reset();
@@ -49,7 +50,7 @@ TEST(TestUtils, TestTimer)
     EXPECT_LT(interval_ms, 50.); // large upper bound, we don't know when sleep returns
 }
 
-TEST(TestUtils, TestFinally)
+TEST(Utils, TestFinally)
 {
     bool value = false;
     {
@@ -58,7 +59,7 @@ TEST(TestUtils, TestFinally)
     EXPECT_TRUE(value);
 }
 
-TEST(TestUtils, TestCounted)
+TEST(Utils, TestCounted)
 {
     struct S : public Counted<S>
     { };
@@ -80,14 +81,14 @@ TEST(TestUtils, TestCounted)
     EXPECT_EQ(S::GetCount(), 0);
 }
 
-TEST(TestUtils, TestToBase)
+TEST(Utils, TestToBase)
 {
     std::vector<int> buffer{};
     ToBase<int>(8, 2, buffer);
     ExpectVectorsEqual(buffer, std::vector<int>{0, 0, 0, 1});
 }
 
-TEST(TestUtils, TestFromBase)
+TEST(Utils, TestFromBase)
 {
     // base 2
     const uint16_t baseTwo{2};
@@ -108,7 +109,7 @@ TEST(TestUtils, TestFromBase)
     ASSERT_DEATH(FromBase<uint64_t>(std::vector<int>{-1}, 2), "");
 }
 
-TEST(TestUtils, TestToFromBase)
+TEST(Utils, TestToFromBase)
 {
     // pick a random value and base. convert value to that other base.
     // Then convert it back to normal representation
@@ -132,7 +133,7 @@ TEST(TestUtils, TestToFromBase)
     }
 }
 
-TEST(TestUtils, Linspace)
+TEST(Utils, Linspace)
 {
     const auto vec0 = Linspace(0., 1., 0);
     EXPECT_EQ(vec0.size(), 0);
@@ -153,7 +154,7 @@ TEST(TestUtils, Linspace)
     EXPECT_DOUBLE_EQ(vec3.at(2), 1.);
 }
 
-TEST(TestUtils, TestRange)
+TEST(Utils, TestRange)
 {
     // test range
     std::vector<int> result;
@@ -197,7 +198,7 @@ TEST(TestUtils, TestRange)
     ASSERT_EQ(result6, answer6);
 }
 
-//TEST(TestUtils, TestZip)
+//TEST(Utils, TestZip)
 //{
 //    std::vector<int> a{0, 1, 2, 3};
 //    std::vector<char> b{'a', 'b', 'c', 'd'};
@@ -209,7 +210,7 @@ TEST(TestUtils, TestRange)
 //    ASSERT_EQ(result, answer);
 //}
 
-TEST(TestUtils, TestStateMachine)
+TEST(Utils, TestStateMachine)
 {
     enum class State
     {
@@ -252,7 +253,7 @@ TEST(TestUtils, TestStateMachine)
     ////stateMachine.Tick(); // calls: stateMachine.Tick<State::Two>();
 }
 
-TEST(TestUtils, TestNewStateMachine)
+TEST(Utils, TestNewStateMachine)
 {
     enum class StateEnum
     {
@@ -293,7 +294,7 @@ TEST(TestUtils, TestNewStateMachine)
     (void)newStateMachine;
 }
 
-TEST(TestUtils, TestObservable)
+TEST(Utils, TestObservable)
 {
     struct TestObservable : public Observable<TestObservable>
     { };
@@ -316,7 +317,7 @@ TEST(TestUtils, TestObservable)
     ASSERT_FALSE(object.IsObserved());
 }
 
-TEST(TestUtils, TestIsPowerOfTwo)
+TEST(Utils, TestIsPowerOfTwo)
 {
     // check constexpr
     static_assert(IsPowerOfTwo(int8_t{2}));
@@ -349,7 +350,7 @@ TEST(TestUtils, TestIsPowerOfTwo)
         ASSERT_FALSE(IsPowerOfTwo(Power<int32_t>(2, i) - 1)) << i;
 }
 
-TEST(TestUtils, Exp)
+TEST(Utils, Exp)
 {
     std::default_random_engine rng;
     std::uniform_real_distribution dist(0.0001, 100.);
@@ -363,7 +364,7 @@ TEST(TestUtils, Exp)
     }
 }
 
-TEST(TestUtils, TestUnique)
+TEST(Utils, TestUnique)
 {
     struct SomeObject
     {
@@ -425,7 +426,7 @@ TEST(TestUtils, TestUnique)
     static_assert(std::is_same_v<decltype(object), decltype(object2)>);
 }
 
-TEST(TestUtils, Ranges)
+TEST(Utils, Ranges)
 {
     struct Type1
     { };
@@ -453,7 +454,7 @@ TEST(TestUtils, Ranges)
     //}
 }
 
-TEST(TestUtils, Templates_Contains)
+TEST(Utils, Templates_Contains)
 {
     static_assert(!templates::Contains<double>());
 
@@ -463,7 +464,7 @@ TEST(TestUtils, Templates_Contains)
     static_assert(!templates::Contains<double, int, uint16_t>());
 }
 
-TEST(TestUtils, Templates_IsUnique)
+TEST(Utils, Templates_IsUnique)
 {
     static_assert(templates::IsUnique<>());
     static_assert(templates::IsUnique<double>());
@@ -479,13 +480,15 @@ TEST(TestUtils, Templates_IsUnique)
     static_assert(!templates::IsUnique<int, double, uint16_t, double>());
 }
 
-TEST(TestUtils, Templates_Unique)
+TEST(Utils, Templates_Unique)
 {
     //
     // static_assert(std::is_same_v<std::tuple<double>, typename templates::to_unique<double>::tuple_type>);
 }
 
-TEST(TestUtils, Serialize)
+TEST(Utils, Serialize)
 {
     //
 }
+
+} // namespace vic::utils
