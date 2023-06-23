@@ -108,7 +108,7 @@ private:
 };
 
 // non-thread safe ring buffer wrapper for vector
-// mostly copies std::list interface where possible
+// mostly copies std::list/std::deque interface where possible.
 template <typename T>
 class RingBuffer
 {
@@ -143,7 +143,7 @@ public:
     bool empty() const { return (mHead == mTail); }
     void clear()
     {
-        mData.clear();
+        // mData.clear(); // todo: reset values?
         mHead = 0;
         mTail = 0;
     }
