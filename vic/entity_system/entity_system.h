@@ -393,14 +393,6 @@ public:
         return algorithms::Iterate2d<T1, T2>(*this, iterable.begin(), iterable.end());
     }
 
-    //template <typename T1, typename T2, typename TIter>
-    //auto Iterate(TIter begin, TIter end)
-    //{
-    //    static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
-    //    static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
-    //    return algorithms::Iterate(*this, begin, end);
-    //}
-
     template <typename T, typename TIter>
     auto Insert(TIter begin, TIter end)
     {
