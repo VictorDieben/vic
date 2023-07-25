@@ -1,13 +1,10 @@
 #include "gtest/gtest.h"
 
-#include "vic/entity_system/ecs.h"
+#include "vic/entity_system/ecs.h" 
 
 #include <optional>
 
-namespace vic
-{
-namespace ecs
-{
+using namespace vic::ecs;
 
 struct A
 { };
@@ -24,7 +21,7 @@ struct F
 struct G
 { };
 
-TEST(TestEntitySystem, Startup)
+TEST(ECS, Startup)
 {
     // create a system, add an entity, add components to that entity, retrieve them
     using System = vic::ecs::ECS<int, float, std::string>;
@@ -57,7 +54,7 @@ TEST(TestEntitySystem, Startup)
     ASSERT_FALSE(ent.Has<std::string>());
 }
 
-TEST(TestEntitySystem, ComponentSystem)
+TEST(ECS, ComponentSystem)
 {
     struct TestType
     {
@@ -92,7 +89,7 @@ TEST(TestEntitySystem, ComponentSystem)
     EXPECT_FALSE(components.Has(first));
 }
 
-TEST(TestEntitySystem, LowerBound)
+TEST(ECS, LowerBound)
 {
     using ComponentSystem = vic::ecs::ComponentSystem<A>;
     ComponentSystem components{};
@@ -114,7 +111,7 @@ TEST(TestEntitySystem, LowerBound)
     EXPECT_EQ(components.lower_bound_with_hint(EntityId{6}, it_5)->first, EntityId{7});
 }
 
-TEST(TestEntitySystem, Iterate)
+TEST(ECS, Iterate)
 {
     using Ecs = ECS<A, B, C>;
     Ecs ecs;
@@ -167,7 +164,7 @@ TEST(TestEntitySystem, Iterate)
     }
 }
 
-TEST(TestEntitySystem, Filter)
+TEST(ECS, Filter)
 {
     using namespace vic::ecs::algorithms;
 
@@ -248,7 +245,7 @@ TEST(TestEntitySystem, Filter)
     }
 }
 
-TEST(TestEntitySystem, Remove)
+TEST(ECS, Remove)
 {
     using namespace vic::ecs::algorithms;
 
@@ -285,7 +282,7 @@ TEST(TestEntitySystem, Remove)
     EXPECT_FALSE(handle.HasAny());
 }
 
-TEST(TestEntitySystem, 3d)
+TEST(ECS, 3d)
 {
     using ECS = vic::ecs::ECS<A, B, C, D>;
 
@@ -302,7 +299,7 @@ TEST(TestEntitySystem, 3d)
     EXPECT_EQ(f3.size(), 1u);
 }
 
-TEST(TestEntitySystem, Insert)
+TEST(ECS, Insert)
 {
     struct A
     {
@@ -327,7 +324,7 @@ TEST(TestEntitySystem, Insert)
     ASSERT_EQ(system.Size<A>(), 2u);
 }
 
-TEST(TestEntitySystem, TryGet)
+TEST(ECS, TryGet)
 {
     struct Component
     {
@@ -351,7 +348,7 @@ TEST(TestEntitySystem, TryGet)
         ASSERT_TRUE(false); // should not be reachable
 }
 
-TEST(TestEntitySystem, HasAny)
+TEST(ECS, HasAny)
 {
     struct ComponentA
     {
@@ -379,7 +376,7 @@ TEST(TestEntitySystem, HasAny)
     ASSERT_FALSE(System::ContainsComponent<double>());
 }
 
-TEST(TestEntitySystem, Relabel)
+TEST(ECS, Relabel)
 {
     const std::size_t count = 10;
 
@@ -433,7 +430,7 @@ TEST(TestEntitySystem, Relabel)
         EXPECT_EQ(ecs.HasAny(i), i < nItems + 1) << "Entity " << i << (ecs.HasAny(i) ? " exists" : " does not exist");
 }
 
-TEST(TestEntitySystem, ChainAdds)
+TEST(ECS, ChainAdds)
 {
     struct ComponentA
     {
@@ -452,7 +449,7 @@ TEST(TestEntitySystem, ChainAdds)
     EXPECT_TRUE(newEnt.Has<ComponentB>() && newEnt.Get<ComponentB>().otherVal == 2);
 }
 
-TEST(TestEntitySystem, System)
+TEST(ECS, System)
 {
     struct ComponentA
     {
@@ -478,7 +475,7 @@ TEST(TestEntitySystem, System)
     // vic::ecs::System<ECS, double> system_failure(ecs);
 }
 
-TEST(TestEntitySystem, CrossRef)
+TEST(ECS, CrossRef)
 {
     // todo: make a CrossRef<TComponent, ...> type,
     // which is essentially just an EntityId,
@@ -487,7 +484,7 @@ TEST(TestEntitySystem, CrossRef)
     // it should be verified that the entity has the associated components
 }
 
-TEST(TestEntitySystem, Collection)
+TEST(ECS, Collection)
 {
     struct Item
     {
@@ -537,7 +534,7 @@ TEST(TestEntitySystem, Collection)
     EXPECT_EQ(items.size(), 2u);
 }
 
-TEST(TestEntitySystem, ParallelSystems)
+TEST(ECS, ParallelSystems)
 {
     using ECS = vic::ecs::ECS<A, B, C, D>;
     ECS ecs;
@@ -566,7 +563,7 @@ TEST(TestEntitySystem, ParallelSystems)
     EXPECT_TRUE(System_AB::IsBlockedBy<SystemConstA>());
 }
 
-TEST(TestEntitySystem, ExecuteSystems)
+TEST(ECS, ExecuteSystems)
 {
     using ECS = vic::ecs::ECS<A, B, C, D, E, F, G>;
     ECS ecs;
@@ -597,7 +594,7 @@ TEST(TestEntitySystem, ExecuteSystems)
     executor.Run();
 }
 
-TEST(TestEntitySystem, ForeachComponentType)
+TEST(ECS, ForeachComponentType)
 {
     using ECS = vic::ecs::ECS<A, B, C, D, E, F, G>;
     ECS ecs;
@@ -613,6 +610,4 @@ TEST(TestEntitySystem, ForeachComponentType)
 
     EXPECT_EQ(componentTypeCount, 7);
 }
-
-} // namespace ecs
-} // namespace vic
+ 
