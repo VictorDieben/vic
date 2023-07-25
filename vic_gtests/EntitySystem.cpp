@@ -1,10 +1,11 @@
 #include "gtest/gtest.h"
 
-#include "vic/entity_system/ecs.h" 
+#include "vic/entity_system/ecs.h"
 
 #include <optional>
 
-using namespace vic::ecs;
+namespace vic::ecs
+{
 
 struct A
 { };
@@ -610,4 +611,5 @@ TEST(ECS, ForeachComponentType)
 
     EXPECT_EQ(componentTypeCount, 7);
 }
- 
+
+} // namespace vic::ecs
