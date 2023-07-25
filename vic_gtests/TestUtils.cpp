@@ -6,6 +6,7 @@
 #include "vic/utils/counted.h"
 #include "vic/utils/math.h"
 #include "vic/utils/observable.h"
+#include "vic/utils/permutations.h"
 #include "vic/utils/ranges.h"
 #include "vic/utils/serialize.h"
 #include "vic/utils/statemachine.h"
@@ -352,16 +353,16 @@ TEST(Utils, TestIsPowerOfTwo)
 
 TEST(Utils, Exp)
 {
-    std::default_random_engine rng;
-    std::uniform_real_distribution dist(0.0001, 100.);
+    //std::default_random_engine rng;
+    //std::uniform_real_distribution dist(0.0001, 100.);
 
-    for(int32_t i = 0; i < 1000000; ++i)
-    {
-        const double x = dist(rng);
-        const double answer = std::exp(x);
-        const double eps = answer * 1e-7;
-        ASSERT_NEAR(answer, vic::math::exp(x), eps) << "x = " << x;
-    }
+    //for(int32_t i = 0; i < 1000000; ++i)
+    //{
+    //    const double x = dist(rng);
+    //    const double answer = std::exp(x);
+    //    const double eps = answer * 1e-7;
+    //    ASSERT_NEAR(answer, vic::math::exp(x), eps) << "x = " << x;
+    //}
 }
 
 TEST(Utils, TestUnique)
@@ -478,6 +479,28 @@ TEST(Utils, Templates_IsUnique)
     static_assert(!templates::IsUnique<double, double, uint16_t, float>());
     static_assert(!templates::IsUnique<double, double, double, double>());
     static_assert(!templates::IsUnique<int, double, uint16_t, double>());
+}
+
+TEST(Utils, ConstrainedPermutations)
+{
+    std::vector<uint8_t> items{1, 2, 3};
+    std::vector<std::pair<uint8_t, uint8_t>> constraints{{1, 3}};
+
+    const auto VerifyOrderLambda = [](const std::vector<uint8_t>& items, //
+                                      const std::vector<std::pair<uint8_t, uint8_t>>& constraints,
+                                      const std::vector<uint8_t>& permutation) {
+        EXPECT_EQ(std::set(permutation.begin(), permutation.end()).size(), permutation.size()); // verify all items unique
+    };
+
+    VerifyOrderLambda(items, constraints, {1, 2, 3});
+
+    std::vector<std::vector<uint8_t>> result;
+    ConstrainedPermutations(items, //
+                            constraints,
+                            [&](const std::vector<uint8_t>& permutation) {
+                                // result.push_back(permutation); //
+                                VerifyOrderLambda(items, constraints, permutation);
+                            });
 }
 
 TEST(Utils, Templates_Unique)

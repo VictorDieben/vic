@@ -220,6 +220,7 @@
     <ClInclude Include="machine_learning\layer.h" />
     <ClInclude Include="machine_learning\machine_learning.h" />
     <ClInclude Include="machine_learning\mapping.h" />
+    <ClInclude Include="memory\ab_tree.h" />
     <ClInclude Include="memory\constexpr_map.h" />
     <ClInclude Include="memory\dense_map.h" />
     <ClInclude Include="memory\event_queue.h" />
@@ -249,6 +250,7 @@
     <ClInclude Include="utils\file.h" />
     <ClInclude Include="utils\math.h" />
     <ClInclude Include="utils\observable.h" />
+    <ClInclude Include="utils\permutations.h" />
     <ClInclude Include="utils\ranges.h" />
     <ClInclude Include="utils\serialize.h" />
     <ClInclude Include="utils\sort.h" />

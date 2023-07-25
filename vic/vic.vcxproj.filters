@@ -312,6 +312,12 @@
     <ClInclude Include="utils\file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="memory\ab_tree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\permutations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vic.cpp">

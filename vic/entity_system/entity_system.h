@@ -50,6 +50,13 @@ struct EntityHandle
     }
 
     template <typename T2>
+    const T2& Get() const
+    {
+        assert(mSystem && mId);
+        return mSystem->Get<T2>(mId);
+    }
+
+    template <typename T2>
     T2* TryGet()
     {
         assert(mSystem && mId);
@@ -260,6 +267,13 @@ public:
 
     template <typename T>
     T& Get(EntityId id)
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return ComponentSystem<T>::Get(id);
+    }
+
+    template <typename T>
+    const T& Get(EntityId id) const
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::Get(id);
