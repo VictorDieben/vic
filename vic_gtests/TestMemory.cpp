@@ -454,5 +454,38 @@ TEST(TestMemory, MergeSortFunctor)
     // test merge_sort with a custom comparison operator
 }
 
+TEST(TestMemory, MergeSortBackInserter)
+{
+    // test merge_sort with back insertion into another vector
+
+    std::vector<int> answer;
+    answer.resize(10);
+    std::iota(answer.begin(), answer.end(), 0);
+
+    // make a shuffled copy
+    auto values = answer;
+    std::random_device rd;
+    std::mt19937 g(1234);
+    std::shuffle(values.begin(), values.end(), g);
+
+    // sort two halves of the vector separately
+    auto midpoint = values.begin() + 6;
+    std::sort(values.begin(), midpoint);
+    std::sort(midpoint, values.end());
+
+    // use back insertion version of merge_sort
+    std::vector<int> result;
+    vic::sorting::merge_sort_back_insertion(values.begin(), midpoint, values.end(), std::back_inserter(result));
+    EXPECT_EQ(result, answer);
+
+    std::vector<int> result2;
+    vic::sorting::merge_sort_back_insertion(answer.begin(), answer.begin(), answer.end(), std::back_inserter(result2));
+    EXPECT_EQ(result2, answer);
+
+    std::vector<int> result3;
+    vic::sorting::merge_sort_back_insertion(answer.begin(), answer.end(), answer.end(), std::back_inserter(result3));
+    EXPECT_EQ(result3, answer);
+}
+
 } // namespace memory
 } // namespace vic

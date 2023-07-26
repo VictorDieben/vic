@@ -89,5 +89,39 @@ void merge_sort(TIter begin, TIter midpoint, TIter end)
     return merge_sort(begin, midpoint, end, std::less<typename TIter::value_type>{});
 }
 
+template <typename TIter, typename TBackInserter>
+void merge_sort_back_insertion(const TIter begin, const TIter midpoint, const TIter end, TBackInserter backInsert)
+{
+    auto it1 = begin;
+    auto it2 = midpoint;
+    const auto end1 = midpoint;
+    const auto end2 = end;
+    while(true)
+    {
+        if(it1 == end1)
+        {
+            std::copy(it2, end2, backInsert);
+            return;
+        }
+        else if(it2 == end2)
+        {
+            std::copy(it1, end1, backInsert);
+            return;
+        }
+
+        if(*it1 < *it2)
+        {
+            *backInsert = *it1;
+            it1++;
+        }
+        else
+        {
+            *backInsert = *it2;
+            it2++;
+        }
+        backInsert++;
+    }
+}
+
 } // namespace sorting
 } // namespace vic
