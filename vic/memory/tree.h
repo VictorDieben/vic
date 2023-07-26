@@ -1,6 +1,8 @@
 #pragma once
 
 #include <algorithm>
+#include <map>
+#include <vector>
 
 namespace vic
 {
@@ -73,6 +75,8 @@ public:
 
     void Remove(const NodeId id)
     {
+        // todo: once we find the first (last) related node, 
+        // we know what range we can remove
         for(int i = int(mNodes.size()) - 1; i >= 0; --i)
             if(IsRelated(id, mNodes.at(i).Id()))
                 mNodes.erase(std::next(mNodes.begin(), i));
@@ -119,6 +123,7 @@ public:
     void Relabel()
     {
         // Give all nodes in this tree new ids, making the tree continuous again.
+        // this makes all old ids invalid.
         mIdCounter = 0;
         std::map<NodeId, NodeId> newIDs; // maps old to new id
         for(auto& node : mNodes)

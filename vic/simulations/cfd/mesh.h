@@ -2,7 +2,7 @@
 
 #include "vic/geometry/algorithms/algorithms.h"
 #include "vic/geometry/geometry.h"
-#include "vic/linalg/matrices.h"
+#include "vic/linalg/linalg.h"
 #include "vic/utils.h"
 
 // paper by Jos Stam: Real-Time fluid dynamics for Games:
@@ -227,6 +227,7 @@ Mesh InitializeGridMesh(const std::size_t nx, const std::size_t ny)
     const auto verticalEdgeIndex = [&](const std::size_t i, const std::size_t j) {
         return ((nx - 1) * ny) + uint32_t(i + (j * nx)); //
     };
+
     // construct areas
     for(std::size_t i = 0; i < nx - 1; ++i)
         for(std::size_t j = 0; j < ny - 1; ++j)

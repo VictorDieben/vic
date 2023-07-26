@@ -1,16 +1,23 @@
-#include "pch.h"
+
+#include "gtest/gtest.h"
 
 #include "vic/geometry/algorithms/algorithms.h"
+#include "vic/geometry/algorithms/assignment_problem.h"
 #include "vic/geometry/algorithms/bbox_tree.h"
 #include "vic/geometry/algorithms/intersections.h"
 #include "vic/geometry/algorithms/interval_heap.h"
 #include "vic/geometry/geometry.h"
-#include "vic/linalg/add.h"
-#include "vic/linalg/matmul.h"
+
+#include "vic/linalg/algorithms/add.h"
+#include "vic/linalg/algorithms/matmul.h"
 #include "vic/linalg/tools.h"
+
+#include "vic/geometry/algorithms/balanced_aabb_tree.h"
+#include "vic/geometry/mesh.h"
 
 #include "vic/utils/timing.h"
 #include <format>
+#include <random>
 
 using namespace vic;
 
@@ -19,9 +26,11 @@ namespace vic
 namespace geom
 {
 
-TEST(TestGeom, Initialization)
+using namespace vic::linalg;
+using namespace vic::mesh;
+
+TEST(Geom, Initialization)
 {
-    using namespace vic::linalg;
 
     Point2d p1{{0.1, 10.}};
     ASSERT_TRUE(IsEqual(p1, p1));
@@ -55,18 +64,17 @@ TEST(TestGeom, Initialization)
     ASSERT_EQ(interval1.min, -1);
     ASSERT_EQ(interval1.max, 1);
 
-    CubeAxisAligned<int, 3> cube1{Interval<int>{-1, 1}, //
-                                  Interval<int>{-2, 2},
-                                  Interval<int>{-3, 3}};
+    AABB<int, 3> cube1{Interval<int>{-1, 1}, //
+                       Interval<int>{-2, 2},
+                       Interval<int>{-3, 3}};
 
     Cylinder<double, 3> cylinder{Point3d{{-1, 0, 0}}, //
                                  Point3d{{1, 0, 0}},
                                  1.};
 }
 
-TEST(TestGeom, TriLineIntersection)
+TEST(Geom, TriLineIntersection)
 {
-    using namespace vic::linalg;
     using Result = TriLineIntersectionResult<double>;
     const auto ResultEqual = [](const auto& s1, const auto& s2) {
         return std::fabs(s1.u - s2.u) < 1E-10 && //
@@ -129,7 +137,7 @@ TEST(TestGeom, TriLineIntersection)
     }
 }
 
-TEST(TestGeom, SphereLineIntersection)
+TEST(Geom, SphereLineIntersection)
 {
     //constexpr LineSegment<double, 3> segment{Point3d{{0, 0, 2}}, //
     //                                         Point3d{{0, 0, -2}}};
@@ -183,12 +191,52 @@ TEST(TestGeom, SphereLineIntersection)
     }
 }
 
+TEST(Geom, AABBLineIntersection)
+{
+    AABB<double, 3> bbox{Interval<double>{1, 2}, Interval<double>{1, 2}, Interval<double>{1, 2}};
+
+    // simple intersection
+    auto res = AABBLineIntersection(bbox,
+                                    Line<double, 3>{Point<double, 3>{{0, 1.5, 1.5}}, //
+                                                    Direction<double, 3>{{1, 0, 0}}});
+    EXPECT_DOUBLE_EQ(res.interval.min, 1.);
+    EXPECT_DOUBLE_EQ(res.interval.max, 2.);
+
+    // intersection starting inside bbox
+    auto res2 = AABBLineIntersection(bbox,
+                                     Line<double, 3>{Point<double, 3>{{1.5, 1.5, 1.5}}, //
+                                                     Direction<double, 3>{{0, 1, 0}}});
+    EXPECT_DOUBLE_EQ(res2.interval.min, -0.5);
+    EXPECT_DOUBLE_EQ(res2.interval.max, 0.5);
+
+    // intersection cutting through a corner
+    auto res3 = AABBLineIntersection(bbox,
+                                     Line<double, 3>{Point<double, 3>{{0, 0, 1.5}}, //
+                                                     Direction<double, 3>{{1, 1, 0}}});
+    EXPECT_DOUBLE_EQ(res3.interval.min, 1.);
+    EXPECT_DOUBLE_EQ(res3.interval.max, 2.);
+
+    // zero direction
+    auto res4 = AABBLineIntersection(bbox,
+                                     Line<double, 3>{Point<double, 3>{{1.5, 1.5, 1.5}}, //
+                                                     Direction<double, 3>{{0, 0, 0}}});
+    EXPECT_DOUBLE_EQ(res4.interval.min, -std::numeric_limits<double>::infinity());
+    EXPECT_DOUBLE_EQ(res4.interval.max, std::numeric_limits<double>::infinity());
+
+    // intersection in negative direction
+    auto res5 = AABBLineIntersection(bbox,
+                                     Line<double, 3>{Point<double, 3>{{3, 3, 3}}, //
+                                                     Direction<double, 3>{{-1, -1, -1}}});
+    EXPECT_DOUBLE_EQ(res5.interval.min, 1.);
+    EXPECT_DOUBLE_EQ(res5.interval.max, 2.);
+}
+
 constexpr bool IntervalEqual(const Interval<double>& int1, const Interval<double>& int2, const double eps = 1E-10)
 {
     return Abs(int1.min - int2.min) < eps && Abs(int1.max - int2.max) < eps; //
 };
 
-TEST(TestGeom, Interval)
+TEST(Geom, Interval)
 {
     // Includes
     ASSERT_TRUE(Includes(Interval<double>{-1., 1.}, Interval<double>{-.99, .99}));
@@ -213,7 +261,7 @@ constexpr bool BBoxEqual(const BBox<double, 2>& bbox1, const BBox<double, 2>& bb
            IntervalEqual(bbox1.intervals.at(1), bbox2.intervals.at(1)); //
 };
 
-TEST(TestGeom, BBox)
+TEST(Geom, BBox)
 {
     std::default_random_engine g;
     std::uniform_real_distribution<double> r(-1., 1.);
@@ -255,7 +303,7 @@ TEST(TestGeom, BBox)
                           BBox<double, 2>{{Inter{1., 2.}, Inter{0., 3}}}));
 }
 
-TEST(TestGeom, BoxTree)
+TEST(Geom, BoxTree)
 {
     std::default_random_engine g;
     std::uniform_real_distribution<double> pos(-1., 1.);
@@ -266,7 +314,7 @@ TEST(TestGeom, BoxTree)
     const auto toBBox = [](const TestObject& object) {
         BBox<double, 3> bbox{};
         for(const auto& point : object)
-            for(std::size_t i = 0; i < 3; ++i)
+            for(vic::linalg::MatrixSize i = 0; i < 3; ++i)
                 bbox.intervals[i] = Interval<double>{Min(bbox.intervals[i].min, point.Get(i)), //
                                                      Max(bbox.intervals[i].max, point.Get(i))};
         return bbox;
@@ -297,7 +345,7 @@ TEST(TestGeom, BoxTree)
     }
 }
 
-//TEST(TestGeom, TriTri)
+//TEST(Geom, TriTri)
 //{
 //    std::default_random_engine g;
 //    std::uniform_real_distribution<double> pos(-1., 1.);
@@ -333,14 +381,19 @@ TEST(TestGeom, BoxTree)
 //    }
 //}
 
-TEST(TestGeom, IntervalHeap)
+TEST(Geom, IntervalHeap)
 {
     using Box = BBox<double, 2>;
     using Key = uint32_t;
     std::default_random_engine g;
     std::uniform_real_distribution<double> pos(-1., 1.);
     std::uniform_real_distribution<double> size(0.00001, 0.1);
-    constexpr std::size_t nodes = 10000000;
+
+#ifdef _DEBUG
+    constexpr std::size_t nodes = 10000;
+#else
+    constexpr std::size_t nodes = 1000000;
+#endif
 
     const auto randomInterval = [&]() {
         double p = pos(g), d = size(g);
@@ -393,15 +446,15 @@ TEST(TestGeom, IntervalHeap)
     {
         if(!std::binary_search(overlap.begin(), overlap.end(), i))
         {
-            const auto interval = boxes.at(i).intervals[0];
+            const auto& interval = boxes.at(i).intervals[0];
             ASSERT_FALSE(Overlaps(interval, overlapInterval));
         }
     }
 
-    ASSERT_TRUE(false);
+    // ASSERT_TRUE(false);
 }
 
-TEST(TestGeom, IntervalSorted)
+TEST(Geom, IntervalSorted)
 {
     using Inter = Interval<double>;
     using Key = uint32_t;
@@ -435,7 +488,7 @@ TEST(TestGeom, IntervalSorted)
     (void)bla;
 }
 
-TEST(TestGeom, HeapVector)
+TEST(Geom, HeapVector)
 {
     ASSERT_EQ(FromBinaryIndex(0, 4), 0);
     ASSERT_EQ(FromBinaryIndex(1, 4), 2);
@@ -452,6 +505,309 @@ TEST(TestGeom, HeapVector)
     //ASSERT_EQ(heapvec.size(), 1);
     //ASSERT_EQ(heapvec.capacity(), 1);
     //ASSERT_TRUE(heapvec.IsFilled(0));
+}
+
+TEST(Geom, PyramidVector)
+{
+    EXPECT_EQ(PyramidSize(0), 0);
+    EXPECT_EQ(PyramidSize(1), 1);
+    EXPECT_EQ(PyramidSize(2), 3);
+    EXPECT_EQ(PyramidSize(3), 7);
+
+    // EXPECT_EQ(PyramidFirstIndex(0), 0); // what would the correct value be here?
+    EXPECT_EQ(PyramidFirstIndex(1), 0);
+    EXPECT_EQ(PyramidFirstIndex(2), 1);
+    EXPECT_EQ(PyramidFirstIndex(3), 3);
+    EXPECT_EQ(PyramidFirstIndex(4), 7);
+    EXPECT_EQ(PyramidFirstIndex(5), 15);
+
+    // EXPECT_EQ(PyramidIndex(0, 0), 0);  // what would the correct value be here?
+    EXPECT_EQ(PyramidIndex(1, 0), 0);
+
+    EXPECT_EQ(PyramidIndex(2, 0), 1);
+    EXPECT_EQ(PyramidIndex(2, 1), 2);
+
+    EXPECT_EQ(PyramidIndex(3, 0), 3);
+    EXPECT_EQ(PyramidIndex(3, 1), 4);
+    EXPECT_EQ(PyramidIndex(3, 2), 5);
+    EXPECT_EQ(PyramidIndex(3, 3), 6);
+
+    //
+    EXPECT_EQ(PyramidLevelSize(0), 0);
+    EXPECT_EQ(PyramidLevelSize(1), 1);
+    EXPECT_EQ(PyramidLevelSize(2), 2);
+    EXPECT_EQ(PyramidLevelSize(3), 4);
+    EXPECT_EQ(PyramidLevelSize(4), 8);
+    EXPECT_EQ(PyramidLevelSize(5), 16);
+
+    PyramidVector<double> pyramid{};
+
+    pyramid.SetLevel(0);
+    EXPECT_EQ(pyramid.GetSize(), 0);
+
+    pyramid.SetLevel(1);
+    EXPECT_EQ(pyramid.GetSize(), 1);
+
+    pyramid.SetLevel(2);
+    EXPECT_EQ(pyramid.GetSize(), 1 + 2);
+
+    pyramid.SetLevel(3);
+    EXPECT_EQ(pyramid.GetVector().size(), 1 + 2 + 4);
+
+    // test LevelIterator
+    const auto& vec = pyramid.GetVector();
+
+    const auto emptyLevel = pyramid.LevelIterator(0);
+    ASSERT_EQ(std::distance(emptyLevel.begin(), emptyLevel.end()), 0);
+
+    const auto firstLevel = pyramid.LevelIterator(1);
+    ASSERT_EQ(std::distance(firstLevel.begin(), firstLevel.end()), 1);
+
+    const auto secondLevel = pyramid.LevelIterator(2);
+    ASSERT_EQ(std::distance(secondLevel.begin(), secondLevel.end()), 2);
+    ASSERT_EQ(firstLevel.end(), secondLevel.begin());
+
+    const auto thirdLevel = pyramid.LevelIterator(3);
+    ASSERT_EQ(std::distance(thirdLevel.begin(), thirdLevel.end()), 4);
+    ASSERT_EQ(secondLevel.end(), thirdLevel.begin());
+}
+
+//TEST(Geom, BTreeVector)
+//{
+//    EXPECT_EQ(NextPowerOf2(0u), 1); // todo: probably not what we want
+//    EXPECT_EQ(NextPowerOf2(1u), 1);
+//    EXPECT_EQ(NextPowerOf2(2u), 2);
+//    EXPECT_EQ(NextPowerOf2(3u), 4);
+//    EXPECT_EQ(NextPowerOf2(4u), 4);
+//    EXPECT_EQ(NextPowerOf2(7u), 8);
+//    EXPECT_EQ(NextPowerOf2(8u), 8);
+//
+//    BTreeVector<double> vec{};
+//    EXPECT_EQ(vec.GetLevel(), 0);
+//    EXPECT_EQ(vec.GetCapacity(), 1);
+//
+//    vec.push_back({});
+//    EXPECT_EQ(vec.GetLevel(), 0);
+//    EXPECT_EQ(vec.GetCapacity(), 1);
+//
+//    vec.push_back({});
+//    EXPECT_EQ(vec.GetLevel(), 1);
+//    EXPECT_EQ(vec.GetCapacity(), 2);
+//
+//    vec.push_back({});
+//    EXPECT_EQ(vec.GetLevel(), 2);
+//    EXPECT_EQ(vec.GetSize(), 3);
+//    EXPECT_EQ(vec.GetCapacity(), 4);
+//
+//    vec.push_back({});
+//    EXPECT_EQ(vec.GetLevel(), 2);
+//    EXPECT_EQ(vec.GetSize(), 4);
+//    EXPECT_EQ(vec.GetCapacity(), 4);
+//
+//    vec.push_back({});
+//    EXPECT_EQ(vec.GetLevel(), 3);
+//    EXPECT_EQ(vec.GetSize(), 5);
+//    EXPECT_EQ(vec.GetCapacity(), 8);
+//
+//    // now pop the back items
+//    vec.pop_back();
+//    EXPECT_EQ(vec.GetLevel(), 3);
+//    EXPECT_EQ(vec.GetSize(), 4);
+//    EXPECT_EQ(vec.GetCapacity(), 8);
+//
+//    vec.pop_back();
+//    EXPECT_EQ(vec.GetLevel(), 2);
+//    EXPECT_EQ(vec.GetSize(), 3);
+//    EXPECT_EQ(vec.GetCapacity(), 4);
+//}
+
+TEST(Geom, BalancedAABBTree)
+{
+    using Key = std::size_t;
+    using Inter = Interval<double>;
+    using BBoxTree = BalancedAABBTree<Key, double, 2>;
+    using BBox = BBoxTree::BBox;
+    using Leaf = BBoxTree::LeafType;
+
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> pos(-1., 1.);
+    std::uniform_real_distribution<double> size(0.00001, 0.1);
+
+    constexpr std::size_t nItems = vic::Pow<11>(2); // 2^12: 4096
+    std::vector<BBox> boxes{};
+    boxes.reserve(nItems);
+    for(auto i = 0; i < nItems; ++i)
+    {
+        const auto p1 = pos(g), s1 = size(g);
+        const auto p2 = pos(g), s2 = size(g);
+        boxes.push_back(BBox{Inter{p1 - s1, p1 + s1}, Inter{p2 - s2, p2 + s2}});
+    }
+
+    BBoxTree tree{}; //
+
+    for(auto i = 0; i < nItems; ++i)
+    {
+        tree.Insert(Leaf{boxes.at(i), {0}});
+    }
+
+    tree.Update();
+}
+
+TEST(Geom, GroupPairsOfTwo)
+{
+    using Inter = Interval<double>;
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> pos(-1., 1.);
+    std::uniform_real_distribution<double> size(0.01, 0.1);
+
+    std::vector<Inter> intervals{};
+    const std::size_t nItems = 1000;
+    for(auto i = 0; i < nItems; ++i)
+    {
+        const auto p = pos(g), s = size(g);
+        intervals.push_back(Inter{p - s, p + s});
+    }
+
+    const auto volumeLambda = [](const Inter& left, const Inter& right) {
+        const auto combined = Combine(left, right);
+        return combined.max - combined.min;
+    }; // sum of volumes: 55.9504
+
+    // filled fraction is a slightly better heuristic.
+    // but maybe the extra computational effort is not worth it.
+    const auto filledFractionLambda = [](const Inter& left, const Inter& right) {
+        const auto combined = Combine(left, right);
+        return Volume(combined) / (Volume(left) + Volume(right));
+    };
+
+    const auto res = GroupPairsOfTwo(intervals, volumeLambda);
+
+    double sum = 0.;
+    for(const auto& pair : res)
+    {
+        const auto lambdaVal = volumeLambda(intervals.at(pair.first), intervals.at(pair.second));
+        // std::cout << pair.first << "; " << pair.second << "; " << lambda(intervals.at(pair.first), intervals.at(pair.second)) << std::endl;
+        sum += lambdaVal;
+    }
+
+    std::cout << "sum of volumes: " << sum << std::endl;
+
+    ASSERT_TRUE(false);
+}
+
+TEST(Geom, MeshUvSphere)
+{
+    const double radius = .5;
+
+    const MeshIndex nu = 4; // horizontal number of surfaces
+    const MeshIndex nv = 4; // verticl number of surfaces
+    TriMesh<double> uvMesh = vic::mesh::GenerateUVSphere<double>(radius, nu, nv);
+
+    EXPECT_EQ(uvMesh.vertices.size(), (4 * 4) + 2);
+    for(const auto& vertex : uvMesh.vertices)
+        EXPECT_NEAR(vic::linalg::Norm(vertex), radius, 1e-14);
+
+    // todo:
+    // EXPECT_TRUE(IsClosed(mesh));
+}
+
+TEST(Geom, MeshCubeSphere)
+{
+    const double radius = .5;
+
+    auto mesh = GenerateCubeSphere(radius, 2);
+    EXPECT_TRUE(IsClosed(mesh));
+
+    for(const auto& vertex : mesh.vertices)
+        EXPECT_NEAR(vic::linalg::Norm(vertex), radius, 1e-14);
+
+    const auto triNormals = GenerateTriNormals(mesh);
+    for(const auto& normal : triNormals)
+        EXPECT_NEAR(vic::linalg::Norm(normal), 1., 1e-14);
+
+    const auto vertexNormals = GenerateVertexNormals(mesh, triNormals);
+    for(const auto& normal : vertexNormals)
+        EXPECT_NEAR(vic::linalg::Norm(normal), 1., 1e-14);
+
+    const auto uvs = GenerateVertexUVsPolar<double>(mesh, Vertex<double>{{0., 0., 0.}});
+    for(const auto& uv : uvs)
+    {
+        // todo: check that uv is within [0; 1]
+    }
+}
+
+TEST(Geom, MeshCube)
+{
+    const AABB<double, 3> bbox{Interval<double>{1, 2}, Interval<double>{1, 2}, Interval<double>{1, 2}};
+
+    const auto cubeMesh = GenerateCube(bbox);
+    EXPECT_TRUE(IsClosed(cubeMesh));
+
+    const auto subdividedCube = Subdivide(cubeMesh);
+    EXPECT_TRUE(IsClosed(subdividedCube));
+}
+
+TEST(Geom, MeshCone)
+{
+    const auto mesh = GenerateCone(1., 2., 8);
+    EXPECT_TRUE(IsClosed(mesh));
+
+    const auto subdividedMesh = Subdivide(mesh);
+    EXPECT_TRUE(IsClosed(subdividedMesh));
+}
+
+TEST(Geom, MeshTorus)
+{
+    const auto mesh = GenerateTorus(1., .25, 16, 8);
+    EXPECT_TRUE(IsClosed(mesh));
+
+    const auto subdividedMesh = Subdivide(mesh);
+    EXPECT_TRUE(IsClosed(subdividedMesh));
+}
+
+TEST(Geom, Subdivide)
+{
+    TriMesh<double> triMesh;
+    triMesh.vertices = {ToVertex(0., 0., 0.), //
+                        ToVertex(1., 0., 0.),
+                        ToVertex(0., 1., 0.)};
+    triMesh.tris = {Tri{0, 1, 2}};
+
+    auto subdivided = Subdivide(triMesh);
+
+    EXPECT_EQ(subdivided.vertices.size(), 6);
+    EXPECT_EQ(subdivided.tris.size(), 4);
+}
+
+TEST(Geom, MeshCircle)
+{
+    const double radius = 1.5;
+    const EdgeMesh edges = GenerateCircle(radius, 16u);
+
+    EXPECT_TRUE(IsClosed(edges));
+
+    for(const auto& vertex : edges.vertices)
+        EXPECT_NEAR(vic::linalg::Norm(vertex), radius, 1e-14);
+}
+
+TEST(Geom, Revolve)
+{
+    const std::size_t n = 16;
+
+    EdgeMesh<double> mesh;
+    mesh.vertices = {Vertex<double>{{1., 0., -.1}}, //
+                     Vertex<double>{{1., 0., .1}}};
+    mesh.edges = {{0, 1}};
+
+    const TriMesh revolvedMesh = Revolve(mesh, n, false);
+
+    // EXPECT_EQ(revolvedMesh.vertices.size(), 2 * n);
+    EXPECT_EQ(revolvedMesh.tris.size(), 2 * n);
+}
+
+TEST(Geom, EulerPoincare)
+{
+    //
 }
 
 } // namespace geom

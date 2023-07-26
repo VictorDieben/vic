@@ -109,7 +109,7 @@ class IntervalSorted
     struct Item
     {
         TKey key;
-        EBorder border{Eborder::Begin};
+        EBorder border{EBorder::Begin};
     };
 
 public:

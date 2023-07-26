@@ -3,10 +3,7 @@
 #include "vic/geometry/geometry.h"
 #include "vic/utils.h"
 
-#include "vic/linalg/add.h"
-#include "vic/linalg/matrices.h"
-#include "vic/linalg/tools.h"
-#include "vic/linalg/transpose.h"
+#include "vic/linalg/linalg.h"
 
 #include <optional>
 
@@ -73,6 +70,22 @@ T TriangleArea(const Triangle<T, 2>& tri)
 {
     return TriangleArea(tri.points[0], tri.points[1], tri.points[2]);
 }
+
+template <typename T>
+T HeronsEquation(const T a, const T b, const T c)
+{
+    const T s = (a + b + c) / T{2.};
+    return std::sqrt((s - a) * (s - b) * (s - c) * s);
+}
+
+// todo: Herons formula:
+// tri_area = sqrt((s-a)*(s-b)*(s-c)s); s=(a+b+c) / 2.
+
+// todo:
+// https://www.youtube.com/watch?v=IguNXoCjBEk
+
+// todo: a couple nice algorithm snippets
+// https://www.youtube.com/watch?v=GpsKrAipXm8
 
 } // namespace geom
 } // namespace vic

@@ -4,6 +4,8 @@
 
 #include "vic/memory/tree.h"
 
+#include <optional>
+
 namespace vic
 {
 namespace kinematics
@@ -12,11 +14,12 @@ namespace robots
 {
 
 // robot that contains a forward defined chain of joints
+template <typename T>
 class ForwardRobot
 {
 
 private:
-    vic::memory::Tree<Node> mTree{};
+    vic::memory::Tree<Node<T>> mTree{};
     vic::memory::DepthFirstIterator<decltype(mTree)> mIterator{mTree};
 
 public:
@@ -24,7 +27,7 @@ public:
 
     using NodeId = typename decltype(mTree)::NodeId;
 
-    NodeId AddJoint(const std::optional<NodeId> parent, const Transformation& transform, const Screw& screw)
+    NodeId AddJoint(const std::optional<NodeId> parent, const Transformation<T>& transform, const Screw<T>& screw)
     {
         if(parent)
             return mTree.NewNode(Node{NodeType::Joint, transform, screw}, *parent).Id();
@@ -32,13 +35,13 @@ public:
             return mTree.NewRoot(Node{NodeType::Joint, transform, screw}).Id();
     }
 
-    NodeId AddFrame(const std::optional<NodeId> parent, const Transformation& transform)
+    NodeId AddFrame(const std::optional<NodeId> parent, const Transformation<T>& transform)
     {
         // a frame is always directly connected to a joint,
         // it can be used to calculate the transformation at certain points of the robot
         return {};
     }
-    NodeId AddRigidBody(const std::optional<NodeId> parent, const Transformation& transform, const Inertia<DataType>& inertia)
+    NodeId AddRigidBody(const std::optional<NodeId> parent, const Transformation<T>& transform, const Inertia<T>& inertia)
     {
         // a rigid body is always connected to a joint
         return {};

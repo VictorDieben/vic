@@ -83,8 +83,7 @@ private:
 
     void Destroy()
     {
-        if(mObject)
-            delete mObject;
+        delete mObject;
         mObject = nullptr;
     }
 };

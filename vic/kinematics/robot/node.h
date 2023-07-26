@@ -24,6 +24,7 @@ struct Inertia
     // todo: MoI
 };
 
+template <typename T>
 class Node
 {
 public:
@@ -31,11 +32,11 @@ public:
     Node(const NodeType type)
         : mType(type)
     { }
-    Node(const NodeType type, const Transformation& transform)
+    Node(const NodeType type, const Transformation<T>& transform)
         : mType(type)
         , mTransformation(transform)
     { }
-    Node(const NodeType type, const Transformation& transform, const Screw& screw)
+    Node(const NodeType type, const Transformation<T>& transform, const Screw<T>& screw)
         : mType(type)
         , mTransformation(transform)
         , mScrew(screw)
@@ -44,13 +45,13 @@ public:
     constexpr bool IsType(const NodeType type) const { return mType == type; }
 
     // todo
-    Transformation GetTransformation() const { return mTransformation; }
-    Screw GetScrew() const
+    Transformation<T> GetTransformation() const { return mTransformation; }
+    Screw<T> GetScrew() const
     {
         assert(mType == NodeType::Joint);
         return mScrew;
     }
-    Inertia<DataType> GetInertia() const
+    Inertia<T> GetInertia() const
     {
         assert(mType == NodeType::Body);
         return {};
@@ -58,8 +59,8 @@ public:
 
 private:
     NodeType mType{NodeType::Joint};
-    Transformation mTransformation{};
-    Screw mScrew{};
+    Transformation<T> mTransformation{};
+    Screw<T> mScrew{};
 };
 } // namespace robots
 } // namespace kinematics

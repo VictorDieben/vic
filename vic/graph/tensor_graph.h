@@ -149,9 +149,7 @@ public:
         TensorVertexType copy = vert;
         ForeachOutRecursive(copy, functor, 0, mGraph.GetDimensions());
     }
-    //
-    //
-    //
+
     template <typename TFunctor>
     void ForeachValidOut(const TensorVertexId id, TFunctor functor) const
     {
@@ -260,7 +258,7 @@ private:
     using CostType = decltype(mEdgeCostFunctor(TensorVertexType{}, TensorVertexType{}));
     struct HeapObject
     {
-        TensorVertexId vertex;
+        TensorVertexId vertex{};
         CostType f{std::numeric_limits<CostType>::max()};
     };
     struct ExploredObject

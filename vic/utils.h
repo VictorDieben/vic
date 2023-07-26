@@ -1,27 +1,13 @@
 #pragma once
 
+#include <bit>
 #include <cassert>
+#include <cmath>
+#include <cstdint>
 #include <vector>
 
 namespace vic
 {
-
-// example:
-// struct SomeCountedClass : public Counted<SomeCountedClass> {};
-// SomeCountedClass::GetCount();
-template <typename T>
-class Counted
-{
-public:
-    Counted() { mCount++; }
-    Counted(const Counted<T>& other) { mCount++; }
-    Counted(Counted<T>&& other) noexcept { mCount++; }
-    ~Counted() { mCount--; }
-    static std::size_t GetCount() { return mCount; }
-
-private:
-    static inline std::size_t mCount{0};
-};
 
 // Finally class, useful for RAII enforced cleanup.
 // Should generally only be used when working with c code.
@@ -109,6 +95,11 @@ template <typename T>
 constexpr bool IsPowerOfTwo(const T val)
 {
     return (val > T{}) && (!(val & (val - 1))); // check nonzero, and val bitwise and with val-1 should be 0
+}
+
+constexpr auto NextPowerOf2(const std::unsigned_integral auto n)
+{
+    return std::bit_ceil(n); // round up to the next power of 2
 }
 
 template <typename T>
@@ -230,11 +221,11 @@ public:
 
         ZipIterator() = default;
 
-        reference operator*()
-        {
-            auto val = value_type{}; //
-            return val;
-        }
+        //reference operator*()
+        //{
+        //    auto val = value_type{}; //
+        //    return val;
+        //}
         //pointer operator->()
         //{
         //    return &mValue; //
@@ -359,6 +350,33 @@ private:
     T mEnd{};
     T mStride{};
 };
+
+// based on:
+// https://stackoverflow.com/questions/6167598/why-was-pair-range-access-removed-from-c11
+template <class TIterator>
+struct IteratorRange
+{
+    IteratorRange(TIterator begin, TIterator end)
+        : mBegin(begin)
+        , mEnd(end)
+    { }
+    IteratorRange(const std::pair<TIterator, TIterator>& pair)
+        : mBegin(pair.first)
+        , mEnd(pair.second)
+    { }
+    TIterator begin() const { return mBegin; }
+    TIterator end() const { return mEnd; }
+
+private:
+    TIterator mBegin;
+    TIterator mEnd;
+};
+
+template <class TIterator>
+inline IteratorRange<TIterator> AsRange(std::pair<TIterator, TIterator> const& x)
+{
+    return IteratorRange<TIterator>(x);
+}
 
 //
 } // namespace vic

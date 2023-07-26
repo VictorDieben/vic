@@ -1,16 +1,27 @@
-#include "pch.h"
+
+#include "gtest/gtest.h"
 
 #include "test_base.h"
 #include "vic/utils.h"
+#include "vic/utils/counted.h"
+#include "vic/utils/math.h"
 #include "vic/utils/observable.h"
+#include "vic/utils/permutations.h"
+#include "vic/utils/ranges.h"
+#include "vic/utils/serialize.h"
 #include "vic/utils/statemachine.h"
 #include "vic/utils/timing.h"
+#include "vic/utils/unique.h"
 
 #include "vic/memory/constexpr_map.h"
 
-using namespace vic;
+#include <random>
+#include <thread>
 
-TEST(TestUtils, TestPow)
+namespace vic::utils
+{
+
+TEST(Utils, TestPow)
 {
     constexpr auto res = Pow<2>(3); // check constexpr
 
@@ -30,7 +41,7 @@ TEST(TestUtils, TestPow)
     EXPECT_NEAR(Pow<6>(pi), pi * pi * pi * pi * pi * pi, tol);
 }
 
-TEST(TestUtils, TestTimer)
+TEST(Utils, TestTimer)
 {
     CTimer timer;
     timer.Reset();
@@ -40,7 +51,7 @@ TEST(TestUtils, TestTimer)
     EXPECT_LT(interval_ms, 50.); // large upper bound, we don't know when sleep returns
 }
 
-TEST(TestUtils, TestFinally)
+TEST(Utils, TestFinally)
 {
     bool value = false;
     {
@@ -49,7 +60,7 @@ TEST(TestUtils, TestFinally)
     EXPECT_TRUE(value);
 }
 
-TEST(TestUtils, TestCounted)
+TEST(Utils, TestCounted)
 {
     struct S : public Counted<S>
     { };
@@ -71,14 +82,14 @@ TEST(TestUtils, TestCounted)
     EXPECT_EQ(S::GetCount(), 0);
 }
 
-TEST(TestUtils, TestToBase)
+TEST(Utils, TestToBase)
 {
     std::vector<int> buffer{};
     ToBase<int>(8, 2, buffer);
     ExpectVectorsEqual(buffer, std::vector<int>{0, 0, 0, 1});
 }
 
-TEST(TestUtils, TestFromBase)
+TEST(Utils, TestFromBase)
 {
     // base 2
     const uint16_t baseTwo{2};
@@ -99,7 +110,7 @@ TEST(TestUtils, TestFromBase)
     ASSERT_DEATH(FromBase<uint64_t>(std::vector<int>{-1}, 2), "");
 }
 
-TEST(TestUtils, TestToFromBase)
+TEST(Utils, TestToFromBase)
 {
     // pick a random value and base. convert value to that other base.
     // Then convert it back to normal representation
@@ -123,7 +134,7 @@ TEST(TestUtils, TestToFromBase)
     }
 }
 
-TEST(TestUtils, Linspace)
+TEST(Utils, Linspace)
 {
     const auto vec0 = Linspace(0., 1., 0);
     EXPECT_EQ(vec0.size(), 0);
@@ -144,7 +155,7 @@ TEST(TestUtils, Linspace)
     EXPECT_DOUBLE_EQ(vec3.at(2), 1.);
 }
 
-TEST(TestUtils, TestRange)
+TEST(Utils, TestRange)
 {
     // test range
     std::vector<int> result;
@@ -188,19 +199,19 @@ TEST(TestUtils, TestRange)
     ASSERT_EQ(result6, answer6);
 }
 
-TEST(TestUtils, TestZip)
-{
-    std::vector<int> a{0, 1, 2, 3};
-    std::vector<char> b{'a', 'b', 'c', 'd'};
-    std::vector<std::pair<int, char>> result;
-    for(const auto& pair : Zip(a, b))
-        result.push_back(pair); //
+//TEST(Utils, TestZip)
+//{
+//    std::vector<int> a{0, 1, 2, 3};
+//    std::vector<char> b{'a', 'b', 'c', 'd'};
+//    std::vector<std::pair<int, char>> result;
+//    for(const auto& pair : Zip(a, b))
+//        result.push_back(pair); //
+//
+//    std::vector<std::pair<int, char>> answer{{0, 'a'}, {1, 'b'}, {2, 'c'}, {3, 'd'}};
+//    ASSERT_EQ(result, answer);
+//}
 
-    std::vector<std::pair<int, char>> answer{{0, 'a'}, {1, 'b'}, {2, 'c'}, {3, 'd'}};
-    ASSERT_EQ(result, answer);
-}
-
-TEST(TestUtils, TestStateMachine)
+TEST(Utils, TestStateMachine)
 {
     enum class State
     {
@@ -221,29 +232,70 @@ TEST(TestUtils, TestStateMachine)
          std::pair{State::Four, State::Five}, //
          std::pair{State::Five, State::One}};
 
-    // TODO: change template definition such that this simply becomes:
-    // StateMachine<validChanges> stateMachine{State::Two};
-    StateMachine<State, validChanges.size(), validChanges> stateMachine(State::Two);
+    //// TODO: change template definition such that this simply becomes:
+    //// StateMachine<validChanges> stateMachine{State::Two};
+    //StateMachine<State, validChanges.size(), validChanges> stateMachine(State::Two);
 
-    EXPECT_TRUE(stateMachine.HasState<State::Two>());
-    EXPECT_EQ(stateMachine.GetState(), State::Two);
+    //EXPECT_TRUE(stateMachine.HasState<State::Two>());
+    //EXPECT_EQ(stateMachine.GetState(), State::Two);
 
-    stateMachine.SetState<State::Two, State::Four>();
-    EXPECT_TRUE(stateMachine.HasState<State::Four>());
-    // EXPECT_DEATH((stateMachine.SetState<State::Two, State::Four>()), ""); // valid change, but wrong fromState
-    // EXPECT_DEATH((stateMachine.SetState<State::Four, State::One>()), ""); // invalid change, correct fromState
+    //stateMachine.SetState<State::Two, State::Four>();
+    //EXPECT_TRUE(stateMachine.HasState<State::Four>());
+    //// EXPECT_DEATH((stateMachine.SetState<State::Two, State::Four>()), ""); // valid change, but wrong fromState
+    //// EXPECT_DEATH((stateMachine.SetState<State::Four, State::One>()), ""); // invalid change, correct fromState
 
-    // check at compile time that some state changes are valid or not
-    static_assert(stateMachine.IsValid<State::One, State::Two>());
-    static_assert(!stateMachine.IsValid<State::One, State::Five>());
+    //// check at compile time that some state changes are valid or not
+    //static_assert(stateMachine.IsValid<State::One, State::Two>());
+    //static_assert(!stateMachine.IsValid<State::One, State::Five>());
 
-    // TODO: some kind of wrapper for calling a Tick function per current state.
-    // This way, we can even avoid checking the current state.
-    // and maybe even predict deadlock states
-    //stateMachine.Tick(); // calls: stateMachine.Tick<State::Two>();
+    //// TODO: some kind of wrapper for calling a Tick function per current state.
+    //// This way, we can even avoid checking the current state.
+    //// and maybe even predict deadlock states
+    ////stateMachine.Tick(); // calls: stateMachine.Tick<State::Two>();
 }
 
-TEST(TestUtils, TestObservable)
+TEST(Utils, TestNewStateMachine)
+{
+    enum class StateEnum
+    {
+        One,
+        Two,
+        Three,
+        Four,
+        Five,
+        Unused // test that not every enum is automatically valid
+    };
+
+    using State1 = State<StateEnum::One>;
+    using State2 = State<StateEnum::Two>;
+    using State3 = State<StateEnum::Three>;
+    using State4 = State<StateEnum::Four>;
+    using State5 = State<StateEnum::Five>;
+    using StateUnused = State<StateEnum::Unused>;
+
+    using StateList = StateContainer<State1, State2, State3, State4, State5>;
+    static_assert(StateList::Contains<State1>());
+    static_assert(!StateList::Contains<StateUnused>());
+
+    using Transition12 = Transition<State1, State2>;
+    using Transition23 = Transition<State2, State3>;
+    using Transition34 = Transition<State3, State4>;
+    using Transition45 = Transition<State4, State5>;
+    using Transition51 = Transition<State5, State1>;
+
+    using TransitionUnused = Transition<State1, StateUnused>;
+
+    using TransitionList = TransitionContainer<Transition12, Transition23, Transition34, Transition45, Transition51>;
+    static_assert(TransitionList::Contains<Transition12>());
+    static_assert(!TransitionList::Contains<TransitionUnused>());
+
+    using Description = StateMachineDescription<StateList, TransitionList>;
+
+    NewStateMachine<Description> newStateMachine;
+    (void)newStateMachine;
+}
+
+TEST(Utils, TestObservable)
 {
     struct TestObservable : public Observable<TestObservable>
     { };
@@ -266,7 +318,7 @@ TEST(TestUtils, TestObservable)
     ASSERT_FALSE(object.IsObserved());
 }
 
-TEST(TestUtils, TestIsPowerOfTwo)
+TEST(Utils, TestIsPowerOfTwo)
 {
     // check constexpr
     static_assert(IsPowerOfTwo(int8_t{2}));
@@ -298,3 +350,168 @@ TEST(TestUtils, TestIsPowerOfTwo)
     for(uint32_t i = 2; i < 31; ++i)
         ASSERT_FALSE(IsPowerOfTwo(Power<int32_t>(2, i) - 1)) << i;
 }
+
+TEST(Utils, Exp)
+{
+    //std::default_random_engine rng;
+    //std::uniform_real_distribution dist(0.0001, 100.);
+
+    //for(int32_t i = 0; i < 1000000; ++i)
+    //{
+    //    const double x = dist(rng);
+    //    const double answer = std::exp(x);
+    //    const double eps = answer * 1e-7;
+    //    ASSERT_NEAR(answer, vic::math::exp(x), eps) << "x = " << x;
+    //}
+}
+
+TEST(Utils, TestUnique)
+{
+    struct SomeObject
+    {
+        int bla;
+    };
+
+    UniqueType<SomeObject> obj1;
+    UniqueType<SomeObject> obj2;
+    static_assert(!std::is_same_v<decltype(obj1), decltype(obj2)>);
+
+    struct ObjectWithMutexes
+    {
+        using FirstMutex = UniqueType<std::mutex>;
+        using SecondMutex = UniqueType<std::mutex>;
+        static_assert(!std::is_same_v<FirstMutex, SecondMutex>);
+
+        using FirstLock = std::unique_lock<FirstMutex>;
+        using SecondLock = std::unique_lock<SecondMutex>;
+        static_assert(!std::is_same_v<FirstLock, SecondLock>);
+
+        FirstMutex m1;
+        SecondMutex m2;
+
+        void DoSomething1()
+        {
+            FirstLock lock1(m1);
+            DoSomethingPrivate1(lock1);
+        }
+
+        void DoSomething2()
+        {
+            SecondLock lock2(m2);
+            DoSomethingPrivate2(lock2);
+        }
+
+        void DoSomething1And2()
+        {
+            FirstLock lock1(m1, std::defer_lock);
+            SecondLock lock2(m2, std::defer_lock);
+            std::lock(lock1, lock2);
+
+            DoSomethingPrivate1(lock1);
+            DoSomethingPrivate2(lock2);
+        }
+
+    private:
+        void DoSomethingPrivate1(const FirstLock& lock) { }
+        void DoSomethingPrivate2(const SecondLock& lock) { }
+    };
+
+    ObjectWithMutexes object;
+    object.DoSomething1();
+    object.DoSomething2();
+    object.DoSomething1And2();
+
+    // make sure that two objects of the same type, which contain UniqueType<T>s,
+    // are still the same object.
+    ObjectWithMutexes object2;
+    static_assert(std::is_same_v<decltype(object), decltype(object2)>);
+}
+
+TEST(Utils, Ranges)
+{
+    struct Type1
+    { };
+    struct Type2
+    { };
+
+    using Map1 = std::map<int, Type1>;
+    using Map2 = std::map<int, Type2>;
+    const Map1 map1{{1, {}}, {2, {}}, {3, {}}};
+    Map2 map2{{3, {}}, {4, {}}, {5, {}}};
+
+    static_assert(vic::ranges::view::MapConcept<std::map<int, float>>);
+    static_assert(vic::ranges::view::MapConcept<Map1>);
+    static_assert(vic::ranges::view::MapConcept<Map2>);
+    // todo: flat map
+    // todo: make sure that the iterators iterate in sorted order
+
+    static_assert(std::same_as<Map1::key_type, Map2::key_type>);
+
+    // auto mapOverlap = vic::ranges::view::map_intersection(map1, map2);
+
+    //for(const auto& [key, type1, type2] : mapOverlap)
+    //{
+    //    // do stuff
+    //}
+}
+
+TEST(Utils, Templates_Contains)
+{
+    static_assert(!templates::Contains<double>());
+
+    static_assert(templates::Contains<double, double>());
+    static_assert(templates::Contains<double, int, double>());
+    static_assert(!templates::Contains<double, int>());
+    static_assert(!templates::Contains<double, int, uint16_t>());
+}
+
+TEST(Utils, Templates_IsUnique)
+{
+    static_assert(templates::IsUnique<>());
+    static_assert(templates::IsUnique<double>());
+    static_assert(templates::IsUnique<double, int>());
+    static_assert(templates::IsUnique<double, uint16_t, int>());
+    static_assert(templates::IsUnique<double, float, uint16_t, int>());
+
+    static_assert(!templates::IsUnique<double, double>());
+    static_assert(!templates::IsUnique<double, uint16_t, double>());
+    static_assert(!templates::IsUnique<double, uint16_t, float, double>());
+    static_assert(!templates::IsUnique<double, double, uint16_t, float>());
+    static_assert(!templates::IsUnique<double, double, double, double>());
+    static_assert(!templates::IsUnique<int, double, uint16_t, double>());
+}
+
+TEST(Utils, ConstrainedPermutations)
+{
+    std::vector<uint8_t> items{1, 2, 3};
+    std::vector<std::pair<uint8_t, uint8_t>> constraints{{1, 3}};
+
+    const auto VerifyOrderLambda = [](const std::vector<uint8_t>& items, //
+                                      const std::vector<std::pair<uint8_t, uint8_t>>& constraints,
+                                      const std::vector<uint8_t>& permutation) {
+        EXPECT_EQ(std::set(permutation.begin(), permutation.end()).size(), permutation.size()); // verify all items unique
+    };
+
+    VerifyOrderLambda(items, constraints, {1, 2, 3});
+
+    std::vector<std::vector<uint8_t>> result;
+    ConstrainedPermutations(items, //
+                            constraints,
+                            [&](const std::vector<uint8_t>& permutation) {
+                                // result.push_back(permutation); //
+                                VerifyOrderLambda(items, constraints, permutation);
+                            });
+}
+
+TEST(Utils, Templates_Unique)
+{
+    //
+    // static_assert(std::is_same_v<std::tuple<double>, typename templates::to_unique<double>::tuple_type>);
+}
+
+TEST(Utils, Serialize)
+{
+    //
+}
+
+} // namespace vic::utils

@@ -1,103 +1,134 @@
 #pragma once
 
+#include <memory>
 #include <string>
+#include <string_view>
+#include <variant>
 
+#include <iostream>
 namespace vic
 {
 namespace symbolic
 {
 
-// This file is a first attempt at creating a symbolic logic solver in c++.
+enum class EType
+{
+    Const,
+    Var,
+    Add,
+    Multiply,
+    Power,
+    Equal
+};
 
-struct Symbol
+class Symbol;
+
+class BaseSymbol final
 {
 public:
-    Symbol() = default;
-    Symbol(std::string name)
-        : mName(name)
+    void SetName(std::string_view name) { mName = name; }
+
+    EType GetType() const { return mType; }
+    const std::string& GetName() const { return mName; }
+
+    //protected:
+    //    friend class Symbol;
+    BaseSymbol(EType type)
+        : mType(type)
     { }
-    virtual ~Symbol() = default;
+    BaseSymbol(EType type, std::shared_ptr<BaseSymbol> arg)
+        : mType(type)
+        , mArguments{arg}
+    { }
+    BaseSymbol(EType type,
+               std::shared_ptr<BaseSymbol> arg1, //
+               std::shared_ptr<BaseSymbol> arg2)
+        : mType(type)
+        , mArguments{{arg1, arg2}}
+    { }
+
+    const BaseSymbol& FirstArg() const { return *mArguments.at(0); }
+    const BaseSymbol& SecondArg() const { return *mArguments.at(1); }
+    const BaseSymbol& NthArg(const std::size_t i) const { return *mArguments.at(i); }
 
 private:
-    std::string mName{};
+    EType mType;
+    std::string mName{"<empty name>"};
+
+    std::vector<std::shared_ptr<BaseSymbol>> mArguments;
 };
 
-// Constants are building blocks for values.
-// Rationals can be constructed as Multiply(nom, Power(denom, -1)
-// Irrational numbers will need a special object
-struct Constant : public Symbol
+// symbol is effectively a wrapper around shared_ptr to BaseSymbol
+class Symbol
 {
-    Constant() = default;
-    Constant(int val)
-        : mValue(val)
-    { }
-
-private:
-    int mValue{}; // todo: some kind of infinite number container
-};
-
-struct Variable : public Symbol
-{
-    Variable() = default;
-    Variable(std::string name)
-        : Symbol(name)
-    { }
-};
-
-struct Sum : public Symbol
-{
-    Sum(Symbol s1, Symbol s2)
-        : mTerms({s1, s2})
-    { }
-    Sum(std::vector<Symbol> symbols)
-        : mTerms(symbols)
-    { }
-
-private:
-    std::vector<Symbol> mTerms{};
-};
-
-struct Multiply : public Symbol
-{
-    Multiply(Symbol s1, Symbol s2)
-        : mTerms({s1, s2})
-    { }
-    Multiply(std::vector<Symbol> symbols)
-        : mTerms(symbols)
+public:
+    Symbol(EType type)
+        : mData(std::make_shared<BaseSymbol>(type))
     {
-        assert(symbols.size() > 1);
+        assert(type == EType::Var);
     }
+    Symbol(EType type, const Symbol& arg)
+        : mData(std::make_shared<BaseSymbol>(type, arg.Get()))
+    {
+        assert(type == EType::Const);
+    }
+    Symbol(EType type, const Symbol& arg1, const Symbol& arg2)
+        : mData(std::make_shared<BaseSymbol>(type, arg1.Get(), arg2.Get()))
+    {
+        assert(type != EType::Const && type != EType::Var);
+    }
+    // todo: more than 2 arguments?
+
+    void SetName(std::string_view name) { mData->SetName(name); }
+
+    EType GetType() const { return mData->GetType(); }
+    const std::string& GetName() const { return mData->GetName(); }
+
+    std::shared_ptr<BaseSymbol> Get() const { return mData; }
 
 private:
-    std::vector<Symbol> mTerms{};
+    std::shared_ptr<BaseSymbol> mData;
 };
 
-struct Power : public Symbol
+Symbol Variable(std::string_view name)
 {
-    Power(Symbol term, Symbol exponent)
-        : mTerm(term)
-        , mExp(exponent)
-    { }
-
-private:
-    Symbol mTerm;
-    Symbol mExp;
-};
-
-Symbol Rational(Symbol nominator, Symbol denominator)
-{
-    return Multiply{nominator, Power{denominator, Constant{-1}}}; //
+    Symbol symbol{EType::Var};
+    symbol.SetName(name);
+    return symbol;
 }
 
-Symbol Simplify(Symbol symbol)
+Symbol Add(const Symbol& symbol1, const Symbol& symbol2)
 {
-    return symbol; // todo
+    Symbol symbol{EType::Add, symbol1, symbol2};
+
+    return symbol;
 }
 
-bool Equivalent(Symbol symbol1, Symbol simbol2)
+std::ostream& operator<<(std::ostream& os, const BaseSymbol& symbol)
 {
-    return false; // todo: verify that two statements are equivalent
+    switch(symbol.GetType())
+    {
+    case EType::Add:
+        os << "(" << symbol.FirstArg() << " + " << symbol.SecondArg();
+    case EType::Const:
+        os << symbol.FirstArg();
+    }
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const Symbol& symbol)
+{
+    os << symbol.Get();
+    return os;
+}
+
+std::string Represent(const Symbol& symbol)
+{
+    return ""; //
 }
 
 } // namespace symbolic
 } // namespace vic
+
+//} // namespace symbolic
+//} // namespace vic
