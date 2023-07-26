@@ -47,7 +47,7 @@ using TestVertexId = TestVertex::VertexIdType;
 using TestEdgeId = TestEdge::EdgeIdType;
 using TestGraph = BaseGraph<TestVertex, TestEdge>;
 
-TEST(TestGraph, Startup)
+TEST(Graph, Startup)
 {
     TestGraph graph;
 
@@ -145,7 +145,7 @@ auto ConstructStarGraph(const std::size_t arms)
     return graph;
 }
 
-TEST(TestGraph, TestFloydWarshall)
+TEST(Graph, FloydWarshall)
 {
 #ifdef _DEBUG
     const std::size_t nx = 25, ny = 25;
@@ -184,7 +184,7 @@ TEST(TestGraph, TestFloydWarshall)
     ASSERT_EQ(vec.size(), 25);
 }
 
-TEST(TestGraph, TestDijkstra)
+TEST(Graph, Dijkstra)
 {
     constexpr std::size_t nx = 13, ny = 7;
     TestGraph graph = ConstructGridGraph(nx, ny);
@@ -218,7 +218,7 @@ TEST(TestGraph, TestDijkstra)
     }
 }
 
-TEST(TestGraph, TestAStar)
+TEST(Graph, AStar)
 {
     constexpr std::size_t nx = 13, ny = 14;
     TestGraph graph = ConstructGridGraph(nx, ny);
@@ -257,7 +257,7 @@ TEST(TestGraph, TestAStar)
     }
 }
 
-TEST(TestGraph, TestTensorGraph)
+TEST(Graph, TensorGraph)
 {
     constexpr std::size_t nx = 10, ny = 10;
     constexpr std::size_t nVertices = nx * ny;
@@ -308,7 +308,7 @@ TEST(TestGraph, TestTensorGraph)
     }
 }
 
-TEST(TestGraph, TestTensorOutIter)
+TEST(Graph, TensorOutIter)
 {
     constexpr std::size_t nx = 3, ny = 3;
 
@@ -372,7 +372,7 @@ TEST(TestGraph, TestTensorOutIter)
     ASSERT_EQ(ids.size(), 3 * 3 * 3);
 }
 
-TEST(TestGraph, TestTensorAStar)
+TEST(Graph, TensorAStar)
 {
     // setup graph
     constexpr std::size_t nx = 3, ny = 3;
@@ -431,7 +431,7 @@ TEST(TestGraph, TestTensorAStar)
     ASSERT_EQ(res.size(), 3);
 }
 
-TEST(TestGraph, TestTensorAStarHighDim)
+TEST(Graph, TensorAStarHighDim)
 {
     // setup graph
     TestGraph graph = ConstructGridGraph(10, 10);

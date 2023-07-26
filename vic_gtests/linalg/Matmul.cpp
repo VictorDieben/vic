@@ -11,7 +11,7 @@ namespace vic
 namespace linalg
 {
 
-TEST(TestLinalg, TestMatmulScalar)
+TEST(Matmul, TestMatmulScalar)
 {
     constexpr Diagonal2<double> diag2 = Matmul(Identity2<double>{}, 2.);
     EXPECT_DOUBLE_EQ(diag2.Get(0, 0), 2.);
@@ -27,7 +27,7 @@ TEST(TestLinalg, TestMatmulScalar)
     EXPECT_DOUBLE_EQ(diag2b.Get(1, 0), 0.);
 }
 
-TEST(TestLinalg, TestMatmul)
+TEST(Matmul, TestMatmul)
 {
     EXPECT_DOUBLE_EQ(6., Matmul(2., 3.));
 
@@ -67,7 +67,7 @@ TEST(TestLinalg, TestMatmul)
     EXPECT_TRUE((std::is_same_v<int, decltype(Matmul(Identity1<int>{}, Identity1<int>{}))::DataType>));
 }
 
-TEST(TestLinalg, TestMatmulDynamic)
+TEST(Matmul, TestMatmulDynamic)
 {
     // initialize
     const Matrix<double, UnknownShape> dyn1{2, 3};
@@ -102,7 +102,7 @@ TEST(TestLinalg, TestMatmulDynamic)
     auto res2 = Matmul(dyn3x3, dyn3x3);
 }
 
-TEST(TestLinalg, TestMatmulMixed)
+TEST(Matmul, TestMatmulMixed)
 {
     // test several series of multiplications, make sure the result is static size if it can be
     const auto mat2x3 = Matrix<double, Shape<2, 3>>{};
@@ -125,7 +125,7 @@ TEST(TestLinalg, TestMatmulMixed)
     const Matrix<double, Shape<3, 5>> static3x5 = Matmul(rowconst3x100, colconst100x5);
 }
 
-TEST(TestLinalg, TestMultivariate)
+TEST(Matmul, TestMultivariate)
 {
     // test multivariate
     constexpr auto M = Add(Identity3<double>{}, Identity3<double>{});
@@ -137,7 +137,7 @@ TEST(TestLinalg, TestMultivariate)
     ExpectMatrixEqual(ans7, Matmul(Pow<7>(2.), Identity3<double>{}));
 }
 
-TEST(TestLinalg, TestMatmulSparse)
+TEST(Matmul, TestMatmulSparse)
 {
     // todo: specialize Matmul for sparse*vec
     Matrix2<double> mat{{0, 1, 2, 3}};
@@ -153,7 +153,7 @@ TEST(TestLinalg, TestMatmulSparse)
     ExpectMatrixEqual(res1, res2);
 }
 
-TEST(TestLinalg, TestMatmulStack)
+TEST(Matmul, TestMatmulStack)
 {
     for(uint32_t i = 0; i < 10; ++i)
     {
@@ -183,7 +183,7 @@ TEST(TestLinalg, TestMatmulStack)
     }
 }
 
-TEST(TestLinalg, TestMatmulTriDiagonal)
+TEST(Matmul, TestMatmulTriDiagonal)
 {
     constexpr auto test = MatmulTriDiagVector(ToTriDiagonal(Identity6<double>{}), Vector6<double>{});
 

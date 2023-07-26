@@ -13,14 +13,14 @@ namespace vic
 namespace linalg
 {
 
-TEST(TestLinalg, TestInverseDiagonal)
+TEST(Inverse, TestInverseDiagonal)
 {
     constexpr auto diag1 = Diagonal3<double>({1, 2, 3});
     constexpr Diagonal3<double> diagInv1 = Inverse(diag1);
     EXPECT_TRUE(IsEqual(Matmul(diag1, diagInv1), Identity3<double>{}));
 }
 
-TEST(TestLinalg, TestInverseRandom)
+TEST(Inverse, TestInverseRandom)
 {
     // NOTE: these numbers are inside gtest context, including construction of random matrix etc.
     // Not representative of actual performance

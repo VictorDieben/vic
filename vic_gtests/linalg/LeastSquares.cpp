@@ -54,7 +54,7 @@ private:
     std::array<T, N> mCoefficients;
 };
 
-TEST(TestAlgorithms, LeastSquares)
+TEST(Algorithms, LeastSquares)
 {
     constexpr auto nPolynomials = 10;
     constexpr auto nMeasurements = 30;
@@ -94,7 +94,7 @@ TEST(TestAlgorithms, LeastSquares)
     EXPECT_TRUE(IsEqual(b, bHat, 1e-6));
 }
 
-TEST(TestAlgorithms, LeastSquaresSimple)
+TEST(Algorithms, LeastSquaresSimple)
 {
     auto b = Vector3<double>{{6., 0., 0.}};
     auto mat = Matrix<double, Shape<3, 2>>{{0., 1., 1., 1., 2., 1.}};

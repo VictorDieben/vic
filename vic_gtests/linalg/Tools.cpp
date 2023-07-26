@@ -13,10 +13,9 @@
 namespace vic
 {
 namespace linalg
-{
-//
+{ 
 
-TEST(TestLinalg, Tools_RowSplit)
+TEST(Tools, RowSplit)
 {
     static constexpr const Vector4<double> vec4{{1, 2, 3, 4}};
 

@@ -1,12 +1,12 @@
 #include "gtest/gtest.h"
 
-#include "vic/Emulator.h"
+#include "vic/emulation/Emulator.h"
 
 namespace vic
 {
 namespace emulation
 {
-TEST(TestEmulator, Startup)
+TEST(Emulation, Startup)
 {
     //using Tmem = Memory<256>;
     //Tmem mem;

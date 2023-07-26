@@ -1,18 +1,14 @@
 #include "../test_base.h"
 #include "gtest/gtest.h"
 
-#include "vic/linalg/matrices.h"
-#include "vic/linalg/matrices_dynamic.h"
-#include "vic/linalg/traits.h"
-
-#include "vic/linalg/tools.h"
+#include "vic/linalg/linalg.h" 
 
 namespace vic
 {
 namespace linalg
 {
 
-TEST(TestLinalg, TestConceptRows)
+TEST(Concepts, TestConceptRows)
 {
     struct s1
     {
@@ -34,7 +30,7 @@ TEST(TestLinalg, TestConceptRows)
     EXPECT_FALSE(ConceptConstexprRows<s3>);
 }
 
-TEST(TestLinalg, TestConcepts)
+TEST(Concepts, TestConcepts)
 {
     //using mat = Matrix<float, 1, 1>;
     //using identity = Identity<float, 1>;
