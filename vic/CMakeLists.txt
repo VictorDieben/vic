@@ -1,13 +1,13 @@
 cmake_minimum_required (VERSION 3.8)
 
-file(GLOB_RECURSE projectSRC  
-    ${PROJECT_SOURCE_DIR}/vic/*.h
-)
+#file(GLOB_RECURSE projectSRC  
+#    ${PROJECT_SOURCE_DIR}/vic/*.h
+#)
 
-list (SORT projectSRC)
-foreach (_src ${projectSRC})
-    message(STATUS "${_src}")
-endforeach()
+#list (SORT projectSRC)
+#foreach (_src ${projectSRC})
+#    message(STATUS "${_src}")
+#endforeach()
 
 add_library(Vic INTERFACE)
 

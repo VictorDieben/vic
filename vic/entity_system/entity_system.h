@@ -64,6 +64,13 @@ struct EntityHandle
     }
 
     template <typename T2>
+    const T2* TryGet() const
+    {
+        assert(mSystem && mId);
+        return mSystem->TryGet<T2>(mId);
+    }
+
+    template <typename T2>
     bool Has() const
     {
         assert(mSystem && mId);
@@ -130,6 +137,15 @@ public:
     }
 
     T* TryGet(const EntityId id)
+    {
+        auto it = mComponents.find(id);
+        if(it == mComponents.end())
+            return nullptr;
+        else
+            return &(it->second);
+    }
+
+    const T* TryGet(const EntityId id) const
     {
         auto it = mComponents.find(id);
         if(it == mComponents.end())
@@ -281,6 +297,13 @@ public:
 
     template <typename T>
     T* TryGet(EntityId id)
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return ComponentSystem<T>::TryGet(id);
+    }
+
+    template <typename T>
+    const T* TryGet(EntityId id) const
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::TryGet(id);
