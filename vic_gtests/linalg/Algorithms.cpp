@@ -19,7 +19,7 @@
 //namespace algorithms
 //{
 //
-//TEST(TestLinalg, PowerMethod)
+//TEST(Linalg, PowerMethod)
 //{
 //    // power method finds the largest eigenvector.
 //    // and eigenvector is the vector for which holds:
@@ -35,7 +35,7 @@
 //    ASSERT_NEAR(Norm(Ax), 10, 1E-10); // check that eigenvalue corresponding to res is 10
 //}
 //
-//TEST(TestLinalg, PowerMethod2d)
+//TEST(Linalg, PowerMethod2d)
 //{
 //
 //    constexpr Matrix<double, 2, 2> constexpPowerMethodMatrix{{1, 0, 0, 2}};
@@ -61,7 +61,7 @@
 //    lambda(1, 0, 0, 2);
 //}
 //
-//TEST(TestLinalg, QRMethod)
+//TEST(Linalg, QRMethod)
 //{
 //    std::default_random_engine g;
 //    std::uniform_real_distribution<double> dist(0.01, 100.);

@@ -3,10 +3,7 @@
 
 #include "vic/memory/event_queue.h"
 
-namespace vic
-{
-namespace memory
-{
+using namespace vic::memory;
 
 struct MyEvent : public Event
 {
@@ -48,6 +45,3 @@ TEST(TestEventQueue, Startup)
 
     EXPECT_EQ(val, 2);
 }
-
-} // namespace memory
-} // namespace vic

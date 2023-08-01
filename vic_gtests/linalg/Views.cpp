@@ -5,7 +5,7 @@
 using namespace vic::linalg;
 
 //
-//TEST(Views, TestViewTranspose)
+//TEST(Linalg,  ViewTranspose)
 //{
 //    constexpr Matrix<double, 3, 3> matrix({1, 2, 3, 4, 5, 6, 7, 8, 9});
 //    constexpr Matrix<double, 3, 3> answer({1, 4, 7, 2, 5, 8, 3, 6, 9});
@@ -18,7 +18,7 @@ using namespace vic::linalg;
 //    ExpectMatrixEqual(matrixT, answer);
 //}
 //
-//TEST(Views, TestViewRowStack)
+//TEST(Linalg, ViewRowStack)
 //{
 //    constexpr Matrix<double, 3, 3> mat1({1, 2, 3, 4, 5, 6, 7, 8, 9});
 //    constexpr Identity<double, 3> identity3{};
@@ -38,7 +38,7 @@ using namespace vic::linalg;
 //    EXPECT_DOUBLE_EQ(rowStackView.Get(5, 2), 1.);
 //}
 //
-//TEST(Views, TestViewColumnStack)
+//TEST(Linalg, ViewColumnStack)
 //{
 //    constexpr Diagonal<double, 3, 3> mat1({1, 2, 3});
 //    constexpr Diagonal<double, 3, 3> mat2({4, 5, 6});
@@ -60,7 +60,7 @@ using namespace vic::linalg;
 //    EXPECT_DOUBLE_EQ(colStackView.Get(2, 5), 6.);
 //}
 //
-//TEST(Views, TestViewRowColumnCombined)
+//TEST(Linalg, ViewRowColumnCombined)
 //{
 //    // test putting a column stack in a row stack
 //    constexpr Identity<double, 2> identity2{};
@@ -78,7 +78,7 @@ using namespace vic::linalg;
 //    ExpectMatrixEqual(full, rowStack);
 //}
 //
-//TEST(Views, TestViewBlockDiagonal)
+//TEST(Linalg, ViewBlockDiagonal)
 //{
 //    constexpr Matrix<double, 2, 2> mat({1, 2, 3, 4});
 //    const ViewBlockDiagonal blockDiag(mat, mat);
@@ -105,7 +105,7 @@ using namespace vic::linalg;
 //        ViewBlockDiagonal(Identity<double, 3>{}, Identity<double, 4>{}));
 //}
 //
-//TEST(Views, TestViewTriangle)
+//TEST(Linalg, ViewTriangle)
 //{
 //    // Test views for upper / lower parts of matrix.
 //    // useful when making LU decompositions

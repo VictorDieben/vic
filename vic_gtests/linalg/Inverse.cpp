@@ -8,16 +8,16 @@
 
 #include <random>
 
-namespace vic::linalg
+using namespace vic::linalg;
 
-TEST(Inverse, TestInverseDiagonal)
+TEST(Linalg, InverseDiagonal)
 {
-constexpr auto diag1 = Diagonal3<double>({1, 2, 3});
-constexpr Diagonal3<double> diagInv1 = Inverse(diag1);
-EXPECT_TRUE(IsEqual(Matmul(diag1, diagInv1), Identity3<double>{}));
+    constexpr auto diag1 = Diagonal3<double>({1, 2, 3});
+    constexpr Diagonal3<double> diagInv1 = Inverse(diag1);
+    EXPECT_TRUE(IsEqual(Matmul(diag1, diagInv1), Identity3<double>{}));
 } // namespace vic::linalg
 
-TEST(Inverse, TestInverseRandom)
+TEST(Linalg, InverseRandom)
 {
     // NOTE: these numbers are inside gtest context, including construction of random matrix etc.
     // Not representative of actual performance

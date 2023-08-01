@@ -5,12 +5,9 @@
 
 #include "vic/symbolic/symbolic.h"
 
-namespace vic
-{
-namespace symbolic
-{
+using namespace vic::symbolic;
 
-TEST(TestSymbolic, Initialize)
+TEST(Symbolic, Initialize)
 {
     auto var1 = Variable("var1");
     auto var2 = Variable("var2");
@@ -36,7 +33,7 @@ TEST(TestSymbolic, Initialize)
     //EXPECT_TRUE(false);
 }
 //
-//TEST(TestSymbolic, Equivalent)
+//TEST(Symbolic, Equivalent)
 //{
 //    Symbol statement1 = Power{Variable{"x"}, Constant{2}}; // x^2
 //    Symbol statement2 = Multiply{Variable{"x"}, Variable{"x"}}; // x*x
@@ -47,7 +44,7 @@ TEST(TestSymbolic, Initialize)
 //    EXPECT_TRUE(Equivalent(statement1, statement2));
 //}
 //
-//TEST(TestSymbolic, Simplify)
+//TEST(Symbolic, Simplify)
 //{
 //    Symbol x = Variable{"x"};
 //    Symbol oneOverX = Power{x, Constant{-1}};
@@ -60,6 +57,3 @@ TEST(TestSymbolic, Initialize)
 //    Symbol simplifiedFourX = Simplify(FourX);
 //    EXPECT_TRUE(Equivalent(simplifiedFourX, Multiply{{Constant{4}, x}}));
 //}
-
-} // namespace symbolic
-} // namespace vic

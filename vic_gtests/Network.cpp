@@ -3,8 +3,7 @@
 
 #include "vic/network/binary_conversion.h"
 
-namespace vic::network
-{
+using namespace vic::network;
 
 TEST(Network, fundamental)
 {
@@ -13,4 +12,3 @@ TEST(Network, fundamental)
     const double someDouble = 1.2345;
     BinaryConversion<double>::Write(someDouble, buffer.begin(), buffer.end());
 }
-} // namespace vic::network

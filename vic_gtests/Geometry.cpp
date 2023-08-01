@@ -20,7 +20,6 @@
 #include <random>
 
 using namespace vic;
-
 using namespace vic::geom;
 using namespace vic::linalg;
 using namespace vic::mesh;

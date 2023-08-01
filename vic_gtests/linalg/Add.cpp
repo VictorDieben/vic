@@ -8,9 +8,9 @@
 
 #include "../test_base.h"
 
-using namespace vic ::linalg;
+using namespace vic::linalg;
 
-TEST(Add, AddSimple)
+TEST(Linalg, AddSimple)
 {
     constexpr const Identity2<double> i2{};
     constexpr const Diagonal2<double> d2 = Add(i2, i2);
@@ -39,7 +39,7 @@ TEST(Add, AddSimple)
     // todo: sparse
 }
 
-TEST(Add, AddDiagonal)
+TEST(Linalg, AddDiagonal)
 {
     constexpr const Matrix2<double> m2{{1., 2., 3., 4.}};
     constexpr const Diagonal2<double> d2 = AddDiagonal(m2, m2); // note: only adds the diagonals

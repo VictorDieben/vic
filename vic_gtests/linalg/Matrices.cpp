@@ -19,7 +19,7 @@ void VerifyMatrix(TMat& mat)
     EXPECT_TRUE(IsEqual(mat, copy));
 }
 
-TEST(Matrices, InitBase)
+TEST(Linalg, InitBase)
 {
     static constexpr MatrixBaseSelector<Shape<3, 3>> m33{3, 3};
     static constexpr MatrixBaseSelector<Shape<3, UnknownSize>> mr3{3, 3};
@@ -27,7 +27,7 @@ TEST(Matrices, InitBase)
     static constexpr MatrixBaseSelector<Shape<UnknownSize, UnknownSize>> md{3, 3};
 }
 
-TEST(Matrices, InitZeros)
+TEST(Linalg, InitZeros)
 {
     static constexpr Zeros<double, Shape<3, 3>> m33{3, 3};
     static constexpr Zeros<double, Shape<3, UnknownSize>> mr3{3, 3};
@@ -43,7 +43,7 @@ TEST(Matrices, InitZeros)
     EXPECT_TRUE(ConceptZeros<decltype(md)>);
 }
 
-TEST(Matrices, InitDiagonal)
+TEST(Linalg, InitDiagonal)
 {
     static constexpr Diagonal<double, Shape<3, 3>> m33{3, 3};
     Diagonal<double, Shape<3, UnknownSize>> mr3{3, 3};
@@ -59,7 +59,7 @@ TEST(Matrices, InitDiagonal)
     EXPECT_TRUE(ConceptDiagonal<decltype(md)>);
 }
 
-TEST(Matrices, InitIdentity)
+TEST(Linalg, InitIdentity)
 {
     static constexpr Identity<double, Shape<3, 3>> m33{3, 3};
     static constexpr Identity<double, Shape<3, UnknownSize>> mr3{3, 3};
@@ -80,7 +80,7 @@ TEST(Matrices, InitIdentity)
     EXPECT_TRUE(ConceptDiagonal<decltype(md)>);
 }
 
-TEST(Matrices, InitMatrix)
+TEST(Linalg, InitMatrix)
 {
     static constexpr Matrix<double, Shape<3, 3>> static33{3, 3};
     Matrix<double, Shape<3, 3>> m33{3, 3};
@@ -93,7 +93,7 @@ TEST(Matrices, InitMatrix)
     VerifyMatrix(md);
 }
 
-TEST(Matrices, InitSparse)
+TEST(Linalg, InitSparse)
 {
     Sparse<double, Shape<3, 3>> m33{3, 3};
     Sparse<double, Shape<3, UnknownSize>> mr3{3, 3};
@@ -105,7 +105,7 @@ TEST(Matrices, InitSparse)
     VerifyMatrix(md);
 }
 
-TEST(Matrices, InitBracket)
+TEST(Linalg, InitBracket)
 {
     Vector3<double> vec{};
     Bracket3<double> bracket{vec};
@@ -113,7 +113,7 @@ TEST(Matrices, InitBracket)
     EXPECT_TRUE(ConceptConstexprMatrix<decltype(bracket)>);
 }
 
-TEST(Matrices, InitRowStack)
+TEST(Linalg, InitRowStack)
 {
     // stack two constexpr sized matrices, check that result is constexpr
     constexpr Matrix3<double> mat33;
@@ -131,7 +131,7 @@ TEST(Matrices, InitRowStack)
     EXPECT_DOUBLE_EQ(rowstack.Get(1, 0), 2.);
 }
 
-TEST(Matrices, InitColStack)
+TEST(Linalg, InitColStack)
 {
     // stack two constexpr sized matrices, check that result is constexpr
     constexpr Matrix3<double> mat33;
@@ -152,7 +152,7 @@ TEST(Matrices, InitColStack)
     EXPECT_DOUBLE_EQ(colstack.Get(0, 1), 2.);
 }
 
-TEST(Matrices, InitTriDiagonal)
+TEST(Linalg, InitTriDiagonal)
 {
     constexpr Matrix3<double> mat33{{1, 2, 0, 3, 4, 5, 0, 6, 7}};
 

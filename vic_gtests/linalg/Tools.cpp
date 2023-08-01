@@ -12,7 +12,7 @@
 
 using namespace vic::linalg;
 
-TEST(Tools, RowSplit)
+TEST(Linalg, RowSplit)
 {
     static constexpr const Vector4<double> vec4{{1, 2, 3, 4}};
 

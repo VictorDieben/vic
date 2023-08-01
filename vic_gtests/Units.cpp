@@ -5,12 +5,9 @@
 
 #include "vic/units/units.h"
 
-namespace vic
-{
-namespace units
-{
+using namespace vic::units;
 
-TEST(TestUnits, HappyFlow)
+TEST(Units, HappyFlow)
 {
     Length l1{1.};
     auto l2 = Length{2.};
@@ -27,21 +24,21 @@ TEST(TestUnits, HappyFlow)
     EXPECT_DOUBLE_EQ(v6.Get(), 6.);
 }
 
-TEST(TestUnits, Nested)
+TEST(Units, Nested)
 {
     constexpr auto volume = Length{1.} * Length{2.} * Length{3.};
     EXPECT_DOUBLE_EQ(volume.Get(), 6.);
     // static_assert(std::is_same_v<decltype(volume), Volume<double>>);
 }
 
-TEST(TestUnits, Division)
+TEST(Units, Division)
 {
     auto value = Area{5.} / Length{2.};
     EXPECT_DOUBLE_EQ(value.Get(), 2.5);
     // static_assert(std::is_same_v<decltype(value), Length<double>>);
 }
 
-TEST(TestUnits, TypeName)
+TEST(Units, TypeName)
 {
     // constexpr auto name = Unitless<double>::TypeName(); // todo
     EXPECT_EQ(Length<double>::TypeName(), "BPI<0, 1, 0>");
@@ -49,7 +46,7 @@ TEST(TestUnits, TypeName)
     EXPECT_EQ(Volume<double>::TypeName(), "BPI<0, 3, 0>");
 }
 
-TEST(TestUnits, MixTypes)
+TEST(Units, MixTypes)
 {
     // test adding different primitive types
     Length<double> d1{2.};
@@ -67,7 +64,7 @@ TEST(TestUnits, MixTypes)
     Length<double> distance = Unitless<double>{0.5} * Acceleration<double>{3.} * Time<double>{2.} * Time<double>{2.};
 }
 
-TEST(TestUnits, Representations)
+TEST(Units, Representations)
 {
     // + operator
     Length<int> intPlusInt = Length<int>{} + Length<int>{};
@@ -85,11 +82,8 @@ TEST(TestUnits, Representations)
 template <typename T>
 using PendulumPhisics = BPIFundamentalPhysics<Time<T>, Mass<T>, Length<T>, Acceleration<T>>;
 
-TEST(TestUnits, BPIPendulum)
+TEST(Units, BPIPendulum)
 {
     // https://en.wikipedia.org/wiki/Buckingham_%CF%80_theorem
     PendulumPhisics<double> physics{};
 }
-
-} // namespace units
-} // namespace vic

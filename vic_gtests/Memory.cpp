@@ -15,10 +15,7 @@
 #include <thread>
 #include <vector>
 
-namespace vic
-{
-namespace memory
-{
+using namespace vic::memory;
 
 TEST(TestMemory, RefCounted)
 {
@@ -54,7 +51,7 @@ TEST(TestMemory, RefCounted)
         // copy the RefCounter, access data through it,
         // check that refcount is reset after it is destructed.
         {
-            memory::RefCounted<TestStruct> copy{counted};
+            RefCounted<TestStruct> copy{counted};
             EXPECT_EQ(counted.use_count(), 2);
             EXPECT_EQ(copy.use_count(), 2);
 
@@ -486,6 +483,3 @@ TEST(TestMemory, MergeSortBackInserter)
     vic::sorting::merge_sort_back_insertion(answer.begin(), answer.end(), answer.end(), std::back_inserter(result3));
     EXPECT_EQ(result3, answer);
 }
-
-} // namespace memory
-} // namespace vic

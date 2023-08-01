@@ -8,11 +8,7 @@
 #include <random>
 
 using namespace vic;
-
-namespace vic
-{
-namespace graph
-{
+using namespace vic::graph;
 
 struct TestVertex : public BaseVertex<TestVertex>
 {
@@ -483,6 +479,3 @@ TEST(Graph, CartesianGraph)
 //        std::cout << "========" << std::endl;
 //    }
 //}
-
-} // namespace graph
-} // namespace vic

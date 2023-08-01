@@ -5,7 +5,7 @@
 
 using namespace vic::linalg;
 
-TEST(Concepts, TestConceptRows)
+TEST(Linalg, ConceptRows)
 {
     struct s1
     {
@@ -27,7 +27,7 @@ TEST(Concepts, TestConceptRows)
     EXPECT_FALSE(ConceptConstexprRows<s3>);
 }
 
-TEST(Concepts, TestConcepts)
+TEST(Linalg, Concepts)
 {
     //using mat = Matrix<float, 1, 1>;
     //using identity = Identity<float, 1>;

@@ -7,7 +7,7 @@
 
 using namespace vic::linalg;
 
-TEST(Solve, JacobiSimple)
+TEST(Linalg, JacobiSimple)
 {
     constexpr std::size_t n = 3;
     const auto A = ToDiagonal(std::array{4., 5., 6.});
@@ -18,7 +18,7 @@ TEST(Solve, JacobiSimple)
     ExpectMatrixEqual(b, b2, 1E-10);
 }
 
-TEST(Solve, JacobiRandom)
+TEST(Linalg, JacobiRandom)
 {
     constexpr std::size_t n = 100;
 
@@ -50,7 +50,7 @@ TEST(Solve, JacobiRandom)
     }
 }
 
-TEST(Solve, JacobiLargeSparse)
+TEST(Linalg, JacobiLargeSparse)
 {
     std::cout << "init" << std::endl;
 
@@ -111,7 +111,7 @@ TEST(Solve, JacobiLargeSparse)
     std::cout << "done" << std::endl;
 }
 
-TEST(Solve, SimpleConjugateGradient)
+TEST(Linalg, SimpleConjugateGradient)
 {
     const Matrix2<double> A{{4, 1, 1, 3}};
     const Vector2<double> b{{1, 2}};
@@ -125,7 +125,7 @@ TEST(Solve, SimpleConjugateGradient)
     EXPECT_TRUE(IsEqual(b, Matmul(A, x), 1e-10));
 }
 
-TEST(Solve, UpperTriangular)
+TEST(Linalg, UpperTriangular)
 {
     // note: compile time matrix solving \o/
     static constexpr const Matrix3<double> A{{1, 2, 3, 0, 4, 5, 0, 0, 6}};
@@ -137,7 +137,7 @@ TEST(Solve, UpperTriangular)
     EXPECT_TRUE(IsEqual(b, tmp));
 }
 
-TEST(Solve, LowerTriangular)
+TEST(Linalg, LowerTriangular)
 {
     static constexpr const Matrix3<double> A{{1, 0, 0, 2, 3, 0, 4, 5, 6}};
     static constexpr const Vector3<double> b{{1, 2, 3}};
