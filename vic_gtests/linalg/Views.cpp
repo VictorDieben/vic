@@ -2,10 +2,8 @@
 #include "../test_base.h"
 #include "gtest/gtest.h"
 
-namespace vic
-{
-namespace linalg
-{
+using namespace vic::linalg;
+
 //
 //TEST(Views, TestViewTranspose)
 //{
@@ -126,6 +124,3 @@ namespace linalg
 //    ExpectMatrixEqual(ViewStrictLowerTriangle<decltype(mat)>{mat}, //
 //                      Matrix<double, 2, 2>{{0, 0, 3, 0}});
 //}
-
-} // namespace linalg
-} // namespace vic

@@ -1,6 +1,12 @@
 
 
 find_package(GTest CONFIG REQUIRED)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+enable_testing()
+
+include (GoogleTest)
+
 
 ADD_EXECUTABLE(VicTest 
     "EntitySystem.cpp"
@@ -16,9 +22,9 @@ ADD_EXECUTABLE(VicTest
     "TestNetwork.cpp"
     "TestSimulations.cpp"
     "TestSymbolic.cpp"
-    "TestTree.cpp"
+    "Tree.cpp"
     "TestUnits.cpp"
-    "TestUtils.cpp"
+    "Utils.cpp"
     "TestUtpNetwork.cpp"
     "graph/AdjecencyGraph.cpp"
     "linalg/Add.cpp"
@@ -34,13 +40,13 @@ ADD_EXECUTABLE(VicTest
     "linalg/Transpose.cpp"
     "linalg/Views.cpp"
     "test_emulator.cpp" 
-)
+ )
  
 TARGET_LINK_LIBRARIES(VicTest  
+PRIVATE
     GTest::gtest 
     GTest::gtest_main
     Vic
 )
 
-add_test(NAME VicTest
-         COMMAND VicTest)
+gtest_discover_tests(VicTest)

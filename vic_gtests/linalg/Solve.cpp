@@ -5,10 +5,7 @@
 
 #include <random>
 
-namespace vic
-{
-namespace linalg
-{
+using namespace vic::linalg;
 
 TEST(Solve, JacobiSimple)
 {
@@ -150,6 +147,3 @@ TEST(Solve, LowerTriangular)
     static constexpr const auto tmp = Matmul(A, x);
     EXPECT_TRUE(IsEqual(b, tmp));
 }
-
-} // namespace linalg
-} // namespace vic

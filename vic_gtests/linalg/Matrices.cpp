@@ -8,10 +8,7 @@
 
 #include <random>
 
-namespace vic
-{
-namespace linalg
-{
+using namespace vic::linalg;
 
 template <typename TMat>
 void VerifyMatrix(TMat& mat)
@@ -170,6 +167,3 @@ TEST(Matrices, InitTriDiagonal)
     static_assert(ConceptMatrix<decltype(trid3)>);
     EXPECT_TRUE(IsEqual(d33, trid3));
 }
-
-} // namespace linalg
-} // namespace vic

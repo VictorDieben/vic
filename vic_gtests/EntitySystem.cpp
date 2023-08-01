@@ -4,8 +4,7 @@
 
 #include <optional>
 
-namespace vic::ecs
-{
+using namespace vic::ecs ;
 
 struct A
 { };
@@ -135,24 +134,24 @@ TEST(ECS, Iterate)
     const auto entities = std::vector<EntityId>{1, 2, 3, 4};
     const auto iterationA = ecs.Iterate<A>(entities.begin(), entities.end());
     EXPECT_EQ(iterationA.size(), 2u);
-    for(const auto [entityId, aPtr] : iterationA)
+    for(const auto& [entityId, aPtr] : iterationA)
         EXPECT_TRUE(ecs.Has<A>(entityId));
 
     const auto iterationB = ecs.Iterate<B>(entities.begin(), entities.end());
     EXPECT_EQ(iterationB.size(), 1u);
-    for(const auto [entityId, bPtr] : iterationB)
+    for(const auto& [entityId, bPtr] : iterationB)
         EXPECT_TRUE(ecs.Has<B>(entityId));
 
     const auto entitiesC = std::vector<EntityId>{4, 8, 12, 16, 20, 24, 28, 32};
     const auto iterationC = ecs.Iterate<C>(entitiesC.begin(), entitiesC.end());
     EXPECT_EQ(entitiesC.size(), iterationC.size());
-    for(const auto [entityId, cPtr] : iterationC)
+    for(const auto& [entityId, cPtr] : iterationC)
         EXPECT_TRUE(ecs.Has<C>(entityId));
 
     std::set<EntityId> entitySet{2, 4, 6};
     const auto setIteration = ecs.Iterate<A>(entitySet.begin(), entitySet.end());
     EXPECT_EQ(setIteration.size(), 3);
-    for(const auto [entityId, aPtr] : setIteration)
+    for(const auto& [entityId, aPtr] : setIteration)
         EXPECT_TRUE(ecs.Has<A>(entityId));
 
     // todo: iterate 2d
@@ -214,7 +213,7 @@ TEST(ECS, Filter)
 
     // now filter out all objects with both the Fizz and Buzz component
     int sum = 0;
-    for(auto [entId, fizzPtr, buzzPtr] : Filter<Fizz, Buzz>(system))
+    for(const auto& [entId, fizzPtr, buzzPtr] : Filter<Fizz, Buzz>(system))
     {
         const int& index = system.Get<Name>(entId).mI;
         EXPECT_TRUE((index % 3 == 0));
@@ -226,7 +225,7 @@ TEST(ECS, Filter)
     // todo: filter all objects with a Fizz _or_ Buzz component
 
     // iterate 3d;
-    for(auto [entId, namePtr, fizzPtr, buzzPtr] : Filter<Name, Fizz, Buzz>(system))
+    for(const auto& [entId, namePtr, fizzPtr, buzzPtr] : Filter<Name, Fizz, Buzz>(system))
     {
         // no need to do anything, this should just compile
     }
@@ -612,4 +611,33 @@ TEST(ECS, ForeachComponentType)
     EXPECT_EQ(componentTypeCount, 7);
 }
 
-} // namespace vic::ecs
+TEST(ECS, ForeachEntity)
+{
+    using ECS = vic::ecs::ECS<A, B, C, D, E, F, G>;
+    ECS ecs;
+    ecs.NewEntity().Add<A>();
+    ecs.NewEntity().Add<B>();
+    ecs.NewEntity().Add<C>();
+    ecs.NewEntity().Add<D>();
+    ecs.NewEntity().Add<E>();
+    ecs.NewEntity().Add<F>();
+    ecs.NewEntity().Add<G>();
+
+    std::set<EntityId> entities;
+    ecs.ForeachEntity([&](const EntityId id) {
+        entities.insert(id);
+        std::size_t count = 0;
+        ecs.ForeachComponentType([&]<typename T>() {
+            if(ecs.Has<T>(id))
+                count++; //
+        });
+        EXPECT_EQ(count, 1); // every entity should have 1 component
+    });
+
+    EXPECT_EQ(entities, (std::set<EntityId>{1, 2, 3, 4, 5, 6, 7}));
+
+    EXPECT_EQ(entities.size(), 7);
+
+    std::cout << "test has run" << std::endl;
+}
+ 

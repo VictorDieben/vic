@@ -18,8 +18,7 @@
 #include <random>
 #include <thread>
 
-namespace vic::utils
-{
+using namespace vic;
 
 TEST(Utils, TestPow)
 {
@@ -513,5 +512,3 @@ TEST(Utils, Serialize)
 {
     //
 }
-
-} // namespace vic::utils

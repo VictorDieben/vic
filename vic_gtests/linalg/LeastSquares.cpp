@@ -9,10 +9,7 @@
 
 #include <random>
 
-namespace vic
-{
-namespace linalg
-{
+using namespace vic::linalg;
 
 // todo: move to util or something
 template <typename T, std::size_t N>
@@ -103,6 +100,3 @@ TEST(Algorithms, LeastSquaresSimple)
 
     EXPECT_TRUE(IsEqual(xHat, Vector2<double>{{-3., 5.}}, 1e-10));
 }
-
-} // namespace linalg
-} // namespace vic

@@ -13,10 +13,7 @@
 
 #include <random>
 
-namespace vic
-{
-namespace linalg
-{
+using namespace vic::linalg;
 
 template <typename T, typename TShape>
 using TestTypeSelector = TypeSelector<TShape, //
@@ -448,6 +445,3 @@ TEST(Linalg, Indices)
 //
 //    // todo: test/specialize solve
 //}
-
-} // namespace linalg
-} // namespace vic

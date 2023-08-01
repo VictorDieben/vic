@@ -10,10 +10,7 @@
 
 using namespace vic;
 
-namespace vic
-{
-namespace graph
-{
+using namespace vic::graph;
 
 struct TestVertexData
 {
@@ -493,6 +490,3 @@ TEST(Graph, TensorAStarHighDim)
         std::cout << "========" << std::endl;
     }
 }
-
-} // namespace graph
-} // namespace vic

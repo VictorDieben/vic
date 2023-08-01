@@ -10,10 +10,7 @@
 
 #include <random>
 
-namespace vic
-{
-namespace linalg
-{ 
+using namespace vic::linalg;
 
 TEST(Tools, RowSplit)
 {
@@ -39,6 +36,3 @@ TEST(Tools, RowSplit)
         EXPECT_TRUE(IsEqual(part2, Vector2<double>{3, 4}));
     }
 }
-
-} // namespace linalg
-} // namespace vic

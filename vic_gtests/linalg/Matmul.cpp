@@ -6,10 +6,7 @@
 
 #include "vic/linalg/linalg.h"
 
-namespace vic
-{
-namespace linalg
-{
+using namespace vic::linalg;
 
 TEST(Matmul, TestMatmulScalar)
 {
@@ -203,6 +200,3 @@ TEST(Matmul, TestMatmulTriDiagonal)
     const auto res2 = MatmulFull(mat6_tri, vec6);
     EXPECT_TRUE(IsEqual(res1, res2));
 }
-
-} // namespace linalg
-} // namespace vic

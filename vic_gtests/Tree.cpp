@@ -3,10 +3,8 @@
 
 #include "vic/memory/tree.h"
 
-namespace vic
-{
-namespace memory
-{
+using namespace vic::memory;
+
 struct TestTreeData
 {
     int a;
@@ -118,7 +116,3 @@ TEST(TestTree, BreathFirst)
 }
 
 TEST(TestTree, Randomized) { }
-
-//
-} // namespace memory
-} // namespace vic

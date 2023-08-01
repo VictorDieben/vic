@@ -18,12 +18,9 @@
 #include <optional>
 #include <random>
 
-namespace vic
-{
-namespace kinematics
-{
+using namespace vic::kinematics;
 
-TEST(TestKinematics, EulerAngles)
+TEST(Kinematics, EulerAngles)
 {
     EXPECT_TRUE(IsEqual(EulerAngles(0., 0., 0.), Identity3<double>{}));
 
@@ -72,7 +69,7 @@ TEST(TestKinematics, EulerAngles)
     // which is not Sequential
 }
 
-TEST(TestKinematics, rotate)
+TEST(Kinematics, rotate)
 {
 
     EXPECT_TRUE(IsEqual(Rotation<double>{}.ToMatrix(), Identity3<double>{}));
@@ -94,7 +91,7 @@ TEST(TestKinematics, rotate)
     EXPECT_TRUE(IsEqual(tmp, Vector3<double>({1, 0, 0})));
 }
 
-TEST(TestKinematics, rotation)
+TEST(Kinematics, rotation)
 {
     const auto rotationMat = Rotation<double>{}.ToMatrix();
     EXPECT_TRUE(IsEqual(rotationMat, Identity3<double>{}));
@@ -105,7 +102,7 @@ TEST(TestKinematics, rotation)
     EXPECT_TRUE(IsEqual(result.ToMatrix(), Identity3<double>{}));
 }
 
-//TEST(TestKinematics, translation)
+//TEST(Kinematics, translation)
 //{
 //    EXPECT_TRUE(IsEqual(Translation<double>{}.ToMatrix(), Zeros<double, 3, 1>{}));
 //
@@ -113,7 +110,7 @@ TEST(TestKinematics, rotation)
 //    EXPECT_TRUE(IsEqual(t.ToMatrix(), Vector3<double>{{1., 2., 3.}}));
 //}
 //
-//TEST(TestKinematics, transformations)
+//TEST(Kinematics, transformations)
 //{
 //    EXPECT_TRUE(IsEqual(Transformation<double>{}.ToMatrix(), Identity<double, 4>{}));
 //
@@ -135,7 +132,7 @@ TEST(TestKinematics, rotation)
 //    }
 //}
 //
-//TEST(TestKinematics, Screw)
+//TEST(Kinematics, Screw)
 //{
 //    Screw<double> screw{{1, 2, 3, 4, 5, 6}};
 //    EXPECT_TRUE(IsEqual(screw.GetAngular(), Vector3<double>{{1, 2, 3}}));
@@ -146,7 +143,7 @@ TEST(TestKinematics, rotation)
 //    EXPECT_TRUE(IsEqual(screw2.GetLinear(), Vector3<double>{{4, 5, 6}}));
 //}
 //
-//TEST(TestKinematics, ExponentialTransform)
+//TEST(Kinematics, ExponentialTransform)
 //{
 //    Screw<double> screw{{0, 0, 1, 0, 0, 0}}; // screw rotating around z
 //
@@ -191,7 +188,7 @@ TEST(TestKinematics, rotation)
 //    }
 //}
 //
-//TEST(TestKinematics, CartesianRobot)
+//TEST(Kinematics, CartesianRobot)
 //{
 //    const Screw<double> stx{{0, 0, 0, 1, 0, 0}}; // pure x translation
 //    const Screw<double> sty{{0, 0, 0, 0, 1, 0}}; // pure y translation
@@ -228,7 +225,7 @@ TEST(TestKinematics, rotation)
 //    ASSERT_TRUE(IsEqual(rotation.ToMatrix(), euler));
 //}
 //
-//TEST(TestKinematics, Doublependulum)
+//TEST(Kinematics, Doublependulum)
 //{
 //    /* defines a simple double pendulum, balanced on a cart.
 //    *  - cart travels along X-axis (positive to the right)
@@ -264,6 +261,3 @@ TEST(TestKinematics, rotation)
 //
 //    ASSERT_TRUE(IsEqual(p.ToMatrix(), Vector3<double>{{1., 0., 0.5}}));
 //}
-
-} // namespace kinematics
-} // namespace vic

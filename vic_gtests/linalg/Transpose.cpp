@@ -5,10 +5,7 @@
 
 #include "vic/linalg/linalg.h"
 
-namespace vic
-{
-namespace linalg
-{
+using namespace vic::linalg;
 
 TEST(Algorithms, Transpose)
 {
@@ -43,6 +40,3 @@ TEST(Algorithms, InverseDiag)
     constexpr DiagonalMxN<double, 3, 3> diagInv = InverseDiagonal(diag);
     EXPECT_TRUE(IsEqual(Matmul(diag, diagInv), Identity3<double>{}));
 }
-
-} // namespace linalg
-} // namespace vic

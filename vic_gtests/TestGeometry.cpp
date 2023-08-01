@@ -21,11 +21,7 @@
 
 using namespace vic;
 
-namespace vic
-{
-namespace geom
-{
-
+using namespace vic::geom;
 using namespace vic::linalg;
 using namespace vic::mesh;
 
@@ -809,6 +805,3 @@ TEST(Geom, EulerPoincare)
 {
     //
 }
-
-} // namespace geom
-} // namespace vic

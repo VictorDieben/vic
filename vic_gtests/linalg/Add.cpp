@@ -8,10 +8,7 @@
 
 #include "../test_base.h"
 
-namespace vic
-{
-namespace linalg
-{
+using namespace vic ::linalg;
 
 TEST(Add, AddSimple)
 {
@@ -48,6 +45,3 @@ TEST(Add, AddDiagonal)
     constexpr const Diagonal2<double> d2 = AddDiagonal(m2, m2); // note: only adds the diagonals
     EXPECT_TRUE(IsEqual(d2, Matrix2<double>{{2., 0., 0., 8.}}));
 }
-
-} // namespace linalg
-} // namespace vic

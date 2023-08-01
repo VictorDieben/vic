@@ -466,6 +466,16 @@ public:
         (functor.template operator()<TComponents>(), ...);
     }
 
+    template <typename TFunctor>
+    void ForeachEntity(TFunctor functor)
+    {
+        const auto minimum = Minimum();
+        const auto maximum = Maximum();
+        for(auto i = minimum; i <= maximum; ++i)
+            if(HasAny(i))
+                functor(i); // todo: inefficient, there might be a better way
+    }
+
     template <typename T>
     static constexpr int GetIndex()
     {

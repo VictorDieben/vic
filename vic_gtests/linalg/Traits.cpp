@@ -1,12 +1,9 @@
 #include "../test_base.h"
 #include "gtest/gtest.h"
 
-#include "vic/linalg/linalg.h" 
+#include "vic/linalg/linalg.h"
 
-namespace vic
-{
-namespace linalg
-{
+using namespace vic::linalg;
 
 TEST(Concepts, TestConceptRows)
 {
@@ -89,6 +86,3 @@ TEST(Concepts, TestConcepts)
     //EXPECT_FALSE((ConceptVector<Matrix<float, 1, 2>>));
     //EXPECT_FALSE((ConceptVector<Matrix<float, 12, 124>>));
 }
-
-} // namespace linalg
-} // namespace vic

@@ -1,5 +1,5 @@
 
-cmake_minimum_required (VERSION 3.13)
+cmake_minimum_required (VERSION 3.20)
 
 set(VCPKG_ROOT "C:\\c++libs\\vcpkg")
 set(VCPKG_DEFAULT_TRIPLET "x64-windows")
