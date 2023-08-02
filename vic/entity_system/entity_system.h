@@ -42,6 +42,14 @@ struct EntityHandle
         return *this; // return copy of self
     }
 
+    template <typename TComponent>
+    EntityHandle<T> Set(const TComponent& component)
+    {
+        assert(mSystem && mId);
+        mSystem->Set<TComponent>(mId, component);
+        return *this; // return copy of self
+    }
+
     template <typename T2>
     T2& Get()
     {
@@ -119,6 +127,12 @@ public:
     T& Add(EntityId id, auto&&... args)
     {
         mComponents[id] = T{args...};
+        return mComponents[id];
+    }
+
+    T& Set(EntityId id, const T& component)
+    {
+        mComponents[id] = component;
         return mComponents[id];
     }
 
@@ -234,12 +248,6 @@ public:
 
     EntityId Minimum() const { return mComponents.size() == 0 ? std::numeric_limits<EntityId>::max() : mComponents.begin()->first; }
     EntityId Maximum() const { return mComponents.size() == 0 ? std::numeric_limits<EntityId>::min() : std::prev(mComponents.end())->first; }
-
-    //template <typename TFunctor>
-    //void Foreach(TFunctor functor)
-    //{
-    //    //
-    //}
 };
 
 template <typename... TComponents>
@@ -266,6 +274,12 @@ public:
         // No list of valid ids is stored anywhere.
         // we could make EntityId only constructable by EntitySystem,
         // that waywe can at least be sure that it was valid at some point in time
+
+        // other note: if a user makes a deserializer (from json or something), they will want to be able to create objects with specific ids.
+        // GetEntity() could be used (bit hacky but whatever),
+        // but the counter will need to be updated if the id is larger than any we've seen so far.
+        if(id >= mEntityCounter)
+            mEntityCounter = id + 1;
         return EntityHandle(id, this);
     }
 
@@ -279,6 +293,13 @@ public:
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         ComponentSystem<T>::Add(id, std::forward<decltype(args)>(args)...);
+    }
+
+    template <typename T>
+    void Set(EntityId id, const T& component)
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        ComponentSystem<T>::Set(id, component);
     }
 
     template <typename T>

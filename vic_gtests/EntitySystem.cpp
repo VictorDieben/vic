@@ -4,7 +4,7 @@
 
 #include <optional>
 
-using namespace vic::ecs ;
+using namespace vic::ecs;
 
 struct A
 { };
@@ -339,10 +339,10 @@ TEST(ECS, TryGet)
     auto secondEnt = system.NewEntity();
     secondEnt.Add<Component>(5);
 
-    if(auto nonexistantA = firstEnt.TryGet<Component>())
+    if(auto* nonexistantA = firstEnt.TryGet<Component>())
         ASSERT_TRUE(false); // should not be reachable
 
-    if(auto existingA = secondEnt.TryGet<Component>())
+    if(auto* existingA = secondEnt.TryGet<Component>())
         ASSERT_EQ(existingA->val, 5);
     else
         ASSERT_TRUE(false); // should not be reachable
@@ -635,9 +635,12 @@ TEST(ECS, ForeachEntity)
     });
 
     EXPECT_EQ(entities, (std::set<EntityId>{1, 2, 3, 4, 5, 6, 7}));
-
-    EXPECT_EQ(entities.size(), 7);
-
-    std::cout << "test has run" << std::endl;
 }
- 
+
+TEST(ECS, Set)
+{
+    using ECS = vic::ecs::ECS<A, B, C, D, E, F, G>;
+    ECS ecs;
+    A a{};
+    auto handle = ecs.NewEntity().Set<A>(a);
+}
