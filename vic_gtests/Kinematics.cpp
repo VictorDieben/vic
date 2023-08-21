@@ -25,7 +25,7 @@ TEST(Kinematics, EulerAngles)
 {
     EXPECT_TRUE(IsEqual(EulerAngles(0., 0., 0.), Identity3<double>{}));
 
-    /* Test if EulerAngles treats inputs as rotations about X, Y, Z respectively, in rad. */
+    // Test if EulerAngles treats inputs as rotations about X, Y, Z respectively, in rad.
 
     // create results for 90 deg rotations over any one axis
     Matrix3<double> eulerRx90 = EulerAngles(pi / 2, 0., 0.);
@@ -40,12 +40,12 @@ TEST(Kinematics, EulerAngles)
     EXPECT_TRUE(IsEqual(eulerRym90, matRym90, 1e-10));
     EXPECT_TRUE(IsEqual(eulerRz90, matRz90, 1e-10));
 
-    /* Test if EulerAngles implements rotations in INTRINSIC x-y-z sequence.
-     * Intrinsic means that subsequent rotations are fedined in the new intermediade frames
-     * As opposed to Extrinsic, where all rotations are defined in the original reference frame
-     * INTRINSIC wrt consecutive-current: Rot(X0,theta)->Rot(Y1, phi)->Rot(Z2, gamma) = R(X,theta)R(Y,phi)R(Z,gamma)
-     * EXTRINSIC wrt origional:           Rot(X0,theta)->Rot(Y0, phi)->Rot(Z0, gamma) = R(Z,gamma)R(Y,phi)R(X,theta)
-     */
+    // Test if EulerAngles implements rotations in INTRINSIC x-y-z sequence.
+    // * Intrinsic means that subsequent rotations are fedined in the new intermediade frames
+    // * As opposed to Extrinsic, where all rotations are defined in the original reference frame
+    // * INTRINSIC wrt consecutive-current: Rot(X0,theta)->Rot(Y1, phi)->Rot(Z2, gamma) = R(X,theta)R(Y,phi)R(Z,gamma)
+    // * EXTRINSIC wrt origional:           Rot(X0,theta)->Rot(Y0, phi)->Rot(Z0, gamma) = R(Z,gamma)R(Y,phi)R(X,theta)
+
     Matrix3<double> euler = EulerAngles(0., pi / 4, pi / 2.);
     Matrix3<double> matIntrinsic({0., -0.70710678118, 0.70710678118, 1., 0., 0., 0., 0.70710678118, 0.70710678118});
     Matrix3<double> matExtrinsic({0., -1., 0., 0.70710678118, 0., 0.70710678118, -0.70710678118, 0., 0.70710678118});
@@ -115,8 +115,6 @@ TEST(Kinematics, transformations)
 {
     EXPECT_TRUE(IsEqual(Transformation<double>{}.ToMatrix(), Identity4<double>{}));
 
-    // EXPECT_TRUE(IsEqual(Transformation{}.ToMatrix(), Transformation{{}, {}}.ToMatrix() ));
-
     std::default_random_engine g;
     std::uniform_real_distribution<double> dist(-100., 100.);
 
@@ -128,8 +126,7 @@ TEST(Kinematics, transformations)
         const Transformation transformation{rot, tr};
         const auto inv = transformation.Inverse();
 
-        EXPECT_TRUE(IsEqual((transformation * inv).ToMatrix(), //
-                            Identity4<double>{}));
+        EXPECT_TRUE(IsEqual((transformation * inv).ToMatrix(), Identity4<double>{}));
     }
 }
 

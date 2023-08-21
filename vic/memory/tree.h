@@ -75,7 +75,7 @@ public:
 
     void Remove(const NodeId id)
     {
-        // todo: once we find the first (last) related node, 
+        // todo: once we find the first (last) related node,
         // we know what range we can remove
         for(int i = int(mNodes.size()) - 1; i >= 0; --i)
             if(IsRelated(id, mNodes.at(i).Id()))
@@ -138,6 +138,9 @@ public:
 
     auto begin() { return mNodes.begin(); }
     auto end() { return mNodes.end(); }
+
+    auto begin() const { return mNodes.begin(); }
+    auto end() const { return mNodes.end(); }
 
 private:
     std::size_t GetIndexBinarySearch(NodeId id) const
@@ -215,8 +218,8 @@ public:
     auto begin() { return Iterator{this, 0u}; }
     auto end() { return Iterator{this, mDFOrder.size()}; }
 
-    //auto begin() const { return Iterator(this, 0); }
-    //auto end() const { return Iterator(this, mDFOrder.size()); }
+    auto begin() const { return Iterator(this, 0); }
+    auto end() const { return Iterator(this, mDFOrder.size()); }
 
 private:
     TTree& mTree;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "vic/linalg/linalg.h"
+
 #include "vic/kinematics/kinematics.h"
 #include "vic/kinematics/rotation.h"
 #include "vic/kinematics/transformation.h"
@@ -52,7 +54,7 @@ std::vector<Transformation<T>> ForwardKinematics(ForwardRobot<T>& robot, //
 }
 
 template <typename T>
-std::vector<Transformation<T>> ForwardKinematics2(ForwardRobot<T>& robot, //
+std::vector<Transformation<T>> ForwardKinematics2(const ForwardRobot<T>& robot, //
                                                   const std::vector<T>& theta)
 {
     assert(robot.GetTree().IsContinuous()); // if tree is not continuous, we cannot iterate over it
@@ -77,37 +79,38 @@ std::vector<Transformation<T>> ForwardKinematics2(ForwardRobot<T>& robot, //
     return result;
 }
 
-/* Bracket operator extended for twists & wrenches. 
-TODO: migrate to linalg/tools.h ?and refactor to class? 
-*/
+// Bracket operator extended for twists & wrenches.
+// TODO: migrate to linalg/tools.h? and refactor to class?
 template <typename T>
 Matrix4<T> Bracket6(const std::array<T, 6>& vec)
 {
-    const Matrix<T, 4, 4> vec_tilde({0, -vec[2], vec[1], vec[3], vec[2], 0, -vec[0], vec[4], -vec[1], vec[0], 0, vec[5], 0, 0, 0, 0});
+    const Matrix4<T> vec_tilde({0, -vec[2], vec[1], vec[3], vec[2], 0, -vec[0], vec[4], -vec[1], vec[0], 0, vec[5], 0, 0, 0, 0});
     return vec_tilde;
 }
 
-/* the Adjoint matrix re-expresses:  
- * Tilde(twist_transformed) = H * Tilde(twist) * H^-1
- *                   to:
- * twist_transformed = Adjoint(H) * twist
- */
+// The Adjoint matrix re-expresses:
+// Tilde(twist_transformed) = H * Tilde(twist) * H^-1
+//                  to:
+// twist_transformed = Adjoint(H) * twist
+//
 template <typename T>
 Matrix6<T> Adjoint(const Transformation<T>& transform)
 {
-    const Matrix<T, 6, 6> adjoint; // assume initialised with zeros
+    Matrix6<T> adjoint{}; // initialised with zeros
     Rotation R = transform.GetRotation();
     Translation p = transform.GetTranslation().ToMatrix();
 
     Assign<0, 0>(adjoint, R); // 3x3; top left
     //Assign<0, 3>(adjoint, Mat3());            // 3x3 zeros; top right
-    Assign<3, 0>(adjoint, Matrix<T, 3, 3>::MatMul(Matrix<T, 3, 3>::Bracket3(p), R)); // 3x3; bottom left
+    Assign<3, 0>(adjoint, MatMul(Bracket3(p), R)); // 3x3; bottom left
     Assign<3, 3>(adjoint, R); // 3x3; bottom right
     return adjoint;
 }
 
 template <typename T>
-std::vector<Twist<T>> ForwardKinematicsDot(ForwardRobot<T>& robot, const std::vector<Transformation<T>> transforms, const std::vector<T>& thetaDot)
+std::vector<Twist<T>> ForwardKinematicsDot(const ForwardRobot<T>& robot, //
+                                           const std::vector<Transformation<T>>& transforms,
+                                           const std::vector<T>& thetaDot)
 {
     assert(robot.GetTree().IsContinuous()); // if tree is not continuous, we cannot iterate over it
     // TODO
