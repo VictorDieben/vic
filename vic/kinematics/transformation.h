@@ -55,7 +55,7 @@ public:
     }
 
 private:
-    Matrix4<T> mMatrix{Identity4<T>{}};
+    Matrix4<T> mMatrix = To<Matrix4<double>>(Identity4<T>{});
 };
 
 } // namespace kinematics

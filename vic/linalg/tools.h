@@ -188,37 +188,33 @@ constexpr TMat ElementWiseMultiply(const TMat& mat1, const TMat& mat2)
 //    }
 //}
 //
-//// todo: TMatTarget needs to be asignable
-//template <std::size_t row, std::size_t col, typename TMatTarget, typename TMatSource>
-//void Assign(TMatTarget& target, const TMatSource& source)
-//{
-//    static_assert(target.GetRows() >= source.GetRows() + row);
-//    static_assert(target.GetColumns() >= source.GetColumns() + col);
-//
-//    for(std::size_t i = 0; i < source.GetRows(); ++i)
-//    {
-//        for(std::size_t j = 0; j < source.GetColumns(); ++j)
-//        {
-//            target.At(row + i, col + j) = source.Get(i, j);
-//        }
-//    }
-//}
-//
-//// todo: TMatResult needs to have a static size, assignable
-//template <typename TMatResult, std::size_t row, std::size_t col, typename TMatInput>
-//TMatResult Extract(const TMatInput& source)
-//{
-//    static_assert(source.GetRows() >= TMatResult::GetRows() + row);
-//    static_assert(source.GetColumns() >= TMatResult::GetColumns() + col);
-//
-//    TMatResult res{};
-//    for(std::size_t i = 0; i < TMatResult::GetRows(); ++i)
-//        for(std::size_t j = 0; j < TMatResult::GetColumns(); ++j)
-//            res.At(i, j) = source.Get(i + row, j + col);
-//
-//    return res;
-//}
-//
+// todo: TMatTarget needs to be asignable
+template <std::size_t row, std::size_t col, typename TMatTarget, typename TMatSource>
+void Assign(TMatTarget& target, const TMatSource& source)
+{
+    static_assert(target.GetRows() >= source.GetRows() + row);
+    static_assert(target.GetColumns() >= source.GetColumns() + col);
+
+    for(std::size_t i = 0; i < source.GetRows(); ++i) 
+        for(std::size_t j = 0; j < source.GetColumns(); ++j) 
+            target.At(row + i, col + j) = source.Get(i, j); 
+}
+
+// todo: TMatResult needs to have a static size, assignable
+template <typename TMatResult, std::size_t row, std::size_t col, typename TMatInput>
+TMatResult Extract(const TMatInput& source)
+{
+    static_assert(source.GetRows() >= TMatResult::GetRows() + row);
+    static_assert(source.GetColumns() >= TMatResult::GetColumns() + col);
+
+    TMatResult res{};
+    for(std::size_t i = 0; i < TMatResult::GetRows(); ++i)
+        for(std::size_t j = 0; j < TMatResult::GetColumns(); ++j)
+            res.At(i, j) = source.Get(i + row, j + col);
+
+    return res;
+}
+
 //template <typename TMatResult, typename TMatInput>
 //TMatResult Extract(const TMatInput& source, std::size_t row, std::size_t col)
 //{
@@ -329,22 +325,24 @@ void RandomFill(TMat& mat)
         }
     }
 }
-//
-//// todo: TMatTarget needs to be assignable
-//template <typename TMatTarget, typename TMatSource>
-//constexpr auto Extract(const TMatSource& source, const std::size_t row, const std::size_t col)
-//{
-//    assert(target.GetRows() >= source.GetRows() + row);
-//    assert(target.GetColumns() >= source.GetColumns() + col);
-//
-//    for(std::size_t i = 0; i < source.GetRows(); ++i)
-//    {
-//        for(std::size_t j = 0; j < source.GetColumns(); ++j)
-//        {
-//            target.At(row + i, col + j) = source.At(i, j);
-//        }
-//    }
-//}
+
+// todo: TMatTarget needs to be assignable
+template <typename TMatTarget, typename TMatSource>
+constexpr auto Extract(const TMatSource& source, const std::size_t row, const std::size_t col)
+{
+    TMatTarget target{};
+
+    // todo: ensure that TMatTarget is a fixed size matrix?
+
+    assert(target.GetRows() >= source.GetRows() + row);
+    assert(target.GetColumns() >= source.GetColumns() + col);
+     
+    for(std::size_t i = 0; i < target.GetRows(); ++i) 
+        for(std::size_t j = 0; j < target.GetColumns(); ++j) 
+            target.At(i,j) = source.At(row + i,  col + j); 
+
+    return target;
+}
 
 constexpr std::pair<Row, Row> RowSplitSizes(const Row original, const Row firstSize, const Row secondSize)
 {

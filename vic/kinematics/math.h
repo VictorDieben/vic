@@ -45,7 +45,7 @@ Matrix4<T> ExponentialTransform(const Screw<T>& screw, //
 {
     const auto angular = screw.GetAngular();
     const auto linear = screw.GetLinear();
-    const auto b = Matrix3<T>{Bracket3(angular)}; // todo: Bracket3 overload for matmul
+    const auto b = To<Matrix3<T>>(Bracket3(angular)); // todo: Bracket3 overload for matmul
     const auto bSquared = Matmul(b, b);
 
     const auto tmp = Add(Matmul(Identity3<T>{}, theta), //

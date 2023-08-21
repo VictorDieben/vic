@@ -40,7 +40,7 @@ constexpr int WindingNumber(const std::vector<Point<T, 2>>& polygon, const Point
 }
 
 template <typename T, std::size_t dims>
-T Project(const Point<T, dims>& origin, const Direction<T, dims>& dir, const Point<T, dims>& point)
+constexpr T Project(const Point<T, dims>& origin, const Direction<T, dims>& dir, const Point<T, dims>& point)
 {
     const auto relative = Subtract(point, origin);
     return Dot(relative, dir) / Dot(dir, dir);
@@ -55,7 +55,7 @@ Point<T, 2> ProjectUV(const Triangle<T, 3>& tri, const Point<T, 3>& pos)
 }
 
 template <typename T>
-T TriangleArea(const Point<T, 2>& p1, //
+constexpr T TriangleArea(const Point<T, 2>& p1, //
                const Point<T, 2>& p2,
                const Point<T, 2>& p3)
 {
@@ -66,13 +66,13 @@ T TriangleArea(const Point<T, 2>& p1, //
 }
 
 template <typename T>
-T TriangleArea(const Triangle<T, 2>& tri)
+constexpr T TriangleArea(const Triangle<T, 2>& tri)
 {
     return TriangleArea(tri.points[0], tri.points[1], tri.points[2]);
 }
 
 template <typename T>
-T HeronsEquation(const T a, const T b, const T c)
+constexpr T HeronsEquation(const T a, const T b, const T c)
 {
     const T s = (a + b + c) / T{2.};
     return std::sqrt((s - a) * (s - b) * (s - c) * s);

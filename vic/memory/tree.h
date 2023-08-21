@@ -82,13 +82,13 @@ public:
                 mNodes.erase(std::next(mNodes.begin(), i));
     }
 
-    bool IsRelated(const NodeId parent, const NodeId child) const
+    bool IsRelated(const NodeId parent, const NodeId nth_child) const
     {
-        if(parent == child)
+        if(parent == nth_child)
             return true;
-        if(child < parent)
+        if(nth_child < parent)
             return false; // id of child is always larger than parent, these 2 are not related
-        return IsRelated(parent, Get(child).Parent());
+        return IsRelated(parent, Get(nth_child).Parent());
     }
 
     TreeNodeType& Get(const NodeId id)
