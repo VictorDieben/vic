@@ -74,7 +74,7 @@ using SquareShape = Shape<Min(TShape::rows, TShape::cols), Min(TShape::rows, TSh
 
 // trace is sum of all diagonal elements
 template <typename TMat>
-requires ConceptSquareMatrix<TMat>
+    requires ConceptSquareMatrix<TMat>
 constexpr auto Trace(const TMat& matrix)
 {
     assert(matrix.GetRows() == matrix.GetColumns());
@@ -86,14 +86,14 @@ constexpr auto Trace(const TMat& matrix)
 
 // 2d cross product
 template <typename TVec>
-requires ConceptVector<TVec> &&(TVec::GetRows() == 2) //
-    constexpr auto Cross(const TVec& vec1, const TVec& vec2)
+    requires ConceptVector<TVec> && (TVec::GetRows() == 2) //
+constexpr auto Cross(const TVec& vec1, const TVec& vec2)
 {
     return (vec1.Get(0, 0) * vec2.Get(1, 0)) - (vec1.Get(1, 0) * vec2.Get(0, 0));
 }
 
 template <typename T>
-requires ConceptVector<T>
+    requires ConceptVector<T>
 constexpr auto SquaredNorm(const T& vec)
 {
     typename T::DataType sum = 0;
@@ -103,7 +103,7 @@ constexpr auto SquaredNorm(const T& vec)
 }
 
 template <typename T>
-requires ConceptVector<T>
+    requires ConceptVector<T>
 constexpr auto Norm(const T& vec)
 {
     typename T::DataType sum = 0.;
@@ -113,7 +113,7 @@ constexpr auto Norm(const T& vec)
 }
 
 template <typename TVec>
-requires ConceptVector<TVec>
+    requires ConceptVector<TVec>
 constexpr auto Normalize(const TVec& vec)
 {
     TVec res{vec.GetRows(), vec.GetColumns()};
@@ -125,7 +125,7 @@ constexpr auto Normalize(const TVec& vec)
 
 // 3d cross product
 template <typename TVec1, typename TVec2>
-requires ConceptVector<TVec1> && ConceptVector<TVec2>
+    requires ConceptVector<TVec1> && ConceptVector<TVec2>
 constexpr auto Cross(const TVec1& vec1, const TVec2& vec2)
 {
     assert(vec1.GetRows() == 3 && vec2.GetRows() == 3);
@@ -141,7 +141,7 @@ using DotResultShape = Shape<Min(TShape1::rows, TShape2::rows), Min(TShape1::col
 
 // dot product between two vectors
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto Dot(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetRows() == mat2.GetRows() && mat1.GetColumns() == mat2.GetColumns());
@@ -155,7 +155,7 @@ constexpr auto Dot(const TMat1& mat1, const TMat2& mat2)
 
 // todo: make a more general algorithm that can also work with different types of input matrices
 template <typename TMat>
-requires ConceptMatrix<TMat>
+    requires ConceptMatrix<TMat>
 constexpr TMat ElementWiseMultiply(const TMat& mat1, const TMat& mat2)
 {
     assert(mat1.GetRows() == mat2.GetRows() && mat1.GetColumns() == mat2.GetColumns());
@@ -189,27 +189,27 @@ constexpr TMat ElementWiseMultiply(const TMat& mat1, const TMat& mat2)
 //}
 //
 // todo: TMatTarget needs to be asignable
-template <std::size_t row, std::size_t col, typename TMatTarget, typename TMatSource>
+template <Row row, Col col, typename TMatTarget, typename TMatSource>
 void Assign(TMatTarget& target, const TMatSource& source)
 {
     static_assert(target.GetRows() >= source.GetRows() + row);
     static_assert(target.GetColumns() >= source.GetColumns() + col);
 
-    for(std::size_t i = 0; i < source.GetRows(); ++i) 
-        for(std::size_t j = 0; j < source.GetColumns(); ++j) 
-            target.At(row + i, col + j) = source.Get(i, j); 
+    for(Row i = 0; i < source.GetRows(); ++i)
+        for(Col j = 0; j < source.GetColumns(); ++j)
+            target.At(row + i, col + j) = source.Get(i, j);
 }
 
 // todo: TMatResult needs to have a static size, assignable
-template <typename TMatResult, std::size_t row, std::size_t col, typename TMatInput>
+template <typename TMatResult, Row row, Col col, typename TMatInput>
 TMatResult Extract(const TMatInput& source)
 {
     static_assert(source.GetRows() >= TMatResult::GetRows() + row);
     static_assert(source.GetColumns() >= TMatResult::GetColumns() + col);
 
     TMatResult res{};
-    for(std::size_t i = 0; i < TMatResult::GetRows(); ++i)
-        for(std::size_t j = 0; j < TMatResult::GetColumns(); ++j)
+    for(Row i = 0; i < TMatResult::GetRows(); ++i)
+        for(Col j = 0; j < TMatResult::GetColumns(); ++j)
             res.At(i, j) = source.Get(i + row, j + col);
 
     return res;
@@ -231,7 +231,7 @@ TMatResult Extract(const TMatInput& source)
 //
 // mostly used for tests, but also useful outside of it
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const typename TMat1::DataType eps = 1e-10)
 {
     if((mat1.GetRows() != mat2.GetRows()) || (mat1.GetColumns() != mat2.GetColumns()))
@@ -245,7 +245,7 @@ constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const typename TMat
 
 // Verify that a matrix is orthogonal (e.g. A.T*A == I)
 template <typename TMat>
-requires ConceptMatrix<TMat>
+    requires ConceptMatrix<TMat>
 constexpr auto IsOrthogonal(const TMat& mat, const double eps = 1e-10)
 {
     if(mat.GetRows() != mat.GetColumns())
@@ -255,7 +255,7 @@ constexpr auto IsOrthogonal(const TMat& mat, const double eps = 1e-10)
 }
 
 template <typename TMat>
-requires ConceptMatrix<TMat>
+    requires ConceptMatrix<TMat>
 constexpr auto Negative(const TMat& mat)
 {
     return Matmul(-1., mat); //
@@ -263,14 +263,14 @@ constexpr auto Negative(const TMat& mat)
 
 // 3d cross product
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto Subtract(const TMat1& mat1, const TMat2& mat2)
 {
     return Add(mat1, Negative(mat2)); //
 }
 
 template <typename TTarget, typename TSource>
-requires ConceptMatrix<TSource> && ConceptMatrix<TTarget>
+    requires ConceptMatrix<TSource> && ConceptMatrix<TTarget>
 constexpr auto To(const TSource& mat)
 {
     // todo: check if user made a specialization
@@ -328,7 +328,7 @@ void RandomFill(TMat& mat)
 
 // todo: TMatTarget needs to be assignable
 template <typename TMatTarget, typename TMatSource>
-constexpr auto Extract(const TMatSource& source, const std::size_t row, const std::size_t col)
+constexpr auto Extract(const TMatSource& source, const Row row, const Col col)
 {
     TMatTarget target{};
 
@@ -336,10 +336,10 @@ constexpr auto Extract(const TMatSource& source, const std::size_t row, const st
 
     assert(target.GetRows() >= source.GetRows() + row);
     assert(target.GetColumns() >= source.GetColumns() + col);
-     
-    for(std::size_t i = 0; i < target.GetRows(); ++i) 
-        for(std::size_t j = 0; j < target.GetColumns(); ++j) 
-            target.At(i,j) = source.At(row + i,  col + j); 
+
+    for(Row i = 0; i < target.GetRows(); ++i)
+        for(Col j = 0; j < target.GetColumns(); ++j)
+            target.At(i, j) = source.At(row + i, col + j);
 
     return target;
 }
@@ -382,7 +382,7 @@ constexpr auto RowSplit(const TMatInput& mat, const Row row)
 }
 
 template <Row rowSize1, Row rowSize2, typename TMat>
-requires ConceptMatrix<TMat>
+    requires ConceptMatrix<TMat>
 constexpr auto RowSplit(const TMat& mat)
 {
     using TValue = typename TMat::DataType;
