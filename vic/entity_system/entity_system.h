@@ -421,6 +421,8 @@ public:
         return algorithms::Filter<T1, T2, T3>(*this);
     }
 
+    // Iterate 1d
+
     template <typename T, typename TIter>
     auto Iterate(const TIter begin, const TIter end)
     {
@@ -434,6 +436,22 @@ public:
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return algorithms::Iterate<T>(*this, iterable.begin(), iterable.end());
     }
+
+    template <typename T, typename TIter>
+    auto Iterate(const TIter begin, const TIter end) const
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return algorithms::Iterate<T>(*this, begin, end);
+    }
+
+    template <typename T, typename TIterable>
+    auto Iterate(const TIterable& iterable) const
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return algorithms::Iterate<T>(*this, iterable.begin(), iterable.end());
+    }
+
+    //
 
     template <typename T1, typename T2, typename TIter>
     auto Iterate2d(const TIter begin, const TIter end)
@@ -450,6 +468,28 @@ public:
         static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
         return algorithms::Iterate2d<T1, T2>(*this, iterable.begin(), iterable.end());
     }
+
+    // 
+
+    template <typename T1, typename T2, typename T3,  typename TIter>
+    auto Iterate3d(const TIter begin, const TIter end)
+    {
+        static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
+        static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
+        static_assert(templates::Contains<T3, TComponents...>(), "Unknown component T3");
+        return algorithms::Iterate3d<T1, T2, T3>(*this, begin, end);
+    }
+
+    template <typename T1, typename T2,typename T3,  typename TIterable>
+    auto Iterate3d(const TIterable& iterable)
+    {
+        static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
+        static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
+        static_assert(templates::Contains<T3, TComponents...>(), "Unknown component T3");
+        return algorithms::Iterate3d<T1, T2, T3>(*this, iterable.begin(), iterable.end());
+    }
+
+    //
 
     template <typename T, typename TIter>
     auto Insert(TIter begin, TIter end)

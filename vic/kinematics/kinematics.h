@@ -18,7 +18,7 @@ static constexpr Vector3<double> xAxis{{1, 0, 0}};
 static constexpr Vector3<double> yAxis{{0, 1, 0}};
 static constexpr Vector3<double> zAxis{{0, 0, 1}};
 
-constexpr double pi = 3.14159265358979323846;
+// constexpr double pi = 3.14159265358979323846;
 
 template <typename T>
 struct Screw

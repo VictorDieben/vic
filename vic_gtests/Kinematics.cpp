@@ -17,6 +17,7 @@
 
 #include <optional>
 #include <random>
+#include <numbers>
 
 using namespace vic;
 using namespace vic::kinematics;
@@ -28,9 +29,9 @@ TEST(Kinematics, EulerAngles)
     // Test if EulerAngles treats inputs as rotations about X, Y, Z respectively, in rad.
 
     // create results for 90 deg rotations over any one axis
-    Matrix3<double> eulerRx90 = EulerAngles(pi / 2, 0., 0.);
-    Matrix3<double> eulerRym90 = EulerAngles(0., -pi / 2, 0.);
-    Matrix3<double> eulerRz90 = EulerAngles(0., 0., pi / 2);
+    Matrix3<double> eulerRx90 = EulerAngles(std::numbers::pi / 2., 0., 0.);
+    Matrix3<double> eulerRym90 = EulerAngles(0., -std::numbers::pi / 2., 0.);
+    Matrix3<double> eulerRz90 = EulerAngles(0., 0., std::numbers::pi / 2.);
     // manually defined answers
     Matrix3<double> matRx90({1., 0., 0., 0., 0., -1., 0., 1., 0.});
     Matrix3<double> matRym90({0., 0., -1., 0., 1., 0., 1., 0., 0.});
@@ -46,7 +47,7 @@ TEST(Kinematics, EulerAngles)
     // * INTRINSIC wrt consecutive-current: Rot(X0,theta)->Rot(Y1, phi)->Rot(Z2, gamma) = R(X,theta)R(Y,phi)R(Z,gamma)
     // * EXTRINSIC wrt origional:           Rot(X0,theta)->Rot(Y0, phi)->Rot(Z0, gamma) = R(Z,gamma)R(Y,phi)R(X,theta)
 
-    Matrix3<double> euler = EulerAngles(0., pi / 4, pi / 2.);
+    Matrix3<double> euler = EulerAngles(0., std::numbers::pi / 4., std::numbers::pi / 2.);
     Matrix3<double> matIntrinsic({0., -0.70710678118, 0.70710678118, 1., 0., 0., 0., 0.70710678118, 0.70710678118});
     Matrix3<double> matExtrinsic({0., -1., 0., 0.70710678118, 0., 0.70710678118, -0.70710678118, 0., 0.70710678118});
     EXPECT_TRUE(IsEqual(euler, matIntrinsic, 1e-10));
@@ -76,7 +77,7 @@ TEST(Kinematics, rotate)
     EXPECT_TRUE(IsEqual(Rotation<double>{}.ToMatrix(), Identity3<double>{}));
 
     constexpr auto matrix = ToFull(Identity3<double>{});
-    auto zRotation = vic::linalg::Rotate(zAxis, pi / 2.);
+    auto zRotation = vic::linalg::Rotate(zAxis, std::numbers::pi / 2.);
 
     // rotating a vector around the z axis for pi/2
     auto tmp = Matmul(zRotation, Vector3<double>({1, 0, 0}));
@@ -97,7 +98,7 @@ TEST(Kinematics, rotation)
     const auto rotationMat = Rotation<double>{}.ToMatrix();
     EXPECT_TRUE(IsEqual(rotationMat, Identity3<double>{}));
 
-    Rotation r1{vic::linalg::Rotate(zAxis, pi / 2.)};
+    Rotation r1{vic::linalg::Rotate(zAxis, std::numbers::pi / 2.)};
     Rotation r1Inverse = r1.Inverse();
     Rotation result = r1 * r1Inverse;
     EXPECT_TRUE(IsEqual(result.ToMatrix(), Identity3<double>{}));
@@ -150,7 +151,7 @@ TEST(Kinematics, ExponentialTransform)
     EXPECT_TRUE(IsEqual(transform0, Identity4<double>{}));
 
     // check rotating over the same screw for a range of angles
-    for(const auto& theta : Linspace<double>(0., 2. * pi, 10))
+    for(const auto& theta : Linspace<double>(0., 2. * std::numbers::pi, 10))
     {
         auto tr = ExponentialTransform(screw, theta);
 
@@ -215,8 +216,8 @@ TEST(Kinematics, CartesianRobot)
 
     robot.Update(); // <-- update iterator with new joints
 
-    const Matrix3<double> euler = EulerAngles(pi / 2, pi / 3, pi / 4);
-    const std::vector<double> theta2{3., 2., 1., pi / 2, pi / 3, pi / 4};
+    const Matrix3<double> euler = EulerAngles(std::numbers::pi / 2., std::numbers::pi / 3., std::numbers::pi / 4.);
+    const std::vector<double> theta2{3., 2., 1., std::numbers::pi / 2., std::numbers::pi / 3., std::numbers::pi / 4.};
 
     const auto transforms2 = algorithms::ForwardKinematics2(robot, theta2);
     const auto rotation = transforms2.at(5u).GetRotation();
@@ -250,7 +251,7 @@ TEST(Kinematics, Doublependulum)
 
     robot.Update();
 
-    const std::vector<double> theta0{1., -pi / 3., 2 * pi / 3., -pi / 3.};
+    const std::vector<double> theta0{1., -std::numbers::pi / 3., 2. * std::numbers::pi / 3., -std::numbers::pi / 3.};
 
     const auto transform = algorithms::ForwardKinematics2(robot, theta0);
 
