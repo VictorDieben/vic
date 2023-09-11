@@ -409,8 +409,8 @@ constexpr Matrix3<T> Rotate(const Vector3<T>& vec, const T angle)
     constexpr Identity3<T> identity{};
     const Bracket3<T> b{vec};
     const Matrix3<T> bSquared = Matmul(b, b);
-    const Matrix3<T> tmp1 = Matmul(std::sin(angle), b);
-    const Matrix3<T> tmp2 = Matmul(1. - std::cos(angle), bSquared);
+    const Matrix3<T> tmp1 = Matmul((T)std::sin(angle), b);
+    const Matrix3<T> tmp2 = Matmul((T)1. - std::cos(angle), bSquared);
     return Add(identity, tmp1, tmp2);
 }
 
