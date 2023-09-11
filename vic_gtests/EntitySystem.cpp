@@ -591,7 +591,7 @@ TEST(ECS, ExecuteSystems)
 
     vic::ecs::SystemExecutor executor{&sys1, &sys2, &sys3, &sys4, &sys5};
 
-    executor.Run();
+    executor.Run(); // todo: test that systems that can run simultaneously do so.
 }
 
 TEST(ECS, ForeachComponentType)
@@ -643,4 +643,14 @@ TEST(ECS, Set)
     ECS ecs;
     A a{};
     auto handle = ecs.NewEntity().Set<A>(a);
+}
+
+
+
+TEST(ECS, Extend)
+{
+    using Ecs = vic::ecs::ECS<A, B>;
+    Ecs ecs;
+
+    // using ExtendedEcs = vic::ecs::ECS<Ecs, C, D>; // todo
 }

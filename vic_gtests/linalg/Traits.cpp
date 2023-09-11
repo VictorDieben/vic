@@ -9,17 +9,17 @@ TEST(Linalg, ConceptRows)
 {
     struct s1
     {
-        constexpr static std::size_t GetRows() { return 1; }
+        constexpr static Row GetRows() { return 1; }
     };
 
     struct s2
     {
-        static std::size_t GetRows() { return 1; }
+        static Row GetRows() { return 1; }
     };
 
     struct s3
     {
-        std::size_t GetRows() const { return 1; }
+        Row GetRows() const { return 1; }
     };
 
     EXPECT_TRUE(ConceptConstexprRows<s1>);

@@ -216,7 +216,8 @@ constexpr auto MatmulMatrix(const TMat1& mat1, const TMat2& mat2)
     }
     else if constexpr(ConceptIdentity<TMat1> || ConceptIdentity<TMat2>)
     {
-        if constexpr(ConceptIdentity<TMat1>)
+        // todo: if datatype of mat1 is not equal to mat2, we might need to cast the matrix to another data type
+        if constexpr(ConceptIdentity<TMat1>) 
             return mat2;
         else // TMat2 is identity
             return mat1;

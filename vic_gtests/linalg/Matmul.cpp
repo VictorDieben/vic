@@ -59,10 +59,11 @@ TEST(Linalg, Matmul)
     ExpectMatrixEqual(scalar2, Matrix2<double>({15, 18, 21, 24}));
 
     // verify DataTypes
-    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Identity1<double>{}, Identity1<double>{}))::DataType>));
-    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Identity1<double>{}, Identity1<float>{}))::DataType>));
-    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Identity1<double>{}, Identity1<int>{}))::DataType>));
-    EXPECT_TRUE((std::is_same_v<int, decltype(Matmul(Identity1<int>{}, Identity1<int>{}))::DataType>));
+    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Matrix3<double>{}, Matrix3<double>{}))::DataType>));
+    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Matrix3<double>{}, Matrix3<float>{}))::DataType>));
+    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Matrix3<float>{}, Matrix3<double>{}))::DataType>));
+    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Matrix3<double>{}, Matrix3<int>{}))::DataType>));
+    EXPECT_TRUE((std::is_same_v<int, decltype(Matmul(Matrix3<int>{}, Matrix3<int>{}))::DataType>));
 }
 
 TEST(Linalg, MatmulDynamic)

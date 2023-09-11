@@ -314,7 +314,7 @@ TriMesh<T> Subdivide(const TriMesh<T>& mesh)
     for(auto& [key, value] : uniqueEdges)
     {
         const auto& [v1, v2] = key;
-        auto newVertex = Matmul(0.5, Add(mesh.vertices.at(v1), mesh.vertices.at(v2)));
+        auto newVertex = Matmul(0.5f, Add(mesh.vertices.at(v1), mesh.vertices.at(v2)));
         result.vertices.push_back(newVertex);
 
         value = (MeshIndex)result.vertices.size() - 1;
@@ -349,10 +349,10 @@ EdgeMesh<T> GenerateCircle(const T radius, const uint32_t n)
 
     for(MeshIndex i = 0; i < n; ++i)
     {
-        const auto ratio = (double)i / (double)n;
-        const double x = radius * std::sin(ratio * 2. * std::numbers::pi);
-        const double y = radius * std::cos(ratio * 2. * std::numbers::pi);
-        result.vertices.push_back(ToVertex(x, y, 0.));
+        const T ratio = (T)i / (T)n;
+        const T x = radius * (T)std::sin(ratio * 2. * std::numbers::pi);
+        const T y = radius * (T)std::cos(ratio * 2. * std::numbers::pi);
+        result.vertices.push_back(ToVertex<T>(x, y, 0.));
         result.edges.push_back({i, (i + 1) % n});
     }
 
@@ -371,11 +371,9 @@ TriMesh<T> Revolve(const EdgeMesh<T>& mesh, //
     // revolve around z axis
     TriMesh<T> result;
 
-    result.vertices = mesh.vertices;
-
     for(MeshIndex ring = 0; ring < n; ++ring)
     {
-        const auto zRotation = vic::linalg::Rotate(zAxis, ((double)ring / ((double)ring + 1.)) * std::numbers::pi * 2.);
+        const auto zRotation = vic::linalg::Rotate<T>(zAxis, (T)(((T)ring / (T)n) * std::numbers::pi * 2.));
         for(const auto& vertex : mesh.vertices)
             result.vertices.push_back(Matmul(zRotation, vertex));
     }
@@ -407,14 +405,14 @@ TriMesh<T> GenerateTorus(const T R, //
 {
     TriMesh<T> result;
 
-    auto circleMesh = GenerateCircle(r, nr);
+    auto circleMesh = GenerateCircle<T>(r, nr);
 
     // circleMesh will be in the xy plane, in order to revolve, we need to switch y and z coords
     // todo: rotate mesh using a helper
     for(auto& vertex : circleMesh.vertices)
-        vertex = ToVertex(R + vertex.Get(0, 0), vertex.Get(2, 0), vertex.Get(1, 0));
+        vertex = ToVertex<T>(R + vertex.Get(0), vertex.Get(2), vertex.Get(1));
 
-    return Revolve(circleMesh, nR, false);
+    return Revolve<T>(circleMesh, nR, false);
 }
 
 template <typename T>

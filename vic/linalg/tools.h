@@ -116,8 +116,9 @@ template <typename TVec>
     requires ConceptVector<TVec>
 constexpr auto Normalize(const TVec& vec)
 {
+    using TRet = typename TVec::DataType;
     TVec res{vec.GetRows(), vec.GetColumns()};
-    const auto oneOverNorm = 1. / Norm(vec);
+    const auto oneOverNorm = (TRet)1. / Norm(vec);
     for(MatrixSize i = 0; i < vec.GetRows(); ++i)
         res.At(i, 0) = vec.Get(i, 0) * oneOverNorm;
     return res;
@@ -128,10 +129,11 @@ template <typename TVec1, typename TVec2>
     requires ConceptVector<TVec1> && ConceptVector<TVec2>
 constexpr auto Cross(const TVec1& vec1, const TVec2& vec2)
 {
+    using TRet = decltype((typename TVec1::DataType{}) * (typename TVec2::DataType{}));
     assert(vec1.GetRows() == 3 && vec2.GetRows() == 3);
-    const double ax = vec1.Get(0), ay = vec1.Get(1), az = vec1.Get(2);
-    const double bx = vec2.Get(0), by = vec2.Get(1), bz = vec2.Get(2);
-    return Vector3<double>({(ay * bz) - (az * by), //
+    const TRet ax = vec1.Get(0), ay = vec1.Get(1), az = vec1.Get(2);
+    const TRet bx = vec2.Get(0), by = vec2.Get(1), bz = vec2.Get(2);
+    return Vector3<TRet>({(ay * bz) - (az * by), //
                             (az * bx) - (ax * bz), //
                             (ax * by) - (ay * bx)});
 }
@@ -250,21 +252,23 @@ constexpr auto IsOrthogonal(const TMat& mat, const double eps = 1e-10)
 {
     if(mat.GetRows() != mat.GetColumns())
         return false;
-    Identity<typename TMat::DataType> identity{mat.GetRows(), mat.GetColumns()};
-    return IsEqual(Matmul(Transpose(mat), mat), identity, eps);
+    const auto tmp = Matmul(Transpose(mat), mat);
+    using tmpType = decltype(tmp);
+    Identity<tmpType::DataType, tmpType::ShapeType> identity{mat.GetRows(), mat.GetColumns()};
+    return IsEqual(tmp, identity, eps);
 }
 
 template <typename TMat>
     requires ConceptMatrix<TMat>
 constexpr auto Negative(const TMat& mat)
 {
-    return Matmul(-1., mat); //
+    return Matmul((typename TMat::DataType) - 1, mat); //
 }
 
 // 3d cross product
 template <typename TMat1, typename TMat2>
     requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
-constexpr auto Subtract(const TMat1& mat1, const TMat2& mat2)
+constexpr auto Subtract(const TMat1& mat1, const TMat2& mat2) // mat1 - mat2
 {
     return Add(mat1, Negative(mat2)); //
 }
