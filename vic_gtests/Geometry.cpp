@@ -735,7 +735,7 @@ TEST(Geom, MeshCube)
 {
     const AABB<double, 3> bbox{Interval<double>{1, 2}, Interval<double>{1, 2}, Interval<double>{1, 2}};
 
-    const auto cubeMesh = GenerateCube(bbox);
+    const auto cubeMesh = GenerateBboxCube(bbox);
     EXPECT_TRUE(IsClosed(cubeMesh));
 
     const auto subdividedCube = Subdivide(cubeMesh);

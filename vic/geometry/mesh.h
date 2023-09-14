@@ -189,11 +189,7 @@ TriMesh<T> GenerateBboxCube(const vic::geom::AABB<T, 3>& box)
 template <typename T>
 TriMesh<T> GenerateCubeSphere(const T radius, const uint32_t subdivisions)
 {
-    // todo: name
-    vic::geom::Interval<T> interval{-1., 1.};
-    const vic::geom::AABB<T, 3> bbox{interval, interval, interval};
-
-    auto mesh = GenerateCube(bbox);
+    auto mesh = GenerateCube<T>();
 
     for(uint32_t i = 0; i < subdivisions; ++i)
         mesh = Subdivide(mesh);
