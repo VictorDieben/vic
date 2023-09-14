@@ -122,26 +122,26 @@ TriMesh<T> GenerateCube()
 
     result.vertices.push_back(Vertex<T>{{-1, -1, 1}}); // 0
     result.vertices.push_back(Vertex<T>{{1, -1, 1}}); // 1
-    result.vertices.push_back(Vertex<T>{{-1, 1, 1}}); // 2
-    result.vertices.push_back(Vertex<T>{{1, 1, 1}}); // 3
+    result.vertices.push_back(Vertex<T>{{-1, -1, -1}}); // 2
+    result.vertices.push_back(Vertex<T>{{1, -1, -1}}); // 3
 
-    result.vertices.push_back(Vertex<T>{{-1, -1, -1}}); // 4
-    result.vertices.push_back(Vertex<T>{{1, -1, -1}}); // 5
+    result.vertices.push_back(Vertex<T>{{-1, 1, 1}}); // 4
+    result.vertices.push_back(Vertex<T>{{1, 1, 1}}); // 5
     result.vertices.push_back(Vertex<T>{{-1, 1, -1}}); // 6
     result.vertices.push_back(Vertex<T>{{1, 1, -1}}); // 7
 
-    result.tris.push_back(Tri{2, 6, 7}); // bottom
-    result.tris.push_back(Tri{2, 3, 7});
-    result.tris.push_back(Tri{0, 4, 5}); // front
-    result.tris.push_back(Tri{0, 1, 5});
-    result.tris.push_back(Tri{0, 2, 6}); // left
-    result.tris.push_back(Tri{0, 4, 6});
-    result.tris.push_back(Tri{1, 3, 7}); // top
-    result.tris.push_back(Tri{1, 5, 7});
-    result.tris.push_back(Tri{0, 2, 3}); // back
-    result.tris.push_back(Tri{0, 1, 3});
-    result.tris.push_back(Tri{4, 6, 7}); // right
-    result.tris.push_back(Tri{4, 5, 7});
+    result.tris.push_back(Tri{0, 2, 1}); // front
+    result.tris.push_back(Tri{1, 2, 3});
+    result.tris.push_back(Tri{2, 6, 3}); // bottom
+    result.tris.push_back(Tri{3, 6, 7});
+    result.tris.push_back(Tri{0, 4, 6}); // left
+    result.tris.push_back(Tri{0, 6, 2});
+    result.tris.push_back(Tri{0, 1, 4}); // top
+    result.tris.push_back(Tri{1, 5, 4});
+    result.tris.push_back(Tri{4, 5, 6}); // back
+    result.tris.push_back(Tri{5, 7, 6});
+    result.tris.push_back(Tri{1, 3, 5}); // right
+    result.tris.push_back(Tri{5, 3, 7});
 
     return result;
 }
