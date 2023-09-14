@@ -114,7 +114,40 @@ bool IsClosed(const vic::mesh::EdgeMesh<T>& mesh)
 }
 
 template <typename T>
-TriMesh<T> GenerateCube(const vic::geom::AABB<T, 3>& box)
+TriMesh<T> GenerateCube()
+{
+    TriMesh<T> result;
+    result.vertices.reserve(8);
+    result.tris.reserve(12);
+
+    result.vertices.push_back(Vertex<T>{{-1, -1, 1}}); // 0
+    result.vertices.push_back(Vertex<T>{{1, -1, 1}}); // 1
+    result.vertices.push_back(Vertex<T>{{-1, 1, 1}}); // 2
+    result.vertices.push_back(Vertex<T>{{1, 1, 1}}); // 3
+
+    result.vertices.push_back(Vertex<T>{{-1, -1, -1}}); // 4
+    result.vertices.push_back(Vertex<T>{{1, -1, -1}}); // 5
+    result.vertices.push_back(Vertex<T>{{-1, 1, -1}}); // 6
+    result.vertices.push_back(Vertex<T>{{1, 1, -1}}); // 7
+
+    result.tris.push_back(Tri{2, 6, 7}); // bottom
+    result.tris.push_back(Tri{2, 3, 7});
+    result.tris.push_back(Tri{0, 4, 5}); // front
+    result.tris.push_back(Tri{0, 1, 5});
+    result.tris.push_back(Tri{0, 2, 6}); // left
+    result.tris.push_back(Tri{0, 4, 6});
+    result.tris.push_back(Tri{1, 3, 7}); // top
+    result.tris.push_back(Tri{1, 5, 7});
+    result.tris.push_back(Tri{0, 2, 3}); // back
+    result.tris.push_back(Tri{0, 1, 3});
+    result.tris.push_back(Tri{4, 6, 7}); // right
+    result.tris.push_back(Tri{4, 5, 7});
+
+    return result;
+}
+
+template <typename T>
+TriMesh<T> GenerateBboxCube(const vic::geom::AABB<T, 3>& box)
 {
     const auto lx = box.intervals.at(0).min;
     const auto ux = box.intervals.at(0).max;
@@ -251,8 +284,8 @@ TriMesh<T> GenerateCone(const T rad, //
                         const MeshIndex n)
 {
     // simple uv sphere mesh
-    const Vertex<T> top = ToVertex(0., 0., height);
-    const Vertex<T> bottom = ToVertex(0., 0., 0.);
+    const Vertex<T> top = ToVertex((T)0., (T)0., (T)height);
+    const Vertex<T> bottom = ToVertex((T)0., (T)0., (T)0.);
 
     TriMesh<T> mesh{};
     mesh.vertices.reserve(n + 2);
