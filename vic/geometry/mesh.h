@@ -171,17 +171,17 @@ TriMesh<T> GenerateBboxCube(const vic::geom::AABB<T, 3>& box)
     result.vertices.push_back(Vertex<T>{{ux, uy, uz}}); // 7
 
     result.tris.push_back(Tri{0, 1, 2}); // bottom
-    result.tris.push_back(Tri{2, 1, 3});
+    result.tris.push_back(Tri{2, 3, 2});
     result.tris.push_back(Tri{0, 1, 4}); // front
-    result.tris.push_back(Tri{4, 1, 5});
+    result.tris.push_back(Tri{4, 5, 1});
     result.tris.push_back(Tri{0, 2, 4}); // left
-    result.tris.push_back(Tri{2, 4, 6});
+    result.tris.push_back(Tri{2, 6, 4});
     result.tris.push_back(Tri{4, 5, 6}); // top
-    result.tris.push_back(Tri{6, 5, 7});
+    result.tris.push_back(Tri{6, 7, 5});
     result.tris.push_back(Tri{2, 3, 6}); // back
-    result.tris.push_back(Tri{6, 3, 7});
+    result.tris.push_back(Tri{6, 7, 3});
     result.tris.push_back(Tri{1, 3, 5}); // right
-    result.tris.push_back(Tri{5, 3, 7});
+    result.tris.push_back(Tri{5, 7, 3});
 
     return result;
 }
