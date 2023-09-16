@@ -37,6 +37,7 @@ struct EntityHandle
     template <typename TComponent>
     EntityHandle<T> Add(auto&&... args)
     {
+        static_assert(SystemType::template ContainsComponent<TComponent>(), "Unknown component T");
         assert(mSystem && mId);
         mSystem->Add<TComponent>(mId, std::forward<decltype(args)>(args)...);
         return *this; // return copy of self
@@ -126,8 +127,8 @@ public:
 
     T& Add(EntityId id, auto&&... args)
     {
-        mComponents[id] = T{args...};
-        return mComponents[id];
+        auto res = mComponents.emplace(std::pair(id, T{std::forward<decltype(args)>(args)...}));
+        return res.first->second;
     }
 
     T& Set(EntityId id, const T& component)
