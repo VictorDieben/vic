@@ -180,6 +180,20 @@ using Matrix5 = MatrixMxN<T, 5, 5>;
 template <typename T>
 using Matrix6 = MatrixMxN<T, 6, 6>;
 
+using Matrix11f = MatrixMxN<float, 1, 1>;
+using Matrix22f = MatrixMxN<float, 2, 3>;
+using Matrix33f = MatrixMxN<float, 3, 3>;
+using Matrix44f = MatrixMxN<float, 4, 4>;
+using Matrix55f = MatrixMxN<float, 5, 5>;
+using Matrix66f = MatrixMxN<float, 6, 6>;
+
+using Matrix11d = MatrixMxN<double, 1, 1>;
+using Matrix22d = MatrixMxN<double, 2, 3>;
+using Matrix33d = MatrixMxN<double, 3, 3>;
+using Matrix44d = MatrixMxN<double, 4, 4>;
+using Matrix55d = MatrixMxN<double, 5, 5>;
+using Matrix66d = MatrixMxN<double, 6, 6>;
+
 template <typename T, Row rows>
 using VectorN = MatrixMxN<T, rows, 1>;
 
@@ -195,6 +209,20 @@ template <typename T>
 using Vector5 = VectorN<T, 5>;
 template <typename T>
 using Vector6 = VectorN<T, 6>;
+
+using Vector1f = VectorN<float, 1>;
+using Vector2f = VectorN<float, 2>;
+using Vector3f = VectorN<float, 3>;
+using Vector4f = VectorN<float, 4>;
+using Vector5f = VectorN<float, 5>;
+using Vector6f = VectorN<float, 6>;
+
+using Vector1d = VectorN<double, 1>;
+using Vector2d = VectorN<double, 2>;
+using Vector3d = VectorN<double, 3>;
+using Vector4d = VectorN<double, 4>;
+using Vector5d = VectorN<double, 5>;
+using Vector6d = VectorN<double, 6>;
 
 template <typename... Ts>
 constexpr auto MakeVector(Ts&&... ts)
