@@ -15,9 +15,9 @@
 
 #include "vic/utils.h"
 
+#include <numbers>
 #include <optional>
 #include <random>
-#include <numbers>
 
 using namespace vic;
 using namespace vic::kinematics;
@@ -133,18 +133,18 @@ TEST(Kinematics, transformations)
 
 TEST(Kinematics, Screw)
 {
-    Screw<double> screw{{1, 2, 3, 4, 5, 6}};
+    Screw<double> screw{1., 2., 3., 4., 5., 6.};
     EXPECT_TRUE(IsEqual(screw.GetAngular(), Vector3<double>{{1, 2, 3}}));
     EXPECT_TRUE(IsEqual(screw.GetLinear(), Vector3<double>{{4, 5, 6}}));
 
-    Screw screw2{Vector3<double>{{1, 2, 3}}, Vector3<double>{{4, 5, 6}}};
+    Screw screw2{Vector3<double>{1., 2., 3.}, Vector3<double>{4., 5., 6.}};
     EXPECT_TRUE(IsEqual(screw2.GetAngular(), Vector3<double>{{1, 2, 3}}));
     EXPECT_TRUE(IsEqual(screw2.GetLinear(), Vector3<double>{{4, 5, 6}}));
 }
 
 TEST(Kinematics, ExponentialTransform)
 {
-    Screw<double> screw{{0, 0, 1, 0, 0, 0}}; // screw rotating around z
+    Screw<double> screw(0, 0, 1, 0, 0, 0); // screw rotating around z
 
     // check zero rotation
     auto transform0 = ExponentialTransform(screw, 0.);
@@ -189,12 +189,12 @@ TEST(Kinematics, ExponentialTransform)
 
 TEST(Kinematics, CartesianRobot)
 {
-    const Screw<double> stx{{0, 0, 0, 1, 0, 0}}; // pure x translation
-    const Screw<double> sty{{0, 0, 0, 0, 1, 0}}; // pure y translation
-    const Screw<double> stz{{0, 0, 0, 0, 0, 1}}; // pure z translation
-    const Screw<double> srx{{1, 0, 0, 0, 0, 0}}; // pure x rotation
-    const Screw<double> sry{{0, 1, 0, 0, 0, 0}}; // pure y rotation
-    const Screw<double> srz{{0, 0, 1, 0, 0, 0}}; // pure z rotation
+    const Screw<double> stx{0, 0, 0, 1, 0, 0}; // pure x translation
+    const Screw<double> sty{0, 0, 0, 0, 1, 0}; // pure y translation
+    const Screw<double> stz{0, 0, 0, 0, 0, 1}; // pure z translation
+    const Screw<double> srx{1, 0, 0, 0, 0, 0}; // pure x rotation
+    const Screw<double> sry{0, 1, 0, 0, 0, 0}; // pure y rotation
+    const Screw<double> srz{0, 0, 1, 0, 0, 0}; // pure z rotation
 
     robots::ForwardRobot<double> robot{};
 
@@ -235,10 +235,10 @@ TEST(Kinematics, Doublependulum)
     //
     // given state-space variables of the cart and 2 jounts, what is the position and orientation of the end effector?
 
-    const Screw<double> cart{{0., 0., 0., 1, 0, 0}};
-    const Screw<double> rotor1{{0., 1., 0., 0, 0, 0}};
-    const Screw<double> rotor2{{0., 1., 0., 0, 0, 0}};
-    const Screw<double> endEffector{{0., 1., 0., 0, 0, 0}};
+    const Screw<double> cart{0., 0., 0., 1, 0, 0};
+    const Screw<double> rotor1{0., 1., 0., 0, 0, 0};
+    const Screw<double> rotor2{0., 1., 0., 0, 0, 0};
+    const Screw<double> endEffector{0., 1., 0., 0, 0, 0};
 
     const Transformation<double> transform12{Rotation<double>{}, Translation{Vector3<double>{{0., 0., 0.5}}}};
     const Transformation<double> transform23{EulerAngles(0., 0., 0.), Vector3<double>{{0., 0., 0.5}}};

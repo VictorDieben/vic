@@ -18,6 +18,9 @@ namespace linalg
 namespace detail
 {
 
+template <typename T, typename... Ts>
+using AllTs = typename std::conjunction<std::is_same<Ts, T>...>::value;
+
 template <typename T, typename TShape>
 struct MatrixConst : public MatrixBaseSelector<TShape>
 {
@@ -34,6 +37,13 @@ struct MatrixConst : public MatrixBaseSelector<TShape>
     constexpr MatrixConst(const std::array<T, ArraySize>& data)
         : mData(data)
     { }
+
+    template <typename... Ts>
+        requires(std::is_convertible_v<Ts, T> && ...) && (sizeof...(Ts) == ArraySize)
+    constexpr MatrixConst(Ts&&... data)
+        : mData(std::forward<Ts>(data)...)
+    { }
+
     constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
@@ -186,8 +196,16 @@ using Vector5 = VectorN<T, 5>;
 template <typename T>
 using Vector6 = VectorN<T, 6>;
 
+template <typename... Ts>
+constexpr auto MakeVector(Ts&&... ts)
+{
+    using CT = std::common_type_t<Ts...>;
+    std::array<CT, sizeof...(Ts)> data{std::forward<CT>(ts)...};
+    return VectorN<CT, sizeof...(Ts)>(data);
+}
+
 template <typename TMat>
-requires ConceptMatrix<TMat>
+    requires ConceptMatrix<TMat>
 constexpr auto ToFull(const TMat& mat)
 {
     Matrix<typename TMat::DataType, typename TMat::ShapeType> res{mat.GetRows(), mat.GetColumns()};

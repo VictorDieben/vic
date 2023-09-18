@@ -125,13 +125,18 @@ public:
 
     using value_type = std::pair<const EntityId, T>;
 
-    T& Add(EntityId id, auto&&... args)
+    T& Add(const EntityId id, auto&&... args)
     {
-        auto res = mComponents.emplace(std::pair(id, T{std::forward<decltype(args)>(args)...}));
+        // todo: find out if piecewise construct is worth it / how to make it work with any type
+        //auto res = mComponents.emplace(std::piecewise_construct, //
+        //                               std::forward_as_tuple(id),
+        //                               std::forward_as_tuple(args...));
+
+        auto res = mComponents.emplace(std::pair(id, std::move(T{std::forward<decltype(args)>(args)...})));
         return res.first->second;
     }
 
-    T& Set(EntityId id, const T& component)
+    T& Set(const EntityId id, const T& component)
     {
         mComponents[id] = component;
         return mComponents[id];
@@ -470,9 +475,9 @@ public:
         return algorithms::Iterate2d<T1, T2>(*this, iterable.begin(), iterable.end());
     }
 
-    // 
+    //
 
-    template <typename T1, typename T2, typename T3,  typename TIter>
+    template <typename T1, typename T2, typename T3, typename TIter>
     auto Iterate3d(const TIter begin, const TIter end)
     {
         static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
@@ -481,7 +486,7 @@ public:
         return algorithms::Iterate3d<T1, T2, T3>(*this, begin, end);
     }
 
-    template <typename T1, typename T2,typename T3,  typename TIterable>
+    template <typename T1, typename T2, typename T3, typename TIterable>
     auto Iterate3d(const TIterable& iterable)
     {
         static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
