@@ -33,7 +33,7 @@ template <typename T>
 Vertex<T> ToVertex(const T x, const T y, const T z)
 {
     // helper, linalg vecs don't have this constructor
-    return Vertex<T>{{x, y, z}};
+    return Vertex<T>(x, y, z);
 }
 
 template <typename T>
@@ -120,15 +120,15 @@ TriMesh<T> GenerateCube()
     result.vertices.reserve(8);
     result.tris.reserve(12);
 
-    result.vertices.push_back(Vertex<T>{{-1, -1, 1}}); // 0
-    result.vertices.push_back(Vertex<T>{{1, -1, 1}}); // 1
-    result.vertices.push_back(Vertex<T>{{-1, -1, -1}}); // 2
-    result.vertices.push_back(Vertex<T>{{1, -1, -1}}); // 3
+    result.vertices.push_back(Vertex<T>(-1, -1, 1)); // 0
+    result.vertices.push_back(Vertex<T>(1, -1, 1)); // 1
+    result.vertices.push_back(Vertex<T>(-1, -1, -1)); // 2
+    result.vertices.push_back(Vertex<T>(1, -1, -1)); // 3
 
-    result.vertices.push_back(Vertex<T>{{-1, 1, 1}}); // 4
-    result.vertices.push_back(Vertex<T>{{1, 1, 1}}); // 5
-    result.vertices.push_back(Vertex<T>{{-1, 1, -1}}); // 6
-    result.vertices.push_back(Vertex<T>{{1, 1, -1}}); // 7
+    result.vertices.push_back(Vertex<T>(-1, 1, 1)); // 4
+    result.vertices.push_back(Vertex<T>(1, 1, 1)); // 5
+    result.vertices.push_back(Vertex<T>(-1, 1, -1)); // 6
+    result.vertices.push_back(Vertex<T>(1, 1, -1)); // 7
 
     result.tris.push_back(Tri{0, 2, 1}); // front
     result.tris.push_back(Tri{1, 2, 3});
@@ -209,8 +209,8 @@ TriMesh<T> GenerateUVSphere(const T rad, //
                             const MeshIndex nv)
 {
     // simple uv sphere mesh
-    Vertex<T> top{{0., 0., rad}};
-    Vertex<T> bottom{{0., 0., -rad}};
+    Vertex<T> top(0., 0., rad);
+    Vertex<T> bottom(0., 0., -rad);
 
     std::vector<Vertex<T>> vertices;
 
@@ -280,8 +280,8 @@ TriMesh<T> GenerateCone(const T rad, //
                         const MeshIndex n)
 {
     // simple uv sphere mesh
-    const Vertex<T> top = ToVertex((T)0., (T)height, (T)0.);
-    const Vertex<T> bottom = ToVertex((T)0., (T)0., (T)0.);
+    const auto top = Vertex<T>((T)0., (T)height, (T)0.);
+    const auto bottom = Vertex<T>((T)0., (T)0., (T)0.);
 
     TriMesh<T> mesh{};
     mesh.vertices.reserve(n + 2);
@@ -326,9 +326,8 @@ TriMesh<T> Subdivide(const TriMesh<T>& mesh)
         else
             uniqueEdges[{v2, v1}] = {};
     };
-    for(const auto& tri : mesh.tris)
-    {
-        const auto& [v0, v1, v2] = tri;
+    for(const auto& [v0, v1, v2] : mesh.tris)
+    { 
         addEdge(v0, v1);
         addEdge(v1, v2);
         addEdge(v2, v0);
@@ -350,10 +349,8 @@ TriMesh<T> Subdivide(const TriMesh<T>& mesh)
     }
 
     // iterate over all triangles in the original mesh. perform subdivision
-    for(const auto& tri : mesh.tris)
-    {
-        const auto& [v0, v1, v2] = tri;
-
+    for(const auto& [v0, v1, v2] : mesh.tris)
+    { 
         const auto e0 = v0 < v1 ? std::pair(v0, v1) : std::pair(v1, v0);
         const auto e1 = v1 < v2 ? std::pair(v1, v2) : std::pair(v2, v1);
         const auto e2 = v2 < v0 ? std::pair(v2, v0) : std::pair(v0, v2);
@@ -381,7 +378,7 @@ EdgeMesh<T> GenerateCircle(const T radius, const uint32_t n)
         const T ratio = (T)i / (T)n;
         const T x = radius * (T)std::sin(ratio * 2. * std::numbers::pi);
         const T y = radius * (T)std::cos(ratio * 2. * std::numbers::pi);
-        result.vertices.push_back(ToVertex<T>(x, y, 0.));
+        result.vertices.push_back(Vertex<T>(x, y, 0.));
         result.edges.push_back({i, (i + 1) % n});
     }
 
@@ -439,7 +436,7 @@ TriMesh<T> GenerateTorus(const T R, //
     // circleMesh will be in the xy plane, in order to revolve, we need to switch y and z coords
     // todo: rotate mesh using a helper
     for(auto& vertex : circleMesh.vertices)
-        vertex = ToVertex<T>(R + vertex.Get(0), vertex.Get(2), vertex.Get(1));
+        vertex = Vertex<T>(R + vertex.Get(0), vertex.Get(2), vertex.Get(1));
 
     return Revolve<T>(circleMesh, nR, false);
 }
@@ -452,9 +449,8 @@ std::vector<Normal<T>> GenerateTriNormals(const TriMesh<T>& mesh)
     std::vector<Normal<T>> normals;
     normals.reserve(mesh.tris.size());
 
-    for(const auto& tri : mesh.tris)
-    {
-        const auto [ia, ib, ic] = tri;
+    for(const auto& [ia, ib, ic]  : mesh.tris)
+    { 
         const auto ab = Subtract(mesh.vertices.at(ib), mesh.vertices.at(ia));
         const auto ac = Subtract(mesh.vertices.at(ic), mesh.vertices.at(ia));
 
@@ -511,7 +507,7 @@ Vertex<T> FromSphericalCoordinates(const T radius, const T inclination, const T 
     const T x = radius * sinInclination * std::cos(azimuth);
     const T y = radius * sinInclination * std::sin(azimuth);
     const T z = radius * std::cos(inclination);
-    return Vertex<T>{{x, y, z}};
+    return Vertex<T>(x, y, z);
 }
 
 template <typename T>
@@ -526,7 +522,7 @@ std::vector<UV<T>> GenerateVertexUVsPolar(const TriMesh<T>& mesh, const Vertex<T
     {
         const auto direction = Subtract(vertex, origin);
         const auto [r, inclination, azimuth] = ToSphericalCoordinates(direction);
-        uvs.push_back(UV<double>{{inclination / std::numbers::pi, azimuth / (2. * std::numbers::pi)}}); // todo: scale to [0; 1]
+        uvs.push_back(UV<T>(inclination / std::numbers::pi, azimuth / (2. * std::numbers::pi))); // todo: scale to [0; 1]
     }
 
     return uvs;
