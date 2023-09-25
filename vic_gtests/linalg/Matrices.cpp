@@ -21,18 +21,18 @@ void VerifyMatrix(TMat& mat)
 
 TEST(Linalg, InitBase)
 {
-    static constexpr MatrixBaseSelector<Shape<3, 3>> m33{3, 3};
-    static constexpr MatrixBaseSelector<Shape<3, UnknownSize>> mr3{3, 3};
-    static constexpr MatrixBaseSelector<Shape<UnknownSize, 3>> mc3{3, 3};
-    static constexpr MatrixBaseSelector<Shape<UnknownSize, UnknownSize>> md{3, 3};
+    static constexpr MatrixBaseSelector<Shape<3, 3>> m33(3, 3);
+    static constexpr MatrixBaseSelector<Shape<3, UnknownSize>> mr3(3, 3);
+    static constexpr MatrixBaseSelector<Shape<UnknownSize, 3>> mc3(3, 3);
+    static constexpr MatrixBaseSelector<Shape<UnknownSize, UnknownSize>> md(3, 3);
 }
 
 TEST(Linalg, InitZeros)
 {
-    static constexpr Zeros<double, Shape<3, 3>> m33{3, 3};
-    static constexpr Zeros<double, Shape<3, UnknownSize>> mr3{3, 3};
-    static constexpr Zeros<double, Shape<UnknownSize, 3>> mc3{3, 3};
-    static constexpr Zeros<double, Shape<UnknownSize, UnknownSize>> md{3, 3};
+    static constexpr Zeros<double, Shape<3, 3>> m33(3, 3);
+    static constexpr Zeros<double, Shape<3, UnknownSize>> mr3(3, 3);
+    static constexpr Zeros<double, Shape<UnknownSize, 3>> mc3(3, 3);
+    static constexpr Zeros<double, Shape<UnknownSize, UnknownSize>> md(3, 3);
     VerifyMatrix(m33);
     VerifyMatrix(mr3);
     VerifyMatrix(mc3);
@@ -154,7 +154,7 @@ TEST(Linalg, InitColStack)
 
 TEST(Linalg, InitTriDiagonal)
 {
-    constexpr Matrix3<double> mat33{{1, 2, 0, 3, 4, 5, 0, 6, 7}};
+    constexpr Matrix3<double> mat33(1, 2, 0, 3, 4, 5, 0, 6, 7);
 
     constexpr auto tri3 = ToTriDiagonal(mat33);
     static_assert(ConceptMatrix<decltype(tri3)>);

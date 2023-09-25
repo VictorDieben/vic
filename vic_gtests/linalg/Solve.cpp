@@ -113,10 +113,10 @@ TEST(Linalg, JacobiLargeSparse)
 
 TEST(Linalg, SimpleConjugateGradient)
 {
-    const Matrix2<double> A{{4, 1, 1, 3}};
-    const Vector2<double> b{{1, 2}};
+    const Matrix2<double> A(4, 1, 1, 3);
+    const Vector2<double> b(1, 2);
 
-    const Vector2<double> solution{{0.0909, 0.6364}};
+    const Vector2<double> solution(0.0909, 0.6364);
 
     const Vector2<double> x = SolveConjugateGradient(A, b);
 
@@ -128,8 +128,8 @@ TEST(Linalg, SimpleConjugateGradient)
 TEST(Linalg, UpperTriangular)
 {
     // note: compile time matrix solving \o/
-    static constexpr const Matrix3<double> A{{1, 2, 3, 0, 4, 5, 0, 0, 6}};
-    static constexpr const Vector3<double> b{{1, 2, 3}};
+    static constexpr const Matrix3<double> A(1., 2., 3., 0., 4., 5., 0., 0., 6.);
+    static constexpr const Vector3<double> b(1., 2., 3.);
 
     static constexpr const auto x = SolveUpperTriangular(A, b);
 
@@ -139,8 +139,8 @@ TEST(Linalg, UpperTriangular)
 
 TEST(Linalg, LowerTriangular)
 {
-    static constexpr const Matrix3<double> A{{1, 0, 0, 2, 3, 0, 4, 5, 6}};
-    static constexpr const Vector3<double> b{{1, 2, 3}};
+    static constexpr const Matrix3<double> A(1, 0, 0, 2, 3, 0, 4, 5, 6);
+    static constexpr const Vector3<double> b(1, 2, 3);
 
     static constexpr const auto x = SolveLowerTriangular(A, b);
 

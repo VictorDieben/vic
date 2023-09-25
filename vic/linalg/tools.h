@@ -134,8 +134,8 @@ constexpr auto Cross(const TVec1& vec1, const TVec2& vec2)
     const TRet ax = vec1.Get(0), ay = vec1.Get(1), az = vec1.Get(2);
     const TRet bx = vec2.Get(0), by = vec2.Get(1), bz = vec2.Get(2);
     return Vector3<TRet>({(ay * bz) - (az * by), //
-                            (az * bx) - (ax * bz), //
-                            (ax * by) - (ay * bx)});
+                          (az * bx) - (ax * bz), //
+                          (ax * by) - (ay * bx)});
 }
 
 template <typename TShape1, typename TShape2>
@@ -217,24 +217,10 @@ TMatResult Extract(const TMatInput& source)
     return res;
 }
 
-//template <typename TMatResult, typename TMatInput>
-//TMatResult Extract(const TMatInput& source, std::size_t row, std::size_t col)
-//{
-//    assert(source.GetRows() >= TMatResult::GetRows() + row);
-//    assert(source.GetColumns() >= TMatResult::GetColumns() + col);
-//
-//    TMatResult res{};
-//    for(std::size_t i = 0; i < TMatResult::GetRows(); ++i)
-//        for(std::size_t j = 0; j < TMatResult::GetColumns(); ++j)
-//            res.At(i, j) = source.Get(i + row, j + col);
-//
-//    return res; // todo
-//}
-//
 // mostly used for tests, but also useful outside of it
 template <typename TMat1, typename TMat2>
     requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
-constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const typename TMat1::DataType eps = 1e-10)
+constexpr bool IsEqual(const TMat1& mat1, const TMat2& mat2, const typename TMat1::DataType eps = 1e-10)
 {
     if((mat1.GetRows() != mat2.GetRows()) || (mat1.GetColumns() != mat2.GetColumns()))
         return false;
@@ -248,13 +234,13 @@ constexpr auto IsEqual(const TMat1& mat1, const TMat2& mat2, const typename TMat
 // Verify that a matrix is orthogonal (e.g. A.T*A == I)
 template <typename TMat>
     requires ConceptMatrix<TMat>
-constexpr auto IsOrthogonal(const TMat& mat, const double eps = 1e-10)
+constexpr bool IsOrthogonal(const TMat& mat, const double eps = 1e-10)
 {
     if(mat.GetRows() != mat.GetColumns())
         return false;
     const auto tmp = Matmul(Transpose(mat), mat);
     using tmpType = decltype(tmp);
-    Identity<tmpType::DataType, tmpType::ShapeType> identity{mat.GetRows(), mat.GetColumns()};
+    Identity<typename tmpType::DataType, typename tmpType::ShapeType> identity{mat.GetRows(), mat.GetColumns()};
     return IsEqual(tmp, identity, eps);
 }
 
@@ -294,7 +280,7 @@ constexpr auto To(const TSource& mat)
         static_assert(ConceptAssignable<TTarget>);
         TTarget res{mat.GetRows(), mat.GetColumns()};
         for(MatrixSize i = 0; i < Min(mat.GetRows(), mat.GetColumns()); ++i)
-            res.At(i, i) = mat.Get(i, i);
+            res.At(i, i) = (typename TTarget::DataType)mat.Get(i, i);
         return res;
     }
     else
@@ -303,7 +289,7 @@ constexpr auto To(const TSource& mat)
         TTarget res{mat.GetRows(), mat.GetColumns()};
         for(Row i = 0; i < mat.GetRows(); ++i)
             for(Col j = 0; j < mat.GetColumns(); ++j)
-                res.At(i, j) = mat.Get(i, j);
+                res.At(i, j) =(typename TTarget::DataType) mat.Get(i, j);
         return res;
     }
 }
@@ -343,7 +329,7 @@ constexpr auto Extract(const TMatSource& source, const Row row, const Col col)
 
     for(Row i = 0; i < target.GetRows(); ++i)
         for(Col j = 0; j < target.GetColumns(); ++j)
-            target.At(i, j) = source.At(row + i, col + j);
+            target.At(i, j) = source.Get(row + i, col + j);
 
     return target;
 }

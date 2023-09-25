@@ -280,7 +280,7 @@ TriMesh<T> GenerateCone(const T rad, //
                         const MeshIndex n)
 {
     // simple uv sphere mesh
-    const Vertex<T> top = ToVertex((T)0., (T)0., (T)height);
+    const Vertex<T> top = ToVertex((T)0., (T)height, (T)0.);
     const Vertex<T> bottom = ToVertex((T)0., (T)0., (T)0.);
 
     TriMesh<T> mesh{};
@@ -290,9 +290,9 @@ TriMesh<T> GenerateCone(const T rad, //
     for(MeshIndex i = 0; i < n; ++i)
     {
         const auto ratio = (double)i / (double)n;
-        const auto x = rad * std::sin(ratio * 2. * std::numbers::pi);
-        const auto y = rad * std::cos(ratio * 2. * std::numbers::pi);
-        mesh.vertices.push_back(Vertex<T>{{x, y, 0.}});
+        const T x = (T)-rad * std::sin(ratio * 2. * std::numbers::pi);
+        const T z = (T)rad * std::cos(ratio * 2. * std::numbers::pi);
+        mesh.vertices.push_back(Vertex<T>{{x,  (T)0., z}});
     }
     mesh.vertices.push_back(top);
     mesh.vertices.push_back(bottom);

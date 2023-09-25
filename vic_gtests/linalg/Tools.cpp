@@ -36,3 +36,12 @@ TEST(Linalg, RowSplit)
         EXPECT_TRUE(IsEqual(part2, Vector2<double>{3, 4}));
     }
 }
+
+TEST(Linalg, IsOrthogonal)
+{
+    EXPECT_TRUE(ConceptMatrix<Identity3<double>>);
+    EXPECT_TRUE((ConceptMatrix<Identity<double, UnknownShape>>));
+
+    const Identity3<double> identity{};
+    // EXPECT_TRUE(IsOrthogonal(identity)); //
+}

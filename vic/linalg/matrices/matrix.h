@@ -18,9 +18,6 @@ namespace linalg
 namespace detail
 {
 
-template <typename T, typename... Ts>
-using AllTs = typename std::conjunction<std::is_same<Ts, T>...>::value;
-
 template <typename T, typename TShape>
 struct MatrixConst : public MatrixBaseSelector<TShape>
 {
