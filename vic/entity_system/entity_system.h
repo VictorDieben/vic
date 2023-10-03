@@ -190,8 +190,8 @@ public:
     iterator begin() { return mComponents.begin(); }
     iterator end() { return mComponents.end(); }
 
-    const_iterator begin() const { return mComponents.cbegin(); }
-    const_iterator end() const { return mComponents.cend(); }
+    const_iterator begin() const { return mComponents.begin(); }
+    const_iterator end() const { return mComponents.end(); }
 
     const_iterator cbegin() const { return mComponents.cbegin(); }
     const_iterator cend() const { return mComponents.cend(); }
@@ -201,10 +201,23 @@ public:
         return mComponents.lower_bound(id); //
     }
 
+    const_iterator lower_bound(const EntityId id) const
+    {
+        return mComponents.lower_bound(id); //
+    }
+
     iterator lower_bound_with_hint(const EntityId id, iterator hint)
     {
         return std::lower_bound(hint, //
                                 mComponents.end(),
+                                id,
+                                [](const auto& item, const EntityId value) { return item.first < value; });
+    }
+
+    iterator lower_bound_with_hint(const EntityId id, iterator hint) const
+    {
+        return std::lower_bound(hint, //
+                                mComponents.cend(),
                                 id,
                                 [](const auto& item, const EntityId value) { return item.first < value; });
     }
@@ -382,11 +395,25 @@ public:
     auto begin() const
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
-        return ComponentSystem<T>::cbegin();
+        return ComponentSystem<T>::begin();
     }
 
     template <typename T>
     auto end() const
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return ComponentSystem<T>::end();
+    }
+
+    template <typename T>
+    auto cbegin() const
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return ComponentSystem<T>::cbegin();
+    }
+
+    template <typename T>
+    auto cend() const
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::cend();
@@ -447,7 +474,8 @@ public:
     auto Iterate(const TIter begin, const TIter end) const
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
-        return algorithms::Iterate<T>(*this, begin, end);
+        const auto& thisRef = *this;
+        return algorithms::Iterate<T>(thisRef, begin, end);
     }
 
     template <typename T, typename TIterable>

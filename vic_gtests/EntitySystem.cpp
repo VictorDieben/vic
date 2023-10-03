@@ -71,6 +71,9 @@ TEST(ECS, ComponentSystem)
     const ComponentSystem& refComponents = components;
     EXPECT_EQ(refComponents.Get(1).val, 1u);
 
+    for(auto it = refComponents.begin(); it != refComponents.end(); ++it)
+    { }
+
     std::optional<vic::ecs::EntityId> previous;
     for(const auto& comp : refComponents)
     {
@@ -162,6 +165,41 @@ TEST(ECS, Iterate)
         EXPECT_EQ(aPtr != nullptr, ecs.Has<A>(id));
         EXPECT_EQ(bPtr != nullptr, ecs.Has<B>(id));
     }
+}
+
+TEST(ECS, ConstIterate)
+{
+    using Ecs = ECS<A, B, C>;
+    Ecs ecs;
+
+    std::vector<EntityId> allIds;
+    for(std::size_t i = 1; i < 100; ++i)
+    {
+        auto handle = ecs.NewEntity();
+        const auto id = handle.Id();
+        allIds.push_back(id);
+
+        if((id % 2) == 0)
+            handle.Add<A>();
+        if((id % 3) == 0)
+            handle.Add<B>();
+        if((id % 4) == 0)
+            handle.Add<C>();
+    }
+
+    const Ecs& constRefEcs = ecs;
+
+    std::set<EntityId> entitySet{2, 4, 6};
+
+    for(auto it = constRefEcs.begin<A>(); it != constRefEcs.end<A>(); ++it)
+    {
+        //
+    }
+
+    const auto entitiesIteration = constRefEcs.Iterate<A>(entitySet.begin(), entitySet.end());
+
+    for(const auto& [entityId, aPtr] : entitiesIteration)
+        EXPECT_TRUE(ecs.Has<A>(entityId));
 }
 
 TEST(ECS, Filter)
@@ -644,8 +682,6 @@ TEST(ECS, Set)
     A a{};
     auto handle = ecs.NewEntity().Set<A>(a);
 }
-
-
 
 TEST(ECS, Extend)
 {

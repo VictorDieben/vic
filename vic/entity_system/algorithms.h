@@ -72,6 +72,7 @@ void FilterForeach(TSystem& system, TFunctor functor)
         {
             functor(it1->first, it1->second, it2->second);
             it1 = std::next(it1);
+            it2 = std::next(it2);
         }
     }
 }
@@ -161,23 +162,59 @@ auto Filter(TSystem& system)
 template <typename TComponent, typename TEcs, typename TIter>
 auto Iterate(TEcs& ecs, const TIter begin, const TIter end)
 {
-    // todo: check if range is sorted in debug?
     assert(std::is_sorted(begin, end));
-
-    // todo: pass placeholder vector, or turn into std::range
     using ResultType = std::pair<EntityId, TComponent*>;
-
     std::vector<ResultType> result;
     if constexpr(std::contiguous_iterator<TIter>)
         result.reserve(std::distance(begin, end));
 
-    auto hint = ecs.begin<TComponent>();
-    for(auto it = begin; it != end; ++it)
+    using iterType = decltype(ecs.begin<TComponent>());
+
+    iterType it = ecs.begin<TComponent>();
+    TIter entityIt = begin;
+
+    while(it != ecs.end<TComponent>() && entityIt != end)
     {
-        auto cur = ecs.ComponentSystem<TComponent>::lower_bound_with_hint(*it, hint);
-        if(cur->first == *it)
-            result.push_back({cur->first, &(cur->second)});
-        hint = cur;
+        if(it->first < *entityIt)
+            it = std::next(it);
+        else if(*entityIt < it->first)
+            entityIt = std::next(entityIt);
+        else
+        {
+            result.push_back({it->first, &(it->second)});
+            it = std::next(it);
+            entityIt = std::next(entityIt);
+        }
+    }
+    return result;
+}
+
+template <typename TComponent, typename TEcs, typename TIter>
+auto Iterate(const TEcs& ecs, const TIter begin, const TIter end)
+{
+    assert(std::is_sorted(begin, end));
+    using ResultType = std::pair<EntityId, const TComponent*>;
+    std::vector<ResultType> result;
+    if constexpr(std::contiguous_iterator<TIter>)
+        result.reserve(std::distance(begin, end));
+
+    using iterType = decltype(ecs.begin<TComponent>());
+
+    iterType it = ecs.begin<TComponent>();
+    TIter entityIt = begin;
+
+    while(it != ecs.end<TComponent>() && entityIt != end)
+    {
+        if(it->first < *entityIt)
+            it = std::next(it);
+        else if(*entityIt < it->first)
+            entityIt = std::next(entityIt);
+        else
+        {
+            result.push_back({it->first, &(it->second)});
+            it = std::next(it);
+            entityIt = std::next(entityIt);
+        }
     }
     return result;
 }
