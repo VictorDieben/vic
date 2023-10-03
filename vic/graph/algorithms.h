@@ -119,7 +119,7 @@ public:
     using EdgeIdType = typename GraphType::EdgeIdType;
     using EdgeType = typename GraphType::EdgeType;
 
-    Dijkstra(TGraph& graph, TEdgeCostFunctor functor)
+    Dijkstra(const TGraph& graph, const TEdgeCostFunctor functor)
         : mGraph(graph)
         , mEdgeCostFunctor(functor)
         , mOutIterator(graph)
@@ -128,8 +128,8 @@ public:
     }
 
 private:
-    TGraph& mGraph;
-    TEdgeCostFunctor mEdgeCostFunctor;
+    const TGraph& mGraph;
+    const TEdgeCostFunctor mEdgeCostFunctor;
     OutIterator<TGraph> mOutIterator;
 
     using CostType = decltype(mEdgeCostFunctor(VertexIdType{}, EdgeIdType{}, VertexIdType{})); // return type of lambda
@@ -143,7 +143,7 @@ private:
 public:
     void Update() { mOutIterator.Update(); }
 
-    std::vector<VertexIdType> Calculate(const VertexIdType start, const VertexIdType target)
+    std::vector<VertexIdType> Calculate(const VertexIdType start, const VertexIdType target) const
     {
         std::vector<SHeapObject> heap;
 
@@ -199,7 +199,7 @@ public:
         return path;
     }
 
-    CostType GetCost(const std::vector<VertexIdType>& path)
+    CostType GetCost(const std::vector<VertexIdType>& path) const
     {
         CostType cost = 0.;
         for(std::size_t i = 0; i < path.size() - 1; ++i)
@@ -221,7 +221,7 @@ public:
     using VertexIdType = typename GraphType::VertexIdType;
     using EdgeIdType = typename GraphType::EdgeIdType;
 
-    AStar(TGraph& graph, TEdgeCostFunctor edgeCost, THeuristicFunctor heuristic)
+    AStar(const TGraph& graph, TEdgeCostFunctor edgeCost, THeuristicFunctor heuristic)
         : mGraph(graph)
         , mEdgeCostFunctor(edgeCost)
         , mHeuristicFunctor(heuristic)
@@ -231,7 +231,7 @@ public:
     void Update() { mOutIterator.Update(); }
 
 private:
-    TGraph& mGraph;
+    const TGraph& mGraph;
     TEdgeCostFunctor mEdgeCostFunctor; // defines the exact cost of going over a certain edge
     THeuristicFunctor mHeuristicFunctor; // defines the expected cost of going from a to b
     OutIterator<TGraph> mOutIterator;
@@ -247,7 +247,7 @@ private:
     };
 
 public:
-    std::vector<VertexIdType> Calculate(const VertexIdType start, const VertexIdType target)
+    std::vector<VertexIdType> Calculate(const VertexIdType start, const VertexIdType target) const
     {
         std::map<VertexIdType, ExploredObject> exploredSet;
         std::vector<VertexIdType> heap;
@@ -310,7 +310,7 @@ public:
         return path;
     }
 
-    CostType GetCost(const std::vector<VertexIdType>& path)
+    CostType GetCost(const std::vector<VertexIdType>& path) const
     {
         CostType cost = 0.;
         int i = 0;
