@@ -40,7 +40,7 @@ ADD_EXECUTABLE(VicTest
     "linalg/Transpose.cpp"
     "linalg/Views.cpp"
     "test_emulator.cpp" 
- )
+  "Graph2.cpp")
  
 TARGET_LINK_LIBRARIES(VicTest  
 PRIVATE

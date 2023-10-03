@@ -292,7 +292,7 @@ TriMesh<T> GenerateCone(const T rad, //
         const auto ratio = (double)i / (double)n;
         const T x = (T)-rad * std::sin(ratio * 2. * std::numbers::pi);
         const T z = (T)rad * std::cos(ratio * 2. * std::numbers::pi);
-        mesh.vertices.push_back(Vertex<T>{{x,  (T)0., z}});
+        mesh.vertices.push_back(Vertex<T>{{x, (T)0., z}});
     }
     mesh.vertices.push_back(top);
     mesh.vertices.push_back(bottom);
@@ -327,7 +327,7 @@ TriMesh<T> Subdivide(const TriMesh<T>& mesh)
             uniqueEdges[{v2, v1}] = {};
     };
     for(const auto& [v0, v1, v2] : mesh.tris)
-    { 
+    {
         addEdge(v0, v1);
         addEdge(v1, v2);
         addEdge(v2, v0);
@@ -350,7 +350,7 @@ TriMesh<T> Subdivide(const TriMesh<T>& mesh)
 
     // iterate over all triangles in the original mesh. perform subdivision
     for(const auto& [v0, v1, v2] : mesh.tris)
-    { 
+    {
         const auto e0 = v0 < v1 ? std::pair(v0, v1) : std::pair(v1, v0);
         const auto e1 = v1 < v2 ? std::pair(v1, v2) : std::pair(v2, v1);
         const auto e2 = v2 < v0 ? std::pair(v2, v0) : std::pair(v0, v2);
@@ -424,6 +424,18 @@ TriMesh<T> Revolve(const EdgeMesh<T>& mesh, //
 }
 
 template <typename T>
+TriMesh<T> RevolveClosed(const EdgeMesh<T>& mesh, //
+                         const std::size_t n)
+{
+    assert(mesh.vertices.size() > 2);
+    TriMesh<T> result;
+
+    // revolve the edge around the y axis, the start and end vertices should lay on the y axis
+
+    return result;
+}
+
+template <typename T>
 TriMesh<T> GenerateTorus(const T R, //
                          const T r,
                          const uint32_t nR,
@@ -449,8 +461,8 @@ std::vector<Normal<T>> GenerateTriNormals(const TriMesh<T>& mesh)
     std::vector<Normal<T>> normals;
     normals.reserve(mesh.tris.size());
 
-    for(const auto& [ia, ib, ic]  : mesh.tris)
-    { 
+    for(const auto& [ia, ib, ic] : mesh.tris)
+    {
         const auto ab = Subtract(mesh.vertices.at(ib), mesh.vertices.at(ia));
         const auto ac = Subtract(mesh.vertices.at(ic), mesh.vertices.at(ia));
 
@@ -526,6 +538,20 @@ std::vector<UV<T>> GenerateVertexUVsPolar(const TriMesh<T>& mesh, const Vertex<T
     }
 
     return uvs;
+}
+
+
+template <typename T>
+vic::mesh::TriMesh<T> GenerateSquareMesh()
+{
+    using namespace vic::mesh;
+    TriMesh<T> mesh;
+    mesh.vertices = {{Vertex((T)-0.5, (T)-0.5, (T)0.), //
+                      Vertex((T)0.5,(T) 0.5, (T)0.),
+                      Vertex((T)-0.5,(T) 0.5, (T)0.),
+                      Vertex((T)0.5, (T)-0.5,(T) 0.)}};
+    mesh.tris = {Tri{0, 1, 2}, Tri{0, 1, 3}};
+    return mesh;
 }
 
 } // namespace mesh
