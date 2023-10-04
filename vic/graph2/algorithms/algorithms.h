@@ -1,4 +1,4 @@
-
+#pragma once
 
 #include "vic/graph2/base.h"
 
@@ -11,12 +11,6 @@ namespace graph2
 
 template <typename TGraph>
 auto FloydWarshall(const TGraph& graph)
-{
-    // todo: the function should calculate a distance and policy matrix.
-}
-
-template <typename TGraph>
-auto Dijkstra(const TGraph& graph)
 {
     // todo: the function should calculate a distance and policy matrix.
 }

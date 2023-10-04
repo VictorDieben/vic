@@ -193,7 +193,8 @@ TEST(ECS, ConstIterate)
 
     for(auto it = constRefEcs.begin<A>(); it != constRefEcs.end<A>(); ++it)
     {
-        //
+        EXPECT_TRUE(it->first % 2 == 0);
+        EXPECT_TRUE(constRefEcs.Has<A>(it->first));
     }
 
     const auto entitiesIteration = constRefEcs.Iterate<A>(entitySet.begin(), entitySet.end());
