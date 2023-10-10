@@ -25,14 +25,15 @@ auto AStar(const TGraph& graph, //
            const typename TGraph::VertexIdType start,
            const typename TGraph::VertexIdType target)
 {
-    using CostType = decltype(edgeCostFunctor(VertexIdType{}, EdgeIdType{}, VertexIdType{}));
-    using HeuristicType = decltype(edgeCostFunctor(VertexIdType{}, EdgeIdType{}, VertexIdType{}));
-    static_assert(std::is_same_v<CostType, HeuristicType>);
-
+    using GraphType = TGraph;
     using VertexIdType = typename GraphType::VertexIdType;
     using EdgeIdType = typename GraphType::EdgeIdType;
 
-    OutIterator iterator{graph};
+    using CostType = decltype(edgeCostFunctor(VertexIdType{}, VertexIdType{}));
+    using HeuristicType = decltype(heuristicFunctor(VertexIdType{}, VertexIdType{}));
+    static_assert(std::is_same_v<CostType, HeuristicType>);
+
+    OutVertexIterator<TGraph> outIterator{graph};
 
     struct ExploredObject
     {
@@ -65,24 +66,21 @@ auto AStar(const TGraph& graph, //
         closedSet.insert(current);
 
         // iterate over neighbours, check with best value so far
-        for(const auto& [edgeId, otherVertexId] : iterator.OutEdgeVertices(current))
-        {
-            const auto edgeCost = mEdgeCostFunctor(current, edgeId, otherVertexId);
+        outIterator.ForeachOutVertex(current, [&](const VertexIdType other) {
+            const auto edgeCost = edgeCostFunctor(current, other);
             const auto newGScore = exploredMap[current].g + edgeCost;
 
-            auto& item = exploredMap[otherVertexId]; // adds item if it did not exist
+            auto& item = exploredMap[other]; // adds item if it did not exist
 
             if(newGScore < item.g)
             {
-                const CostType hscore = mHeuristicFunctor(otherVertexId, target);
+                const CostType hscore = heuristicFunctor(other, target);
                 item = {current, newGScore + hscore, newGScore};
 
-                // put the new vertex in the heap
-
-                heap.push_back(otherVertexId);
+                heap.push_back(other);
                 std::push_heap(heap.begin(), heap.end(), compareF);
             }
-        }
+        });
     }
 
     if(current != target)
@@ -101,12 +99,6 @@ auto AStar(const TGraph& graph, //
     std::reverse(path.begin(), path.end());
     return path;
 }
-
-template <typename TGraph, typename TEdgeCostFunctor>
-auto PathCost(const TGraph& graph, //
-              TEdgeCostFunctor edgeCostFunctor,
-              const std::vector<typename TGraph::VertexIdType>& path)
-{ }
 
 } // namespace graph2
 } // namespace vic

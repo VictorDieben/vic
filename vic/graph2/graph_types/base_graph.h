@@ -20,7 +20,11 @@ public:
     Graph(const std::size_t numVertices, const std::vector<EdgeType>& edges)
         : mNumVertices(numVertices)
         , mEdges(edges)
-    { }
+    {
+        for(const auto& edge : mEdges)
+            if(edge.first >= mNumVertices || edge.second >= mNumVertices)
+                throw std::runtime_error("invalid edge verterx!");
+    }
 
     std::size_t NumVertices() const { return mNumVertices; }
     std::size_t NumEdges() const { return mEdges.size(); }

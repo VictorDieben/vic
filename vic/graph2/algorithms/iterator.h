@@ -3,6 +3,8 @@
 #include <tuple>
 #include <vector>
 
+#include "vic/graph2/traits.h"
+
 namespace vic
 {
 namespace graph2
@@ -54,6 +56,68 @@ private:
     const TGraph& mGraph;
 };
 
+template <typename TGraph>
+class OutVertexIterator;
+
+template <typename TGraph>
+    requires ConceptGraphEdgeList<TGraph>
+class OutVertexIterator<TGraph>
+{
+public:
+    using VertexIdType = typename TGraph::VertexIdType;
+    OutVertexIterator(const TGraph& graph)
+        : mGraph(graph)
+    {
+        Update();
+    }
+
+    void Update()
+    {
+        mOutVertices.clear();
+        mOutVertices.resize(mGraph.NumVertices());
+        for(const auto& edge : mGraph.Edges())
+        {
+            mOutVertices[edge.first].emplace_back(edge.second);
+            // if constexpr(!directed)
+            mOutVertices[edge.second].emplace_back(edge.first);
+        }
+    }
+
+    const std::vector<VertexIdType>& OutVertices(const VertexIdType id) const { return mOutVertices.at(id); }
+
+    template <typename TFunctor>
+    void ForeachOutVertex(const VertexIdType from, TFunctor lambda) const
+    {
+        for(const auto& to : mOutVertices.at(from))
+            lambda(to);
+    }
+
+private:
+    const TGraph& mGraph;
+    std::vector<std::vector<VertexIdType>> mOutVertices{};
+};
+
+template <typename TGraph>
+    requires ConceptGraphCartesian<TGraph>
+class OutVertexIterator<TGraph>
+{
+public:
+    using VertexIdType = typename TGraph::VertexIdType;
+    OutVertexIterator(const TGraph& graph)
+        : mGraph(graph)
+    { }
+
+    template <typename TFunctor>
+    void ForeachOutVertex(const VertexIdType from, TFunctor lambda) const
+    {
+        //for(const auto& to : mOutVertices.at(from))
+        //    lambda(to);
+    }
+
+private:
+    const TGraph& mGraph;
+};
+
 template <typename TGraph, bool directed = false>
 class OutIterator
 {
@@ -89,5 +153,6 @@ private:
     const TGraph& mGraph;
     std::vector<std::vector<std::pair<EdgeIdType, VertexIdType>>> mOutEdgeData{};
 };
+
 } // namespace graph2
 } // namespace vic

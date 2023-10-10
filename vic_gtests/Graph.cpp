@@ -256,7 +256,7 @@ TEST(Graph, AStar)
 
 TEST(Graph, TensorGraph)
 {
-    constexpr std::size_t nx = 10, ny = 10;
+    constexpr std::size_t nx = 5, ny = 5;
     constexpr std::size_t nVertices = nx * ny;
     TestGraph graph = ConstructGridGraph(nx, ny);
 

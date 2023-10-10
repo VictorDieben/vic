@@ -25,10 +25,9 @@ auto Dijkstra(const TGraph& graph, //
     using GraphType = TGraph;
     using VertexIdType = typename GraphType::VertexIdType;
     using EdgeIdType = typename GraphType::EdgeIdType;
-    using EdgeType = typename GraphType::EdgeType;
-    using CostType = decltype(edgeCostFunctor(VertexIdType{}, EdgeIdType{}, VertexIdType{})); // return type of lambda
+    using CostType = decltype(edgeCostFunctor(VertexIdType{}, VertexIdType{})); // return type of lambda
 
-    const OutIterator outIterator{graph};
+    const OutVertexIterator<TGraph> outIterator{graph};
 
     struct VertexData
     {
@@ -64,19 +63,17 @@ auto Dijkstra(const TGraph& graph, //
 
         vertexData.at(current).visited = true;
 
-        // iterate over neighbours, check with best value so far
-        for(const auto& [edgeId, otherVertexId] : outIterator.OutEdgeVertices(current))
-        {
-            const auto edgeCost = edgeCostFunctor(current, edgeId, otherVertexId);
+        outIterator.ForeachOutVertex(current, [&](const VertexIdType other) {
+            const auto edgeCost = edgeCostFunctor(current, other); // todo: remove edge id from cost functor
             const auto newCost = vertexData.at(current).lowestCost + edgeCost;
 
-            if(newCost < vertexData.at(otherVertexId).lowestCost)
+            if(newCost < vertexData.at(other).lowestCost)
             {
-                vertexData.at(otherVertexId) = {newCost, false, current};
-                heap.push_back(otherVertexId);
+                vertexData.at(other) = {newCost, false, current};
+                heap.push_back(other);
                 std::push_heap(heap.begin(), heap.end(), compare);
             }
-        }
+        });
     }
 
     if(current != target)
@@ -85,29 +82,12 @@ auto Dijkstra(const TGraph& graph, //
     // backtrack
     std::vector<VertexIdType> path;
     path.push_back(target);
-    while(path.back() != start && path.size() < graph.NumVertices())
+    while(path.back() != start && path.size() <= graph.NumVertices())
         path.push_back(vertexData.at(path.back()).previous);
 
     std::reverse(path.begin(), path.end());
 
     return path;
-}
-
-template <typename TGraph, typename TEdgeCostFunctor>
-auto PathCost(const TGraph& graph, //
-              TEdgeCostFunctor edgeCostFunctor,
-              const std::vector<typename TGraph::VertexIdType>& path)
-{
-    using VertexIdType = typename TGraph::VertexIdType;
-    using EdgeIdType = typename TGraph::EdgeIdType;
-    using CostType = decltype(edgeCostFunctor(VertexIdType{}, EdgeIdType{}, VertexIdType{}));
-
-    CostType cost = 0.;
-    for(std::size_t i = 0; i < path.size() - 1; ++i)
-        cost = cost + edgeCostFunctor(path.at(i), //
-                                      graph.GetEdgeId(path.at(i), path.at(i + 1)),
-                                      path.at(i + 1)); // todo: decide how we want to compute the edge cost (using edge id?)
-    return cost;
 }
 
 } // namespace graph2

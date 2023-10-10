@@ -1,13 +1,10 @@
+#pragma once
 
 namespace vic
 {
 namespace graph2
 {
-
-// note: any data can be a vertex right now
-//template <typename T>
-//concept ConceptVertex = requires { T::VertexIdType; };
-
+     
 template <typename T>
 concept ConceptEdge = requires(T edge) {
                           edge.Source();
@@ -15,12 +12,21 @@ concept ConceptEdge = requires(T edge) {
                       };
 
 template <typename T>
-concept ConceptGraph = requires(T graph) {
-                           T::VertexType;
-                           T::VertexIdType;
-                           T::EdgeType;
-                           T::EdgeIdType;
+concept ConceptGraph = requires(T& graph) {
+                           typename T::VertexIdType;
+                           typename T::EdgeIdType;
+                           graph.NumVertices();
+                           graph.NumEdges();
                        };
+
+template <typename T>
+concept ConceptGraphEdgeList = ConceptGraph<T> && requires(T& graph) { graph.Edges(); };
+
+template <typename T>
+concept ConceptGraphCartesian = ConceptGraph<T> && requires(T& graph) {
+                                                       typename T::BaseGraphType;
+                                                       graph.NumDimensions();
+                                                   };
 
 } // namespace graph2
 } // namespace vic

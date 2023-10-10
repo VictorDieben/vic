@@ -32,24 +32,7 @@ template <std::size_t>
 using ConstexprSizeHelper = void;
 
 template <typename T>
-concept ConceptConstexprRows = requires
-{
-    T::GetRows();
-    requires std::is_same_v<Row, decltype(T::GetRows())>;
-    typename ConstexprSizeHelper<T::GetRows()>;
-};
-
-template <typename T>
-concept ConceptConstexprColumns = requires
-{
-    T::GetColumns();
-    requires std::is_same_v<Col, decltype(T::GetColumns())>;
-    typename ConstexprSizeHelper<T::GetColumns()>;
-};
-
-template <typename T>
-concept ConceptMatrix = requires(T mat)
-{
+concept ConceptMatrix = requires(T mat) {
     // todo: check that the two constructors exist
     //T{};
     //T{0u, 0u};
@@ -64,8 +47,21 @@ concept ConceptMatrix = requires(T mat)
 };
 
 template <typename T>
-concept ConceptSparse = ConceptMatrix<T> && requires(T mat)
-{
+concept ConceptConstexprRows = ConceptMatrix<T> && requires {
+    T::GetRows();
+    requires std::is_same_v<Row, decltype(T::GetRows())>;
+    typename ConstexprSizeHelper<T::GetRows()>;
+};
+
+template <typename T>
+concept ConceptConstexprColumns = ConceptMatrix<T> && requires {
+    T::GetColumns();
+    requires std::is_same_v<Col, decltype(T::GetColumns())>;
+    typename ConstexprSizeHelper<T::GetColumns()>;
+};
+
+template <typename T>
+concept ConceptSparse = ConceptMatrix<T> && requires(T mat) {
     typename T::KeyType;
     T::Distribution == EDistribution::Sparse;
     // todo: check that T::Distribution is Sparse
@@ -75,15 +71,13 @@ concept ConceptSparse = ConceptMatrix<T> && requires(T mat)
 };
 
 template <typename T>
-concept ConceptDiagonal = ConceptMatrix<T> && requires(T mat)
-{
+concept ConceptDiagonal = ConceptMatrix<T> && requires(T mat) {
     T::TempIsDiagonal == true; // todo: remove this boolean, find better solution
     T::Distribution == EDistribution::Diagonal;
 };
 
 template <typename T>
-concept ConceptTriDiagonal = ConceptMatrix<T> && requires(T mat)
-{
+concept ConceptTriDiagonal = ConceptMatrix<T> && requires(T mat) {
     T::TempIsTriDiagonal == true; // todo: remove this boolean, find better solution
     mat.A();
     mat.B();
@@ -95,32 +89,27 @@ template <typename T>
 concept ConceptConstexprMatrix = ConceptMatrix<T> && ConceptConstexprRows<T> && ConceptConstexprColumns<T>;
 
 template <typename T>
-concept ConceptIdentity = ConceptMatrix<T> && requires(T mat)
-{
+concept ConceptIdentity = ConceptMatrix<T> && requires(T mat) {
     T::TempIsIdentity == true; // todo: remove this boolean, find better solution
 };
 
 template <typename T>
-concept ConceptZeros = ConceptMatrix<T> && requires(T mat)
-{
+concept ConceptZeros = ConceptMatrix<T> && requires(T mat) {
     T::TempIsZeros == true; // todo: remove this boolean, find better solution
 };
 
 template <typename T>
-concept ConceptSymmetric = ConceptMatrix<T> && requires(T mat)
-{
+concept ConceptSymmetric = ConceptMatrix<T> && requires(T mat) {
     T::TempIsSymmetric == true; // todo: remove this boolean, find better solution
 };
 
 template <typename T>
-concept ConceptRowStack = ConceptMatrix<T> && requires(T mat)
-{
+concept ConceptRowStack = ConceptMatrix<T> && requires(T mat) {
     T::TempIsRowStack == true; // todo: remove this boolean, find better solution
 };
 
 template <typename T>
-concept ConceptColStack = ConceptMatrix<T> && requires(T mat)
-{
+concept ConceptColStack = ConceptMatrix<T> && requires(T mat) {
     T::TempIsColStack == true; // todo: remove this boolean, find better solution
 };
 
@@ -128,16 +117,14 @@ template <typename T>
 concept ConceptStack = ConceptColStack<T> || ConceptRowStack<T>;
 
 template <typename T>
-concept ConceptAssignable = ConceptMatrix<T> && requires(T mat)
-{
-    {mat.At(Row{}, Col{}) = 1.};
+concept ConceptAssignable = ConceptMatrix<T> && requires(T mat) {
+    {
+        mat.At(Row{}, Col{}) = 1.
+    };
 };
 
 template <typename T>
-concept ConceptVector = ConceptMatrix<T> && requires(T mat)
-{
-    requires(T::GetColumns() == 1);
-};
+concept ConceptVector = ConceptMatrix<T> && requires(T mat) { requires(T::GetColumns() == 1); };
 
 template <typename TMat>
 struct is_square
