@@ -1,6 +1,8 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
+#include <ranges>
 
 namespace vic
 {
@@ -94,6 +96,49 @@ template <typename T>
 int sign(T val)
 {
     return (T(0) < val) - (val < T(0));
+}
+
+//
+// The following two functions are related to assigning set indices to each object in a list
+// imagine the list of objects: {a, b, c, d}
+// the set assignment {{a}, {b, c}, {d}} would translate to the indices: {0, 1, 1, 2}
+// the set assignment {{a, c}, {b, d}} would translate to the indices: {0, 1, 0, 1}
+// etc.
+//
+// The first value will _always_ be 0. The next value will either be 0 or 1. The one after that can be 0, 1, or 2.
+// Effectively, we need to create a number where each index has another base.
+
+constexpr std::array<uint8_t, 32> NumberOfPossibilities()
+{
+    std::array<uint8_t, 32> values{};
+    for(std::size_t i = 0; i < values.size(); ++i)
+        values.at(i) = i + 1;
+    return values;
+}
+
+constexpr std::array<uint64_t, 32> CumulativeSize()
+{
+    constexpr auto possibilities = NumberOfPossibilities();
+    std::array<uint64_t, 32> values;
+    values.at(0) = 1;
+    for(std::size_t i = 1; i < values.size(); ++i)
+        values.at(i) = values.at(i - 1) * possibilities.at(i);
+    return values;
+}
+
+template <typename TReturn, std::ranges::range TRange>
+const TReturn SetAssingmentsToInteger(const TRange& range)
+{
+    static constexpr auto possibilities = NumberOfPossibilities();
+    static constexpr auto cumulativeSize = CumulativeSize();
+    // todo
+    return TReturn{};
+}
+
+template <std::ranges::range TRange, std::integral TInteger>
+void IntegerToSetAssingment(const TInteger integer, TRange& range)
+{
+    // todo
 }
 
 } // namespace math

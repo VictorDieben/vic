@@ -17,6 +17,8 @@ public:
 
     using EdgeType = std::pair<VertexIdType, VertexIdType>;
 
+    Graph() = default;
+
     Graph(const std::size_t numVertices, const std::vector<EdgeType>& edges)
         : mNumVertices(numVertices)
         , mEdges(edges)
