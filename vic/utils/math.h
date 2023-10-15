@@ -112,7 +112,7 @@ constexpr std::array<uint8_t, 32> NumberOfPossibilities()
 {
     std::array<uint8_t, 32> values{};
     for(std::size_t i = 0; i < values.size(); ++i)
-        values.at(i) = i + 1;
+        values.at(i) = (uint8_t)i + 1;
     return values;
 }
 
@@ -139,6 +139,100 @@ template <std::ranges::range TRange, std::integral TInteger>
 void IntegerToSetAssingment(const TInteger integer, TRange& range)
 {
     // todo
+}
+
+// https://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
+
+// NOTE: related to stirling number
+// I need  \Sum from k=1 to n S(n,k)
+
+// stirling number of the second kind
+// n: number of elements
+// k: number of sets
+constexpr uint64_t Stirling(const uint64_t n, const uint64_t k)
+{
+    if(k == 1 || n == k)
+        return 1;
+    return (k * Stirling(n - 1, k)) + Stirling(n - 1, k - 1);
+}
+
+// generating permutations (Knuths algorithm):
+// https://math.stackexchange.com/questions/222780/enumeration-of-set-partitions
+
+template <uint32_t n, uint32_t k>
+constexpr uint64_t NumberOfPermutationsHelper()
+{
+    if constexpr(n == k)
+        return Stirling(n, k);
+    else
+        return Stirling(n, k) + NumberOfPermutationsHelper<n, k + 1>();
+}
+
+template <uint32_t n>
+constexpr uint64_t NumberOfPermutations()
+{
+    return NumberOfPermutationsHelper<n, 1>();
+}
+
+//
+template <uint32_t n, uint32_t k>
+constexpr auto StirlingPermutations()
+{
+    constexpr auto arraySize = Stirling(n, k);
+
+    using Permutation = std::array<uint8_t, n>;
+    using Permutations = std::array<Permutation, arraySize>;
+
+    return Permutations{};
+}
+
+template <uint32_t n>
+using Partition = std::array<uint8_t, n>;
+
+template <uint32_t n, uint32_t nPartitions>
+using Partitions = std::array<Partition<n>, nPartitions>;
+
+template <uint32_t n, uint32_t nPartitions, uint32_t depth>
+constexpr void ConstructPartitionsRecursive(Partitions<n, nPartitions>& partitions, //
+                                            Partition<n>& buffer,
+                                            uint32_t& iPartition,
+                                            const uint32_t nSubsets)
+{
+    if constexpr(depth == n)
+    {
+        partitions.at(iPartition) = buffer;
+        iPartition++; // next Partition will be stored in the next index
+    }
+    else
+    {
+        for(uint32_t iSubset = 0; iSubset < nSubsets; ++iSubset)
+        {
+            buffer.at(depth) = iSubset;
+            ConstructPartitionsRecursive<n, nPartitions, depth + 1>(partitions, buffer, iPartition, nSubsets);
+        }
+
+        buffer.at(depth) = nSubsets;
+        ConstructPartitionsRecursive<n, nPartitions, depth + 1>(partitions, buffer, iPartition, nSubsets + 1);
+    }
+}
+
+template <uint32_t n, uint32_t nPartitions>
+constexpr auto ConstructPartitionsHelper()
+{
+    Partitions<n, nPartitions> partitions{};
+    Partition<n> partition{};
+    uint32_t iPartition = 0;
+
+    ConstructPartitionsRecursive<n, nPartitions, 0>(partitions, partition, iPartition, 0);
+
+    return partitions;
+}
+
+template <uint32_t n>
+constexpr auto ConstructPartitions()
+{
+    constexpr uint64_t numberOfPartitions = NumberOfPermutations<n>();
+    return ConstructPartitionsHelper<n, numberOfPartitions>();
 }
 
 } // namespace math

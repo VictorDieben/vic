@@ -3,6 +3,8 @@
 
 #include "vic/utils/math.h"
 
+#include "test_base.h"
+
 #include <array>
 #include <random>
 
@@ -18,4 +20,44 @@ TEST(Math, SetAssignment)
     IntegerToSetAssingment<decltype(resultBuffer)>(value, resultBuffer);
 
     EXPECT_EQ(setAssignment, resultBuffer);
+}
+
+TEST(Math, Stirling)
+{
+    // check end conditions
+    EXPECT_EQ(Stirling(1, 1), 1);
+    EXPECT_EQ(Stirling(10, 1), 1);
+    EXPECT_EQ(Stirling(100, 1), 1);
+
+    EXPECT_EQ(Stirling(1, 1), 1);
+    EXPECT_EQ(Stirling(10, 10), 1);
+    EXPECT_EQ(Stirling(100, 100), 1);
+
+    // check some random values
+    EXPECT_EQ(Stirling(5, 3), 25);
+    EXPECT_EQ(Stirling(7, 5), 140);
+    EXPECT_EQ(Stirling(10, 5), 42525);
+
+    // todo: this function can be greatly sped up, by storing the last list of n
+}
+
+TEST(Math, Partition)
+{
+    static constexpr auto stirling_3_1 = Stirling(3, 1);
+    static constexpr auto stirling_3_2 = Stirling(3, 2);
+    static constexpr auto stirling_3_3 = Stirling(3, 3);
+
+    static constexpr auto nPartitions3 = NumberOfPermutations<3>(); // todo: change name to Partitions
+
+    EXPECT_EQ(stirling_3_1 + stirling_3_2 + stirling_3_3, nPartitions3);
+
+    static constexpr auto partitions_5 = ConstructPartitions<5>();
+
+    static constexpr uint64_t numberOfPermutations = NumberOfPermutations<10>();
+
+    static constexpr auto permutations_8 = ConstructPartitions<8>();
+    for(const auto& permutation : permutations_8)
+        std::cout << permutation << std::endl;
+
+    std::cout << "permutations(8): " << permutations_8.size() << std::endl;
 }

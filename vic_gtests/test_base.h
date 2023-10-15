@@ -54,3 +54,37 @@ private:
     TOnMove mOnMove;
     TOnDestruct mOnDestruct;
 };
+
+template <typename T>
+std::ostream& operator<<(std::ostream& out, const std::vector<T>& v)
+{
+    if(v.empty())
+    {
+        out << "[]";
+        return out;
+    }
+
+    out << '[';
+    for(auto it = v.begin(); it != std::prev(v.end()); ++it)
+        out << +(*it) << ", ";
+    out << +(*std::prev(v.end())) << ']';
+
+    return out;
+}
+
+template <typename T, std::size_t n>
+std::ostream& operator<<(std::ostream& out, const std::array<T, n>& v)
+{
+    if(v.empty())
+    {
+        out << "[]";
+        return out;
+    }
+
+    out << '[';
+    for(auto it = v.begin(); it != std::prev(v.end()); ++it)
+        out << +(*it) << ", ";
+    out << +(*std::prev(v.end())) << ']';
+
+    return out;
+}
