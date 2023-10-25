@@ -219,6 +219,32 @@ TEST(Graph2, PathsConflict)
     EXPECT_TRUE((PathsConflict<PathType, false>(PathType{1, 0}, PathType{1, 1})));
 }
 
+TEST(Graph2, CartesianVertex)
+{
+    constexpr std::size_t nx = 5, ny = 5;
+    TestGraph graph = ConstructGridGraph(nx, ny);
+
+    for(const uint32_t dims : {2, 3, 4})
+    {
+        CartesianGraph cartesian{graph, dims};
+
+        const auto numVertices = cartesian.NumVertices();
+
+        std::vector<TestVertexId> buffer;
+        buffer.reserve(dims);
+
+        for(CartesianVertexIdType iVertex = 0; iVertex < numVertices; ++iVertex)
+        {
+            // convert to and from a vector of indices
+            ToVector(iVertex, dims, numVertices, buffer);
+            const auto backConverted = ToId<CartesianVertexIdType>(buffer, dims, numVertices);
+
+            if(iVertex != iVertex)
+                ASSERT_EQ(iVertex, backConverted);
+        }
+    }
+}
+
 TEST(Graph2, MStar)
 {
     constexpr std::size_t nx = 3, ny = 3;

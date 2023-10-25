@@ -162,7 +162,11 @@ auto Filter(TSystem& system)
 template <typename TComponent, typename TEcs, typename TIter>
 auto Iterate(TEcs& ecs, const TIter begin, const TIter end)
 {
-    assert(std::is_sorted(begin, end));
+#ifdef _DEBUG
+    if(!std::is_sorted(begin, end))
+        throw std::runtime_error("Iterate(): range is not sorted!");
+#endif
+
     using ResultType = std::pair<EntityId, TComponent*>;
     std::vector<ResultType> result;
     if constexpr(std::contiguous_iterator<TIter>)
@@ -192,7 +196,11 @@ auto Iterate(TEcs& ecs, const TIter begin, const TIter end)
 template <typename TComponent, typename TEcs, typename TIter>
 auto Iterate(const TEcs& ecs, const TIter begin, const TIter end)
 {
-    assert(std::is_sorted(begin, end));
+#ifdef _DEBUG
+    if(!std::is_sorted(begin, end))
+        throw std::runtime_error("Iterate(): range is not sorted!");
+#endif
+
     using ResultType = std::pair<EntityId, const TComponent*>;
     std::vector<ResultType> result;
     if constexpr(std::contiguous_iterator<TIter>)
@@ -222,8 +230,10 @@ auto Iterate(const TEcs& ecs, const TIter begin, const TIter end)
 template <typename T1, typename T2, typename TEcs, typename TIter>
 auto Iterate2d(TEcs& ecs, const TIter begin, const TIter end)
 {
-    // todo: check if range is sorted in debug?
-    assert(std::is_sorted(begin, end));
+#ifdef _DEBUG
+    if(!std::is_sorted(begin, end))
+        throw std::runtime_error("Iterate(): range is not sorted!");
+#endif
 
     // todo: pass placeholder vector, or turn into std::range
     using ResultType = std::tuple<EntityId, T1*, T2*>;
@@ -254,8 +264,10 @@ auto Iterate2d(TEcs& ecs, const TIter begin, const TIter end)
 template <typename T1, typename T2, typename T3, typename TEcs, typename TIter>
 auto Iterate3d(TEcs& ecs, const TIter begin, const TIter end)
 {
-    // todo: check if range is sorted in debug?
-    assert(std::is_sorted(begin, end));
+#ifdef _DEBUG
+    if(!std::is_sorted(begin, end))
+        throw std::runtime_error("Iterate(): range is not sorted!");
+#endif
 
     // todo: pass placeholder vector, or turn into std::range
     using ResultType = std::tuple<EntityId, T1*, T2*, T3*>;

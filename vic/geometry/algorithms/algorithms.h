@@ -40,11 +40,13 @@ constexpr int WindingNumber(const std::vector<Point<T, 2>>& polygon, const Point
 }
 
 template <typename T, std::size_t dims>
-constexpr T Project(const Point<T, dims>& origin, const Direction<T, dims>& dir, const Point<T, dims>& point)
+constexpr T Project(const Point<T, dims>& lineStart, const Direction<T, dims>& lineEnd, const Point<T, dims>& point)
 {
-    const auto relative = Subtract(point, origin);
-    return Dot(relative, dir) / Dot(dir, dir);
+    const auto pointDirection = Subtract(point, lineStart);
+    const auto edgeDirection = Subtract(lineEnd, lineStart);
+    return Dot(pointDirection, pointDirection) / Dot(edgeDirection, edgeDirection);
 }
+ 
 
 template <typename T>
 Point<T, 2> ProjectUV(const Triangle<T, 3>& tri, const Point<T, 3>& pos)

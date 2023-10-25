@@ -25,7 +25,7 @@ inline constexpr bool NthBitIsSet(const CollisionSet collisionset, const uint8_t
     const CollisionSet mask = ((uint64_t)1) << index;
     return collisionset & mask;
 }
-//
+
 //template <typename TGraph>
 //class CartesianOutIterator
 //{
@@ -174,7 +174,6 @@ auto MStar(const TGraph& graph, //
 
     while(!heap.empty())
     {
-        //
         std::pop_heap(heap.begin(), heap.end(), compareCost);
         current = heap.back();
         heap.pop_back();

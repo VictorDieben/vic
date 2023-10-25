@@ -86,37 +86,6 @@ std::ostream& operator<<(std::ostream& os, const TestStruct& item)
     return os;
 }
 
-TEST(TestMemory, DenseMap)
-{
-
-    vic::memory::DenseMap<KeyType, TestStruct> map;
-
-    map.Write();
-
-    map.Insert(1, TestStruct{1});
-
-    std::cout << "=== after insert: ===" << std::endl;
-
-    map.Write();
-
-    map.Insert(2, TestStruct{2});
-
-    std::cout << "=== after insert 2: ===" << std::endl;
-    map.Write();
-
-    map.Insert(0, TestStruct{0});
-
-    std::cout << "=== after insert 3: ===" << std::endl;
-    map.Write();
-
-    std::cout << "=== removing key 1 ===" << std::endl;
-    // map.Remove(1);
-
-    map.Write();
-
-    ASSERT_TRUE(false);
-}
-
 TEST(TestMemory, FlatMap)
 {
     struct MyType

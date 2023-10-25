@@ -145,14 +145,20 @@ public:
     T& Get(const EntityId id)
     {
         auto it = mComponents.find(id);
-        assert(it != mComponents.end());
+#ifdef _DEBUG
+    if( it == mComponents.end())
+        throw std::runtime_error("Iterate(): range is not sorted!");
+#endif
         return it->second;
     }
 
     const T& Get(const EntityId id) const
     {
         auto it = mComponents.find(id);
-        assert(it != mComponents.end());
+#ifdef _DEBUG
+    if( it == mComponents.end())
+        throw std::runtime_error("Iterate(): range is not sorted!");
+#endif
         return it->second;
     }
 
