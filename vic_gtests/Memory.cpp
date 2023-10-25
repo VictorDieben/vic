@@ -2,8 +2,8 @@
 #include "gtest/gtest.h"
 
 #include "test_base.h"
-#include "vic/memory/dense_map.h"
 #include "vic/memory/flat_map.h"
+#include "vic/memory/flat_set.h"
 #include "vic/memory/merge_sort.h"
 #include "vic/memory/refcounter.h"
 #include "vic/memory/ring_buffer.h"
@@ -451,4 +451,51 @@ TEST(TestMemory, MergeSortBackInserter)
     std::vector<int> result3;
     vic::sorting::merge_sort_back_insertion(answer.begin(), answer.end(), answer.end(), std::back_inserter(result3));
     EXPECT_EQ(result3, answer);
+}
+
+TEST(TestMemory, UnorderedFlatSet)
+{
+    std::set<uint32_t> stdSet;
+    vic::memory::FlatSet<uint32_t> flatSet;
+    vic::memory::UnorderedFlatSet<uint32_t> unorderedFlatSet;
+
+    std::random_device rd;
+    std::mt19937 g(1234);
+
+    auto trueOrFalse = std::bind(std::uniform_int_distribution<>(0, 3), std::default_random_engine()); // bias towards inserting
+    auto randomInt = std::bind(std::uniform_int_distribution<>(0, 1000000), std::default_random_engine());
+
+    for(std::size_t i = 0; i < 100; ++i)
+    {
+        const bool insertOrRemove = trueOrFalse();
+        if(insertOrRemove) // insert
+        {
+            const uint32_t value = randomInt();
+            stdSet.insert(value);
+            flatSet.insert(value);
+            unorderedFlatSet.insert(value);
+        }
+        else
+        {
+            if(stdSet.empty())
+                continue;
+            // grab a random value from the set
+            const std::size_t index = randomInt() % stdSet.size();
+            const uint32_t removeValue = *std::next(stdSet.begin(), index);
+
+            stdSet.erase(removeValue);
+            flatSet.erase(removeValue);
+            unorderedFlatSet.erase(removeValue);
+        }
+
+        EXPECT_EQ(stdSet.size(), flatSet.size());
+        EXPECT_EQ(stdSet.size(), unorderedFlatSet.size());
+
+        for(const auto value : stdSet)
+        {
+            // check that all sets contain the same items
+            EXPECT_TRUE(flatSet.contains(value));
+            EXPECT_TRUE(unorderedFlatSet.contains(value));
+        }
+    }
 }
