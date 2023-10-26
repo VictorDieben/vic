@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "vic/graph2/traits.h"
+#include "vic/memory/flat_set.h"
 
 namespace vic
 {
@@ -57,15 +58,11 @@ private:
 };
 
 template <typename TGraph>
-class OutVertexIterator;
-
-template <typename TGraph>
-    requires ConceptGraphEdgeList<TGraph>
-class OutVertexIterator<TGraph>
+class BaseOutVertexIterator
 {
 public:
     using VertexIdType = typename TGraph::VertexIdType;
-    OutVertexIterator(const TGraph& graph)
+    BaseOutVertexIterator(const TGraph& graph)
         : mGraph(graph)
     {
         Update();
@@ -88,6 +85,7 @@ public:
     template <typename TFunctor>
     void ForeachOutVertex(const VertexIdType from, TFunctor lambda) const
     {
+        lambda(from);
         for(const auto& to : mOutVertices.at(from))
             lambda(to);
     }
@@ -98,12 +96,11 @@ private:
 };
 
 template <typename TGraph>
-    requires ConceptGraphCartesian<TGraph>
-class OutVertexIterator<TGraph>
+class CartesianOutVertexIterator
 {
 public:
     using VertexIdType = typename TGraph::VertexIdType;
-    OutVertexIterator(const TGraph& graph)
+    CartesianOutVertexIterator(const TGraph& graph)
         : mGraph(graph)
     { }
 
@@ -117,6 +114,17 @@ public:
 private:
     const TGraph& mGraph;
 };
+
+template <typename TGraph>
+auto GetOutVertexIterator(const TGraph& graph)
+{
+    if constexpr(ConceptGraphCartesian<TGraph>)
+        return CartesianOutVertexIterator(graph);
+    else if constexpr(ConceptGraph<TGraph>)
+        return BaseOutVertexIterator(graph);
+    else
+        throw std::runtime_error("No out vertex iterator available for this type of graph!");
+}
 
 template <typename TGraph, bool directed = false>
 class OutIterator
@@ -152,6 +160,133 @@ public:
 private:
     const TGraph& mGraph;
     std::vector<std::vector<std::pair<EdgeIdType, VertexIdType>>> mOutEdgeData{};
+};
+
+template <typename TGraph, typename TOutVertexIterator>
+class CartesianOutIterator
+{
+public:
+    using VertexIdType = typename TGraph::VertexIdType;
+    using EdgeIdType = typename TGraph::EdgeIdType;
+
+    using Graph = TGraph;
+
+    // todo: this might need to be input
+    using CartesianVertexIdType = uint64_t;
+    using CartesianEdgeIdType = uint64_t;
+
+    using CartesianVertexType = std::vector<VertexIdType>;
+    using CartesianEdgeType = std::vector<EdgeIdType>;
+
+private:
+    const Graph& mGraph;
+    const TOutVertexIterator mOutIterator; // todo: constrain with concept
+
+public:
+    CartesianOutIterator(const TGraph& graph, const TOutVertexIterator& outIterator)
+        : mGraph(graph)
+        , mOutIterator(outIterator)
+    { }
+
+    template <typename TFunctor>
+    void ForeachOutVertex(const uint32_t dimensions, const VertexIdType id, TFunctor functor) const
+    {
+        std::vector<VertexIdType> buffer;
+        buffer.resize(dimensions);
+        ToVector(id, dimensions, mGraph.NumVertices(), buffer);
+
+        ForeachOut(buffer, functor);
+    }
+
+    template <typename TFunctor>
+    void ForeachOutVertex(const std::vector<VertexIdType>& vert, TFunctor functor) const
+    {
+        auto copy = vert; // non-const copy
+        ForeachOutRecursive(copy, functor, 0, vert.size());
+    }
+
+    template <typename TFunctor>
+    void ForeachValidOutVertex(const uint32_t dimensions, const VertexIdType id, TFunctor functor) const
+    {
+        std::vector<VertexIdType> buffer;
+        buffer.resize(dimensions);
+        ToVector(id, dimensions, mGraph.NumVertices(), buffer);
+
+        ForeachValidOut(buffer, functor);
+    }
+
+    template <typename TFunctor>
+    void ForeachValidOutVertex(const std::vector<VertexIdType>& vert, TFunctor functor) const
+    {
+        auto copy = vert;
+        // std::unordered_set<VertexIdType> occupiedVertices(copy.begin(), copy.end());
+        vic::memory::UnorderedFlatSet<VertexIdType> occupiedVertices;
+        occupiedVertices.reserve(vert.size() * 2);
+        for(const auto& id : vert)
+            occupiedVertices.insert(id);
+        if(occupiedVertices.size() < vert.size())
+            return; // start vertex is already in collision
+        ForeachValidOutVertexRecursive(copy, functor, 0, vert.size(), occupiedVertices);
+    }
+
+private:
+    template <typename TFunctor>
+    void ForeachOutRecursive(std::vector<VertexIdType>& vertex,
+                             TFunctor functor, //
+                             const std::size_t dim,
+                             const std::size_t dims) const
+    {
+        if(dim == dims)
+        {
+            functor(vertex);
+            return;
+        }
+        const VertexIdType vertexAtDim = vertex.at(dim);
+
+        // loop over case where this dimension is constant
+        ForeachOutRecursive(vertex, functor, dim + 1, dims);
+
+        // todo: loop over all out vertices for this dimension
+        const auto& outVerts = mOutIterator.OutVertices(vertexAtDim);
+        for(const auto& outVert : outVerts)
+        {
+            vertex.at(dim) = outVert;
+            ForeachOutRecursive(vertex, functor, dim + 1, dims);
+        }
+        vertex.at(dim) = vertexAtDim;
+    }
+
+    template <typename TFunctor>
+    void ForeachValidOutVertexRecursive(std::vector<VertexIdType>& vertex,
+                                        TFunctor functor, //
+                                        const std::size_t dim,
+                                        const std::size_t dims,
+                                        vic::memory::UnorderedFlatSet<VertexIdType>& occupiedVertices) const
+    {
+        if(dim == dims)
+        {
+            functor(vertex);
+            return;
+        }
+        const VertexIdType vertexAtDim = vertex.at(dim);
+
+        // loop over case where this dimension is constant
+        ForeachValidOutVertexRecursive(vertex, functor, dim + 1, dims, occupiedVertices);
+
+        // loop over all out vertices for this dimension
+        const auto& outVerts = mOutIterator.OutVertices(vertex.at(dim));
+        for(const auto& outVert : outVerts)
+        {
+            if(occupiedVertices.insert(outVert).second)
+            {
+                vertex.at(dim) = outVert;
+                ForeachValidOutVertexRecursive(vertex, functor, dim + 1, dims, occupiedVertices);
+                occupiedVertices.pop_back();
+                // occupiedVertices.erase(outVert); // for normal set
+            }
+        }
+        vertex.at(dim) = vertexAtDim;
+    }
 };
 
 } // namespace graph2

@@ -4,9 +4,13 @@
 
 #include "vic/graph2/algorithms/iterator.h"
 
+#include "vic/memory/flat_set.h"
+
 #include <algorithm>
 #include <map>
 #include <set>
+#include <unordered_set>
+#include <vector>
 
 namespace vic
 {
@@ -26,117 +30,42 @@ inline constexpr bool NthBitIsSet(const CollisionSet collisionset, const uint8_t
     return collisionset & mask;
 }
 
-//template <typename TGraph>
-//class CartesianOutIterator
-//{
-//public:
-//    using VertexIdType = typename TGraph::VertexIdType;
-//
-//    using TensorGraphType = typename TTensorGraph;
-//    using GraphType = typename TTensorGraph::GraphType;
-//
-//private:
-//    CartesianOutIterator& mGraph;
-//    OutVertexIterator<GraphType> mOutIterator;
-//
-//public:
-//    CartesianOutIterator(TTensorGraph& graph)
-//        : mGraph(graph)
-//        , mOutIterator(graph.GetGraph())
-//    { }
-//
-//    void Update()
-//    {
-//        mOutIterator.Update(); //
-//    }
-//
-//    template <typename TFunctor>
-//    void ForeachOut(const VertexIdType id, TFunctor functor) const
-//    {
-//        ForeachOut(TensorVertexType(mGraph, id), functor);
-//    }
-//
-//    template <typename TFunctor>
-//    void ForeachOut(const TensorVertexType& vert, TFunctor functor) const
-//    {
-//        TensorVertexType copy = vert;
-//        ForeachOutRecursive(copy, functor, 0, mGraph.GetDimensions());
-//    }
-//
-//    template <typename TFunctor>
-//    void ForeachValidOut(const TensorVertexId id, TFunctor functor) const
-//    {
-//        ForeachValidOut(TensorVertexType(mGraph, id), functor);
-//    }
-//
-//    template <typename TFunctor>
-//    void ForeachValidOut(const TensorVertexType& vert, TFunctor functor) const
-//    {
-//        TensorVertexType copy = vert;
-//        std::unordered_set<VertexIdType> occupiedVertices(copy.GetVertices().begin(), copy.GetVertices().end());
-//        if(occupiedVertices.size() < copy.GetVertices().size())
-//            return;
-//        ForeachValidOutRecursive(copy, functor, 0, mGraph.GetDimensions(), occupiedVertices);
-//    }
-//
-//private:
-//    template <typename TFunctor>
-//    void ForeachOutRecursive(TensorVertexType& vertex,
-//                             TFunctor functor, //
-//                             const std::size_t dim,
-//                             const std::size_t dims) const
-//    {
-//        if(dim == dims)
-//        {
-//            functor(vertex);
-//            return;
-//        }
-//        const VertexIdType vertexAtDim = vertex.At(dim);
-//
-//        // loop over case where this dimension is constant
-//        ForeachOutRecursive(vertex, functor, dim + 1, dims);
-//
-//        // todo: loop over all out vertices for this dimension
-//        const auto& outVerts = mOutIterator.OutVertices(vertex.At(dim));
-//        for(const auto& outVert : outVerts)
-//        {
-//            vertex.Set(dim, outVert);
-//            ForeachOutRecursive(vertex, functor, dim + 1, dims);
-//        }
-//        vertex.Set(dim, vertexAtDim);
-//    }
-//
-//    template <typename TFunctor>
-//    void ForeachValidOutRecursive(TensorVertexType& vertex,
-//                                  TFunctor functor, //
-//                                  const std::size_t dim,
-//                                  const std::size_t dims,
-//                                  std::unordered_set<VertexIdType>& occupiedVertices) const
-//    {
-//        if(dim == dims)
-//        {
-//            functor(vertex);
-//            return;
-//        }
-//        const VertexIdType vertexAtDim = vertex.At(dim);
-//
-//        // loop over case where this dimension is constant
-//        ForeachValidOutRecursive(vertex, functor, dim + 1, dims, occupiedVertices);
-//
-//        // loop over all out vertices for this dimension
-//        const auto& outVerts = mOutIterator.OutVertices(vertex.At(dim));
-//        for(const auto& outVert : outVerts)
-//        {
-//            if(occupiedVertices.insert(outVert).second)
-//            {
-//                vertex.Set(dim, outVert);
-//                ForeachValidOutRecursive(vertex, functor, dim + 1, dims, occupiedVertices);
-//                occupiedVertices.erase(outVert);
-//            }
-//        }
-//        vertex.Set(dim, vertexAtDim);
-//    }
-//};
+template <typename TGraph, typename TOutVertexIterator>
+class SubsetOutIterator
+{
+public:
+    using VertexIdType = typename TGraph::VertexIdType;
+    using EdgeIdType = typename TGraph::EdgeIdType;
+
+    using Graph = TGraph;
+
+    using CartesianVertexIdType = uint64_t;
+    using CartesianEdgeIdType = uint64_t;
+
+    using CartesianVertexType = std::vector<VertexIdType>;
+    using CartesianEdgeType = std::vector<EdgeIdType>;
+
+private:
+    const Graph& mGraph;
+    const TOutVertexIterator mOutIterator; // todo: constrain with concept
+
+public:
+    SubsetOutIterator(const TGraph& graph, const TOutVertexIterator& outIterator)
+        : mGraph(graph)
+        , mOutIterator(outIterator)
+    { }
+
+    template <typename TFunctor>
+    void ForeachOutVertex(const CartesianVertexType& from, //
+                          const CartesianVertexType& policy,
+                          const CollisionSet collisionSet,
+                          TFunctor lambda) const
+    {
+        //lambda(from);
+        //for(const auto& to : mOutVertices.at(from))
+        //    lambda(to);
+    }
+};
 
 template <typename TGraph, typename TEdgeCostFunctor, typename THeuristicFunctor>
 auto MStar(const TGraph& graph, //
@@ -151,7 +80,10 @@ auto MStar(const TGraph& graph, //
 
     using CostType = double;
 
-    // todo
+    // todo: make this a function argument
+    const auto outIterator = SubsetOutIterator(graph);
+
+    const auto subsetIterator = SubsetOutIterator(graph, outIterator);
 
     struct ExploredObject
     {
@@ -180,6 +112,13 @@ auto MStar(const TGraph& graph, //
 
         if(current == target)
             break;
+        if(closedSet.contains(current))
+            continue;
+        closedSet.insert(current);
+
+        //subsetIterator.ForeachValidOut(current, [&](const VertexIdType other) {
+        //    //
+        //});
     }
 
     return 1; // todo

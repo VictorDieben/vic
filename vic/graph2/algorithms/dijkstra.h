@@ -27,7 +27,7 @@ auto Dijkstra(const TGraph& graph, //
     using EdgeIdType = typename GraphType::EdgeIdType;
     using CostType = decltype(edgeCostFunctor(VertexIdType{}, VertexIdType{})); // return type of lambda
 
-    const OutVertexIterator<TGraph> outIterator{graph};
+    const auto outIterator = GetOutVertexIterator(graph);
 
     struct VertexData
     {

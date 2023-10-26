@@ -331,7 +331,7 @@ TEST(Geom, BoxTree)
         objects.push_back(makeObject());
 
     {
-        CTimer timer{};
+        Timer timer{};
         for(auto& object : objects)
             boxtree.Insert(object);
         const auto totalTime = timer.GetTime();
@@ -417,13 +417,13 @@ TEST(Geom, IntervalHeap)
     // find overlaps using algorithm
     std::chrono::duration<double> time, bruteForceTime;
     std::vector<Key> overlap;
-    CTimer timer{};
+    Timer timer{};
     heapX.Overlap(overlapInterval, overlap);
     time = timer.GetTime();
 
     // find overlaps using brute force
     std::vector<Key> bruteForce;
-    CTimer bruteForceTimer{};
+    Timer bruteForceTimer{};
     for(Key i = 0; i < boxes.size(); ++i)
         if(Overlaps(overlapInterval, lambdax(i)))
             bruteForce.push_back(i);

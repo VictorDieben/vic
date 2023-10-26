@@ -11,9 +11,6 @@ namespace vic
 namespace graph2
 {
 
-using CartesianVertexIdType = uint64_t; // todo: u128/u256
-using CartesianEdgeIdType = uint64_t;
-
 template <typename TBaseId, typename TCartesianId>
 void ToVector(const TCartesianId cartesianId, //
               const uint32_t dimensions,
@@ -38,7 +35,6 @@ std::vector<TBaseId> ToVector(const TCartesianId cartesianId, //
 
 template <typename TCartesianId, typename TBaseId>
 TCartesianId ToId(const std::vector<TBaseId>& buffer, //
-                  const uint32_t dimensions,
                   const uint32_t size)
 {
     // todo: rewrite FromBase to do a fixed number of iterations, equal to size
@@ -63,7 +59,7 @@ public:
 
     uint32_t NumDimensions() const { return mDimensions; }
 
-    const TGraph& GetBaseGraph();
+    const TGraph& GetBaseGraph() const { return mGraph; }
 
 private:
     const TGraph& mGraph;

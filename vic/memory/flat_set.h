@@ -65,7 +65,7 @@ public:
     void clear() { mData.clear(); }
 
     template <bool sort = true>
-    std::pair<iterator, bool> insert(const Key& key)
+    std::pair<iterator, bool> insert(const Key& key) noexcept
     {
         if constexpr(!sort)
         {
@@ -97,7 +97,7 @@ public:
     }
 
     template <bool sort = true>
-    std::pair<iterator, bool> insert(value_type&& pair)
+    std::pair<iterator, bool> insert(value_type&& pair) noexcept
     {
         const auto copy = pair;
         return insert<sort>(copy); // tmp, do proper move later
@@ -107,8 +107,8 @@ public:
     iterator erase(const_iterator pos) { return mData.erase(pos); }
     iterator erase(const TKey& key) { return mData.erase(find(key)); }
 
-    size_type count(const TKey& key) const { return find(key) == mData.end() ? 0 : 1; }
-    iterator find(const TKey& key)
+    size_type count(const TKey& key) const noexcept { return find(key) == mData.end() ? 0 : 1; }
+    iterator find(const TKey& key) noexcept
     {
         auto it = mData.begin();
         for(; it != mData.end(); ++it)
@@ -116,24 +116,27 @@ public:
                 return it;
         return it;
     }
-    const_iterator find(const TKey& key) const
+    const_iterator find(const TKey& key) const noexcept
     {
+        // todo: binary search
         auto it = mData.cbegin();
         for(; it != mData.cend(); ++it)
             if(*it == key)
                 return it;
         return it;
     }
-    bool contains(const TKey& key) const { return find(key) != mData.end(); }
+    bool contains(const TKey& key) const noexcept { return find(key) != mData.end(); }
+
+    void pop_back() { mData.pop_back(); }
 
     //
     // Custom, not similar to std::map
     //
 
-    auto Reserve(const std::size_t size) { mData.reserve(size); }
+    auto Reserve(const std::size_t size) noexcept { mData.reserve(size); }
 
     // call sort after multiple insert<false>()
-    void Sort()
+    void Sort() noexcept
     {
         std::sort(mData.begin(),
                   mData.end(), //
@@ -191,9 +194,9 @@ public:
     std::size_t max_size() const { return std::numeric_limits<difference_type>::max(); }
 
     // Modifiers
-    void clear() { mData.clear(); }
+    void clear() noexcept { mData.clear(); }
 
-    std::pair<iterator, bool> insert(const Key& key)
+    std::pair<iterator, bool> insert(const Key& key) noexcept
     {
         for(auto it = mData.begin(); it != mData.end(); ++it)
             if(*it == key)
@@ -202,7 +205,7 @@ public:
         return std::pair(std::prev(mData.end()), true);
     }
 
-    std::pair<iterator, bool> insert(value_type&& pair)
+    std::pair<iterator, bool> insert(value_type&& pair) noexcept
     {
         const auto copy = pair;
         return insert(copy); // tmp, do proper move later
@@ -212,8 +215,7 @@ public:
     iterator erase(const_iterator pos) { return mData.erase(pos); }
     iterator erase(const TKey& key) { return mData.erase(find(key)); }
 
-    size_type count(const TKey& key) const { return find(key) == mData.end() ? 0 : 1; }
-    iterator find(const TKey& key)
+    iterator find(const TKey& key) noexcept
     {
         auto it = mData.begin();
         for(; it != mData.end(); ++it)
@@ -221,7 +223,7 @@ public:
                 return it;
         return it;
     }
-    const_iterator find(const TKey& key) const
+    const_iterator find(const TKey& key) const noexcept
     {
         auto it = mData.begin();
         for(; it != mData.end(); ++it)
@@ -229,13 +231,23 @@ public:
                 return it;
         return it;
     }
-    bool contains(const TKey& key) const { return find(key) != mData.end(); }
+    bool contains(const TKey& key) const noexcept
+    {
+        for(auto it = mData.begin(); it != mData.end(); ++it)
+            if(*it == key)
+                return true;
+        return false;
+    }
+
+    size_type count(const TKey& key) const noexcept { return contains(key) ? 1 : 0; }
 
     //
     // Custom, not similar to std::unordered_set
     //
 
-    auto Reserve(const std::size_t size) { mData.reserve(size); }
+    auto reserve(const std::size_t size) { mData.reserve(size); }
+
+    void pop_back() { mData.pop_back(); }
 };
 
 } // namespace memory

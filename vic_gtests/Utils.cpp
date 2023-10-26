@@ -42,7 +42,7 @@ TEST(Utils, TestPow)
 
 TEST(Utils, TestTimer)
 {
-    CTimer timer;
+    Timer timer;
     timer.Reset();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     const double interval_ms = timer.GetTime<double, std::milli>().count();

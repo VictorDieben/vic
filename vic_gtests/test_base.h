@@ -5,6 +5,8 @@
 #include "vic/linalg/linalg.h"
 #include <random>
 
+#include <chrono>
+
 using namespace vic::linalg;
 
 template <typename TMat1, typename TMat2>

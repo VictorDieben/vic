@@ -465,7 +465,7 @@ TEST(TestMemory, UnorderedFlatSet)
     auto trueOrFalse = std::bind(std::uniform_int_distribution<>(0, 3), std::default_random_engine()); // bias towards inserting
     auto randomInt = std::bind(std::uniform_int_distribution<>(0, 1000000), std::default_random_engine());
 
-    for(std::size_t i = 0; i < 100; ++i)
+    for(std::size_t i = 0; i < 1000; ++i)
     {
         const bool insertOrRemove = trueOrFalse();
         if(insertOrRemove) // insert
@@ -475,7 +475,7 @@ TEST(TestMemory, UnorderedFlatSet)
             flatSet.insert(value);
             unorderedFlatSet.insert(value);
         }
-        else
+        else // remove
         {
             if(stdSet.empty())
                 continue;

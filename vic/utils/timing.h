@@ -4,10 +4,10 @@
 
 namespace vic
 {
-class CTimer
+class Timer
 {
 public:
-    CTimer()
+    Timer()
         : mStart(std::chrono::high_resolution_clock::now())
     { }
 
