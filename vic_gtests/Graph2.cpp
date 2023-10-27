@@ -4,26 +4,13 @@
 #include "vic/graph2/graph.h"
 
 #include "vic/utils/timing.h"
+#include "vic/utils/to_string.h"
 
 #include <random>
 
 using namespace vic;
 
 using namespace vic::graph2;
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
-{
-    os << "[";
-    for(auto it = vec.begin(); it < vec.end(); ++it)
-    {
-        os << *it;
-        if(it < std::prev(vec.end()))
-            os << ", ";
-    }
-    os << "]";
-    return os;
-}
 
 using TestVertexId = uint16_t;
 using TestEdgeId = uint16_t;
@@ -270,7 +257,7 @@ TEST(Graph2, CartesianAStar)
         for(std::size_t i = 0; i < from.size(); ++i)
             cost += fw.at(from.at(i)).at(to.at(i)).cost;
         cost = cost / double(from.size());
-        return cost; //
+        return 1.00001 * cost; // slightly overestimate the remaining part of path
     };
 
     const auto path = CartesianAStar(
@@ -433,7 +420,33 @@ TEST(Graph2, SubsetOutIterator)
                                     const CartesianVertexType& policy,
                                     const CollisionSet collisionSet) {
         std::size_t count = 0;
-        subsetIterator.ForeachOutVertex(vertex, policy, collisionSet, [&](const auto& other) { count++; });
+        subsetIterator.ForeachOutVertex(vertex, policy, collisionSet, [&](const auto& other) {
+            // std::cout << count << ": " << other << std::endl;
+            count++;
+        });
         return count;
     };
+
+    CollisionSet noAgents{0};
+    CollisionSet allAgents{static_cast<uint64_t>(-1)};
+    CollisionSet firstAgents = ((uint64_t)1) << 0;
+    CollisionSet secondAgents = ((uint64_t)1) << 1;
+    CollisionSet thirdAgents = ((uint64_t)1) << 2;
+
+    EXPECT_EQ(countSubsetOut(CartesianVertexType{3, 4, 5}, //
+                             CartesianVertexType{6, 7, 8},
+                             allAgents),
+              (3 * 3 * 3));
+
+    EXPECT_EQ(countSubsetOut(CartesianVertexType{3, 4, 5}, //
+                             CartesianVertexType{6, 7, 8},
+                             firstAgents | secondAgents),
+              (3 * 3 * 1));
+
+    // check situation where every agent wants to go to the same node.
+    // no agent is in collision set, but this should not be possible anyway
+    EXPECT_EQ(countSubsetOut(CartesianVertexType{1, 3, 7}, //
+                             CartesianVertexType{4, 4, 4},
+                             noAgents),
+              0);
 }

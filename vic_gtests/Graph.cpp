@@ -8,6 +8,8 @@
 
 #include <random>
 
+#include "vic/utils/to_string.h"
+
 using namespace vic;
 
 using namespace vic::graph;
@@ -23,21 +25,6 @@ struct TestEdgeData
     using VertexIdType = uint16_t;
     using EdgeIdType = uint16_t;
 };
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
-{
-    os << "[";
-    for(auto it = vec.begin(); it < vec.end(); ++it)
-    {
-        os << *it;
-        if(it < std::prev(vec.end()))
-            os << ", ";
-    }
-    os << "]";
-    return os;
-}
-
 using TestVertex = Vertex<TestVertexData>;
 using TestEdge = Edge<TestEdgeData>;
 using TestVertexId = TestVertex::VertexIdType;

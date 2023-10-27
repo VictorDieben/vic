@@ -4,6 +4,7 @@
 
 #include "vic/graph2/algorithms/iterator.h"
 #include "vic/graph2/graph_types/cartesian_product_graph.h"
+#include "vic/memory/flat_set.h"
 
 #include <algorithm>
 #include <map>
@@ -193,16 +194,14 @@ auto CartesianAStar(const TGraph& graph, //
     path.push_back(target);
 
     current = targetId;
-    while(true)
+    while(path.size() < numVertices * 4) // note: for multi-robot, we cannot assume than number of vertices is really the upper limit, 4x should be enough
     {
         if(current == startId)
             break;
         auto& node = exploredMap[current].vertex;
         current = node;
 
-        CartesianVertexType buffer;
-        ToVector(current, dims, numVertices, buffer);
-        path.push_back(buffer);
+        path.push_back(ToVector<VertexIdType>(current, dims, numVertices));
     }
 
     std::reverse(path.begin(), path.end());

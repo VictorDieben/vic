@@ -220,10 +220,7 @@ public:
     {
         auto copy = vert;
         // std::unordered_set<VertexIdType> occupiedVertices(copy.begin(), copy.end());
-        vic::memory::UnorderedFlatSet<VertexIdType> occupiedVertices;
-        occupiedVertices.reserve(vert.size() * 2);
-        for(const auto& id : vert)
-            occupiedVertices.insert(id);
+        vic::memory::UnorderedFlatSet<VertexIdType> occupiedVertices(vert.begin(), vert.end());
         if(occupiedVertices.size() < vert.size())
             return; // start vertex is already in collision
         ForeachValidOutVertexRecursive(copy, functor, 0, vert.size(), occupiedVertices);

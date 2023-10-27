@@ -49,6 +49,8 @@ private:
     const Graph& mGraph;
     const TOutVertexIterator mOutIterator; // todo: constrain with concept
 
+    using OccupiedSetType = vic::memory::UnorderedFlatSet<VertexIdType>;
+
 public:
     SubsetOutIterator(const TGraph& graph, const TOutVertexIterator& outIterator)
         : mGraph(graph)
@@ -59,11 +61,55 @@ public:
     void ForeachOutVertex(const CartesianVertexType& from, //
                           const CartesianVertexType& policy,
                           const CollisionSet collisionSet,
-                          TFunctor lambda) const
+                          TFunctor functor) const
     {
-        //lambda(from);
-        //for(const auto& to : mOutVertices.at(from))
-        //    lambda(to);
+        auto copy = from;
+        OccupiedSetType occupiedSet(from.begin(), from.end());
+        ForeachOutVertexRecursive(copy, occupiedSet, policy, collisionSet, 0, from.size(), functor);
+    }
+
+private:
+    template <typename TFunctor>
+    void ForeachOutVertexRecursive(CartesianVertexType& vertex, //
+                                   OccupiedSetType& occupiedVertices,
+                                   const CartesianVertexType& policy,
+                                   const CollisionSet collisionSet,
+                                   const std::size_t dim,
+                                   const std::size_t dims,
+                                   TFunctor functor) const
+    {
+        if(dim == dims)
+        {
+            functor(vertex);
+            return;
+        }
+        const VertexIdType vertexAtDim = vertex.at(dim);
+
+        if(!NthBitIsSet(collisionSet, dim)) // agent not in collision, step in policy direction
+        {
+            if(occupiedVertices.insert(policy.at(dim)).second)
+            {
+                vertex.at(dim) = policy.at(dim);
+                ForeachOutVertexRecursive(vertex, occupiedVertices, policy, collisionSet, dim + 1, dims, functor);
+                vertex.at(dim) = vertexAtDim;
+                occupiedVertices.pop_back();
+            }
+        }
+        else // agent in collision, fully expand this dimension
+        {
+            ForeachOutVertexRecursive(vertex, occupiedVertices, policy, collisionSet, dim + 1, dims, functor);
+
+            for(const auto& outVert : mOutIterator.OutVertices(vertex.at(dim)))
+            {
+                if(occupiedVertices.insert(outVert).second)
+                {
+                    vertex.at(dim) = outVert;
+                    ForeachOutVertexRecursive(vertex, occupiedVertices, policy, collisionSet, dim + 1, dims, functor);
+                    occupiedVertices.pop_back();
+                }
+            }
+            vertex.at(dim) = vertexAtDim;
+        }
     }
 };
 

@@ -13,8 +13,8 @@ namespace graph2
 
 template <typename TBaseId, typename TCartesianId>
 void ToVector(const TCartesianId cartesianId, //
-              const uint32_t dimensions,
-              const uint32_t size,
+              const std::size_t dimensions,
+              const std::size_t size,
               std::vector<TBaseId>& buffer)
 {
     buffer.clear();
@@ -25,10 +25,10 @@ void ToVector(const TCartesianId cartesianId, //
 
 template <typename TBaseId, typename TCartesianId>
 std::vector<TBaseId> ToVector(const TCartesianId cartesianId, //
-                              const uint32_t dimensions,
-                              const uint32_t size)
+                              const std::size_t dimensions,
+                              const std::size_t size)
 {
-    std::vector<TBaseId> buffer{dimensions, 0};
+    std::vector<TBaseId> buffer(dimensions, 0);
     ToVector(cartesianId, dimensions, size, buffer);
     return buffer;
 }

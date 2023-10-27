@@ -151,6 +151,18 @@ template <typename TKey, typename TKeyEqual = std::equal_to<TKey>>
 class UnorderedFlatSet
 {
 public:
+    UnorderedFlatSet() = default;
+
+    template <typename TBegin, typename TEnd>
+    UnorderedFlatSet(TBegin begin, TEnd end)
+    {
+        if constexpr(std::contiguous_iterator<TBegin>)
+            mData.reserve(std::distance(begin, end));
+
+        for(auto it = begin; it != end; ++it)
+            if(std::find(mData.begin(), mData.end(), *it) == mData.end())
+                mData.push_back(*it);
+    }
     using Key = TKey;
     using KeyEqual = TKeyEqual;
 
