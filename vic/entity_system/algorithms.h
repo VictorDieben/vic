@@ -6,6 +6,8 @@
 #include <ranges>
 #include <tuple>
 #include <vector>
+#include <stdexcept>
+	
 
 namespace vic
 {

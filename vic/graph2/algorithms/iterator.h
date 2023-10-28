@@ -180,7 +180,7 @@ public:
 
 private:
     const Graph& mGraph;
-    const TOutVertexIterator mOutIterator; // todo: constrain with concept
+    const TOutVertexIterator& mOutIterator; // todo: constrain with concept
 
 public:
     CartesianOutIterator(const TGraph& graph, const TOutVertexIterator& outIterator)

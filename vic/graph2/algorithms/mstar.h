@@ -45,13 +45,6 @@ public:
     using CartesianVertexType = std::vector<VertexIdType>;
     using CartesianEdgeType = std::vector<EdgeIdType>;
 
-private:
-    const Graph& mGraph;
-    const TOutVertexIterator mOutIterator; // todo: constrain with concept
-
-    using OccupiedSetType = vic::memory::UnorderedFlatSet<VertexIdType>;
-
-public:
     SubsetOutIterator(const TGraph& graph, const TOutVertexIterator& outIterator)
         : mGraph(graph)
         , mOutIterator(outIterator)
@@ -69,6 +62,11 @@ public:
     }
 
 private:
+    const Graph& mGraph;
+    const TOutVertexIterator& mOutIterator; // todo: constrain with concept
+
+    using OccupiedSetType = vic::memory::UnorderedFlatSet<VertexIdType>;
+
     template <typename TFunctor>
     void ForeachOutVertexRecursive(CartesianVertexType& vertex, //
                                    OccupiedSetType& occupiedVertices,
@@ -113,61 +111,124 @@ private:
     }
 };
 
+template <typename TGraph>
+void Backprop(const TGraph& graph, //
+              const std::vector<typename TGraph::VertexIdType>& vertex,
+              const CollisionSet collisionSet,
+              std::vector<uint64_t>& openList)
+{
+    //
+}
+
+// paper:
+// https://citeseerx.ist.psu.edu/viewdoc/download?rep=rep1&type=pdf&doi=10.1.1.221.1909
 template <typename TGraph, typename TEdgeCostFunctor, typename THeuristicFunctor>
 auto MStar(const TGraph& graph, //
            TEdgeCostFunctor edgeCostFunctor,
            THeuristicFunctor heuristicFunctor,
-           const typename TGraph::VertexIdType start,
-           const typename TGraph::VertexIdType target)
+           const std::vector<typename TGraph::VertexIdType>& start,
+           const std::vector<typename TGraph::VertexIdType>& target)
 {
     using GraphType = TGraph;
     using VertexIdType = typename GraphType::VertexIdType;
     using EdgeIdType = typename GraphType::EdgeIdType;
 
+    using CartesianVertexIdType = uint64_t;
+    using CartesianEdgeIdType = uint64_t;
+
+    using CartesianVertexType = std::vector<VertexIdType>;
+    using CartesianEdgeType = std::vector<EdgeIdType>;
+
     using CostType = double;
+    using HeuristicType = decltype(heuristicFunctor(CartesianVertexType{}, CartesianVertexType{}));
+    static_assert(std::is_same_v<CostType, HeuristicType>);
+    assert(start.size() == target.size());
+
+    const auto numVertices = graph.NumVertices();
+    const auto dims = start.size();
 
     // todo: make this a function argument
-    const auto outIterator = SubsetOutIterator(graph);
+    const auto outIterator = GetOutVertexIterator(graph);
 
     const auto subsetIterator = SubsetOutIterator(graph, outIterator);
 
     struct ExploredObject
     {
+        CartesianVertexIdType previous{}; // back_ptr
         CollisionSet collisionSet{0};
         CostType cost{std::numeric_limits<CostType>::max()};
-        VertexIdType previous{};
+        CostType heuristic{std::numeric_limits<CostType>::max()};
+
+        std::set<CartesianVertexIdType> back_set{};
     };
 
-    std::vector<VertexIdType> heap;
-    heap.push_back(start);
+    std::vector<CartesianVertexIdType> heap;
 
-    std::set<VertexIdType> closedSet;
-    std::map<VertexIdType, ExploredObject> exploredMap;
-    exploredMap[start] = ExploredObject{{}, 0, start};
+    const auto startId = ToId<CartesianVertexIdType>(start, numVertices);
+    const auto targetId = ToId<CartesianVertexIdType>(target, numVertices);
+    heap.push_back(startId);
+
+    std::set<CartesianVertexIdType> closedSet;
+    std::map<CartesianVertexIdType, ExploredObject> exploredMap;
+    exploredMap[startId] = ExploredObject{startId, {}, 0.};
 
     // note: > because default make_heap behaviour is max heap for operator<
-    const auto compareCost = [&](const VertexIdType v1, const VertexIdType v2) { return exploredMap.at(v1).cost > exploredMap.at(v2).cost; };
+    const auto compareCost = [&](const CartesianVertexIdType v1, const CartesianVertexIdType v2) { return exploredMap.at(v1).cost > exploredMap.at(v2).cost; };
 
-    VertexIdType current = start;
+    CartesianVertexIdType currentId = startId;
+    CartesianVertexType current = start;
 
     while(!heap.empty())
     {
         std::pop_heap(heap.begin(), heap.end(), compareCost);
-        current = heap.back();
+        currentId = heap.back();
         heap.pop_back();
 
-        if(current == target)
+        if(currentId == targetId)
             break;
-        if(closedSet.contains(current))
+        if(closedSet.contains(currentId))
             continue;
-        closedSet.insert(current);
+        closedSet.insert(currentId);
 
-        //subsetIterator.ForeachValidOut(current, [&](const VertexIdType other) {
-        //    //
+        //subsetIterator.ForeachOutVertex(current, [&](const CartesianVertexType& other) {
+        //    const auto otherId = ToId<CartesianVertexIdType>(other, numVertices);
+
+        //    const auto edgeCost = edgeCostFunctor(current, other);
+        //    const auto newCost = exploredMap[currentId].cost + edgeCost;
+
+        //    auto& item = exploredMap[otherId]; // adds item if it did not exist
+
+        //    if(newCost < item.g)
+        //    {
+        //        const CostType hscore = heuristicFunctor(other, target);
+        //        item = {current, newCost + hscore, newCost};
+
+        //        heap.push_back(otherId);
+        //        std::push_heap(heap.begin(), heap.end(), compareCost);
+        //    }
         //});
     }
 
-    return 1; // todo
+    if(currentId != targetId)
+        return std::vector<CartesianVertexType>{};
+
+    std::vector<CartesianVertexType> path;
+    path.push_back(target);
+
+    //currentId = targetId;
+    //while(path.size() < numVertices * 4) // note: for multi-robot, we cannot assume than number of vertices is really the upper limit, 4x should be enough
+    //{
+    //    if(currentId == startId)
+    //        break;
+    //    auto& node = exploredMap[currentId].previous;
+    //    current = node;
+
+    //    path.push_back(ToVector<VertexIdType>(currentId, dims, numVertices));
+    //}
+
+    //std::reverse(path.begin(), path.end());
+
+    return path;
 }
 
 } // namespace graph2

@@ -270,7 +270,7 @@ TEST(Graph2, CartesianAStar)
     EXPECT_EQ(path.size(), 9);
 }
 
-TEST(Graph2, MStar)
+TEST(Graph2, CartesianIterator)
 {
     constexpr std::size_t nx = 3, ny = 3;
 
@@ -449,4 +449,59 @@ TEST(Graph2, SubsetOutIterator)
                              CartesianVertexType{4, 4, 4},
                              noAgents),
               0);
+
+    const auto generateOutSet = [&](const CartesianVertexType& vertex, //
+                                    const CartesianVertexType& policy,
+                                    const CollisionSet collisionSet) {
+        std::set<CartesianVertexType> result{};
+        subsetIterator.ForeachOutVertex(vertex, policy, collisionSet, [&](const auto& other) { result.insert(other); });
+        return result;
+    };
+
+    const auto outset_0_8 = generateOutSet(CartesianVertexType{0, 8}, //
+                                           CartesianVertexType{1, 7},
+                                           noAgents);
+    EXPECT_EQ(outset_0_8, (std::set<CartesianVertexType>{CartesianVertexType{1, 7}}));
+
+    const auto outset_0f_8 = generateOutSet(CartesianVertexType{0, 8}, //
+                                            CartesianVertexType{1, 7},
+                                            firstAgents);
+    EXPECT_EQ(outset_0f_8,
+              (std::set<CartesianVertexType>{CartesianVertexType{1, 7}, //
+                                             CartesianVertexType{0, 7},
+                                             CartesianVertexType{3, 7}}));
+}
+
+TEST(Graph2, MStar)
+{
+    using VertexType = uint16_t;
+    using EdgeType = uint16_t;
+
+    using CartesianVertexIdType = uint64_t;
+    using CartesianEdgeIdType = uint64_t;
+
+    using CartesianVertexType = std::vector<VertexType>;
+    using CartesianEdgeType = std::vector<EdgeType>;
+
+    constexpr std::size_t nx = 3, ny = 3;
+    const auto graph = ConstructGridGraph<VertexType, EdgeType>(nx, ny);
+
+    const auto costLambda = [&](const VertexType, const VertexType) -> double { return 1.; };
+    const auto fw = FloydWarshall(graph, costLambda);
+    const auto heuristicLambda = [&](const CartesianVertexType from, const CartesianVertexType to) -> double {
+        double cost = 0.;
+        for(std::size_t i = 0; i < from.size(); ++i)
+            cost += fw.at(from.at(i)).at(to.at(i)).cost;
+        cost = cost / double(from.size());
+        return 1.00001 * cost; // slightly overestimate the remaining part of path
+    };
+
+    const auto path = MStar(
+        graph, //
+        [&](const CartesianVertexType, const CartesianVertexType) -> double { return 1.; },
+        heuristicLambda,
+        CartesianVertexType{0, 8},
+        CartesianVertexType{8, 0});
+
+    EXPECT_EQ(path.size(), 5);
 }
