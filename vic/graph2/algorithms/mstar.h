@@ -120,116 +120,150 @@ void Backprop(const TGraph& graph, //
     //
 }
 
-// paper:
-// https://citeseerx.ist.psu.edu/viewdoc/download?rep=rep1&type=pdf&doi=10.1.1.221.1909
-template <typename TGraph, typename TEdgeCostFunctor, typename THeuristicFunctor>
-auto MStar(const TGraph& graph, //
-           TEdgeCostFunctor edgeCostFunctor,
-           THeuristicFunctor heuristicFunctor,
-           const std::vector<typename TGraph::VertexIdType>& start,
-           const std::vector<typename TGraph::VertexIdType>& target)
+template <typename TGraph, typename TEdgeCostFunctor, typename THeuristicFunctor, typename TPolicy>
+    requires ConceptEdgeCost<TEdgeCostFunctor> && ConceptEdgeCost<THeuristicFunctor>
+struct MStar
 {
-    using GraphType = TGraph;
-    using VertexIdType = typename GraphType::VertexIdType;
-    using EdgeIdType = typename GraphType::EdgeIdType;
-
-    using CartesianVertexIdType = uint64_t;
-    using CartesianEdgeIdType = uint64_t;
+public:
+    using VertexIdType = typename TGraph::VertexIdType;
+    using EdgeIdType = typename TGraph::EdgeIdType;
 
     using CartesianVertexType = std::vector<VertexIdType>;
-    using CartesianEdgeType = std::vector<EdgeIdType>;
 
-    using CostType = double;
-    using HeuristicType = decltype(heuristicFunctor(CartesianVertexType{}, CartesianVertexType{}));
+    MStar(const TGraph& graph, //
+          TEdgeCostFunctor edgeCostFunctor,
+          THeuristicFunctor heuristicFunctor,
+          TPolicy policy)
+        : mGraph(graph)
+        , mEdgeCostFunctor(edgeCostFunctor)
+        , mHeuristicFunctor(heuristicFunctor)
+        , mPolicy(policy)
+        , mOutIterator(graph)
+    { }
+
+private:
+    const TGraph& mGraph;
+    TEdgeCostFunctor mEdgeCostFunctor;
+    THeuristicFunctor mHeuristicFunctor;
+    TPolicy mPolicy;
+    BaseOutVertexIterator<TGraph> mOutIterator;
+
+public:
+    using CostType = decltype(mEdgeCostFunctor(CartesianVertexType{}, CartesianVertexType{}));
+    using HeuristicType = decltype(mHeuristicFunctor(CartesianVertexType{}, CartesianVertexType{}));
     static_assert(std::is_same_v<CostType, HeuristicType>);
-    assert(start.size() == target.size());
-
-    const auto numVertices = graph.NumVertices();
-    const auto dims = start.size();
-
-    // todo: make this a function argument
-    const auto outIterator = GetOutVertexIterator(graph);
-
-    const auto subsetIterator = SubsetOutIterator(graph, outIterator);
 
     struct ExploredObject
     {
-        CartesianVertexIdType previous{}; // back_ptr
-        CollisionSet collisionSet{0};
-        CostType cost{std::numeric_limits<CostType>::max()};
-        CostType heuristic{std::numeric_limits<CostType>::max()};
+        CartesianVertexType vertex{}; // previous
+        CollisionSet collisionSet;
 
-        std::set<CartesianVertexIdType> back_set{};
+        CostType f{std::numeric_limits<CostType>::max()};
+        CostType g{std::numeric_limits<CostType>::max()};
+
+        std::set<CartesianVertexType> backpropSet;
     };
-
-    std::vector<CartesianVertexIdType> heap;
-
-    const auto startId = ToId<CartesianVertexIdType>(start, numVertices);
-    const auto targetId = ToId<CartesianVertexIdType>(target, numVertices);
-    heap.push_back(startId);
-
-    std::set<CartesianVertexIdType> closedSet;
-    std::map<CartesianVertexIdType, ExploredObject> exploredMap;
-    exploredMap[startId] = ExploredObject{startId, {}, 0.};
-
-    // note: > because default make_heap behaviour is max heap for operator<
-    const auto compareCost = [&](const CartesianVertexIdType v1, const CartesianVertexIdType v2) { return exploredMap.at(v1).cost > exploredMap.at(v2).cost; };
-
-    CartesianVertexIdType currentId = startId;
-    CartesianVertexType current = start;
-
-    while(!heap.empty())
+    void ConstructPolicy(const CartesianVertexType& position, //
+                         const CartesianVertexType& target,
+                         CartesianVertexType& buffer) const
     {
-        std::pop_heap(heap.begin(), heap.end(), compareCost);
-        currentId = heap.back();
-        heap.pop_back();
-
-        if(currentId == targetId)
-            break;
-        if(closedSet.contains(currentId))
-            continue;
-        closedSet.insert(currentId);
-
-        //subsetIterator.ForeachOutVertex(current, [&](const CartesianVertexType& other) {
-        //    const auto otherId = ToId<CartesianVertexIdType>(other, numVertices);
-
-        //    const auto edgeCost = edgeCostFunctor(current, other);
-        //    const auto newCost = exploredMap[currentId].cost + edgeCost;
-
-        //    auto& item = exploredMap[otherId]; // adds item if it did not exist
-
-        //    if(newCost < item.g)
-        //    {
-        //        const CostType hscore = heuristicFunctor(other, target);
-        //        item = {current, newCost + hscore, newCost};
-
-        //        heap.push_back(otherId);
-        //        std::push_heap(heap.begin(), heap.end(), compareCost);
-        //    }
-        //});
+        const auto numDims = position.size();
+        buffer.clear();
+        for(std::size_t i = 0; i < numDims; ++i)
+            buffer.push_back(mPolicy.Policy(position.at(i), target.at(i)));
     }
 
-    if(currentId != targetId)
-        return std::vector<CartesianVertexType>{};
+    CollisionSet ConstructCollisionSet(const CartesianVertexType& start, const CartesianVertexType& target) const
+    {
+        const auto numAgents = start.size();
 
-    std::vector<CartesianVertexType> path;
-    path.push_back(target);
+        CartesianVertexType current = start;
+        CartesianVertexType next;
 
-    //currentId = targetId;
-    //while(path.size() < numVertices * 4) // note: for multi-robot, we cannot assume than number of vertices is really the upper limit, 4x should be enough
-    //{
-    //    if(currentId == startId)
-    //        break;
-    //    auto& node = exploredMap[currentId].previous;
-    //    current = node;
+        CollisionSet collisionSet;
 
-    //    path.push_back(ToVector<VertexIdType>(currentId, dims, numVertices));
-    //}
+        // todo: this can probably be sped up by ignoring agents that are already in collision
+        while(current != target)
+        {
+            ConstructPolicy(current, target, next);
 
-    //std::reverse(path.begin(), path.end());
+            // for each pair of agents, check if their next step will conflict
+            for(std::size_t a = 0; a < numAgents - 1; ++a)
+            {
+                for(std::size_t b = a + 1; b < numAgents; ++b)
+                {
+                    if((current.at(a) == next.at(b)) || //
+                       (next.at(a) == current.at(b)) || //
+                       (next.at(a) == next.at(b)))
+                    {
+                        SetNthBit(collisionSet, a);
+                        SetNthBit(collisionSet, b);
+                    }
+                }
+            }
+            std::swap(current, next);
+        }
 
-    return path;
-}
+        return collisionSet;
+    }
+
+    std::map<CartesianVertexType, ExploredObject> mExploredMap;
+    std::vector<CartesianVertexType> mHeap;
+
+    void Backprop(const CartesianVertexType& vertex, //
+                  const CollisionSet collisionSet,
+                  std::vector<uint64_t>& openList)
+    {
+        //
+    }
+
+    auto Run(const CartesianVertexType& start, const CartesianVertexType& target)
+    {
+        mExploredMap.clear();
+        mExploredMap.at(start) = ExploredObject(start, CollisionSet{}, 0., 0., {});
+
+        mHeap.clear();
+        mHeap.push_back(start);
+
+        SubsetOutIterator subsetIterator(mGraph, mOutIterator);
+
+        // note: > because default make_heap behaviour is max heap for operator<
+        const auto compareF = [&](const CartesianVertexType v1, const CartesianVertexType v2) { return mExploredMap.at(v1).f > mExploredMap.at(v2).f; };
+
+        CartesianVertexType current;
+        CartesianVertexType policy;
+
+        while(!mHeap.empty())
+        {
+            std::pop_heap(mHeap.begin(), mHeap.end(), compareF);
+            current = mHeap.back();
+            mHeap.pop_back();
+
+            if(current == target)
+                break;
+
+            ConstructPolicy(current, target, policy);
+
+            const CollisionSet collisionSet = ConstructCollisionSet(current, target);
+
+            subsetIterator.ForeachOutVertex(current, policy, collisionSet, [&](const CartesianVertexType& other) {
+                //
+            });
+        }
+
+        std::vector<CartesianVertexType> path;
+
+        // todo: backtrack
+
+        return path;
+    }
+};
+
+// M*: A Complete Multirobot Path Planning Algorithm with Performance Bounds:
+// https://citeseerx.ist.psu.edu/viewdoc/download?rep=rep1&type=pdf&doi=10.1.1.221.1909
+
+// Subdimensional expansion for multirobot path planning
+// https://pdf.sciencedirectassets.com/271585/1-s2.0-S0004370214X00123/1-s2.0-S0004370214001271/main.pdf?X-Amz-Security-Token=IQoJb3JpZ2luX2VjEK3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIAoGH2jFIH6eaM4%2FlutGi4DeuZ2hg9zG0cK5GxZUe2jDAiEAwc03VXhyHGZ8kJ2R9O2kUQXTByeR1rGT78oXQwk%2FmmIquwUI1v%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAFGgwwNTkwMDM1NDY4NjUiDE%2BCJBn2XWFzFSwPByqPBfvQ9kAqrtQM3QSj9tpkWhjQHhc4zTxeHGNJxaYGJIT4utnlTsEWdOyVBvsthXUtJuae3ppqbEWFi4Mdd%2Fqe5awtSYKX2HefBU8hrx9O0hk4Bu2bhmX75OZ4LICgZ20QBmhWDWT1wf53aObkLohqpuFPX8Mu6dvliU6ci0KI9C%2FHHig61dOl7XcOS3VSYBP2Re7L6oZbFsMS3uExQE8jemnawsqghkWzCmVGDJNbXj0MWuVFCDXCpJAkqcTbvqfgsIH5bwXFvhORri5clZUwK9Zz6yoxS0TvKLt3gCCzxcCF3UjjbnOcEzPEx17Dh9EIpOPagOssx1mVCOFuLQ89vzxkOZcjcPDcOgk26QkyG3X1NbItwHGkEYw9LTQ72ih9b8YhHlFIGJ6EmNLTvgfarF7%2BhPrubmAJb2Ki30fhjDgXR0uXnyXhEixgjeJTZLLh2Fz7ViFtkOVzkDEMgdHR6osKjxu8Br6MX0Nx4hQwpVSQVCxiWk89bR0VgzRdV2wAd9FWdKGfoAnylWy0uJvgyshMXEk71qZnfd%2FrLdDJtH%2BAd6woPTcCxnxLhazjDZBDkvUzHFmLCgXMrQ%2FwbL3c2QpHgLJWCc4T%2FDi124xefXW7cWfzdXXlBGZdsUT2Cqfa%2B6NUw1D2zvJqm%2F%2F87XBq4o6AnLMPcihvt9oFk4iRF5Sno3DvUzIC2sG%2B3lIb7uWzuz6PcMUS2E6oF3CY3RihzKzQB%2FrUYNKsbXBwMOtd%2FIIOH7f5wnZMHoj42AyajNkrzpiwoANPw5QTDhSWwhHcB6FvktOSCJvQ%2BkwcdzPauQnTOKu9az%2B57JHHojWLKYT6EBML%2FRDw%2BxeAK3DpMiost5QLzzaqNlzYXYCidRWMU%2Fowwsf%2BqQY6sQGsfOLGFScM9wAAk80iStUAjo2BfSqcSFDMBb8JBeVeX6D%2BsYx47QisiO5hYp5YwwPWw%2BPLAC55oQG3weRI8ilxzLZPArDbas9rnfegUSXwjOccUN2WbGl6MiuhYKA%2BmpzGaQGlKqL0CzkbyjyvfGXItxl%2BikKLvoyWdxrg4fTCTAjybAoD0rKEHEhQvd6e0kPd3%2Bcy5MS4JSmyjF%2FqmEl47UR9fDbfJABWFhfCalMQ8So%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20231030T130854Z&X-Amz-SignedHeaders=host&X-Amz-Expires=300&X-Amz-Credential=ASIAQ3PHCVTYZBPGPBWY%2F20231030%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=12d249e97d240c494abe770d8814ce775f2232bf25194d3098688f852fe3d187&hash=dd17c10d887ae5cbc0c44cd4443851baecf6d269916f312a68c556c31370d50c&host=68042c943591013ac2b2430a89b270f6af2c76d8dfd086a07176afe7c76c2c61&pii=S0004370214001271&tid=spdf-b2d1d29c-1919-44b6-8d52-46d2cd8e7e4b&sid=f1d5d06d33b702495918a227b13db629c00dgxrqb&type=client&tsoh=d3d3LnNjaWVuY2VkaXJlY3QuY29t&ua=080f575106540657000c&rr=81e3e3bc998d6604&cc=nl
 
 } // namespace graph2
 } // namespace vic

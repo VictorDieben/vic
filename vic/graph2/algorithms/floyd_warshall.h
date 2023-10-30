@@ -11,119 +11,252 @@ namespace vic
 {
 namespace graph2
 {
-template <typename CostType, typename VertexIdType>
-struct FWData
-{
-    CostType cost{std::numeric_limits<CostType>::max()};
-    VertexIdType next{0};
-};
+//template <typename CostType, typename VertexIdType>
+//struct FWData
+//{
+//    CostType cost{std::numeric_limits<CostType>::max()};
+//    VertexIdType next{0};
+//};
+//
+//template <typename CostType, typename VertexIdType>
+//using FWMatrix = std::vector<std::vector<FWData<CostType, VertexIdType>>>;
+//
+//template <typename TGraph, typename TEdgeCostFunctor, bool directed = false>
+//auto FloydWarshall(const TGraph& graph, //
+//                   TEdgeCostFunctor edgeCostFunctor)
+//{
+//    using GraphType = TGraph;
+//    using VertexIdType = typename GraphType::VertexIdType;
+//    using EdgeIdType = typename GraphType::EdgeIdType;
+//    using CostType = decltype(edgeCostFunctor(VertexIdType{}, VertexIdType{}));
+//
+//    using Data = FWData<CostType, VertexIdType>;
+//
+//    const auto n = graph.NumVertices();
+//
+//    const std::vector<Data> tmp{n, Data{}};
+//    FWMatrix<CostType, VertexIdType> matrix{n, tmp};
+//
+//    const auto vertices = VertexIterator(graph);
+//
+//    for(const auto i : vertices)
+//        matrix[i][i] = Data{0., i};
+//
+//    for(const auto& edge : EdgeIterator(graph))
+//    {
+//        const auto edgeCost = edgeCostFunctor(edge.first, edge.second);
+//        matrix[edge.first][edge.second] = Data{edgeCost, edge.second};
+//        if constexpr(!directed)
+//            matrix[edge.second][edge.first] = Data{edgeCost, edge.first};
+//    }
+//
+//    for(const auto& vk : vertices)
+//    {
+//        for(const auto& vi : vertices)
+//        {
+//            for(const auto& vj : vertices)
+//            {
+//                const double sum_ik_kj = matrix[vi][vk].cost + matrix[vk][vj].cost;
+//                if(matrix[vi][vj].cost > sum_ik_kj)
+//                {
+//                    matrix[vi][vj] = Data{sum_ik_kj, matrix[vi][vk].next};
+//                }
+//            }
+//        }
+//    }
+//
+//    return matrix;
+//}
 
-template <typename CostType, typename VertexIdType>
-using FWMatrix = std::vector<std::vector<FWData<CostType, VertexIdType>>>;
-
+// Calculate the matrix of shortest distances and shortest paths
+// Can be used by other algorithms for policy.
 template <typename TGraph, typename TEdgeCostFunctor, bool directed = false>
-auto FloydWarshall(const TGraph& graph, //
-                   TEdgeCostFunctor edgeCostFunctor)
+class FloydWarshall
 {
-    using GraphType = TGraph;
-    using VertexIdType = typename GraphType::VertexIdType;
-    using EdgeIdType = typename GraphType::EdgeIdType;
-    using CostType = decltype(edgeCostFunctor(VertexIdType{}, VertexIdType{}));
+public:
+    using VertexIdType = typename TGraph::VertexIdType;
 
-    using Data = FWData<CostType, VertexIdType>;
-
-    const auto n = graph.NumVertices();
-
-    const std::vector<Data> tmp{n, Data{}};
-    FWMatrix<CostType, VertexIdType> matrix{n, tmp};
-
-    const auto vertices = VertexIterator(graph);
-
-    for(const auto i : vertices)
-        matrix[i][i] = Data{0., i};
-
-    for(const auto& edge : EdgeIterator(graph))
+    FloydWarshall(TGraph& graph, TEdgeCostFunctor functor)
+        : mGraph(graph)
+        , mEdgeCostFunctor(functor)
     {
-        const auto edgeCost = edgeCostFunctor(edge.first, edge.second);
-        matrix[edge.first][edge.second] = Data{edgeCost, edge.second};
-        if constexpr(!directed)
-            matrix[edge.second][edge.first] = Data{edgeCost, edge.first};
+        Update();
     }
 
-    for(const auto& vk : vertices)
+private:
+    TGraph& mGraph;
+    TEdgeCostFunctor mEdgeCostFunctor;
+    using CostType = decltype(mEdgeCostFunctor(VertexIdType{}, VertexIdType{}));
+
+    // todo: replace these with a matrix
+    std::vector<std::vector<CostType>> mCostMatrix{};
+    std::vector<std::vector<VertexIdType>> mPolicyMatrix{};
+
+public:
+    void Update()
     {
-        for(const auto& vi : vertices)
+        // todo: use Matrix from vic::linalg
+        // initialize
+        const auto n = mGraph.NumVertices();
+        constexpr CostType maxval = std::numeric_limits<CostType>::max() / 4.;
+        mCostMatrix = InitializeEmpty<CostType>(maxval, n, n);
+        mPolicyMatrix = InitializeEmpty<VertexIdType>(n, n);
+
+        const auto vertices = VertexIterator(mGraph);
+
+        // vertex to itself costs zero
+        for(const auto& id : vertices)
         {
-            for(const auto& vj : vertices)
+            mCostMatrix[id][id] = 0.;
+            mPolicyMatrix[id][id] = id;
+        }
+
+        // todo: fix for when 2 edges go between the same vertices
+
+        // set value of the direct edges
+        for(const auto& [source, sink] : EdgeIterator(mGraph))
+        {
+            mCostMatrix[source][sink] = mEdgeCostFunctor(source, sink);
+            mPolicyMatrix[source][sink] = sink;
+            if constexpr(!directed)
             {
-                const double sum_ik_kj = matrix[vi][vk].cost + matrix[vk][vj].cost;
-                if(matrix[vi][vj].cost > sum_ik_kj)
+                mCostMatrix[sink][source] = mEdgeCostFunctor(sink, source);
+                mPolicyMatrix[sink][source] = source;
+            }
+        }
+
+        for(const auto& vk : vertices)
+        {
+            for(const auto& vi : vertices)
+            {
+                for(const auto& vj : vertices)
                 {
-                    matrix[vi][vj] = Data{sum_ik_kj, matrix[vi][vk].next};
+                    const double sum_ik_kj = mCostMatrix[vi][vk] + mCostMatrix[vk][vj];
+                    if(mCostMatrix[vi][vj] > sum_ik_kj)
+                    {
+                        mCostMatrix[vi][vj] = sum_ik_kj;
+                        mPolicyMatrix[vi][vj] = mPolicyMatrix[vi][vk];
+                    }
                 }
             }
         }
     }
 
-    return matrix;
-}
+    CostType Cost(const VertexIdType source, const VertexIdType sink) const { return mCostMatrix[source][sink]; }
 
-// todo: higher order FW, where we store a policy for two robots driving their own path
+    VertexIdType Policy(const VertexIdType source, const VertexIdType sink) const { return mPolicyMatrix[source][sink]; }
 
-template <typename TGraph, typename TData>
-auto PolicyPath(const TGraph& graph, //
-                const std::vector<std::vector<TData>>& fw,
-                const typename TGraph::VertexIdType start,
-                const typename TGraph::VertexIdType target)
-{
-    std::vector<typename TGraph::VertexIdType> path;
-
-    path.push_back(start);
-    while(path.back() != target && path.size() < graph.NumVertices())
-        path.push_back(fw[path.back()][target].next);
-
-    return path;
-}
-
-template <typename TVertexId, typename FWData, bool shareHeadTail = false>
-bool PolicyPathsConflict(const FWData& fw, //
-                         const TVertexId start1,
-                         const TVertexId target1,
-                         const TVertexId start2,
-                         const TVertexId target2)
-{
-    TVertexId current1 = start1;
-    TVertexId current2 = start2;
-
-    if(current1 == current2)
-        return true;
-
-    while(current1 != target1 || current2 != target2)
+    void PolicyPath(std::vector<VertexIdType>& path, const VertexIdType source, const VertexIdType sink) const
     {
-        const TVertexId next1 = fw[current1][target1].next;
-        const TVertexId next2 = fw[current2][target2].next;
-
-        // check for conflict, if found, return true
-        if constexpr(shareHeadTail)
-        {
-            if(next1 == next2 || (next1 == current2 && //
-                                  next2 == current1))
-                return true;
-        }
-        else
-        {
-            if(next1 == current2 || (next2 == current1 || //
-                                     next1 == next2))
-                return true;
-        }
-
-        // increase current values
-        current1 = next1;
-        current2 = next2;
+        path.clear();
+        path.push_back(source);
+        while(path.back() != sink)
+            path.push_back(mPolicyMatrix[path.back()][sink]);
     }
 
-    return false; // todo
-}
+    std::vector<VertexIdType> PolicyPath(const VertexIdType source, const VertexIdType sink) const
+    {
+        std::vector<VertexIdType> buffer;
+        PolicyPath(buffer, source, sink);
+        return buffer;
+    }
+
+    template <bool shareHeadTail = false>
+    bool PolicyPathsConflict(const VertexIdType start1, //
+                             const VertexIdType target1,
+                             const VertexIdType start2,
+                             const VertexIdType target2) const
+    {
+        VertexIdType current1 = start1;
+        VertexIdType current2 = start2;
+
+        if(current1 == current2)
+            return true;
+
+        while(current1 != target1 || current2 != target2)
+        {
+            const VertexIdType next1 = mPolicyMatrix[current1][target1];
+            const VertexIdType next2 = mPolicyMatrix[current2][target2];
+
+            // check for conflict, if found, return true
+            if constexpr(shareHeadTail)
+            {
+                if(next1 == next2 || (next1 == current2 && //
+                                      next2 == current1))
+                    return true;
+            }
+            else
+            {
+                if(next1 == current2 || (next2 == current1 || //
+                                         next1 == next2))
+                    return true;
+            }
+
+            // increase current values
+            current1 = next1;
+            current2 = next2;
+        }
+
+        return false; // todo
+    }
+};
+
+// todo: higher order FW, where we store a policy for two robots driving their own path
+//
+//template <typename TGraph, typename TData>
+//auto PolicyPath(const TGraph& graph, //
+//                const std::vector<std::vector<TData>>& fw,
+//                const typename TGraph::VertexIdType start,
+//                const typename TGraph::VertexIdType target)
+//{
+//    std::vector<typename TGraph::VertexIdType> path;
+//
+//    path.push_back(start);
+//    while(path.back() != target && path.size() < graph.NumVertices())
+//        path.push_back(fw[path.back()][target].next);
+//
+//    return path;
+//}
+//
+//template <typename TVertexId, typename FWData, bool shareHeadTail = false>
+//bool PolicyPathsConflict(const FWData& fw, //
+//                         const TVertexId start1,
+//                         const TVertexId target1,
+//                         const TVertexId start2,
+//                         const TVertexId target2)
+//{
+//    TVertexId current1 = start1;
+//    TVertexId current2 = start2;
+//
+//    if(current1 == current2)
+//        return true;
+//
+//    while(current1 != target1 || current2 != target2)
+//    {
+//        const TVertexId next1 = fw[current1][target1].next;
+//        const TVertexId next2 = fw[current2][target2].next;
+//
+//        // check for conflict, if found, return true
+//        if constexpr(shareHeadTail)
+//        {
+//            if(next1 == next2 || (next1 == current2 && //
+//                                  next2 == current1))
+//                return true;
+//        }
+//        else
+//        {
+//            if(next1 == current2 || (next2 == current1 || //
+//                                     next1 == next2))
+//                return true;
+//        }
+//
+//        // increase current values
+//        current1 = next1;
+//        current2 = next2;
+//    }
+//
+//    return false; // todo
+//}
 
 template <typename TPath, bool shareHeadTail = false>
 bool PathsConflict(const TPath& path1, const TPath& path2)
@@ -162,6 +295,5 @@ bool PathsConflict(const TPath& path1, const TPath& path2)
     }
     return false;
 }
-
 } // namespace graph2
 } // namespace vic
