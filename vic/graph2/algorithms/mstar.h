@@ -19,7 +19,7 @@ namespace graph2
 
 using CollisionSet = uint64_t;
 
-inline constexpr void SetNthBit(CollisionSet& collisionset, uint8_t index)
+inline constexpr void SetNthBit(CollisionSet& collisionset, const uint8_t index)
 {
     collisionset |= ((uint64_t)1) << index; //
 }
@@ -28,6 +28,11 @@ inline constexpr bool NthBitIsSet(const CollisionSet collisionset, const uint8_t
 {
     const CollisionSet mask = ((uint64_t)1) << index;
     return collisionset & mask;
+}
+
+inline constexpr bool CollisionSetContains(const CollisionSet collisionSet, const CollisionSet possibleSubset)
+{
+    return (collisionSet & possibleSubset) == possibleSubset; //
 }
 
 template <typename TGraph, typename TOutVertexIterator>
@@ -182,7 +187,7 @@ public:
 
         CollisionSet collisionSet;
 
-        // todo: this can probably be sped up by ignoring agents that are already in collision
+        // todo: this can probably be sped up by skipping pairs of agents that are already in collision
         while(current != target)
         {
             ConstructPolicy(current, target, next);
@@ -211,8 +216,7 @@ public:
     std::vector<CartesianVertexType> mHeap;
 
     void Backprop(const CartesianVertexType& vertex, //
-                  const CollisionSet collisionSet,
-                  std::vector<uint64_t>& openList)
+                  const CollisionSet collisionSet)
     {
         //
     }

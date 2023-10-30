@@ -55,7 +55,7 @@ TEST(Graph2, Traits)
     static_assert(ConceptGraphEdgeList<TestGraph>);
     static_assert(!ConceptGraphCartesian<TestGraph>);
 
-    const auto fw = FloydWarshall(graph, [](const auto, const auto) { return 1; });
+    const auto fw = FloydWarshall<double, TestVertexId>(graph, [](const auto, const auto) { return 1; });
 
     static_assert(ConceptHeuristic<decltype(fw)>);
     static_assert(ConceptPolicy<decltype(fw)>);
@@ -89,7 +89,7 @@ TEST(Graph2, Startup)
 
     const auto costLambda = [&](const TestVertexId, const TestVertexId) -> double { return 1.; };
 
-    const auto fw = FloydWarshall(graph, costLambda);
+    const auto fw = FloydWarshall<double, TestVertexId>(graph, costLambda);
 
     const auto heuristicLambda = [&](const TestVertexId from, const TestVertexId to) -> double { return fw.Cost(from, to); };
 
@@ -170,7 +170,7 @@ TEST(Graph2, PolicyPathsConflict)
 
     const auto costLambda = [&](TestVertexId, TestVertexId) -> double { return 1.; };
 
-    const auto fw = FloydWarshall(graph, costLambda);
+    const auto fw = FloydWarshall<double, TestVertexId>(graph, costLambda);
 
     EXPECT_FALSE(fw.PolicyPathsConflict(0, 1, 2, 3));
     EXPECT_FALSE(fw.PolicyPathsConflict(1, 2, 3, 3));
@@ -256,7 +256,7 @@ TEST(Graph2, CartesianAStar)
 
     const auto graph = ConstructGridGraph<VertexType, EdgeType>(nx, ny);
 
-    const auto fw = FloydWarshall(graph, [&](const auto, const auto) -> double { return 1.; });
+    const auto fw = FloydWarshall<double, TestVertexId>(graph, [&](const auto, const auto) -> double { return 1.; });
 
     const auto heuristicLambda = [&](const CartesianVertexType& from, const CartesianVertexType& to) -> double {
         double cost = 0.;
@@ -298,7 +298,7 @@ TEST(Graph2, CartesianIterator)
 
     const auto costLambda = [&](VertexType, VertexType) -> double { return 1.; };
 
-    const auto fw = FloydWarshall(graph, costLambda);
+    const auto fw = FloydWarshall<double, TestVertexId>(graph, costLambda);
 
     // todo: make this a function argument
     const auto outIterator = GetOutVertexIterator(graph);
@@ -497,7 +497,7 @@ TEST(Graph2, MStar)
     const auto graph = ConstructGridGraph<VertexType, EdgeType>(nx, ny);
 
     const auto costLambda = [&](const auto, const auto) -> double { return 1.; };
-    const auto fw = FloydWarshall(graph, costLambda);
+    const auto fw = FloydWarshall<double, TestVertexId>(graph, costLambda);
     const auto heuristicLambda = [&](const CartesianVertexType from, const CartesianVertexType to) -> double {
         double cost = 0.;
         for(std::size_t i = 0; i < from.size(); ++i)

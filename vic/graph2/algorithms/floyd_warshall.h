@@ -70,39 +70,37 @@ namespace graph2
 
 // Calculate the matrix of shortest distances and shortest paths
 // Can be used by other algorithms for policy.
-template <typename TGraph, typename TEdgeCostFunctor, bool directed = false>
+template <typename TCost, typename TVertexId, bool directed = false>
 class FloydWarshall
 {
 public:
-    using VertexIdType = typename TGraph::VertexIdType;
+    using VertexIdType = TVertexId;
+    using CostType = TCost;
 
-    FloydWarshall(TGraph& graph, TEdgeCostFunctor functor)
-        : mGraph(graph)
-        , mEdgeCostFunctor(functor)
+    template <typename TGraph, typename TEdgeCostFunctor>
+    FloydWarshall(const TGraph& graph, TEdgeCostFunctor functor)
     {
-        Update();
+        // todo: static_assert();
+        Update(graph, functor);
     }
 
 private:
-    TGraph& mGraph;
-    TEdgeCostFunctor mEdgeCostFunctor;
-    using CostType = decltype(mEdgeCostFunctor(VertexIdType{}, VertexIdType{}));
-
     // todo: replace these with a matrix
     std::vector<std::vector<CostType>> mCostMatrix{};
     std::vector<std::vector<VertexIdType>> mPolicyMatrix{};
 
 public:
-    void Update()
+    template <typename TGraph, typename TEdgeCostFunctor>
+    void Update(const TGraph& graph, TEdgeCostFunctor functor)
     {
         // todo: use Matrix from vic::linalg
         // initialize
-        const auto n = mGraph.NumVertices();
+        const auto n = graph.NumVertices();
         constexpr CostType maxval = std::numeric_limits<CostType>::max() / 4.;
         mCostMatrix = InitializeEmpty<CostType>(maxval, n, n);
         mPolicyMatrix = InitializeEmpty<VertexIdType>(n, n);
 
-        const auto vertices = VertexIterator(mGraph);
+        const auto vertices = VertexIterator(graph);
 
         // vertex to itself costs zero
         for(const auto& id : vertices)
@@ -114,13 +112,13 @@ public:
         // todo: fix for when 2 edges go between the same vertices
 
         // set value of the direct edges
-        for(const auto& [source, sink] : EdgeIterator(mGraph))
+        for(const auto& [source, sink] : EdgeIterator(graph))
         {
-            mCostMatrix[source][sink] = mEdgeCostFunctor(source, sink);
+            mCostMatrix[source][sink] = functor(source, sink);
             mPolicyMatrix[source][sink] = sink;
             if constexpr(!directed)
             {
-                mCostMatrix[sink][source] = mEdgeCostFunctor(sink, source);
+                mCostMatrix[sink][source] = functor(sink, source);
                 mPolicyMatrix[sink][source] = source;
             }
         }
