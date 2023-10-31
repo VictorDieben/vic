@@ -267,7 +267,9 @@ TEST(Graph2, CartesianAStar)
     };
 
     const auto costLambda = [&](const CartesianVertexType, const CartesianVertexType) -> double { return 1.; };
-    CartesianAStarInstance astarInstance(graph, costLambda, heuristicLambda);
+    CartesianAStar astarInstance(graph, costLambda, heuristicLambda);
+
+    const auto pathTmp = astarInstance.Run(CartesianVertexType{0, last}, CartesianVertexType{last, 0});
 
     const auto timer = Timer();
     const auto path = astarInstance.Run(CartesianVertexType{0, last}, CartesianVertexType{last, 0});

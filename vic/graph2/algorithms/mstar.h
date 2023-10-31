@@ -185,7 +185,7 @@ public:
         CartesianVertexType current = start;
         CartesianVertexType next;
 
-        CollisionSet collisionSet;
+        CollisionSet collisionSet{};
 
         // todo: this can probably be sped up by skipping pairs of agents that are already in collision
         while(current != target)
