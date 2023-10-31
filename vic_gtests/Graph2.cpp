@@ -245,6 +245,11 @@ TEST(Graph2, CartesianAStar)
     constexpr std::size_t nx = 10, ny = 10;
     constexpr std::size_t last = (nx * ny) - 1;
 
+    constexpr std::size_t bl = 0;
+    constexpr std::size_t br = nx - 1;
+    constexpr std::size_t tl = (nx * (ny - 1));
+    constexpr std::size_t tr = (nx * ny) - 1;
+
     using VertexType = uint16_t;
     using EdgeType = uint16_t;
 
@@ -260,19 +265,21 @@ TEST(Graph2, CartesianAStar)
 
     const auto heuristicLambda = [&](const CartesianVertexType& from, const CartesianVertexType& to) -> double {
         double cost = 0.;
-        for(std::size_t i = 0; i < from.size(); ++i)
+        const auto size = from.size();
+        for(std::size_t i = 0; i < size; ++i)
             cost += fw.Cost(from.at(i), to.at(i));
-        cost = cost / double(from.size());
+        cost = cost / double(size);
         return 1.00001 * cost; // slightly overestimate the remaining part of path
     };
 
-    const auto costLambda = [&](const CartesianVertexType, const CartesianVertexType) -> double { return 1.; };
-    CartesianAStar astarInstance(graph, costLambda, heuristicLambda);
+    const auto costLambda = [&](const CartesianVertexType&, const CartesianVertexType&) -> double { return 1.; };
+    auto astarInstance = CartesianAStar<double, decltype(graph)>(graph);
 
-    const auto pathTmp = astarInstance.Run(CartesianVertexType{0, last}, CartesianVertexType{last, 0});
+    const auto from = CartesianVertexType{bl, tr, tl, br};
+    const auto to = CartesianVertexType{tr, bl, br, tl};
 
     const auto timer = Timer();
-    const auto path = astarInstance.Run(CartesianVertexType{0, last}, CartesianVertexType{last, 0});
+    const auto path = astarInstance.Run(from, to, costLambda, heuristicLambda);
     const auto duration = timer.GetTime();
 
     std::cout << std::format("duration: {}ms", 1000. * duration.count()) << std::endl;
@@ -498,9 +505,9 @@ TEST(Graph2, MStar)
     constexpr std::size_t nx = 3, ny = 3;
     const auto graph = ConstructGridGraph<VertexType, EdgeType>(nx, ny);
 
-    const auto costLambda = [&](const auto, const auto) -> double { return 1.; };
-    const auto fw = FloydWarshall<double, TestVertexId>(graph, costLambda);
-    const auto heuristicLambda = [&](const CartesianVertexType from, const CartesianVertexType to) -> double {
+    const auto costLambda = [&](const CartesianVertexType&, const CartesianVertexType&) -> double { return 1.; };
+    const auto fw = FloydWarshall<double, TestVertexId>(graph, [](const auto, const auto) -> double { return 1.; });
+    const auto heuristicLambda = [&](const CartesianVertexType& from, const CartesianVertexType& to) -> double {
         double cost = 0.;
         for(std::size_t i = 0; i < from.size(); ++i)
             cost += fw.Cost(from.at(i), to.at(i));
@@ -508,10 +515,14 @@ TEST(Graph2, MStar)
         return 1.00001 * cost; // slightly overestimate the remaining part of path
     };
 
-    MStar mstar{graph, heuristicLambda, heuristicLambda, fw};
+    // todo: figure out why graph type is not automatically deduced
+    MStar<double, decltype(graph)> mstar{graph};
 
     const auto path = mstar.Run(CartesianVertexType{0, 8}, //
-                                CartesianVertexType{8, 0});
+                                CartesianVertexType{8, 0},
+                                costLambda,
+                                heuristicLambda,
+                                fw);
 
     //const auto path = MStar(
     //    graph, //

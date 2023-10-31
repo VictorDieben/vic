@@ -242,37 +242,27 @@ struct VectorHasher
     }
 };
 
-template <typename TGraph, typename TEdgeCostFunctor, typename THeuristicFunctor>
+template <typename TCost, typename TGraph>
 struct CartesianAStar
 {
 public:
+    explicit CartesianAStar(const TGraph& graph)
+        : mGraph(graph)
+        , mOutIterator(graph)
+    { }
+
     using VertexIdType = typename TGraph::VertexIdType;
     using EdgeIdType = typename TGraph::EdgeIdType;
 
     using CartesianVertexType = std::vector<VertexIdType>;
 
-    CartesianAStar(const TGraph& graph, //
-                   TEdgeCostFunctor edgeCostFunctor,
-                   THeuristicFunctor heuristicFunctor)
-        : mGraph(graph)
-        , mEdgeCostFunctor(edgeCostFunctor)
-        , mHeuristicFunctor(heuristicFunctor)
-        , mOutIterator(graph)
-    { }
+    using CostType = TCost;
 
 private:
     const TGraph& mGraph;
-
-    TEdgeCostFunctor mEdgeCostFunctor;
-    THeuristicFunctor mHeuristicFunctor;
-
     BaseOutVertexIterator<TGraph> mOutIterator;
 
 public:
-    using CostType = decltype(mEdgeCostFunctor(CartesianVertexType{}, CartesianVertexType{}));
-    using HeuristicType = decltype(mHeuristicFunctor(CartesianVertexType{}, CartesianVertexType{}));
-    // static_assert(std::is_same_v<CostType, HeuristicType>);
-
     struct ExploredObject
     {
         CartesianVertexType vertex{}; // previous
@@ -286,12 +276,13 @@ public:
     std::unordered_map<CartesianVertexType, ExploredObject, Hasher> mExploredMap;
     std::vector<CartesianVertexType> mHeap;
 
-    auto Run(const CartesianVertexType& start, const CartesianVertexType& target)
+    template <typename TEdgeCostFunctor, typename THeuristicFunctor>
+    auto Run(const CartesianVertexType& start, //
+             const CartesianVertexType& target,
+             const TEdgeCostFunctor& edgeCostFunctor,
+             const THeuristicFunctor& heuristicFunctor)
     {
         assert(start.size() == target.size());
-        mClosedSet.clear();
-        mExploredMap.clear();
-        mHeap.clear();
 
         const auto numVertices = mGraph.NumVertices();
         const auto dims = start.size();
@@ -309,7 +300,7 @@ public:
         while(!mHeap.empty())
         {
             std::pop_heap(mHeap.begin(), mHeap.end(), compareF);
-            current = std::move(mHeap.back());
+            std::swap(current, mHeap.back()); // avoid destructing current, just swap it to the heap
             mHeap.pop_back();
 
             if(current == target)
@@ -320,14 +311,14 @@ public:
 
             // iterate over neighbours, check with best value so far
             cartesianOutIterator.ForeachValidOutVertex(current, [&](const CartesianVertexType& other) {
-                const auto edgeCost = mEdgeCostFunctor(current, other);
+                const auto edgeCost = edgeCostFunctor(current, other);
                 const auto newGScore = mExploredMap[current].g + edgeCost;
 
                 auto& item = mExploredMap[other]; // adds item if it did not exist
 
                 if(newGScore < item.g)
                 {
-                    const CostType hscore = mHeuristicFunctor(other, target);
+                    const CostType hscore = heuristicFunctor(other, target);
                     item = ExploredObject{current, newGScore + hscore, newGScore};
 
                     mHeap.push_back(other);
@@ -350,6 +341,11 @@ public:
         }
 
         std::reverse(path.begin(), path.end());
+
+        mClosedSet.clear();
+        mExploredMap.clear();
+        mHeap.clear();
+
         return path;
     }
 };

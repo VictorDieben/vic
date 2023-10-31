@@ -116,7 +116,7 @@ private:
     }
 };
 
-template <typename TGraph>
+template <typename TGraph, typename TCost>
 void Backprop(const TGraph& graph, //
               const std::vector<typename TGraph::VertexIdType>& vertex,
               const CollisionSet collisionSet,
@@ -125,8 +125,67 @@ void Backprop(const TGraph& graph, //
     //
 }
 
-template <typename TGraph, typename TEdgeCostFunctor, typename THeuristicFunctor, typename TPolicy>
-    requires ConceptEdgeCost<TEdgeCostFunctor> && ConceptEdgeCost<THeuristicFunctor>
+template <typename CartesianVertexType, typename TPolicy>
+void ConstructPolicy(const TPolicy& policy,
+                     const CartesianVertexType& position, //
+                     const CartesianVertexType& target,
+                     CartesianVertexType& buffer)
+{
+    const auto numDims = position.size();
+    buffer.clear();
+    for(std::size_t i = 0; i < numDims; ++i)
+        buffer.push_back(policy.Policy(position.at(i), target.at(i)));
+}
+
+template <typename CartesianVertexType, typename TPolicy>
+CartesianVertexType ConstructPolicy(const TPolicy& policy,
+                                    const CartesianVertexType& position, //
+                                    const CartesianVertexType& target)
+{
+    CartesianVertexType buffer;
+    ConstructPolicy(policy, position, target, buffer);
+    return buffer;
+}
+
+template <typename TPolicy, typename CartesianVertexType>
+    requires ConceptPolicy<TPolicy>
+CollisionSet ConstructCollisionSet(const TPolicy& policy, //
+                                   const CartesianVertexType& start,
+                                   const CartesianVertexType& target)
+{
+    const auto numAgents = start.size();
+
+    CartesianVertexType current = start;
+    CartesianVertexType next;
+
+    CollisionSet collisionSet{};
+
+    // todo: this can probably be sped up by skipping pairs of agents that are already in collision
+    while(current != target)
+    {
+        ConstructPolicy(policy, current, target, next);
+
+        // for each pair of agents, check if their next step will conflict
+        for(std::size_t a = 0; a < numAgents - 1; ++a)
+        {
+            for(std::size_t b = a + 1; b < numAgents; ++b)
+            {
+                if((current.at(a) == next.at(b)) || //
+                   (next.at(a) == current.at(b)) || //
+                   (next.at(a) == next.at(b)))
+                {
+                    SetNthBit(collisionSet, a);
+                    SetNthBit(collisionSet, b);
+                }
+            }
+        }
+        std::swap(current, next);
+    }
+
+    return collisionSet;
+}
+
+template <typename TCost, typename TGraph>
 struct MStar
 {
 public:
@@ -135,29 +194,18 @@ public:
 
     using CartesianVertexType = std::vector<VertexIdType>;
 
-    MStar(const TGraph& graph, //
-          TEdgeCostFunctor edgeCostFunctor,
-          THeuristicFunctor heuristicFunctor,
-          TPolicy policy)
+    using CostType = TCost;
+
+    MStar(const TGraph& graph)
         : mGraph(graph)
-        , mEdgeCostFunctor(edgeCostFunctor)
-        , mHeuristicFunctor(heuristicFunctor)
-        , mPolicy(policy)
         , mOutIterator(graph)
     { }
 
 private:
     const TGraph& mGraph;
-    TEdgeCostFunctor mEdgeCostFunctor;
-    THeuristicFunctor mHeuristicFunctor;
-    TPolicy mPolicy;
     BaseOutVertexIterator<TGraph> mOutIterator;
 
 public:
-    using CostType = decltype(mEdgeCostFunctor(CartesianVertexType{}, CartesianVertexType{}));
-    using HeuristicType = decltype(mHeuristicFunctor(CartesianVertexType{}, CartesianVertexType{}));
-    static_assert(std::is_same_v<CostType, HeuristicType>);
-
     struct ExploredObject
     {
         CartesianVertexType vertex{}; // previous
@@ -168,60 +216,17 @@ public:
 
         std::set<CartesianVertexType> backpropSet;
     };
-    void ConstructPolicy(const CartesianVertexType& position, //
-                         const CartesianVertexType& target,
-                         CartesianVertexType& buffer) const
-    {
-        const auto numDims = position.size();
-        buffer.clear();
-        for(std::size_t i = 0; i < numDims; ++i)
-            buffer.push_back(mPolicy.Policy(position.at(i), target.at(i)));
-    }
-
-    CollisionSet ConstructCollisionSet(const CartesianVertexType& start, const CartesianVertexType& target) const
-    {
-        const auto numAgents = start.size();
-
-        CartesianVertexType current = start;
-        CartesianVertexType next;
-
-        CollisionSet collisionSet{};
-
-        // todo: this can probably be sped up by skipping pairs of agents that are already in collision
-        while(current != target)
-        {
-            ConstructPolicy(current, target, next);
-
-            // for each pair of agents, check if their next step will conflict
-            for(std::size_t a = 0; a < numAgents - 1; ++a)
-            {
-                for(std::size_t b = a + 1; b < numAgents; ++b)
-                {
-                    if((current.at(a) == next.at(b)) || //
-                       (next.at(a) == current.at(b)) || //
-                       (next.at(a) == next.at(b)))
-                    {
-                        SetNthBit(collisionSet, a);
-                        SetNthBit(collisionSet, b);
-                    }
-                }
-            }
-            std::swap(current, next);
-        }
-
-        return collisionSet;
-    }
 
     std::map<CartesianVertexType, ExploredObject> mExploredMap;
     std::vector<CartesianVertexType> mHeap;
 
-    void Backprop(const CartesianVertexType& vertex, //
-                  const CollisionSet collisionSet)
-    {
-        //
-    }
-
-    auto Run(const CartesianVertexType& start, const CartesianVertexType& target)
+    template <typename TEdgeCostFunctor, typename THeuristicFunctor, typename TPolicy>
+        requires ConceptEdgeCost<TEdgeCostFunctor> && ConceptEdgeCost<THeuristicFunctor>
+    auto Run(const CartesianVertexType& start, //
+             const CartesianVertexType& target,
+             const TEdgeCostFunctor& edgeCostFunctor,
+             const THeuristicFunctor& heuristicFunctor,
+             const TPolicy& policy)
     {
         mExploredMap.clear();
         mExploredMap.at(start) = ExploredObject(start, CollisionSet{}, 0., 0., {});
@@ -235,27 +240,27 @@ public:
         const auto compareF = [&](const CartesianVertexType v1, const CartesianVertexType v2) { return mExploredMap.at(v1).f > mExploredMap.at(v2).f; };
 
         CartesianVertexType current;
-        CartesianVertexType policy;
+        CartesianVertexType policyDirection;
 
         while(!mHeap.empty())
         {
             std::pop_heap(mHeap.begin(), mHeap.end(), compareF);
-            current = mHeap.back();
+            std::swap(current, mHeap.back());
             mHeap.pop_back();
 
             if(current == target)
                 break;
 
-            ConstructPolicy(current, target, policy);
+            ConstructPolicy(policy, current, target, policyDirection);
 
-            const CollisionSet collisionSet = ConstructCollisionSet(current, target);
+            const CollisionSet collisionSet = ConstructCollisionSet(policy, current, target);
 
-            subsetIterator.ForeachOutVertex(current, policy, collisionSet, [&](const CartesianVertexType& other) {
+            subsetIterator.ForeachOutVertex(current, policyDirection, collisionSet, [&](const CartesianVertexType& other) {
                 //
             });
         }
 
-        std::vector<CartesianVertexType> path;
+        std::vector<CartesianVertexType> path{};
 
         // todo: backtrack
 
