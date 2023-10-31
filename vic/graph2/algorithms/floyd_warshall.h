@@ -84,6 +84,8 @@ public:
         Update(graph, functor);
     }
 
+    FloydWarshall() = default;
+
 private:
     // todo: replace these with a matrix
     std::vector<std::vector<CostType>> mCostMatrix{};

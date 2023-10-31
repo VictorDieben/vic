@@ -62,17 +62,13 @@ class BaseOutVertexIterator
 {
 public:
     using VertexIdType = typename TGraph::VertexIdType;
-    BaseOutVertexIterator(const TGraph& graph)
-        : mGraph(graph)
-    {
-        Update();
-    }
+    BaseOutVertexIterator(const TGraph& graph) { Update(graph); }
 
-    void Update()
+    void Update(const TGraph& graph)
     {
         mOutVertices.clear();
-        mOutVertices.resize(mGraph.NumVertices());
-        for(const auto& edge : mGraph.Edges())
+        mOutVertices.resize(graph.NumVertices());
+        for(const auto& edge : graph.Edges())
         {
             mOutVertices[edge.first].emplace_back(edge.second);
             // if constexpr(!directed)
@@ -91,7 +87,6 @@ public:
     }
 
 private:
-    const TGraph& mGraph;
     std::vector<std::vector<VertexIdType>> mOutVertices{};
 };
 
@@ -162,14 +157,12 @@ private:
     std::vector<std::vector<std::pair<EdgeIdType, VertexIdType>>> mOutEdgeData{};
 };
 
-template <typename TGraph, typename TOutVertexIterator>
+template <typename TOutVertexIterator>
 class CartesianOutIterator
 {
 public:
-    using VertexIdType = typename TGraph::VertexIdType;
-    using EdgeIdType = typename TGraph::EdgeIdType;
-
-    using Graph = TGraph;
+    using VertexIdType = uint16_t;
+    using EdgeIdType = uint16_t;
 
     // todo: this might need to be input
     using CartesianVertexIdType = uint64_t;
@@ -179,24 +172,22 @@ public:
     using CartesianEdgeType = std::vector<EdgeIdType>;
 
 private:
-    const Graph& mGraph;
     const TOutVertexIterator& mOutIterator; // todo: constrain with concept
 
 public:
-    CartesianOutIterator(const TGraph& graph, const TOutVertexIterator& outIterator)
-        : mGraph(graph)
-        , mOutIterator(outIterator)
+    CartesianOutIterator(const TOutVertexIterator& outIterator)
+        : mOutIterator(outIterator)
     { }
 
-    template <typename TFunctor>
-    void ForeachOutVertex(const uint32_t dimensions, const VertexIdType id, TFunctor functor) const
-    {
-        std::vector<VertexIdType> buffer;
-        buffer.resize(dimensions);
-        ToVector(id, dimensions, mGraph.NumVertices(), buffer);
+    //template <typename TFunctor>
+    //void ForeachOutVertex(const uint32_t dimensions, const VertexIdType id, TFunctor functor) const
+    //{
+    //    std::vector<VertexIdType> buffer;
+    //    buffer.resize(dimensions);
+    //    ToVector(id, dimensions, mGraph.NumVertices(), buffer);
 
-        ForeachOut(buffer, functor);
-    }
+    //    ForeachOut(buffer, functor);
+    //}
 
     template <typename TFunctor>
     void ForeachOutVertex(const std::vector<VertexIdType>& vert, TFunctor functor) const
@@ -205,15 +196,15 @@ public:
         ForeachOutRecursive(copy, functor, 0, vert.size());
     }
 
-    template <typename TFunctor>
-    void ForeachValidOutVertex(const uint32_t dimensions, const VertexIdType id, TFunctor functor) const
-    {
-        std::vector<VertexIdType> buffer;
-        buffer.resize(dimensions);
-        ToVector(id, dimensions, mGraph.NumVertices(), buffer);
+    //template <typename TFunctor>
+    //void ForeachValidOutVertex(const uint32_t dimensions, const VertexIdType id, TFunctor functor) const
+    //{
+    //    std::vector<VertexIdType> buffer;
+    //    buffer.resize(dimensions);
+    //    ToVector(id, dimensions, mGraph.NumVertices(), buffer);
 
-        ForeachValidOut(buffer, functor);
-    }
+    //    ForeachValidOut(buffer, functor);
+    //}
 
     template <typename TFunctor>
     void ForeachValidOutVertex(const std::vector<VertexIdType>& vert, TFunctor functor) const

@@ -166,9 +166,9 @@ CollisionSet ConstructCollisionSet(const TPolicy& policy, //
         ConstructPolicy(policy, current, target, next);
 
         // for each pair of agents, check if their next step will conflict
-        for(std::size_t a = 0; a < numAgents - 1; ++a)
+        for(std::uint8_t a = 0; a < numAgents - 1; ++a)
         {
-            for(std::size_t b = a + 1; b < numAgents; ++b)
+            for(std::uint8_t b = a + 1; b < numAgents; ++b)
             {
                 if((current.at(a) == next.at(b)) || //
                    (next.at(a) == current.at(b)) || //

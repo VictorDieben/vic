@@ -322,7 +322,7 @@ TEST(Graph2, CartesianIterator)
     EXPECT_EQ(generateOutSet(outIterator, 3), (std::set<VertexType>{0, 3, 4, 6}));
     EXPECT_EQ(generateOutSet(outIterator, 4), (std::set<VertexType>{1, 3, 4, 5, 7}));
 
-    const auto cartesianOutIterator = CartesianOutIterator(graph, outIterator);
+    const auto cartesianOutIterator = CartesianOutIterator(outIterator);
 
     const auto generateCartesianOutSet = [&](const decltype(cartesianOutIterator)& iterator, const CartesianVertexType& vertex) {
         std::set<CartesianVertexType> result{};
@@ -378,7 +378,7 @@ TEST(Graph2, ValidOutPerformace)
 
     const auto outIterator = GetOutVertexIterator(graph);
 
-    const auto cartesianOutIterator = CartesianOutIterator(graph, outIterator);
+    const auto cartesianOutIterator = CartesianOutIterator(outIterator);
 
     const auto countCartesianOut = [&](const decltype(cartesianOutIterator)& iterator, const CartesianVertexType& vertex) {
         std::size_t count = 0;

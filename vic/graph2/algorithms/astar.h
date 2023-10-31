@@ -247,9 +247,10 @@ struct CartesianAStar
 {
 public:
     explicit CartesianAStar(const TGraph& graph)
-        : mGraph(graph)
-        , mOutIterator(graph)
+        : mOutIterator(graph)
     { }
+
+    CartesianAStar() = default;
 
     using VertexIdType = typename TGraph::VertexIdType;
     using EdgeIdType = typename TGraph::EdgeIdType;
@@ -259,7 +260,6 @@ public:
     using CostType = TCost;
 
 private:
-    const TGraph& mGraph;
     BaseOutVertexIterator<TGraph> mOutIterator;
 
 public:
@@ -284,10 +284,9 @@ public:
     {
         assert(start.size() == target.size());
 
-        const auto numVertices = mGraph.NumVertices();
         const auto dims = start.size();
 
-        const auto cartesianOutIterator = CartesianOutIterator(mGraph, mOutIterator);
+        const auto cartesianOutIterator = CartesianOutIterator(mOutIterator);
 
         mHeap.push_back(start);
         mExploredMap[start] = ExploredObject{start, 0., 0.};
@@ -334,7 +333,7 @@ public:
         path.push_back(target);
 
         current = target;
-        while(current != start && path.size() < numVertices * 4) // note: for multi-robot, we cannot assume than number of vertices is really the upper limit, 4x should be enough
+        while(current != start) // note: for multi-robot, we cannot assume than number of vertices is really the upper limit, 4x should be enough
         {
             current = mExploredMap[current].vertex;
             path.push_back(current);
