@@ -179,47 +179,28 @@ public:
         : mOutIterator(outIterator)
     { }
 
-    //template <typename TFunctor>
-    //void ForeachOutVertex(const uint32_t dimensions, const VertexIdType id, TFunctor functor) const
-    //{
-    //    std::vector<VertexIdType> buffer;
-    //    buffer.resize(dimensions);
-    //    ToVector(id, dimensions, mGraph.NumVertices(), buffer);
-
-    //    ForeachOut(buffer, functor);
-    //}
+    mutable CartesianVertexType buffer{}; // todo: keep?
 
     template <typename TFunctor>
-    void ForeachOutVertex(const std::vector<VertexIdType>& vert, TFunctor functor) const
+    void ForeachOutVertex(const CartesianVertexType& vert, TFunctor functor) const
     {
-        auto copy = vert; // non-const copy
-        ForeachOutRecursive(copy, functor, 0, vert.size());
+        buffer = vert;
+        ForeachOutRecursive(buffer, functor, 0, vert.size());
     }
 
-    //template <typename TFunctor>
-    //void ForeachValidOutVertex(const uint32_t dimensions, const VertexIdType id, TFunctor functor) const
-    //{
-    //    std::vector<VertexIdType> buffer;
-    //    buffer.resize(dimensions);
-    //    ToVector(id, dimensions, mGraph.NumVertices(), buffer);
-
-    //    ForeachValidOut(buffer, functor);
-    //}
-
     template <typename TFunctor>
-    void ForeachValidOutVertex(const std::vector<VertexIdType>& vert, TFunctor functor) const
+    void ForeachValidOutVertex(const CartesianVertexType& vert, TFunctor functor) const
     {
-        auto copy = vert;
-        // std::unordered_set<VertexIdType> occupiedVertices(copy.begin(), copy.end());
+        buffer = vert;
         vic::memory::UnorderedFlatSet<VertexIdType> occupiedVertices(vert.begin(), vert.end());
         if(occupiedVertices.size() < vert.size())
             return; // start vertex is already in collision
-        ForeachValidOutVertexRecursive(copy, functor, 0, vert.size(), occupiedVertices);
+        ForeachValidOutVertexRecursive(buffer, functor, 0, vert.size(), occupiedVertices);
     }
 
 private:
     template <typename TFunctor>
-    void ForeachOutRecursive(std::vector<VertexIdType>& vertex,
+    void ForeachOutRecursive(CartesianVertexType& vertex,
                              TFunctor functor, //
                              const std::size_t dim,
                              const std::size_t dims) const
@@ -245,7 +226,7 @@ private:
     }
 
     template <typename TFunctor>
-    void ForeachValidOutVertexRecursive(std::vector<VertexIdType>& vertex,
+    void ForeachValidOutVertexRecursive(CartesianVertexType& vertex,
                                         TFunctor functor, //
                                         const std::size_t dim,
                                         const std::size_t dims,

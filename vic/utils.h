@@ -345,6 +345,9 @@ public:
     RangeIterator begin() { return RangeIterator{mBegin, mEnd, mStride}; }
     RangeIterator end() { return RangeIterator{mEnd, mEnd, mStride}; }
 
+    RangeIterator begin() const { return RangeIterator{mBegin, mEnd, mStride}; }
+    RangeIterator end() const { return RangeIterator{mEnd, mEnd, mStride}; }
+
 private:
     T mBegin{};
     T mEnd{};

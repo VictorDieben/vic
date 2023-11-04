@@ -39,20 +39,15 @@ struct Triangle
     const Point<T, dims>& p3() const { return points[2]; }
 };
 
-// todo: Circle is just a 2d sphere?
-//template <typename T, std::size_t dims>
-//struct Circle
-//{
-//    Point<T, dims> pos{};
-//    T rad{};
-//};
-
 template <typename T, std::size_t dims>
 struct Sphere
 {
     Point<T, dims> pos{};
     T rad{};
 };
+
+template <typename T>
+using Circle = Sphere<T, 2>;
 
 template <typename T>
 struct Interval

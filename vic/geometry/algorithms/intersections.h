@@ -317,4 +317,41 @@ auto ParametricPatchLineIntersection(const BSurface<T, 3>& surface, //
     return false; //
 }
 
+template <typename T>
+Sphere<T, 2> CircumscribedCircle(const Point<T, 2>& v1, //
+                                 const Point<T, 2>& v2,
+                                 const Point<T, 2>& v3)
+{
+    using namespace vic::linalg;
+    const T& ax = v1.Get(0);
+    const T& ay = v1.Get(1);
+
+    const T& bx = v2.Get(0);
+    const T& by = v2.Get(1);
+
+    const T& cx = v3.Get(0);
+    const T& cy = v3.Get(1);
+
+    const T oneOverD = 1. / (2. * ((ax * (by - cy)) + (bx * (cy - ay)) + (cx * (ay - by))));
+
+    const T asq = (ax * ax) + (ay * ay);
+    const T bsq = (bx * bx) + (by * by);
+    const T csq = (cx * cx) + (cy * cy);
+
+    const T ux = oneOverD * ((asq * (by - cy)) + (bsq * (cy - ay)) + (csq * (ay - by)));
+    const T uy = oneOverD * ((asq * (cx - bx)) + (bsq * (ax - cx)) + (csq * (bx - ax)));
+
+    const auto u = Point<T, 2>{ux, uy};
+    const T r = Norm(Subtract(u, v1));
+
+    return Sphere<T, 2>{u, r};
+}
+
+template <typename T, std::size_t dims>
+bool PointInsideSphere(const Point<T, dims>& point, const Sphere<T, dims>& sphere)
+{
+    using namespace vic::linalg;
+    return SquaredNorm(Subtract(sphere.pos, point)) < (sphere.rad * sphere.rad);
+}
+
 } // namespace vic::geom

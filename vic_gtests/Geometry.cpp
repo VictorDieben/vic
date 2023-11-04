@@ -4,6 +4,7 @@
 #include "vic/geometry/algorithms/algorithms.h"
 #include "vic/geometry/algorithms/assignment_problem.h"
 #include "vic/geometry/algorithms/bbox_tree.h"
+#include "vic/geometry/algorithms/delaunay.h"
 #include "vic/geometry/algorithms/intersections.h"
 #include "vic/geometry/algorithms/interval_heap.h"
 #include "vic/geometry/geometry.h"
@@ -803,4 +804,69 @@ TEST(Geom, Revolve)
 TEST(Geom, EulerPoincare)
 {
     //
+}
+
+TEST(Geom, CircumscribedCircle)
+{
+    Point2d p1{1., 0.};
+    Point2d p2{1., 1.};
+    Point2d p3{0., 1.};
+
+    const auto circle = CircumscribedCircle(p1, p2, p3);
+
+    EXPECT_TRUE(IsEqual(circle.pos, Point2d(.5, .5)));
+    EXPECT_EQ(circle.rad, std::sqrt(.5));
+}
+
+TEST(Geom, SuperTriangle)
+{
+
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> pos(-1., 1.);
+
+    std::vector<Vector2d> vertices;
+    for(std::size_t i = 0; i < 1000; ++i)
+        vertices.push_back(Vector2d(pos(g), pos(g)));
+
+    const auto [a, b, c] = SuperTriangle(vertices);
+
+    const auto circumCircle = CircumscribedCircle(vertices.at(a), vertices.at(b), vertices.at(c));
+
+    for(std::size_t i = 0; i < 1000; ++i)
+    {
+        if(i == a || i == b || i == c)
+            continue;
+
+        ASSERT_TRUE(PointInsideSphere(vertices.at(i), circumCircle));
+    }
+}
+
+TEST(Geom, Delaunay2d)
+{
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> pos(-1., 1.);
+
+    const std::size_t numPoints = 1000;
+
+    std::vector<Vector2d> vertices;
+    for(std::size_t i = 0; i < numPoints; ++i)
+        vertices.push_back(Vector2d(pos(g), pos(g)));
+
+    const auto tris = Delaunay2d(vertices);
+
+    for(const auto& [a, b, c] : tris)
+    {
+        const auto circumCircle = CircumscribedCircle(vertices.at(a), vertices.at(b), vertices.at(c));
+
+        for(std::size_t i = 0; i < numPoints; ++i)
+        {
+            if(i != a && i != b && i != c)
+            {
+                const auto& vert = vertices.at(i);
+                const auto inside = PointInsideSphere(vert, circumCircle);
+                if(inside)
+                    ASSERT_FALSE(inside);
+            }
+        }
+    }
 }

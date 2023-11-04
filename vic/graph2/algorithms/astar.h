@@ -272,8 +272,8 @@ public:
 
     using Hasher = VectorHasher<VertexIdType>;
 
-    std::unordered_set<CartesianVertexType, Hasher> mClosedSet;
-    std::unordered_map<CartesianVertexType, ExploredObject, Hasher> mExploredMap;
+    std::set<CartesianVertexType> mClosedSet;
+    std::map<CartesianVertexType, ExploredObject> mExploredMap;
     std::vector<CartesianVertexType> mHeap;
 
     template <typename TEdgeCostFunctor, typename THeuristicFunctor>
@@ -335,6 +335,8 @@ public:
         current = target;
         while(current != start) // note: for multi-robot, we cannot assume than number of vertices is really the upper limit, 4x should be enough
         {
+            if(path.size() > 1000)
+                return std::vector<CartesianVertexType>{};
             current = mExploredMap[current].vertex;
             path.push_back(current);
         }
