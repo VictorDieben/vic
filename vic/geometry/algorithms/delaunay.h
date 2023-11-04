@@ -8,6 +8,7 @@
 #include "vic/geometry/algorithms/intersections.h"
 
 #include <cmath>
+#include <execution>
 #include <tuple>
 #include <vector>
 
@@ -68,14 +69,12 @@ std::vector<std::size_t> ConvexHull(const std::vector<vic::linalg::Vector2<T>>& 
     }
     data.push_back(data.at(0));
 
-    std::sort(data.begin(), data.end(), [](const auto& a, const auto& b) { return a.angle < b.angle; });
+    std::sort(std::execution::par_unseq, data.begin(), data.end(), [](const auto& a, const auto& b) { return a.angle < b.angle; });
 
     // note: experiment with paralellizable algorithm
     while(true)
     {
-        // todo: is execution always multithreaded?
-        // std::for_each(std::execution::par, foo.begin(), foo.end(), [](auto&& item) {
-        std::for_each(data.begin(), data.end(), [&](auto& item) {
+        const auto foreachData = [&data = std::as_const(data), &points = std::as_const(points)](auto& item) {
             const std::size_t idx = &item - &data[0]; //
             const auto previous = idx == 0 ? data.size() - 1 : idx - 1;
             const auto next = idx == data.size() - 1 ? 0 : idx + 1;
@@ -85,7 +84,13 @@ std::vector<std::size_t> ConvexHull(const std::vector<vic::linalg::Vector2<T>>& 
             const auto& p3 = points.at(data.at(next).idx);
 
             item.ccw = (IsCCW(p1, p2, p3) > 0.);
-        });
+        };
+
+        // todo: is execution always multithreaded?
+        // if(data.size() > 1000)
+        std::for_each(std::execution::par_unseq, data.begin(), data.end(), foreachData);
+        //else
+        //    std::for_each(std::execution::unseq, data.begin(), data.end(), foreachData);
 
         const std::size_t preSize = data.size();
         data.erase(std::remove_if(data.begin(),
