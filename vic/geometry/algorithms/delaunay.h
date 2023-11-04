@@ -62,12 +62,12 @@ std::vector<std::size_t> ConvexHull(const std::vector<vic::linalg::Vector2<T>>& 
     data.reserve(points.size());
     for(std::size_t i = 0; i < points.size(); ++i)
     {
-        const auto delta = Subtract(points.at(i), pivotPoint);
+        const auto delta = Subtract(points[i], pivotPoint);
         data.push_back(PointData(i, //
                                  std::atan2(delta.Get(1), delta.Get(0)),
                                  true));
     }
-    data.push_back(data.at(0));
+    data.push_back(data[0]);
 
     std::sort(std::execution::par_unseq, data.begin(), data.end(), [](const auto& a, const auto& b) { return a.angle < b.angle; });
 
@@ -77,11 +77,11 @@ std::vector<std::size_t> ConvexHull(const std::vector<vic::linalg::Vector2<T>>& 
         const auto foreachData = [&data = std::as_const(data), &points = std::as_const(points)](auto& item) {
             const std::size_t idx = &item - &data[0]; //
             const auto previous = idx == 0 ? data.size() - 1 : idx - 1;
-            const auto next = idx == data.size() - 1 ? 0 : idx + 1;
+            const auto next = (idx == data.size() - 1) ? 0 : idx + 1;
 
-            const auto& p1 = points.at(data.at(previous).idx);
-            const auto& p2 = points.at(data.at(idx).idx);
-            const auto& p3 = points.at(data.at(next).idx);
+            const auto& p1 = points.at(data[previous].idx);
+            const auto& p2 = points.at(data[idx].idx);
+            const auto& p3 = points.at(data[next].idx);
 
             item.ccw = (IsCCW(p1, p2, p3) > 0.);
         };
@@ -122,34 +122,34 @@ std::tuple<std::size_t, std::size_t, std::size_t> SuperTriangle(const std::vecto
     // todo: this algorithm can probably be sped up by first calculating which vertices are part of the convex hull
 
     std::tuple<std::size_t, std::size_t, std::size_t> tri{0, 1, 2};
-    Sphere<T, 2> circumCircle = CircumscribedCircle(points.at(0), points.at(1), points.at(2));
+    Sphere<T, 2> circumCircle = CircumscribedCircle(points[0], points[1], points[2]);
 
     for(std::size_t i = 3; i < points.size(); ++i)
     {
-        const auto& point = points.at(i);
+        const auto& point = points[i];
         if(PointInsideSphere(point, circumCircle))
             continue; // this point is inside the current circle
 
         const auto [a, b, c] = tri;
 
-        const auto circle1 = CircumscribedCircle(points.at(a), points.at(b), points.at(i));
-        if(PointInsideSphere(points.at(c), circle1))
+        const auto circle1 = CircumscribedCircle(points[a], points[b], points[i]);
+        if(PointInsideSphere(points[c], circle1))
         {
             tri = {a, b, i};
             circumCircle = circle1;
             continue;
         }
 
-        const auto circle2 = CircumscribedCircle(points.at(a), points.at(c), points.at(i));
-        if(PointInsideSphere(points.at(b), circle2))
+        const auto circle2 = CircumscribedCircle(points[a], points[c], points[i]);
+        if(PointInsideSphere(points[b], circle2))
         {
             tri = {a, c, i};
             circumCircle = circle2;
             continue;
         }
 
-        const auto circle3 = CircumscribedCircle(points.at(b), points.at(c), points.at(i));
-        if(PointInsideSphere(points.at(a), circle3))
+        const auto circle3 = CircumscribedCircle(points[b], points[c], points[i]);
+        if(PointInsideSphere(points[a], circle3))
         {
             tri = {b, c, i};
             circumCircle = circle3;
@@ -197,7 +197,7 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
 
     const auto constructCircumCircle = [&](const Triangle& tri) {
         const auto& [i, j, k] = tri;
-        return CircumscribedCircle(points.at(i), points.at(j), points.at(k));
+        return CircumscribedCircle(points[i], points[j], points[k]);
     };
 
     // todo: we can keep the triangles sorted by max x reach. This way we don't need to check every single one

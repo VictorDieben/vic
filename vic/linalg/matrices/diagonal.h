@@ -39,7 +39,7 @@ struct DiagonalConst : public MatrixBaseSelector<TShape>
     constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < this->GetRows()) && (j < this->GetColumns())));
-        return i == j ? mData.at(i) : T{0};
+        return i == j ? mData[i] : T{0};
     }
     constexpr T& At(const Row i, const Col j)
     {
@@ -70,7 +70,7 @@ struct DiagonalRowConst : public MatrixBaseSelector<TShape>
     constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < this->GetRows()) && (j < this->GetColumns())));
-        return i == j ? mData.at(i) : T{0};
+        return i == j ? mData[i] : T{0};
     }
     constexpr T& At(const Row i, const Col j)
     {
@@ -101,7 +101,7 @@ struct DiagonalColConst : public MatrixBaseSelector<TShape>
     constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < this->GetRows()) && (j < this->GetColumns())));
-        return i == j ? mData.at(i) : T{0};
+        return i == j ? mData[i] : T{0};
     }
     constexpr T& At(const Row i, const Col j)
     {
@@ -131,7 +131,7 @@ struct DiagonalDynamic : public MatrixBaseSelector<TShape>
     constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < this->GetRows()) && (j < this->GetColumns())));
-        return i == j ? mData.at(i) : T{0};
+        return i == j ? mData[i] : T{0};
     }
     constexpr T& At(const Row i, const Col j)
     {
@@ -170,7 +170,7 @@ template <typename T>
 using Diagonal6 = DiagonalMxN<T, 6, 6>;
 
 template <typename TMat>
-requires ConceptMatrix<TMat>
+    requires ConceptMatrix<TMat>
 constexpr auto ToDiagonal(const TMat& mat)
 {
     Diagonal<typename TMat::DataType, typename TMat::ShapeType> res{mat.GetRows(), mat.GetColumns()};
