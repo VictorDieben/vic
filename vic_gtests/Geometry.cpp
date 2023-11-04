@@ -816,6 +816,32 @@ TEST(Geom, CircumscribedCircle)
 
     EXPECT_TRUE(IsEqual(circle.pos, Point2d(.5, .5)));
     EXPECT_EQ(circle.rad, std::sqrt(.5));
+
+    // test a bunch of random circles
+    std::default_random_engine g{1234};
+    std::uniform_real_distribution<double> rand(-1., 1.);
+    std::uniform_real_distribution<double> radius(.1, 10.);
+
+    for(std::size_t i = 0; i < 1000; ++i)
+    {
+        const double x = rand(g);
+        const double y = rand(g);
+        const double rad = radius(g);
+
+        const double theta1 = 2. * std::numbers::pi * rand(g);
+        p1 = Point2d(x + (rad * std::sin(theta1)), y + (rad * std::cos(theta1)));
+
+        const double theta2 = 2. * std::numbers::pi * rand(g);
+        p2 = Point2d(x + (rad * std::sin(theta2)), y + (rad * std::cos(theta2)));
+
+        const double theta3 = 2. * std::numbers::pi * rand(g);
+        p3 = Point2d(x + (rad * std::sin(theta3)), y + (rad * std::cos(theta3)));
+
+        const auto circumscribedCircle = CircumscribedCircle(p1, p2, p3);
+
+        EXPECT_TRUE(IsEqual(circumscribedCircle.pos, Point2d(x, y), 1e-6));
+        EXPECT_NEAR(circumscribedCircle.rad, rad, 1e-6);
+    }
 }
 
 TEST(Geom, SuperTriangle)
@@ -854,6 +880,8 @@ TEST(Geom, Delaunay2d)
 
     const auto tris = Delaunay2d(vertices);
 
+    std::size_t incorrectCount = 0;
+
     for(const auto& [a, b, c] : tris)
     {
         const auto circumCircle = CircumscribedCircle(vertices.at(a), vertices.at(b), vertices.at(c));
@@ -865,8 +893,10 @@ TEST(Geom, Delaunay2d)
                 const auto& vert = vertices.at(i);
                 const auto inside = PointInsideSphere(vert, circumCircle);
                 if(inside)
-                    ASSERT_FALSE(inside);
+                    incorrectCount++;
             }
         }
     }
+
+    ASSERT_EQ(incorrectCount, 0);
 }
