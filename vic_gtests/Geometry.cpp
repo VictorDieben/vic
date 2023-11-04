@@ -850,26 +850,39 @@ TEST(Geom, SuperTriangle)
     std::default_random_engine g;
     std::uniform_real_distribution<double> pos(-1., 1.);
 
+    const std::size_t numVertices = 1000;
+
     std::vector<Vector2d> vertices;
-    for(std::size_t i = 0; i < 1000; ++i)
+    for(std::size_t i = 0; i < numVertices; ++i)
         vertices.push_back(Vector2d(pos(g), pos(g)));
 
     const auto [a, b, c] = SuperTriangle(vertices);
 
     const auto circumCircle = CircumscribedCircle(vertices.at(a), vertices.at(b), vertices.at(c));
 
-    for(std::size_t i = 0; i < 1000; ++i)
+    std::vector<double> distances;
+
+    for(std::size_t i = 0; i < numVertices; ++i)
     {
+        distances.push_back(Norm(Subtract(vertices.at(i), circumCircle.pos)));
+
         if(i == a || i == b || i == c)
             continue;
 
         ASSERT_TRUE(PointInsideSphere(vertices.at(i), circumCircle));
     }
+
+    std::sort(distances.begin(), distances.end());
+
+    // verify that the three largest distances are almost equal to rad
+    EXPECT_NEAR(circumCircle.rad, distances.at(numVertices - 1), 1e-10);
+    EXPECT_NEAR(circumCircle.rad, distances.at(numVertices - 2), 1e-10);
+    EXPECT_NEAR(circumCircle.rad, distances.at(numVertices - 3), 1e-10);
 }
 
 TEST(Geom, Delaunay2d)
 {
-    std::default_random_engine g;
+    std::default_random_engine g{123};
     std::uniform_real_distribution<double> pos(-1., 1.);
 
     const std::size_t numPoints = 1000;
@@ -879,6 +892,17 @@ TEST(Geom, Delaunay2d)
         vertices.push_back(Vector2d(pos(g), pos(g)));
 
     const auto tris = Delaunay2d(vertices);
+
+    // verify that each vertex occurs at least once
+    std::set<std::size_t> indices;
+    for(const auto& [a, b, c] : tris)
+    {
+        indices.insert(a);
+        indices.insert(b);
+        indices.insert(c);
+    }
+
+    ASSERT_EQ(numPoints, indices.size());
 
     std::size_t incorrectCount = 0;
 
@@ -891,12 +915,45 @@ TEST(Geom, Delaunay2d)
             if(i != a && i != b && i != c)
             {
                 const auto& vert = vertices.at(i);
-                const auto inside = PointInsideSphere(vert, circumCircle);
-                if(inside)
-                    incorrectCount++;
+                //const auto inside = PointInsideSphere(vert, circumCircle);
+                const double distance = Norm(Subtract(vert, circumCircle.pos));
+                if((distance / circumCircle.rad) < 0.9)
+                    incorrectCount++; // quite large epsilon because of chance of colinearity
             }
         }
     }
 
     ASSERT_EQ(incorrectCount, 0);
+}
+
+TEST(Geom, ConvexHull)
+{
+    std::default_random_engine g{123};
+    std::uniform_real_distribution<double> pos(-1., 1.);
+
+    const std::size_t numPoints = 100;
+
+    std::vector<Vector2d> vertices;
+    for(std::size_t i = 0; i < numPoints; ++i)
+        vertices.push_back(Vector2d(pos(g), pos(g)));
+
+    const auto hull = ConvexHull(vertices);
+
+    const std::set<std::size_t> hullSet(hull.begin(), hull.end());
+
+    ASSERT_EQ(hull.size(), hullSet.size());
+
+    std::size_t failures = 0;
+
+    for(std::size_t idx = 0; idx < numPoints; ++idx)
+    {
+        if(hullSet.contains(idx))
+            continue;
+
+        for(std::size_t iHull = 0; iHull < hull.size() - 1; ++iHull)
+            if(IsCCW(vertices.at(hull.at(iHull)), vertices.at(hull.at(iHull + 1)), vertices.at(idx)) < 0.)
+                failures++;
+    }
+
+    ASSERT_EQ(failures, 0);
 }

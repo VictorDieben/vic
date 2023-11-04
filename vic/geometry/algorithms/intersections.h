@@ -351,7 +351,8 @@ template <typename T, std::size_t dims>
 bool PointInsideSphere(const Point<T, dims>& point, const Sphere<T, dims>& sphere)
 {
     using namespace vic::linalg;
-    return SquaredNorm(Subtract(sphere.pos, point)) < (sphere.rad * sphere.rad);
+    // return SquaredNorm(Subtract(sphere.pos, point)) < (sphere.rad * sphere.rad);
+    return Norm(Subtract(sphere.pos, point)) < sphere.rad;
 }
 
 } // namespace vic::geom

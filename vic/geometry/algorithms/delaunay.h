@@ -4,8 +4,10 @@
 
 #include "vic/utils.h"
 
+#include "vic/geometry/algorithms/algorithms.h"
 #include "vic/geometry/algorithms/intersections.h"
 
+#include <cmath>
 #include <tuple>
 #include <vector>
 
@@ -16,7 +18,6 @@ namespace geom
 
 namespace detail
 {
-
 template <typename T>
 struct TriangleData
 {
@@ -26,11 +27,94 @@ struct TriangleData
 };
 } // namespace detail
 
+// modified Graham’s scan algorithm
+template <typename T>
+std::vector<std::size_t> ConvexHull(const std::vector<vic::linalg::Vector2<T>>& points)
+{
+    assert(points.size() > 2);
+    using namespace vic::linalg;
+
+    // todo: abstract with bbox
+    double xmin = std::numeric_limits<double>::max();
+    double xmax = std::numeric_limits<double>::lowest();
+    double ymin = std::numeric_limits<double>::max();
+    double ymax = std::numeric_limits<double>::lowest();
+
+    for(const auto& p : points)
+    {
+        xmin = std::min(xmin, p.Get(0));
+        xmax = std::max(xmax, p.Get(0));
+        ymin = std::min(ymin, p.Get(1));
+        ymax = std::max(ymax, p.Get(1));
+    }
+
+    const Vector2<T> pivotPoint((xmin + xmax) / 2., (ymin + ymax) / 2.);
+
+    struct PointData
+    {
+        std::size_t idx;
+        double angle;
+        bool ccw;
+    };
+
+    std::vector<PointData> data;
+    data.reserve(points.size());
+    for(std::size_t i = 0; i < points.size(); ++i)
+    {
+        const auto delta = Subtract(points.at(i), pivotPoint);
+        data.push_back(PointData(i, //
+                                 std::atan2(delta.Get(1), delta.Get(0)),
+                                 true));
+    }
+    data.push_back(data.at(0));
+
+    std::sort(data.begin(), data.end(), [](const auto& a, const auto& b) { return a.angle < b.angle; });
+
+    // note: experiment with paralellizable algorithm
+    while(true)
+    {
+        // todo: is execution always multithreaded?
+        // std::for_each(std::execution::par, foo.begin(), foo.end(), [](auto&& item) {
+        std::for_each(data.begin(), data.end(), [&](auto& item) {
+            const std::size_t idx = &item - &data[0]; //
+            const auto previous = idx == 0 ? data.size() - 1 : idx - 1;
+            const auto next = idx == data.size() - 1 ? 0 : idx + 1;
+
+            const auto& p1 = points.at(data.at(previous).idx);
+            const auto& p2 = points.at(data.at(idx).idx);
+            const auto& p3 = points.at(data.at(next).idx);
+
+            item.ccw = (IsCCW(p1, p2, p3) > 0.);
+        });
+
+        const std::size_t preSize = data.size();
+        data.erase(std::remove_if(data.begin(),
+                                  data.end(),
+                                  [](const PointData& data) -> bool {
+                                      return !data.ccw; //
+                                  }),
+                   data.end());
+
+        const std::size_t postSize = data.size();
+
+        if(preSize == postSize)
+            break;
+    }
+
+    std::vector<std::size_t> result;
+    result.reserve(data.size());
+    for(const auto& item : data)
+        result.push_back(item.idx);
+    return result;
+}
+
 // find the three vertices that together describe the circumcircle for all other points
 template <typename T>
 std::tuple<std::size_t, std::size_t, std::size_t> SuperTriangle(const std::vector<vic::linalg::Vector2<T>>& points)
 {
     assert(points.size() >= 3);
+
+    // todo: this algorithm can probably be sped up by first calculating which vertices are part of the convex hull
 
     std::tuple<std::size_t, std::size_t, std::size_t> tri{0, 1, 2};
     Sphere<T, 2> circumCircle = CircumscribedCircle(points.at(0), points.at(1), points.at(2));
@@ -66,6 +150,8 @@ std::tuple<std::size_t, std::size_t, std::size_t> SuperTriangle(const std::vecto
             circumCircle = circle3;
             continue;
         }
+
+        assert(false); // problem in algorithm
     }
 
     return tri;
@@ -100,16 +186,18 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
             indices.push_back(i);
 
     auto sortedX = indices;
-    std::sort(sortedX.begin(), sortedX.end(), [&points](const auto& a, const auto& b) {
-        return points.at(a).Get(0) < points.at(b).Get(0); //
-    });
+    //std::sort(sortedX.begin(), sortedX.end(), [&points](const auto& a, const auto& b) {
+    //    return points.at(a).Get(0) < points.at(b).Get(0); //
+    //});
 
     const auto constructCircumCircle = [&](const Triangle& tri) {
         const auto& [i, j, k] = tri;
         return CircumscribedCircle(points.at(i), points.at(j), points.at(k));
     };
 
-    std::vector<TriangleData> triangles; // working data;
+    // todo: we can keep the triangles sorted by max x reach. This way we don't need to check every single one
+    std::vector<TriangleData> triangles;
+    triangles.reserve(points.size() / 3); // todo: how many do we expect?
 
     {
         const auto newTri = Triangle(s1, s2, s3);
@@ -131,9 +219,9 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
             {
                 tridata.isCorrect = false;
                 const auto [i, j, k] = tridata.tri;
-                edges.push_back(EdgeData{{i, j}});
-                edges.push_back(EdgeData{{j, k}});
-                edges.push_back(EdgeData{{k, i}});
+                edges.push_back(EdgeData({i, j}, true));
+                edges.push_back(EdgeData({j, k}, true));
+                edges.push_back(EdgeData({k, i}, true));
             }
         }
 
@@ -147,16 +235,19 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
 
         // remove duplicate edges
         // todo: can be sped up by pre-sorting the edges
-        for(auto it1 = edges.begin(); it1 != edges.end(); ++it1)
+        if(edges.size() > 1)
         {
-            const auto& [i1, j1] = it1->edge;
-            for(auto it2 = std::next(it1); it2 != edges.end(); ++it2)
+            for(auto it1 = edges.begin(); it1 != std::prev(edges.end()); ++it1)
             {
-                const auto& [i2, j2] = it2->edge;
-                if((i1 == i2 && j1 == j2) || (i1 == j2 && j1 == i2))
+                const auto& [i1, j1] = it1->edge;
+                for(auto it2 = std::next(it1); it2 != edges.end(); ++it2)
                 {
-                    it1->isCorrect = false;
-                    it2->isCorrect = false;
+                    const auto& [i2, j2] = it2->edge;
+                    if(((i1 == i2) && (j1 == j2)) || ((i1 == j2) && (j1 == i2)))
+                    {
+                        it1->isCorrect = false;
+                        it2->isCorrect = false;
+                    }
                 }
             }
         }
@@ -172,8 +263,10 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
         {
             const auto& [e1, e2] = edge.edge;
             const auto newTri = Triangle(e1, e2, vertexIndex);
-            triangles.push_back(TriangleData(newTri, constructCircumCircle(newTri)));
+            triangles.push_back(TriangleData(newTri, constructCircumCircle(newTri), true));
         }
+
+        // todo: sort triangles based on circle x+rad, so we don't need to check all tris (vertices are sorted already)
     }
 
     std::vector<Triangle> tris;

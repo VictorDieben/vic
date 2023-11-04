@@ -29,7 +29,7 @@ constexpr T IsCCW(const Point<T, 2>& p1, //
                   const Point<T, 2>& p2,
                   const Point<T, 2>& p3)
 {
-    return IsCCW(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1]);
+    return IsCCW(p1.Get(0), p1.Get(1), p2.Get(0), p2.Get(1), p3.Get(0), p3.Get(1));
 }
 
 // calculate how many times a closed loop circles a certain point
@@ -46,7 +46,6 @@ constexpr T Project(const Point<T, dims>& lineStart, const Direction<T, dims>& l
     const auto edgeDirection = Subtract(lineEnd, lineStart);
     return Dot(pointDirection, pointDirection) / Dot(edgeDirection, edgeDirection);
 }
- 
 
 template <typename T>
 Point<T, 2> ProjectUV(const Triangle<T, 3>& tri, const Point<T, 3>& pos)
@@ -58,8 +57,8 @@ Point<T, 2> ProjectUV(const Triangle<T, 3>& tri, const Point<T, 3>& pos)
 
 template <typename T>
 constexpr T TriangleArea(const Point<T, 2>& p1, //
-               const Point<T, 2>& p2,
-               const Point<T, 2>& p3)
+                         const Point<T, 2>& p2,
+                         const Point<T, 2>& p3)
 {
     const auto e1 = Subtract(p2, p1);
     const auto e2 = Subtract(p3, p1);
