@@ -167,6 +167,9 @@ std::tuple<std::size_t, std::size_t, std::size_t> SuperTriangle(const std::vecto
 
 // Delaunay Triangulation:
 // https://en.wikipedia.org/wiki/Delaunay_triangulation
+
+// Delaunay Triangulation:
+// https://en.wikipedia.org/wiki/Delaunay_triangulation
 template <typename T>
 auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
 {
@@ -183,37 +186,46 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
 
     using TriangleData = detail::TriangleData<T>;
 
-    const auto [s1, s2, s3] = SuperTriangle(points);
-
     std::vector<std::size_t> indices;
+    indices.reserve(points.size() + 3);
     for(std::size_t i = 0; i < points.size(); ++i)
-        if(i != s1 && i != s2 && i != s3)
-            indices.push_back(i);
+        indices.push_back(i);
 
-    auto sortedX = indices;
-    //std::sort(sortedX.begin(), sortedX.end(), [&points](const auto& a, const auto& b) {
-    //    return points.at(a).Get(0) < points.at(b).Get(0); //
-    //});
+    // placeholders for temp vertices
+    const std::size_t tmp1 = points.size();
+    const std::size_t tmp2 = points.size() + 1;
+    const std::size_t tmp3 = points.size() + 2;
+    indices.push_back(tmp1);
+    indices.push_back(tmp2);
+    indices.push_back(tmp3);
+
+    // todo: points that are far enough
+    const auto allPoints = [&]() {
+        auto copy = points;
+        copy.push_back(Vector2<T>(-1e6, -1e6));
+        copy.push_back(Vector2<T>(1e6, -1e6));
+        copy.push_back(Vector2<T>(0, 1e6));
+        return copy;
+    }();
 
     const auto constructCircumCircle = [&](const Triangle& tri) {
         const auto& [i, j, k] = tri;
-        return CircumscribedCircle(points[i], points[j], points[k]);
+        return CircumscribedCircle(allPoints[i], allPoints[j], allPoints[k]);
     };
 
-    // todo: we can keep the triangles sorted by max x reach. This way we don't need to check every single one
     std::vector<TriangleData> triangles;
-    triangles.reserve(points.size() / 3); // todo: how many do we expect?
+    triangles.reserve(points.size()); // todo: how many do we expect?
 
     {
-        const auto newTri = Triangle(s1, s2, s3);
+        const auto newTri = Triangle(tmp1, tmp2, tmp3);
         triangles.push_back(TriangleData(newTri, constructCircumCircle(newTri)));
     }
 
     std::vector<EdgeData> edges; // loop data
 
-    for(const auto& vertexIndex : sortedX)
+    for(const auto& vertexIndex : indices)
     {
-        const auto& vertex = points.at(vertexIndex);
+        const auto& vertex = allPoints.at(vertexIndex);
 
         edges.clear();
 
@@ -273,6 +285,17 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
 
         // todo: sort triangles based on circle x+rad, so we don't need to check all tris (vertices are sorted already)
     }
+
+    // remove all triangles that contain any of the temporary vertices
+    triangles.erase(std::remove_if(triangles.begin(),
+                                   triangles.end(),
+                                   [&](const TriangleData& data) -> bool {
+                                       const auto& [v1, v2, v3] = data.tri;
+                                       return ((v1 == tmp1 || v1 == tmp2 || v1 == tmp3) || //
+                                               (v2 == tmp1 || v2 == tmp2 || v2 == tmp3) || //
+                                               (v3 == tmp1 || v3 == tmp2 || v3 == tmp3));
+                                   }),
+                    triangles.end());
 
     std::vector<Triangle> tris;
     tris.reserve(triangles.size());

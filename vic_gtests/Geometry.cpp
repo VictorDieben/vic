@@ -885,7 +885,7 @@ TEST(Geom, Delaunay2d)
     std::default_random_engine g{123};
     std::uniform_real_distribution<double> pos(-1., 1.);
 
-    const std::size_t numPoints = 1000;
+    const std::size_t numPoints = 100000;
 
     std::vector<Vector2d> vertices;
     for(std::size_t i = 0; i < numPoints; ++i)
