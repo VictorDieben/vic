@@ -19,12 +19,12 @@ namespace geom
 
 namespace detail
 {
-template <typename T>
+template <typename TValue, typename TIndex>
 struct TriangleData
 {
-    std::tuple<std::size_t, std::size_t, std::size_t> tri{};
-    Sphere<T, 2> circumscribedCircle{};
-    bool isCorrect = true;
+    std::tuple<TIndex, TIndex, TIndex> tri;
+    Sphere<TValue, 2> circumscribedCircle;
+    bool isCorrect;
 };
 } // namespace detail
 
@@ -175,33 +175,40 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
 {
     using namespace vic::linalg;
 
-    using Edge = std::pair<std::size_t, std::size_t>;
-    using Triangle = std::tuple<std::size_t, std::size_t, std::size_t>;
+    using IndexType = uint32_t;
+
+    using Edge = std::pair<IndexType, IndexType>;
+    using Triangle = std::tuple<IndexType, IndexType, IndexType>;
 
     struct EdgeData
     {
         Edge edge;
-        bool isCorrect = true;
+        bool isCorrect;
     };
 
-    using TriangleData = detail::TriangleData<T>;
+    using TriangleData = detail::TriangleData<T, IndexType>;
 
-    std::vector<std::size_t> indices;
+    std::vector<IndexType> indices;
     indices.reserve(points.size() + 3);
-    for(std::size_t i = 0; i < points.size(); ++i)
+    for(IndexType i = 0; i < points.size(); ++i)
         indices.push_back(i);
 
+    std::sort(indices.begin(), indices.end(), [&](const auto& a, const auto& b) { return points[a].Get(0) < points[b].Get(0); });
+
     // placeholders for temp vertices
-    const std::size_t tmp1 = points.size();
-    const std::size_t tmp2 = points.size() + 1;
-    const std::size_t tmp3 = points.size() + 2;
+    const IndexType tmp1 = points.size();
+    const IndexType tmp2 = points.size() + 1;
+    const IndexType tmp3 = points.size() + 2;
     indices.push_back(tmp1);
     indices.push_back(tmp2);
     indices.push_back(tmp3);
 
-    // todo: points that are far enough
+    // todo: find workaround for copying all data, just to add three more items
     const auto allPoints = [&]() {
-        auto copy = points;
+        std::vector<Vector2<T>> copy;
+        copy.reserve(points.size() + 3);
+        copy = points;
+        // todo: calculate what points are far enough
         copy.push_back(Vector2<T>(-1e6, -1e6));
         copy.push_back(Vector2<T>(1e6, -1e6));
         copy.push_back(Vector2<T>(0, 1e6));
@@ -213,8 +220,12 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
         return CircumscribedCircle(allPoints[i], allPoints[j], allPoints[k]);
     };
 
+    const auto sortTriangles = [](const TriangleData& a, const TriangleData& b) {
+        return a.circumscribedCircle.pos.Get(0) + a.circumscribedCircle.rad < b.circumscribedCircle.pos.Get(0) + b.circumscribedCircle.rad;
+    };
+
     std::vector<TriangleData> triangles;
-    triangles.reserve(points.size()); // todo: how many do we expect?
+    triangles.reserve(points.size() * 2); // todo: how many do we expect?
 
     {
         const auto newTri = Triangle(tmp1, tmp2, tmp3);
@@ -222,10 +233,11 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
     }
 
     std::vector<EdgeData> edges; // loop data
+    edges.reserve(std::ceil(std::sqrt(points.size())));
 
     for(const auto& vertexIndex : indices)
     {
-        const auto& vertex = allPoints.at(vertexIndex);
+        const auto& vertex = allPoints[vertexIndex];
 
         edges.clear();
 
@@ -234,8 +246,9 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
         {
             if(PointInsideSphere(vertex, tridata.circumscribedCircle))
             {
+                // todo: add the vertex indices in sorted order, so we can speed up the edge removal below
                 tridata.isCorrect = false;
-                const auto [i, j, k] = tridata.tri;
+                const auto& [i, j, k] = tridata.tri;
                 edges.push_back(EdgeData({i, j}, true));
                 edges.push_back(EdgeData({j, k}, true));
                 edges.push_back(EdgeData({k, i}, true));
@@ -275,6 +288,8 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
                                    }),
                     edges.end());
 
+        const auto oldSize = triangles.size();
+
         // for each remaining edge, create a new tri, together with the point we were checking
         for(const auto& edge : edges)
         {
@@ -283,7 +298,9 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
             triangles.push_back(TriangleData(newTri, constructCircumCircle(newTri), true));
         }
 
-        // todo: sort triangles based on circle x+rad, so we don't need to check all tris (vertices are sorted already)
+        // sort triangles based on circle x+rad, so we don't need to check all tris (vertices are sorted already)
+        // std::sort(triangles.begin() + oldSize, triangles.end(), sortTriangles); // sort end part
+        // std::sort(trianglesEnd, trianglesNewEnd, sortTriangles); // merge two sorted parts
     }
 
     // remove all triangles that contain any of the temporary vertices

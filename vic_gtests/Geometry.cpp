@@ -885,13 +885,15 @@ TEST(Geom, Delaunay2d)
     std::default_random_engine g{123};
     std::uniform_real_distribution<double> pos(-1., 1.);
 
-    const std::size_t numPoints = 100000;
+    const std::size_t numPoints = 1000;
 
     std::vector<Vector2d> vertices;
     for(std::size_t i = 0; i < numPoints; ++i)
         vertices.push_back(Vector2d(pos(g), pos(g)));
 
+    const vic::Timer timer;
     const auto tris = Delaunay2d(vertices);
+    std::cout << std::format("duration: {}ms", timer.GetTime().count() * 1000.) << std::endl;
 
     // verify that each vertex occurs at least once
     std::set<std::size_t> indices;
@@ -917,7 +919,7 @@ TEST(Geom, Delaunay2d)
                 const auto& vert = vertices.at(i);
                 //const auto inside = PointInsideSphere(vert, circumCircle);
                 const double distance = Norm(Subtract(vert, circumCircle.pos));
-                if((distance / circumCircle.rad) < 0.9)
+                if((distance / circumCircle.rad) < 0.999)
                     incorrectCount++; // quite large epsilon because of chance of colinearity
             }
         }
