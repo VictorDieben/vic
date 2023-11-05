@@ -221,13 +221,13 @@ using Vector4d = VectorN<double, 4>;
 using Vector5d = VectorN<double, 5>;
 using Vector6d = VectorN<double, 6>;
 
-template <typename... Ts>
-constexpr auto MakeVector(Ts&&... ts)
-{
-    using CT = std::common_type_t<Ts...>;
-    std::array<CT, sizeof...(Ts)> data{std::forward<CT>(ts)...};
-    return VectorN<CT, sizeof...(Ts)>(data);
-}
+//template <typename... Ts>
+//constexpr auto MakeVector(Ts&&... ts)
+//{
+//    using CT = std::common_type_t<Ts...>;
+//    std::array<CT, sizeof...(Ts)> data{std::forward<CT>(ts)...};
+//    return VectorN<CT, sizeof...(Ts)>(data);
+//}
 
 template <typename TMat>
     requires ConceptMatrix<TMat>

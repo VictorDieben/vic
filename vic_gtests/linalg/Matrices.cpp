@@ -168,16 +168,16 @@ TEST(Linalg, InitTriDiagonal)
     EXPECT_TRUE(IsEqual(d33, trid3));
 }
 
-TEST(Linalg, MakeVector)
-{
-    constexpr Vector1<double> d1 = MakeVector(1.);
-    constexpr Vector2<double> d2 = MakeVector(1., 2.);
-    constexpr Vector3<double> d3 = MakeVector(1., 2., 3.);
-
-    constexpr Vector1<float> f1 = MakeVector(1.f);
-    constexpr Vector2<float> f2 = MakeVector(1.f, 2.f);
-    constexpr Vector3<float> f3 = MakeVector(1.f, 2.f, 3.f);
-}
+//TEST(Linalg, MakeVector)
+//{
+//    constexpr Vector1<double> d1 = MakeVector(1.);
+//    constexpr Vector2<double> d2 = MakeVector(1., 2.);
+//    constexpr Vector3<double> d3 = MakeVector(1., 2., 3.);
+//
+//    constexpr Vector1<float> f1 = MakeVector(1.f);
+//    constexpr Vector2<float> f2 = MakeVector(1.f, 2.f);
+//    constexpr Vector3<float> f3 = MakeVector(1.f, 2.f, 3.f);
+//}
 
 TEST(Linalg, ConstMatrixConstructor)
 {
