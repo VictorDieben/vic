@@ -3,10 +3,12 @@
 #include "vic/linalg/linalg.h"
 
 #include "vic/utils.h"
+#include "vic/utils/algorithms.h"
 
 #include "vic/geometry/algorithms/algorithms.h"
 #include "vic/geometry/algorithms/intersections.h"
 
+#include <array>
 #include <cmath>
 #include <execution>
 #include <tuple>
@@ -22,7 +24,7 @@ namespace detail
 template <typename TValue, typename TIndex>
 struct TriangleData
 {
-    std::tuple<TIndex, TIndex, TIndex> tri;
+    std::array<TIndex, 3> tri;
     Sphere<TValue, 2> circumscribedCircle;
     bool isCorrect;
 };
@@ -177,14 +179,14 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
 
     using IndexType = uint32_t;
 
-    using Edge = std::pair<IndexType, IndexType>;
-    using Triangle = std::tuple<IndexType, IndexType, IndexType>;
+    using Edge = std::array<IndexType, 2>;
+    using Triangle = std::array<IndexType, 3>;
 
-    struct EdgeData
-    {
-        Edge edge;
-        bool isCorrect;
-    };
+    //struct EdgeData
+    //{
+    //    Edge edge;
+    //    bool isCorrect;
+    //};
 
     using TriangleData = detail::TriangleData<T, IndexType>;
 
@@ -193,6 +195,7 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
     for(IndexType i = 0; i < points.size(); ++i)
         indices.push_back(i);
 
+    // pre-sort in x direction, reduces swaps/deletes
     std::sort(indices.begin(), indices.end(), [&](const auto& a, const auto& b) { return points[a].Get(0) < points[b].Get(0); });
 
     // placeholders for temp vertices
@@ -224,15 +227,25 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
         return a.circumscribedCircle.pos.Get(0) + a.circumscribedCircle.rad < b.circumscribedCircle.pos.Get(0) + b.circumscribedCircle.rad;
     };
 
+    const auto sameEdgeLambda = [](const Edge& first, const Edge& second) -> bool {
+        return first[0] == second[0] && first[1] == second[1]; //
+    };
+
+    const auto sortEdgeLambda = [](const Edge& first, const Edge& second) {
+        if(first[0] == second[0])
+            return first[1] < second[1];
+        return first[0] < second[0];
+    };
+
     std::vector<TriangleData> triangles;
     triangles.reserve(points.size() * 2); // todo: how many do we expect?
 
     {
-        const auto newTri = Triangle(tmp1, tmp2, tmp3);
+        const auto newTri = Triangle({tmp1, tmp2, tmp3});
         triangles.push_back(TriangleData(newTri, constructCircumCircle(newTri)));
     }
 
-    std::vector<EdgeData> edges; // loop data
+    std::vector<Edge> edges; // loop data
     edges.reserve(std::ceil(std::sqrt(points.size())));
 
     for(const auto& vertexIndex : indices)
@@ -249,9 +262,9 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
                 // todo: add the vertex indices in sorted order, so we can speed up the edge removal below
                 tridata.isCorrect = false;
                 const auto& [i, j, k] = tridata.tri;
-                edges.push_back(EdgeData({i, j}, true));
-                edges.push_back(EdgeData({j, k}, true));
-                edges.push_back(EdgeData({k, i}, true));
+                edges.push_back(Edge{i, j});
+                edges.push_back(Edge{i, k});
+                edges.push_back(Edge{j, k});
             }
         }
 
@@ -263,38 +276,17 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
                                        }),
                         triangles.end());
 
-        // remove duplicate edges
-        // todo: can be sped up by pre-sorting the edges
-        if(edges.size() > 1)
-        {
-            for(auto it1 = edges.begin(); it1 != std::prev(edges.end()); ++it1)
-            {
-                const auto& [i1, j1] = it1->edge;
-                for(auto it2 = std::next(it1); it2 != edges.end(); ++it2)
-                {
-                    const auto& [i2, j2] = it2->edge;
-                    if(((i1 == i2) && (j1 == j2)) || ((i1 == j2) && (j1 == i2)))
-                    {
-                        it1->isCorrect = false;
-                        it2->isCorrect = false;
-                    }
-                }
-            }
-        }
-        edges.erase(std::remove_if(edges.begin(),
-                                   edges.end(),
-                                   [](const EdgeData& data) -> bool {
-                                       return !data.isCorrect; //
-                                   }),
-                    edges.end());
+        std::sort(edges.begin(), edges.end(), sortEdgeLambda);
+
+        edges.erase(vic::remove_duplicates(edges.begin(), edges.end(), sameEdgeLambda), edges.end());
 
         const auto oldSize = triangles.size();
 
         // for each remaining edge, create a new tri, together with the point we were checking
-        for(const auto& edge : edges)
+        for(const auto& [e1, e2] : edges)
         {
-            const auto& [e1, e2] = edge.edge;
-            const auto newTri = Triangle(e1, e2, vertexIndex);
+            auto newTri = Triangle{e1, e2, vertexIndex};
+            std::sort(newTri.begin(), newTri.end());
             triangles.push_back(TriangleData(newTri, constructCircumCircle(newTri), true));
         }
 

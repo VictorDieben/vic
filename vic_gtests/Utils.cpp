@@ -3,6 +3,7 @@
 
 #include "test_base.h"
 #include "vic/utils.h"
+#include "vic/utils/algorithms.h"
 #include "vic/utils/counted.h"
 #include "vic/utils/math.h"
 #include "vic/utils/observable.h"
@@ -12,6 +13,8 @@
 #include "vic/utils/statemachine.h"
 #include "vic/utils/timing.h"
 #include "vic/utils/unique.h"
+
+#include "vic/utils/to_string.h"
 
 #include "vic/memory/constexpr_map.h"
 
@@ -511,4 +514,39 @@ TEST(Utils, Templates_Unique)
 TEST(Utils, Serialize)
 {
     //
+}
+
+TEST(Utils, RemoveDuplicates)
+{
+    const auto compareLambda = [](const auto& a, const auto& b) {
+        return a == b; //
+    };
+
+    // empty
+    auto vec = std::vector<int>{};
+    vec.erase(vic::remove_duplicates(vec.begin(), vec.end(), compareLambda), vec.end());
+    ASSERT_EQ(vec, (std::vector<int>{}));
+
+    // purely unique
+    vec = std::vector<int>{1, 2, 3, 4};
+    vec.erase(vic::remove_duplicates(vec.begin(), vec.end(), compareLambda), vec.end());
+    ASSERT_EQ(vec, (std::vector<int>{1, 2, 3, 4}));
+
+    // purely duplicates
+    vec = std::vector<int>{1, 1, 1, 1, 1, 1};
+    vec.erase(vic::remove_duplicates(vec.begin(), vec.end(), compareLambda), vec.end());
+    ASSERT_EQ(vec, (std::vector<int>{}));
+
+    // mix of duplicates and unique values
+    vec = std::vector<int>{1, 1, 1, 2, 2, 3, 4, 4, 4, 4, 5};
+    vec.erase(vic::remove_duplicates(vec.begin(), vec.end(), compareLambda), vec.end());
+    ASSERT_EQ(vec, (std::vector{3, 5}));
+
+    std::cout << "vec: " << vec << std::endl;
+
+    vec = std::vector<int>{3, 1, 1, 4, 2, 2, 5};
+    vec.erase(vic::remove_duplicates(vec.begin(), vec.end(), compareLambda), vec.end());
+    ASSERT_EQ(vec, (std::vector{3, 4, 5}));
+
+    std::cout << "vec: " << vec << std::endl;
 }
