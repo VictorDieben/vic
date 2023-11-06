@@ -182,12 +182,6 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
     using Edge = std::array<IndexType, 2>;
     using Triangle = std::array<IndexType, 3>;
 
-    //struct EdgeData
-    //{
-    //    Edge edge;
-    //    bool isCorrect;
-    //};
-
     using TriangleData = detail::TriangleData<T, IndexType>;
 
     std::vector<IndexType> indices;
@@ -202,9 +196,6 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
     const IndexType tmp1 = points.size();
     const IndexType tmp2 = points.size() + 1;
     const IndexType tmp3 = points.size() + 2;
-    indices.push_back(tmp1);
-    indices.push_back(tmp2);
-    indices.push_back(tmp3);
 
     // todo: find workaround for copying all data, just to add three more items
     const auto allPoints = [&]() {
@@ -218,10 +209,10 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
         return copy;
     }();
 
-    const auto constructCircumCircle = [&](const Triangle& tri) {
-        const auto& [i, j, k] = tri;
-        return CircumscribedCircle(allPoints[i], allPoints[j], allPoints[k]);
-    };
+    //const auto constructCircumCircle = [&](const Triangle& tri) {
+    //    const auto& [i, j, k] = tri;
+    //    return CircumscribedCircle(allPoints[i], allPoints[j], allPoints[k]);
+    //};
 
     const auto sortTriangles = [](const TriangleData& a, const TriangleData& b) {
         return a.circumscribedCircle.pos.Get(0) + a.circumscribedCircle.rad < b.circumscribedCircle.pos.Get(0) + b.circumscribedCircle.rad;
@@ -240,10 +231,7 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
     std::vector<TriangleData> triangles;
     triangles.reserve(points.size() * 2); // todo: how many do we expect?
 
-    {
-        const auto newTri = Triangle({tmp1, tmp2, tmp3});
-        triangles.push_back(TriangleData(newTri, constructCircumCircle(newTri)));
-    }
+    triangles.push_back(TriangleData(Triangle({tmp1, tmp2, tmp3}), CircumscribedCircle(allPoints[tmp1], allPoints[tmp2], allPoints[tmp3]), true));
 
     std::vector<Edge> edges; // loop data
     edges.reserve(std::ceil(std::sqrt(points.size())));
@@ -251,33 +239,33 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
     for(const auto& vertexIndex : indices)
     {
         const auto& vertex = allPoints[vertexIndex];
-
         edges.clear();
 
+        const auto itFirstLarger = std::lower_bound(triangles.begin(), triangles.end(), vertex.Get(0), [](const TriangleData& item, const T xCoord) {
+            return item.circumscribedCircle.pos.Get(0) + item.circumscribedCircle.rad < xCoord; //
+        });
+
         // check if new vertex is inside circumscribed circle of any tri
-        for(auto& tridata : triangles)
-        {
+        std::for_each(itFirstLarger, triangles.end(), [&](TriangleData& tridata) {
             if(PointInsideSphere(vertex, tridata.circumscribedCircle))
             {
-                // todo: add the vertex indices in sorted order, so we can speed up the edge removal below
                 tridata.isCorrect = false;
                 const auto& [i, j, k] = tridata.tri;
-                edges.push_back(Edge{i, j});
+                edges.push_back(Edge{i, j}); // note: add edge indices in sorted order
                 edges.push_back(Edge{i, k});
                 edges.push_back(Edge{j, k});
             }
-        }
+        });
 
         // remove bad triangles
         triangles.erase(std::remove_if(triangles.begin(),
                                        triangles.end(),
-                                       [](const TriangleData& data) -> bool {
-                                           return !data.isCorrect; //
+                                       [](const TriangleData& tri) -> bool {
+                                           return !tri.isCorrect; //
                                        }),
                         triangles.end());
 
         std::sort(edges.begin(), edges.end(), sortEdgeLambda);
-
         edges.erase(vic::remove_duplicates(edges.begin(), edges.end(), sameEdgeLambda), edges.end());
 
         const auto oldSize = triangles.size();
@@ -287,12 +275,10 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
         {
             auto newTri = Triangle{e1, e2, vertexIndex};
             std::sort(newTri.begin(), newTri.end());
-            triangles.push_back(TriangleData(newTri, constructCircumCircle(newTri), true));
+            triangles.push_back(TriangleData(newTri, CircumscribedCircle(allPoints[e1], allPoints[e2], allPoints[vertexIndex]), true));
         }
-
-        // sort triangles based on circle x+rad, so we don't need to check all tris (vertices are sorted already)
-        // std::sort(triangles.begin() + oldSize, triangles.end(), sortTriangles); // sort end part
-        // std::sort(trianglesEnd, trianglesNewEnd, sortTriangles); // merge two sorted parts
+        std::sort(triangles.begin() + oldSize, triangles.end(), sortTriangles); // pre-sort newly added tris
+        std::inplace_merge(triangles.begin(), triangles.begin() + oldSize, triangles.end(), sortTriangles); // merge the two sorted ranges
     }
 
     // remove all triangles that contain any of the temporary vertices

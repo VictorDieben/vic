@@ -885,7 +885,16 @@ TEST(Geom, Delaunay2d)
     std::default_random_engine g{123};
     std::uniform_real_distribution<double> pos(-1., 1.);
 
-    const std::size_t numPoints = 100000;
+    const std::size_t numPoints = 120000;
+
+    // performance [points ; seconds]:
+    // 1000         0.00363
+    // 10000        0.175
+    // 40000        2.359
+    // 60000        4.995
+    // 80000        10.0
+    // 100000       18.6
+    // 120000       34.07
 
     std::vector<Vector2d> vertices;
     for(std::size_t i = 0; i < numPoints; ++i)
@@ -906,7 +915,7 @@ TEST(Geom, Delaunay2d)
 
     ASSERT_EQ(numPoints, indices.size());
 
-    ASSERT_TRUE(false);
+    // ASSERT_TRUE(false); // to see test output (ffs vs)
 
     std::size_t incorrectCount = 0;
 
