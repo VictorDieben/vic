@@ -209,11 +209,6 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
         return copy;
     }();
 
-    //const auto constructCircumCircle = [&](const Triangle& tri) {
-    //    const auto& [i, j, k] = tri;
-    //    return CircumscribedCircle(allPoints[i], allPoints[j], allPoints[k]);
-    //};
-
     const auto sortTriangles = [](const TriangleData& a, const TriangleData& b) {
         return a.circumscribedCircle.pos.Get(0) + a.circumscribedCircle.rad < b.circumscribedCircle.pos.Get(0) + b.circumscribedCircle.rad;
     };

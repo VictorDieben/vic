@@ -255,7 +255,7 @@ public:
     using VertexIdType = typename TGraph::VertexIdType;
     using EdgeIdType = typename TGraph::EdgeIdType;
 
-    using CartesianVertexType = std::vector<VertexIdType>;
+    using CartesianVertexType = CartesianVertex<VertexIdType>;
 
     using CostType = TCost;
 

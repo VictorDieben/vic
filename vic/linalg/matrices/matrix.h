@@ -41,21 +41,27 @@ struct MatrixConst : public MatrixBaseSelector<TShape>
         : mData(std::forward<Ts>(data)...)
     { }
 
-    constexpr T Get(const Row i, const Col j) const noexcept
+    constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[RowMayorRowColToIndex<TShape::cols>(i, j)];
     }
-    constexpr T Get(const Row i) const noexcept
+    constexpr T Get(const Row i) const
     {
         assert(i < MatrixBase::GetRows());
         static_assert(MatrixBase::GetColumns() == 1);
         return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
     }
-    constexpr T& At(const Row i, const Col j) noexcept
+    constexpr T& At(const Row i, const Col j)
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[RowMayorRowColToIndex<TShape::cols>(i, j)];
+    }
+    constexpr T& At(const Row i)
+    {
+        assert(i < MatrixBase::GetRows());
+        static_assert(MatrixBase::GetColumns() == 1);
+        return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
     }
 
 private:
@@ -75,12 +81,12 @@ struct MatrixRowConst : public MatrixBaseSelector<TShape>
         assert(TShape::rows == rows);
         mData.resize(MatrixBase::GetRows() * MatrixBase::GetColumns());
     }
-    constexpr T Get(const Row i, const Col j) const noexcept
+    constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[ColMayorRowColToIndex<TShape::rows>(i, j)];
     }
-    constexpr T& At(const Row i, const Col j) noexcept
+    constexpr T& At(const Row i, const Col j)
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[ColMayorRowColToIndex<TShape::rows>(i, j)];
@@ -104,15 +110,27 @@ struct MatrixColConst : public MatrixBaseSelector<TShape>
         assert(TShape::cols == cols);
         mData.resize(MatrixBase::GetRows() * MatrixBase::GetColumns());
     }
-    constexpr T Get(const Row i, const Col j) const noexcept
+    constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[RowMayorRowColToIndex<TShape::cols>(i, j)];
     }
-    constexpr T& At(const Row i, const Col j) noexcept
+    constexpr T Get(const Row i) const
+    {
+        assert(i < MatrixBase::GetRows());
+        static_assert(MatrixBase::GetColumns() == 1);
+        return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
+    }
+    constexpr T& At(const Row i, const Col j)
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[RowMayorRowColToIndex<TShape::cols>(i, j)];
+    }
+    constexpr T& At(const Row i)
+    {
+        assert(i < MatrixBase::GetRows());
+        static_assert(MatrixBase::GetColumns() == 1);
+        return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
     }
 
 private:
@@ -132,12 +150,12 @@ struct MatrixDynamic : public MatrixBaseSelector<TShape>
     {
         mData.resize(MatrixBase::GetRows() * MatrixBase::GetColumns());
     }
-    constexpr T Get(const Row i, const Col j) const noexcept
+    constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[RowMayorRowColToIndex(i, j, MatrixBase::GetColumns())];
     }
-    constexpr T& At(const Row i, const Col j) noexcept
+    constexpr T& At(const Row i, const Col j)
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[RowMayorRowColToIndex(i, j, MatrixBase::GetColumns())];
