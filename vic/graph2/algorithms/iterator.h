@@ -179,19 +179,17 @@ public:
         : mOutIterator(outIterator)
     { }
 
-    mutable CartesianVertexType buffer{}; // todo: keep?
-
     template <typename TFunctor>
     void ForeachOutVertex(const CartesianVertexType& vert, TFunctor functor) const
     {
-        buffer = vert;
+        auto buffer = vert;
         ForeachOutRecursive(buffer, functor, 0, vert.size());
     }
 
     template <typename TFunctor>
     void ForeachValidOutVertex(const CartesianVertexType& vert, TFunctor functor) const
     {
-        buffer = vert;
+        auto buffer = vert;
         vic::memory::UnorderedFlatSet<VertexIdType> occupiedVertices(vert.begin(), vert.end());
         if(occupiedVertices.size() < vert.size())
             return; // start vertex is already in collision
@@ -210,7 +208,7 @@ private:
             functor(vertex);
             return;
         }
-        const VertexIdType vertexAtDim = vertex.at(dim);
+        const VertexIdType vertexAtDim = vertex[dim];
 
         // loop over case where this dimension is constant
         ForeachOutRecursive(vertex, functor, dim + 1, dims);
@@ -219,10 +217,10 @@ private:
         const auto& outVerts = mOutIterator.OutVertices(vertexAtDim);
         for(const auto& outVert : outVerts)
         {
-            vertex.at(dim) = outVert;
+            vertex[dim] = outVert;
             ForeachOutRecursive(vertex, functor, dim + 1, dims);
         }
-        vertex.at(dim) = vertexAtDim;
+        vertex[dim] = vertexAtDim;
     }
 
     template <typename TFunctor>
@@ -237,7 +235,7 @@ private:
             functor(vertex);
             return;
         }
-        const VertexIdType vertexAtDim = vertex.at(dim);
+        const VertexIdType vertexAtDim = vertex[dim];
 
         // loop over case where this dimension is constant
         ForeachValidOutVertexRecursive(vertex, functor, dim + 1, dims, occupiedVertices);
@@ -248,13 +246,13 @@ private:
         {
             if(occupiedVertices.insert(outVert).second)
             {
-                vertex.at(dim) = outVert;
+                vertex[dim] = outVert;
                 ForeachValidOutVertexRecursive(vertex, functor, dim + 1, dims, occupiedVertices);
                 occupiedVertices.pop_back();
                 // occupiedVertices.erase(outVert); // for normal set
             }
         }
-        vertex.at(dim) = vertexAtDim;
+        vertex[dim] = vertexAtDim;
     }
 };
 

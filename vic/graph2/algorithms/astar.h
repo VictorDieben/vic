@@ -104,128 +104,6 @@ auto AStar(const TGraph& graph, //
     return path;
 }
 
-// using conversion from vector to uint
-//template <typename TGraph, typename TEdgeCostFunctor, typename THeuristicFunctor>
-//struct CartesianAStar
-//{
-//public:
-//    using VertexIdType = typename TGraph::VertexIdType;
-//    using EdgeIdType = typename TGraph::EdgeIdType;
-//
-//    using CartesianVertexIdType = uint64_t;
-//    using CartesianVertexType = std::vector<VertexIdType>;
-//    // using CartesianEdgeType = std::vector<EdgeIdType>;
-//
-//    CartesianAStar(const TGraph& graph, //
-//                           TEdgeCostFunctor edgeCostFunctor,
-//                           THeuristicFunctor heuristicFunctor)
-//        : mGraph(graph)
-//        , mEdgeCostFunctor(edgeCostFunctor)
-//        , mHeuristicFunctor(heuristicFunctor)
-//        , mOutIterator(graph)
-//    { }
-//
-//private:
-//    const TGraph& mGraph;
-//
-//    TEdgeCostFunctor mEdgeCostFunctor;
-//    THeuristicFunctor mHeuristicFunctor;
-//
-//    BaseOutVertexIterator<TGraph> mOutIterator;
-//
-//public:
-//    using CostType = decltype(mEdgeCostFunctor(CartesianVertexType{}, CartesianVertexType{}));
-//    using HeuristicType = decltype(mHeuristicFunctor(CartesianVertexType{}, CartesianVertexType{}));
-//    // static_assert(std::is_same_v<CostType, HeuristicType>);
-//
-//    struct ExploredObject
-//    {
-//        CartesianVertexIdType vertex{}; // previous
-//        CostType f{std::numeric_limits<CostType>::max()};
-//        CostType g{std::numeric_limits<CostType>::max()};
-//    };
-//
-//    auto Run(const CartesianVertexType& start, const CartesianVertexType& target)
-//    {
-//        assert(start.size() == target.size());
-//
-//        const auto numVertices = mGraph.NumVertices();
-//        const auto dims = start.size();
-//
-//        const auto cartesianOutIterator = CartesianOutIterator(mGraph, mOutIterator);
-//
-//        std::vector<CartesianVertexIdType> heap;
-//
-//        const auto startId = ToId<CartesianVertexIdType>(start, numVertices);
-//        const auto targetId = ToId<CartesianVertexIdType>(target, numVertices);
-//        heap.push_back(startId);
-//
-//        std::set<CartesianVertexIdType> closedSet;
-//        std::map<CartesianVertexIdType, ExploredObject> exploredMap;
-//        exploredMap[startId] = ExploredObject{startId, 0., 0.};
-//
-//        // note: > because default make_heap behaviour is max heap for operator<
-//        const auto compareF = [&](const CartesianVertexIdType v1, const CartesianVertexIdType v2) { return exploredMap.at(v1).f > exploredMap.at(v2).f; };
-//
-//        CartesianVertexType currentBuffer;
-//
-//        CartesianVertexIdType currentId = startId;
-//        while(!heap.empty())
-//        {
-//            std::pop_heap(heap.begin(), heap.end(), compareF);
-//            currentId = heap.back();
-//            heap.pop_back();
-//
-//            if(currentId == targetId)
-//                break;
-//            if(closedSet.contains(currentId))
-//                continue;
-//            closedSet.insert(currentId);
-//
-//            ToVector(currentId, dims, numVertices, currentBuffer);
-//
-//            // iterate over neighbours, check with best value so far
-//            cartesianOutIterator.ForeachValidOutVertex(currentBuffer, [&](const CartesianVertexType& other) {
-//                const auto otherId = ToId<CartesianVertexIdType>(other, numVertices);
-//
-//                const auto edgeCost = mEdgeCostFunctor(currentBuffer, other);
-//                const auto newGScore = exploredMap[currentId].g + edgeCost;
-//
-//                auto& item = exploredMap[otherId]; // adds item if it did not exist
-//
-//                if(newGScore < item.g)
-//                {
-//                    const CostType hscore = mHeuristicFunctor(other, target);
-//                    item = {currentId, newGScore + hscore, newGScore};
-//
-//                    heap.push_back(otherId);
-//                    std::push_heap(heap.begin(), heap.end(), compareF);
-//                }
-//            });
-//        }
-//
-//        if(currentId != targetId)
-//            return std::vector<CartesianVertexType>{};
-//
-//        std::vector<CartesianVertexType> path;
-//        path.push_back(target);
-//
-//        currentId = targetId;
-//        while(path.size() < numVertices * 4) // note: for multi-robot, we cannot assume than number of vertices is really the upper limit, 4x should be enough
-//        {
-//            if(currentId == startId)
-//                break;
-//            auto& node = exploredMap[currentId].vertex;
-//            currentId = node;
-//
-//            path.push_back(ToVector<VertexIdType>(currentId, dims, numVertices));
-//        }
-//
-//        std::reverse(path.begin(), path.end());
-//        return path;
-//    }
-//};
-
 // hash function for std::vector<T>
 template <typename T>
     requires std::integral<T>
@@ -326,10 +204,11 @@ public:
             });
         }
 
-        if(current != target)
-            return std::vector<CartesianVertexType>{};
-
         std::vector<CartesianVertexType> path;
+
+        if(current != target)
+            return path; // return an empty path if something failed
+
         path.push_back(target);
 
         current = target;
@@ -346,6 +225,129 @@ public:
         mClosedSet.clear();
         mExploredMap.clear();
         mHeap.clear();
+
+        return path;
+    }
+};
+
+//template <typename T, std::size_t dims>
+//using CartesianArrayVertex = std::array<T, dims>:
+
+template <typename TCost, typename TVertex, std::size_t dims>
+struct CartesianArrayAStarExploredObject
+{
+    std::array<TVertex, dims> vertex{}; // previous
+    TCost f{std::numeric_limits<TCost>::max()};
+    TCost g{std::numeric_limits<TCost>::max()};
+};
+
+template <typename TCost, typename TGraph>
+struct CartesianArrayAStar
+{
+public:
+    explicit CartesianArrayAStar(const TGraph& graph)
+        : mOutIterator(graph)
+    { }
+
+    CartesianArrayAStar() = default;
+
+    using VertexIdType = typename TGraph::VertexIdType;
+    using EdgeIdType = typename TGraph::EdgeIdType;
+
+    using CostType = TCost;
+
+private:
+    BaseOutVertexIterator<TGraph> mOutIterator;
+
+public:
+    template <std::size_t dims, typename TEdgeCostFunctor, typename THeuristicFunctor>
+    auto Run(const std::vector<VertexIdType>& start, //
+             const std::vector<VertexIdType>& target,
+             const TEdgeCostFunctor& edgeCostFunctor,
+             const THeuristicFunctor& heuristicFunctor) const
+    {
+        assert(start.size() == dims && target.size() == dims);
+
+        using ExploredObject = CartesianArrayAStarExploredObject<TCost, VertexIdType, dims>;
+        using VertexType = std::array<VertexIdType, dims>;
+
+        std::set<VertexType> closedSet;
+        std::map<VertexType, ExploredObject> exploredMap;
+        std::vector<VertexType> heap;
+
+        const auto dims = start.size();
+
+        const auto cartesianOutIterator = CartesianOutIterator(mOutIterator);
+
+        const auto toArray = [](const std::vector<VertexIdType>& vec) -> VertexType {
+            VertexType vecToArray;
+            assert(vecToArray.size() == vec.size());
+            std::copy_n(vec.begin(), vecToArray.size(), vecToArray.begin());
+            return vecToArray;
+        };
+
+        const auto startArray = toArray(start);
+        const auto targetArray = toArray(target);
+
+        heap.push_back(startArray);
+        exploredMap[startArray] = ExploredObject{startArray, 0., 0.};
+
+        // note: > because default make_heap behaviour is max heap for operator<
+        const auto compareF = [&](const VertexType& v1, const VertexType& v2) { return exploredMap.at(v1).f > exploredMap.at(v2).f; };
+
+        VertexType current;
+
+        while(!heap.empty())
+        {
+            std::pop_heap(heap.begin(), heap.end(), compareF);
+            std::swap(current, heap.back()); // avoid destructing current, just swap it to the heap
+            heap.pop_back();
+
+            if(current == targetArray)
+                break;
+            if(closedSet.contains(current))
+                continue;
+            closedSet.insert(current);
+
+            const auto currentVector = CartesianVertex<VertexIdType>{current.begin(), current.end()};
+
+            // iterate over neighbours, check with best value so far
+            cartesianOutIterator.ForeachValidOutVertex(currentVector, [&](const auto& other) {
+                // temporary fix, iterator uses an std::vector, but we work with arrays
+                const VertexType otherArray = toArray(other);
+                const auto edgeCost = edgeCostFunctor(currentVector, other);
+                const auto newGScore = exploredMap[current].g + edgeCost;
+
+                auto& item = exploredMap[otherArray]; // adds item if it did not exist
+
+                if(newGScore < item.g)
+                {
+                    const CostType hscore = heuristicFunctor(other, target);
+                    item = ExploredObject{current, newGScore + hscore, newGScore};
+
+                    heap.push_back(otherArray);
+                    std::push_heap(heap.begin(), heap.end(), compareF);
+                }
+            });
+        }
+
+        std::vector<VertexType> path;
+
+        if(current != targetArray)
+            return path; // return an empty path if something failed
+
+        path.push_back(targetArray);
+
+        current = targetArray;
+        while(current != startArray) // note: for multi-robot, we cannot assume than number of vertices is really the upper limit, 4x should be enough
+        {
+            if(path.size() > 1000)
+                return std::vector<VertexType>{};
+            current = exploredMap[current].vertex;
+            path.push_back(current);
+        }
+
+        std::reverse(path.begin(), path.end());
 
         return path;
     }

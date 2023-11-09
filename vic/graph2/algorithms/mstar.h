@@ -229,7 +229,7 @@ public:
              const TPolicy& policy)
     {
         mExploredMap.clear();
-        mExploredMap.at(start) = ExploredObject(start, CollisionSet{}, 0., 0., {});
+        mExploredMap[start] = ExploredObject(start, CollisionSet{}, 0., 0., {});
 
         mHeap.clear();
         mHeap.push_back(start);
@@ -256,13 +256,36 @@ public:
             const CollisionSet collisionSet = ConstructCollisionSet(policy, current, target);
 
             subsetIterator.ForeachOutVertex(current, policyDirection, collisionSet, [&](const CartesianVertexType& other) {
-                //
+                // append
+                mExploredMap[other].backpropSet.insert(current);
+
+                const auto edgeCost = edgeCostFunctor(current, other);
+                const auto newGScore = mExploredMap[current].g + edgeCost;
+
+                // const auto collisionSet = ConstructCollisionSet();
             });
         }
 
+        // https://github.com/jdonszelmann/research-project/blob/master/python/mstar/rewrite/find_path.py
+
         std::vector<CartesianVertexType> path{};
 
+        if(current != target)
+            return path;
+
         // todo: backtrack
+        path.push_back(target);
+
+        current = target;
+        while(current != start) // note: for multi-robot, we cannot assume than number of vertices is really the upper limit, 4x should be enough
+        {
+            if(path.size() > 1000)
+                return std::vector<CartesianVertexType>{};
+            current = mExploredMap[current].vertex;
+            path.push_back(current);
+        }
+
+        std::reverse(path.begin(), path.end());
 
         return path;
     }
@@ -273,6 +296,9 @@ public:
 
 // Subdimensional expansion for multirobot path planning
 // https://pdf.sciencedirectassets.com/271585/1-s2.0-S0004370214X00123/1-s2.0-S0004370214001271/main.pdf?X-Amz-Security-Token=IQoJb3JpZ2luX2VjEK3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIAoGH2jFIH6eaM4%2FlutGi4DeuZ2hg9zG0cK5GxZUe2jDAiEAwc03VXhyHGZ8kJ2R9O2kUQXTByeR1rGT78oXQwk%2FmmIquwUI1v%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAFGgwwNTkwMDM1NDY4NjUiDE%2BCJBn2XWFzFSwPByqPBfvQ9kAqrtQM3QSj9tpkWhjQHhc4zTxeHGNJxaYGJIT4utnlTsEWdOyVBvsthXUtJuae3ppqbEWFi4Mdd%2Fqe5awtSYKX2HefBU8hrx9O0hk4Bu2bhmX75OZ4LICgZ20QBmhWDWT1wf53aObkLohqpuFPX8Mu6dvliU6ci0KI9C%2FHHig61dOl7XcOS3VSYBP2Re7L6oZbFsMS3uExQE8jemnawsqghkWzCmVGDJNbXj0MWuVFCDXCpJAkqcTbvqfgsIH5bwXFvhORri5clZUwK9Zz6yoxS0TvKLt3gCCzxcCF3UjjbnOcEzPEx17Dh9EIpOPagOssx1mVCOFuLQ89vzxkOZcjcPDcOgk26QkyG3X1NbItwHGkEYw9LTQ72ih9b8YhHlFIGJ6EmNLTvgfarF7%2BhPrubmAJb2Ki30fhjDgXR0uXnyXhEixgjeJTZLLh2Fz7ViFtkOVzkDEMgdHR6osKjxu8Br6MX0Nx4hQwpVSQVCxiWk89bR0VgzRdV2wAd9FWdKGfoAnylWy0uJvgyshMXEk71qZnfd%2FrLdDJtH%2BAd6woPTcCxnxLhazjDZBDkvUzHFmLCgXMrQ%2FwbL3c2QpHgLJWCc4T%2FDi124xefXW7cWfzdXXlBGZdsUT2Cqfa%2B6NUw1D2zvJqm%2F%2F87XBq4o6AnLMPcihvt9oFk4iRF5Sno3DvUzIC2sG%2B3lIb7uWzuz6PcMUS2E6oF3CY3RihzKzQB%2FrUYNKsbXBwMOtd%2FIIOH7f5wnZMHoj42AyajNkrzpiwoANPw5QTDhSWwhHcB6FvktOSCJvQ%2BkwcdzPauQnTOKu9az%2B57JHHojWLKYT6EBML%2FRDw%2BxeAK3DpMiost5QLzzaqNlzYXYCidRWMU%2Fowwsf%2BqQY6sQGsfOLGFScM9wAAk80iStUAjo2BfSqcSFDMBb8JBeVeX6D%2BsYx47QisiO5hYp5YwwPWw%2BPLAC55oQG3weRI8ilxzLZPArDbas9rnfegUSXwjOccUN2WbGl6MiuhYKA%2BmpzGaQGlKqL0CzkbyjyvfGXItxl%2BikKLvoyWdxrg4fTCTAjybAoD0rKEHEhQvd6e0kPd3%2Bcy5MS4JSmyjF%2FqmEl47UR9fDbfJABWFhfCalMQ8So%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20231030T130854Z&X-Amz-SignedHeaders=host&X-Amz-Expires=300&X-Amz-Credential=ASIAQ3PHCVTYZBPGPBWY%2F20231030%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=12d249e97d240c494abe770d8814ce775f2232bf25194d3098688f852fe3d187&hash=dd17c10d887ae5cbc0c44cd4443851baecf6d269916f312a68c556c31370d50c&host=68042c943591013ac2b2430a89b270f6af2c76d8dfd086a07176afe7c76c2c61&pii=S0004370214001271&tid=spdf-b2d1d29c-1919-44b6-8d52-46d2cd8e7e4b&sid=f1d5d06d33b702495918a227b13db629c00dgxrqb&type=client&tsoh=d3d3LnNjaWVuY2VkaXJlY3QuY29t&ua=080f575106540657000c&rr=81e3e3bc998d6604&cc=nl
+
+// tu delft student:
+//https://github.com/jdonszelmann/research-project
 
 } // namespace graph2
 } // namespace vic

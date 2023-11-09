@@ -242,7 +242,7 @@ TEST(Graph2, CartesianVertex)
 
 TEST(Graph2, CartesianAStar)
 {
-    constexpr std::size_t nx = 10, ny = 10;
+    constexpr std::size_t nx = 40, ny = 40;
     constexpr std::size_t last = (nx * ny) - 1;
 
     constexpr std::size_t bl = 0;
@@ -282,9 +282,16 @@ TEST(Graph2, CartesianAStar)
     const auto path = astarInstance.Run(from, to, costLambda, heuristicLambda);
     const auto duration = timer.GetTime();
 
-    std::cout << std::format("duration: {}ms", 1000. * duration.count()) << std::endl;
+    auto astarArrayInstance = CartesianArrayAStar<double, decltype(graph)>(graph);
+
+    const auto timer2 = Timer();
+    const auto path2 = astarArrayInstance.Run<4>(from, to, costLambda, heuristicLambda);
+    const auto duration2 = timer2.GetTime();
+
+    std::cout << std::format("duration: {}ms; {}ms", 1000. * duration.count(), 1000. * duration2.count()) << std::endl;
 
     EXPECT_EQ(path.size(), nx + ny - 1);
+    EXPECT_EQ(path2.size(), nx + ny - 1);
 
     ASSERT_TRUE(false);
 }

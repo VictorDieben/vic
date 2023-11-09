@@ -192,18 +192,18 @@ public:
     //using insert_return_type =
 
     // Iterators
-    auto begin() { return mData.begin(); }
-    auto begin() const { return mData.begin(); }
-    auto cbegin() const { return mData.cbegin(); }
+    auto begin() noexcept { return mData.begin(); }
+    auto begin() const noexcept { return mData.begin(); }
+    auto cbegin() const noexcept { return mData.cbegin(); }
 
-    auto end() { return mData.end(); }
-    auto end() const { return mData.end(); }
-    auto cend() const { return mData.cend(); }
+    auto end() noexcept { return mData.end(); }
+    auto end() const noexcept { return mData.end(); }
+    auto cend() const noexcept { return mData.cend(); }
 
     // Capacity
-    bool empty() const { return mData.empty(); }
-    std::size_t size() const { return mData.size(); }
-    std::size_t max_size() const { return std::numeric_limits<difference_type>::max(); }
+    bool empty() const noexcept { return mData.empty(); }
+    std::size_t size() const noexcept { return mData.size(); }
+    std::size_t max_size() const noexcept { return std::numeric_limits<difference_type>::max(); }
 
     // Modifiers
     void clear() noexcept { mData.clear(); }
