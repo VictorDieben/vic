@@ -186,10 +186,12 @@ public:
                 continue;
             mClosedSet.insert(current);
 
+            const auto currentGCost = mExploredMap.at(current).g;
+
             // iterate over neighbours, check with best value so far
             cartesianOutIterator.ForeachValidOutVertex(current, [&](const CartesianVertexType& other) {
                 const auto edgeCost = edgeCostFunctor(current, other);
-                const auto newGScore = mExploredMap[current].g + edgeCost;
+                const auto newGScore = currentGCost + edgeCost;
 
                 auto& item = mExploredMap[other]; // adds item if it did not exist
 
@@ -227,6 +229,22 @@ public:
         mHeap.clear();
 
         return path;
+    }
+};
+
+// hash function for std::vector<T>
+template <typename T, std::size_t dims>
+    requires std::integral<T>
+struct ArrayHasher
+{
+    int operator()(const std::array<T, dims>& arr) const
+    {
+        int hash = arr.size();
+        for(const auto& i : arr)
+        {
+            hash ^= i + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+        }
+        return hash;
     }
 };
 
@@ -271,14 +289,6 @@ public:
         using ExploredObject = CartesianArrayAStarExploredObject<TCost, VertexIdType, dims>;
         using VertexType = std::array<VertexIdType, dims>;
 
-        std::set<VertexType> closedSet;
-        std::map<VertexType, ExploredObject> exploredMap;
-        std::vector<VertexType> heap;
-
-        const auto dims = start.size();
-
-        const auto cartesianOutIterator = CartesianOutIterator(mOutIterator);
-
         const auto toArray = [](const std::vector<VertexIdType>& vec) -> VertexType {
             VertexType vecToArray;
             assert(vecToArray.size() == vec.size());
@@ -288,6 +298,12 @@ public:
 
         const auto startArray = toArray(start);
         const auto targetArray = toArray(target);
+
+        std::set<VertexType> closedSet;
+        std::unordered_map<VertexType, ExploredObject, ArrayHasher<VertexIdType, dims>> exploredMap;
+        std::vector<VertexType> heap;
+
+        const auto cartesianOutIterator = CartesianOutIterator(mOutIterator);
 
         heap.push_back(startArray);
         exploredMap[startArray] = ExploredObject{startArray, 0., 0.};
@@ -309,23 +325,22 @@ public:
                 continue;
             closedSet.insert(current);
 
-            const auto currentVector = CartesianVertex<VertexIdType>{current.begin(), current.end()};
+            const auto currentGCost = exploredMap.at(current).g;
 
             // iterate over neighbours, check with best value so far
-            cartesianOutIterator.ForeachValidOutVertex(currentVector, [&](const auto& other) {
+            cartesianOutIterator.ForeachValidOutVertex(current, [&](const VertexType& other) {
                 // temporary fix, iterator uses an std::vector, but we work with arrays
-                const VertexType otherArray = toArray(other);
-                const auto edgeCost = edgeCostFunctor(currentVector, other);
-                const auto newGScore = exploredMap[current].g + edgeCost;
+                const auto edgeCost = edgeCostFunctor(current, other);
+                const auto newGScore = currentGCost + edgeCost;
 
-                auto& item = exploredMap[otherArray]; // adds item if it did not exist
+                auto& item = exploredMap[other]; // adds item if it did not exist
 
                 if(newGScore < item.g)
                 {
-                    const CostType hscore = heuristicFunctor(other, target);
+                    const CostType hscore = heuristicFunctor(other, targetArray);
                     item = ExploredObject{current, newGScore + hscore, newGScore};
 
-                    heap.push_back(otherArray);
+                    heap.push_back(other);
                     std::push_heap(heap.begin(), heap.end(), compareF);
                 }
             });
@@ -343,7 +358,7 @@ public:
         {
             if(path.size() > 1000)
                 return std::vector<VertexType>{};
-            current = exploredMap[current].vertex;
+            current = exploredMap.at(current).vertex;
             path.push_back(current);
         }
 

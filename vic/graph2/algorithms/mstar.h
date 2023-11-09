@@ -35,6 +35,11 @@ inline constexpr bool CollisionSetContains(const CollisionSet collisionSet, cons
     return (collisionSet & possibleSubset) == possibleSubset; //
 }
 
+inline constexpr bool MergeCollisionSets(const CollisionSet a, const CollisionSet b)
+{
+    return a | b; //
+}
+
 template <typename TGraph, typename TOutVertexIterator>
 class SubsetOutIterator
 {
@@ -185,6 +190,30 @@ CollisionSet ConstructCollisionSet(const TPolicy& policy, //
     return collisionSet;
 }
 
+template <typename CartesianVertexType>
+CollisionSet FindCollisions(const CartesianVertexType& from, const CartesianVertexType& to)
+{
+    const auto numAgents = (uint8_t)from.size();
+
+    CollisionSet collisionSet{};
+
+    for(std::uint8_t a = 0; a < numAgents - 1; ++a)
+    {
+        for(std::uint8_t b = a + 1; b < numAgents; ++b)
+        {
+            if((from.at(a) == to.at(b)) || //
+               (to.at(a) == from.at(b)) || //
+               (to.at(a) == to.at(b)))
+            {
+                SetNthBit(collisionSet, a);
+                SetNthBit(collisionSet, b);
+            }
+        }
+    }
+
+    return collisionSet;
+}
+
 template <typename TCost, typename TGraph>
 struct MStar
 {
@@ -208,13 +237,13 @@ private:
 public:
     struct ExploredObject
     {
-        CartesianVertexType vertex{}; // previous
+        CartesianVertexType previous{}; // previous vertex
         CollisionSet collisionSet;
 
         CostType f{std::numeric_limits<CostType>::max()};
         CostType g{std::numeric_limits<CostType>::max()};
 
-        std::set<CartesianVertexType> backpropSet;
+        std::set<CartesianVertexType> backpropSet; // todo: (unordered) flat map?
     };
 
     std::map<CartesianVertexType, ExploredObject> mExploredMap;
@@ -233,6 +262,8 @@ public:
 
         mHeap.clear();
         mHeap.push_back(start);
+
+        std::set<CartesianVertexType> closedSet;
 
         SubsetOutIterator subsetIterator(mGraph, mOutIterator);
 
@@ -253,16 +284,49 @@ public:
 
             ConstructPolicy(policy, current, target, policyDirection);
 
-            const CollisionSet collisionSet = ConstructCollisionSet(policy, current, target);
+            // const CollisionSet collisionSet = ConstructCollisionSet(policy, current, target);
+            const CollisionSet policyCollisionSet = FindCollisions(current, policyDirection);
 
-            subsetIterator.ForeachOutVertex(current, policyDirection, collisionSet, [&](const CartesianVertexType& other) {
+            const auto currentGScore = mExploredMap[current].g;
+
+            subsetIterator.ForeachOutVertex(current, policyDirection, policyCollisionSet, [&](const CartesianVertexType& other) {
                 // append
-                mExploredMap[other].backpropSet.insert(current);
+                ExploredObject& item = mExploredMap[other]; // inserts if it does not exist
+                const bool itemIsNew = item.backpropSet.empty();
+
+                item.backpropSet.insert(current);
 
                 const auto edgeCost = edgeCostFunctor(current, other);
-                const auto newGScore = mExploredMap[current].g + edgeCost;
+                const auto newGScore = currentGScore + edgeCost;
 
                 // const auto collisionSet = ConstructCollisionSet();
+                if(newGScore < item.g)
+                {
+                    // set neighbour data to new values
+                    const auto hscore = heuristicFunctor(other, target);
+                    item.previous = current;
+                    item.f = newGScore + hscore;
+                    item.g = newGScore;
+
+                    if(itemIsNew)
+                    {
+                        mHeap.push_back(other);
+                        std::push_heap(mHeap.begin(), mHeap.end(), compareF);
+                    }
+                    else if(closedSet.contains(other))
+                    {
+                        mHeap.push_back(other);
+                        std::push_heap(mHeap.begin(), mHeap.end(), compareF);
+                        closedSet.erase(other);
+                    }
+                    else
+                    {
+                        // item is not new and not closed, so it is already in the heap.
+                        // the old f score is no longer valid
+
+                        // todo:
+                    }
+                }
             });
         }
 
@@ -281,7 +345,7 @@ public:
         {
             if(path.size() > 1000)
                 return std::vector<CartesianVertexType>{};
-            current = mExploredMap[current].vertex;
+            current = mExploredMap[current].previous;
             path.push_back(current);
         }
 

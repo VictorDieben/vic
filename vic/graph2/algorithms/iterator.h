@@ -164,12 +164,12 @@ public:
     using VertexIdType = uint16_t;
     using EdgeIdType = uint16_t;
 
-    // todo: this might need to be input
-    using CartesianVertexIdType = uint64_t;
-    using CartesianEdgeIdType = uint64_t;
+    //// todo: this might need to be input
+    //using CartesianVertexIdType = uint64_t;
+    //using CartesianEdgeIdType = uint64_t;
 
-    using CartesianVertexType = std::vector<VertexIdType>;
-    using CartesianEdgeType = std::vector<EdgeIdType>;
+    //using CartesianVertexType = std::vector<VertexIdType>;
+    //using CartesianEdgeType = std::vector<EdgeIdType>;
 
 private:
     const TOutVertexIterator& mOutIterator; // todo: constrain with concept
@@ -179,17 +179,17 @@ public:
         : mOutIterator(outIterator)
     { }
 
-    template <typename TFunctor>
-    void ForeachOutVertex(const CartesianVertexType& vert, TFunctor functor) const
+    template <typename TVertex, typename TFunctor>
+    void ForeachOutVertex(const TVertex& vert, TFunctor functor) const
     {
-        auto buffer = vert;
+        TVertex buffer = vert;
         ForeachOutRecursive(buffer, functor, 0, vert.size());
     }
 
-    template <typename TFunctor>
-    void ForeachValidOutVertex(const CartesianVertexType& vert, TFunctor functor) const
+    template <typename TVertex, typename TFunctor>
+    void ForeachValidOutVertex(const TVertex& vert, TFunctor functor) const
     {
-        auto buffer = vert;
+        TVertex buffer = vert;
         vic::memory::UnorderedFlatSet<VertexIdType> occupiedVertices(vert.begin(), vert.end());
         if(occupiedVertices.size() < vert.size())
             return; // start vertex is already in collision
@@ -197,8 +197,8 @@ public:
     }
 
 private:
-    template <typename TFunctor>
-    void ForeachOutRecursive(CartesianVertexType& vertex,
+    template <typename TVertex, typename TFunctor>
+    void ForeachOutRecursive(TVertex& vertex,
                              TFunctor functor, //
                              const std::size_t dim,
                              const std::size_t dims) const
@@ -214,8 +214,7 @@ private:
         ForeachOutRecursive(vertex, functor, dim + 1, dims);
 
         // todo: loop over all out vertices for this dimension
-        const auto& outVerts = mOutIterator.OutVertices(vertexAtDim);
-        for(const auto& outVert : outVerts)
+        for(const auto& outVert : mOutIterator.OutVertices(vertexAtDim))
         {
             vertex[dim] = outVert;
             ForeachOutRecursive(vertex, functor, dim + 1, dims);
@@ -223,8 +222,8 @@ private:
         vertex[dim] = vertexAtDim;
     }
 
-    template <typename TFunctor>
-    void ForeachValidOutVertexRecursive(CartesianVertexType& vertex,
+    template <typename TVertex, typename TFunctor>
+    void ForeachValidOutVertexRecursive(TVertex& vertex,
                                         TFunctor functor, //
                                         const std::size_t dim,
                                         const std::size_t dims,
@@ -241,8 +240,7 @@ private:
         ForeachValidOutVertexRecursive(vertex, functor, dim + 1, dims, occupiedVertices);
 
         // loop over all out vertices for this dimension
-        const auto& outVerts = mOutIterator.OutVertices(vertex.at(dim));
-        for(const auto& outVert : outVerts)
+        for(const auto& outVert : mOutIterator.OutVertices(vertex[dim]))
         {
             if(occupiedVertices.insert(outVert).second)
             {

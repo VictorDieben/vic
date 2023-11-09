@@ -243,6 +243,12 @@ TEST(Graph2, CartesianVertex)
 TEST(Graph2, CartesianAStar)
 {
     constexpr std::size_t nx = 40, ny = 40;
+
+    // performace release 40x40:
+    // 2591.4221ms; 944.0560999999999ms
+
+    //constexpr std::size_t nx = 10, ny = 10;
+
     constexpr std::size_t last = (nx * ny) - 1;
 
     constexpr std::size_t bl = 0;
@@ -253,9 +259,6 @@ TEST(Graph2, CartesianAStar)
     using VertexType = uint16_t;
     using EdgeType = uint16_t;
 
-    using CartesianVertexIdType = uint64_t;
-    using CartesianEdgeIdType = uint64_t;
-
     using CartesianVertexType = std::vector<VertexType>;
     using CartesianEdgeType = std::vector<EdgeType>;
 
@@ -263,16 +266,17 @@ TEST(Graph2, CartesianAStar)
 
     const auto fw = FloydWarshall<double, TestVertexId>(graph, [&](const auto, const auto) -> double { return 1.; });
 
-    const auto heuristicLambda = [&](const CartesianVertexType& from, const CartesianVertexType& to) -> double {
+    const auto heuristicLambda = [&fw]<typename T>(const T& from, const T& to) -> double {
+        assert(from.size() == to.size());
         double cost = 0.;
         const auto size = from.size();
         for(std::size_t i = 0; i < size; ++i)
-            cost += fw.Cost(from.at(i), to.at(i));
+            cost += fw.Cost(from[i], to[i]);
         cost = cost / double(size);
         return 1.00001 * cost; // slightly overestimate the remaining part of path
     };
 
-    const auto costLambda = [&](const CartesianVertexType&, const CartesianVertexType&) -> double { return 1.; };
+    const auto costLambda = []<typename T>(const T&, const T&) -> double { return 1.; };
     auto astarInstance = CartesianAStar<double, decltype(graph)>(graph);
 
     const auto from = CartesianVertexType{bl, tr, tl, br};
