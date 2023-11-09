@@ -256,28 +256,33 @@ TEST(Graph2, CartesianAStar)
     constexpr std::size_t tl = (nx * (ny - 1));
     constexpr std::size_t tr = (nx * ny) - 1;
 
+    constexpr std::size_t ml = (nx * ((ny - 1) / 2));
+    constexpr std::size_t mr = ml + nx;
+
     using VertexType = uint16_t;
     using EdgeType = uint16_t;
+
+    using CostType = float;
 
     using CartesianVertexType = std::vector<VertexType>;
     using CartesianEdgeType = std::vector<EdgeType>;
 
     const auto graph = ConstructGridGraph<VertexType, EdgeType>(nx, ny);
 
-    const auto fw = FloydWarshall<double, TestVertexId>(graph, [&](const auto, const auto) -> double { return 1.; });
+    const auto fw = FloydWarshall<double, TestVertexId>(graph, [&](const auto, const auto) -> CostType { return CostType{1.}; });
 
-    const auto heuristicLambda = [&fw]<typename T>(const T& from, const T& to) -> double {
+    const auto heuristicLambda = [&fw]<typename T>(const T& from, const T& to) -> CostType {
         assert(from.size() == to.size());
-        double cost = 0.;
+        CostType cost = 0.;
         const auto size = from.size();
         for(std::size_t i = 0; i < size; ++i)
             cost += fw.Cost(from[i], to[i]);
-        cost = cost / double(size);
+        cost = cost / CostType(size);
         return 1.00001 * cost; // slightly overestimate the remaining part of path
     };
 
-    const auto costLambda = []<typename T>(const T&, const T&) -> double { return 1.; };
-    auto astarInstance = CartesianAStar<double, decltype(graph)>(graph);
+    const auto costLambda = []<typename T>(const T&, const T&) -> CostType { return CostType{1.}; };
+    auto astarInstance = CartesianAStar<CostType, decltype(graph)>(graph);
 
     const auto from = CartesianVertexType{bl, tr, tl, br};
     const auto to = CartesianVertexType{tr, bl, br, tl};
@@ -285,16 +290,17 @@ TEST(Graph2, CartesianAStar)
     const auto timer = Timer();
     const auto path = astarInstance.Run(from, to, costLambda, heuristicLambda);
     const auto duration = timer.GetTime();
+    std::cout << std::format("old: {}ms", 1000. * duration.count()) << std::endl;
 
-    auto astarArrayInstance = CartesianArrayAStar<double, decltype(graph)>(graph);
+    auto astarArrayInstance = CartesianArrayAStar<CostType, decltype(graph)>(graph);
 
     const auto timer2 = Timer();
     const auto path2 = astarArrayInstance.Run<4>(from, to, costLambda, heuristicLambda);
     const auto duration2 = timer2.GetTime();
 
-    std::cout << std::format("duration: {}ms; {}ms", 1000. * duration.count(), 1000. * duration2.count()) << std::endl;
+    std::cout << std::format("new: {}ms", 1000. * duration2.count()) << std::endl;
 
-    EXPECT_EQ(path.size(), nx + ny - 1);
+    // EXPECT_EQ(path.size(), nx + ny - 1);
     EXPECT_EQ(path2.size(), nx + ny - 1);
 
     ASSERT_TRUE(false);

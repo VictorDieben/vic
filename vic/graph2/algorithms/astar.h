@@ -255,8 +255,15 @@ template <typename TCost, typename TVertex, std::size_t dims>
 struct CartesianArrayAStarExploredObject
 {
     std::array<TVertex, dims> vertex{}; // previous
-    TCost f{std::numeric_limits<TCost>::max()};
+    // TCost f{std::numeric_limits<TCost>::max()};
     TCost g{std::numeric_limits<TCost>::max()};
+};
+
+template <typename TCost, typename TVertex, std::size_t dims>
+struct CartesianArrayAStarHeapObject
+{
+    std::array<TVertex, dims> vertex{}; // previous
+    TCost f{std::numeric_limits<TCost>::max()};
 };
 
 template <typename TCost, typename TGraph>
@@ -287,6 +294,8 @@ public:
         assert(start.size() == dims && target.size() == dims);
 
         using ExploredObject = CartesianArrayAStarExploredObject<TCost, VertexIdType, dims>;
+        using HeapObject = CartesianArrayAStarHeapObject<TCost, VertexIdType, dims>;
+
         using VertexType = std::array<VertexIdType, dims>;
 
         const auto toArray = [](const std::vector<VertexIdType>& vec) -> VertexType {
@@ -299,19 +308,21 @@ public:
         const auto startArray = toArray(start);
         const auto targetArray = toArray(target);
 
-        std::set<VertexType> closedSet;
+        //std::set<VertexType> closedSet;
+        std::unordered_set<VertexType, ArrayHasher<VertexIdType, dims>> closedSet;
         std::unordered_map<VertexType, ExploredObject, ArrayHasher<VertexIdType, dims>> exploredMap;
-        std::vector<VertexType> heap;
+        // std::map<VertexType, ExploredObject> exploredMap;
+        std::vector<HeapObject> heap;
 
         const auto cartesianOutIterator = CartesianOutIterator(mOutIterator);
 
-        heap.push_back(startArray);
-        exploredMap[startArray] = ExploredObject{startArray, 0., 0.};
+        heap.push_back(HeapObject{startArray, 0.});
+        exploredMap[startArray] = ExploredObject{startArray, 0.};
 
         // note: > because default make_heap behaviour is max heap for operator<
-        const auto compareF = [&](const VertexType& v1, const VertexType& v2) { return exploredMap.at(v1).f > exploredMap.at(v2).f; };
+        const auto compareF = [&](const HeapObject& v1, const HeapObject& v2) { return v1.f > v2.f; };
 
-        VertexType current;
+        HeapObject current;
 
         while(!heap.empty())
         {
@@ -319,18 +330,17 @@ public:
             std::swap(current, heap.back()); // avoid destructing current, just swap it to the heap
             heap.pop_back();
 
-            if(current == targetArray)
+            if(current.vertex == targetArray)
                 break;
-            if(closedSet.contains(current))
+            if(const auto [_, inserted] = closedSet.insert(current.vertex); !inserted)
                 continue;
-            closedSet.insert(current);
 
-            const auto currentGCost = exploredMap.at(current).g;
+            const auto currentGCost = exploredMap.at(current.vertex).g;
 
             // iterate over neighbours, check with best value so far
-            cartesianOutIterator.ForeachValidOutVertex(current, [&](const VertexType& other) {
+            cartesianOutIterator.ForeachValidOutVertex(current.vertex, [&](const VertexType& other) {
                 // temporary fix, iterator uses an std::vector, but we work with arrays
-                const auto edgeCost = edgeCostFunctor(current, other);
+                const auto edgeCost = edgeCostFunctor(current.vertex, other);
                 const auto newGScore = currentGCost + edgeCost;
 
                 auto& item = exploredMap[other]; // adds item if it did not exist
@@ -338,9 +348,12 @@ public:
                 if(newGScore < item.g)
                 {
                     const CostType hscore = heuristicFunctor(other, targetArray);
-                    item = ExploredObject{current, newGScore + hscore, newGScore};
+                    const CostType newFScore = newGScore + hscore;
 
-                    heap.push_back(other);
+                    item.vertex = current.vertex;
+                    item.g = newGScore;
+
+                    heap.emplace_back(other, newFScore);
                     std::push_heap(heap.begin(), heap.end(), compareF);
                 }
             });
@@ -348,18 +361,18 @@ public:
 
         std::vector<VertexType> path;
 
-        if(current != targetArray)
+        if(current.vertex != targetArray)
             return path; // return an empty path if something failed
 
         path.push_back(targetArray);
 
-        current = targetArray;
-        while(current != startArray) // note: for multi-robot, we cannot assume than number of vertices is really the upper limit, 4x should be enough
+        auto currentVertex = targetArray;
+        while(currentVertex != startArray) // note: for multi-robot, we cannot assume than number of vertices is really the upper limit, 4x should be enough
         {
             if(path.size() > 1000)
                 return std::vector<VertexType>{};
-            current = exploredMap.at(current).vertex;
-            path.push_back(current);
+            currentVertex = exploredMap.at(currentVertex).vertex;
+            path.push_back(currentVertex);
         }
 
         std::reverse(path.begin(), path.end());
