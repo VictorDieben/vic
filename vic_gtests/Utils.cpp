@@ -170,34 +170,34 @@ TEST(Utils, TestRange)
 
     // test subrange
     std::vector<int> result2;
-    for(const auto& val : Range(2, 5)) //
+    for(const auto& val : Range(2, 5))
         result2.push_back(val);
     std::vector<int> answer2{2, 3, 4};
     ASSERT_EQ(result2, answer2);
 
     // test different stride
     std::vector<int> result3;
-    for(const auto& val : Range(0, 10, 4)) //
+    for(const auto& val : Range(0, 10, 4))
         result3.push_back(val);
     std::vector<int> answer3{0, 4, 8};
     ASSERT_EQ(result3, answer3);
 
     // test backwards stride
     std::vector<int> result4;
-    for(const auto& val : Range(10, 0, -2)) //
+    for(const auto& val : Range(10, 0, -2))
         result4.push_back(val);
     std::vector<int> answer4{10, 8, 6, 4, 2};
     ASSERT_EQ(result4, answer4);
 
     // check range in wrong direction
     std::vector<int> result5;
-    for(const auto& val : Range(0, 4, -1)) //
+    for(const auto& val : Range(0, 4, -1))
         result5.push_back(val);
     std::vector<int> answer5{};
     ASSERT_EQ(result5, answer5);
 
     std::vector<int> result6;
-    for(const auto& val : Range(4, 0, 1)) //
+    for(const auto& val : Range(4, 0, 1))
         result6.push_back(val);
     std::vector<int> answer6{};
     ASSERT_EQ(result6, answer6);
@@ -544,19 +544,15 @@ TEST(Utils, RemoveDuplicates)
     vec.erase(vic::remove_duplicates(vec.begin(), vec.end(), compareLambda), vec.end());
     ASSERT_EQ(vec, (std::vector{3, 5}));
 
-    std::cout << "vec: " << vec << std::endl;
-
     vec = std::vector<int>{3, 1, 1, 4, 2, 2, 5};
     vec.erase(vic::remove_duplicates(vec.begin(), vec.end(), compareLambda), vec.end());
     ASSERT_EQ(vec, (std::vector{3, 4, 5}));
-
-    std::cout << "vec: " << vec << std::endl;
 }
 
 TEST(Utils, SortIndividual)
 {
     {
-        std::vector<int> vec{1, 4, 2, 3, 5}; //
+        std::vector<int> vec{1, 4, 2, 3, 5};
         auto it = std::find(vec.begin(), vec.end(), 4);
         const auto newPositionIt = vic::sort_individual(vec.begin(), vec.end(), it);
         EXPECT_EQ(vec, (std::vector<int>{1, 2, 3, 4, 5}));
@@ -564,7 +560,7 @@ TEST(Utils, SortIndividual)
     }
 
     {
-        std::vector<int> vec{1, 3, 2, 5}; //
+        std::vector<int> vec{1, 3, 2, 5};
         auto it = std::find(vec.begin(), vec.end(), 2);
         const auto newPositionIt = vic::sort_individual(vec.begin(), vec.end(), it);
         EXPECT_EQ(vec, (std::vector<int>{1, 2, 3, 5}));
@@ -572,7 +568,7 @@ TEST(Utils, SortIndividual)
     }
 
     {
-        std::vector<int> vec{5, 1, 2, 3, 4}; //
+        std::vector<int> vec{5, 1, 2, 3, 4};
         auto it = std::find(vec.begin(), vec.end(), 5);
         const auto newPositionIt = vic::sort_individual(vec.begin(), vec.end(), it);
         EXPECT_EQ(vec, (std::vector<int>{1, 2, 3, 4, 5}));
@@ -580,7 +576,7 @@ TEST(Utils, SortIndividual)
     }
 
     {
-        std::vector<int> vec{2, 3, 4, 5, 1}; //
+        std::vector<int> vec{2, 3, 4, 5, 1};
         auto it = std::find(vec.begin(), vec.end(), 1);
         const auto newPositionIt = vic::sort_individual(vec.begin(), vec.end(), it);
         EXPECT_EQ(vec, (std::vector<int>{1, 2, 3, 4, 5}));
@@ -606,8 +602,6 @@ TEST(Utils, Indexing)
     ASSERT_EQ(4, NdIndexToFlat<uint64_t>(shape, std::vector{{0, 0, 0, 4}}));
     ASSERT_EQ(5, NdIndexToFlat<uint64_t>(shape, std::vector{{0, 0, 1, 0}}));
 
-    const auto tmp = FlatToNdIndex<std::size_t>(shape, 5);
-
     // check that each valid nd-index translates to a unique flat index
     std::set<uint64_t> indices;
     for(std::size_t i = 0; i < shape[0]; ++i)
@@ -619,8 +613,7 @@ TEST(Utils, Indexing)
                     const auto flatIdx = NdIndexToFlat<uint64_t>(shape, ndIndex);
                     indices.insert(flatIdx);
                     const auto reconstructedNdIndex = FlatToNdIndex<std::size_t>(shape, flatIdx);
-                    if(ndIndex != reconstructedNdIndex)
-                        EXPECT_EQ(ndIndex, reconstructedNdIndex);
+                    EXPECT_EQ(ndIndex, reconstructedNdIndex);
                 }
     EXPECT_EQ(indices.size(), fullSize);
 }

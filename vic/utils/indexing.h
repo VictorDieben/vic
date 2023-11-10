@@ -20,23 +20,31 @@ using Shape = std::array<uint32_t, dimensions>;
 
 template <typename TShape, typename TIndex>
     requires std::integral<TShape> && std::integral<TIndex>
-bool IsValidIndex(const std::vector<TShape>& shape, const std::vector<TIndex>& index)
+bool IsValidNdIndex(const std::vector<TShape>& shape, const std::vector<TIndex>& ndIndex)
 {
     if(shape.empty())
         return false; // todo: should a 0-dimensional array evaluate to false? there is no possible value for any flat index, so I think yes. However, an empty index array could still be considered "correct"
-    if(shape.size() != index.size())
+    if(shape.size() != ndIndex.size())
         return false;
     for(std::size_t idx = 0; idx < shape.size(); ++idx)
-        if(index[idx] >= shape[idx]) // index needs to be < shape in each dimension
+        if(ndIndex[idx] >= shape[idx]) // index needs to be < shape in each dimension
             return false;
     return true;
+}
+
+template <typename TShape, typename TIndex>
+    requires std::integral<TShape> && std::integral<TIndex>
+bool IsValidFlatIndex(const std::vector<TShape>& shape, const TIndex& index)
+{
+    const uint64_t fullSize = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<uint64_t>());
+    return index < fullSize;
 }
 
 template <typename TRes, typename TShape, typename TIndex>
     requires std::integral<TRes> && std::integral<TShape> && std::integral<TIndex>
 constexpr TRes NdIndexToFlat(const std::vector<TShape>& shape, const std::vector<TIndex>& index)
 {
-    assert(IsValidIndex(shape, index) && "invalid nd-index for this shape!");
+    assert(IsValidNdIndex(shape, index) && "invalid nd-index for this shape!");
     TRes result = index.back();
 
     TRes blockSize = 1; // todo: blocksize can be precomputed, usefull if we are transforming large amounts of data
@@ -57,12 +65,14 @@ void FlatToNdIndex(const std::vector<TShape>& shape, //
                    const TIndex index,
                    std::vector<TBuffer>& buffer)
 {
+    assert(IsValidFlatIndex(shape, index) && "invalid flat index for this shape!");
+
     buffer.resize(shape.size());
 
     TIndex value = index;
 
     TIndex quotient = 0;
-    TIndex remainder = 0;
+    TIndex remainder = index;
 
     uint64_t blocksize;
 
@@ -87,7 +97,7 @@ std::vector<TRes> FlatToNdIndex(const std::vector<TShape>& shape, //
 {
     std::vector<TRes> buffer;
     FlatToNdIndex(shape, index, buffer);
-    return buffer; //
+    return buffer;
 }
 
 } // namespace indexing
