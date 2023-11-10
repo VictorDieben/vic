@@ -43,4 +43,41 @@ TIter remove_duplicates(TIter begin, TIter end, TEquality lambda)
     return itWrite; // todo
 }
 
+// re-sort 1 value in an otherwise sorted array
+template <typename TIter, typename TCompare>
+    requires std::random_access_iterator<TIter>
+TIter sort_individual(TIter begin, //
+                      TIter end,
+                      TIter item,
+                      TCompare lambda)
+{
+    if(begin == end || item == end)
+        return end;
+
+    auto itNewPos = std::lower_bound(begin, end, *item);
+    if(itNewPos == item)
+        return item;
+
+    if(itNewPos < item)
+    {
+        std::rotate(itNewPos, item, item + 1);
+        return itNewPos;
+    }
+    else
+    {
+        std::rotate(item, item + 1, itNewPos);
+        return itNewPos - 1;
+    }
+}
+
+// re-sort 1 value in an otherwise sorted array
+template <typename TIter>
+    requires std::random_access_iterator<TIter>
+TIter sort_individual(TIter begin, //
+                      TIter end,
+                      TIter item)
+{
+    return sort_individual(begin, end, item, std::less<>{});
+}
+
 } // namespace vic

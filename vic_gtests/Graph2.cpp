@@ -284,18 +284,18 @@ TEST(Graph2, CartesianAStar)
     const auto costLambda = []<typename T>(const T&, const T&) -> CostType { return CostType{1.}; };
     auto astarInstance = CartesianAStar<CostType, decltype(graph)>(graph);
 
-    const auto from = CartesianVertexType{bl, tr, tl, br};
-    const auto to = CartesianVertexType{tr, bl, br, tl};
+    const auto from = CartesianVertexType{bl, tr, tl, br, ml};
+    const auto to = CartesianVertexType{tr, bl, br, tl, mr};
 
-    const auto timer = Timer();
-    const auto path = astarInstance.Run(from, to, costLambda, heuristicLambda);
-    const auto duration = timer.GetTime();
-    std::cout << std::format("old: {}ms", 1000. * duration.count()) << std::endl;
+    //const auto timer = Timer();
+    //const auto path = astarInstance.Run(from, to, costLambda, heuristicLambda);
+    //const auto duration = timer.GetTime();
+    //std::cout << std::format("old: {}ms", 1000. * duration.count()) << std::endl;
 
     auto astarArrayInstance = CartesianArrayAStar<CostType, decltype(graph)>(graph);
 
     const auto timer2 = Timer();
-    const auto path2 = astarArrayInstance.Run<4>(from, to, costLambda, heuristicLambda);
+    const auto path2 = astarArrayInstance.Run<5>(from, to, costLambda, heuristicLambda);
     const auto duration2 = timer2.GetTime();
 
     std::cout << std::format("new: {}ms", 1000. * duration2.count()) << std::endl;

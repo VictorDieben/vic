@@ -5,6 +5,7 @@
 #include "vic/utils.h"
 #include "vic/utils/algorithms.h"
 #include "vic/utils/counted.h"
+#include "vic/utils/indexing.h"
 #include "vic/utils/math.h"
 #include "vic/utils/observable.h"
 #include "vic/utils/permutations.h"
@@ -18,6 +19,7 @@
 
 #include "vic/memory/constexpr_map.h"
 
+#include <numeric>
 #include <random>
 #include <thread>
 
@@ -549,4 +551,76 @@ TEST(Utils, RemoveDuplicates)
     ASSERT_EQ(vec, (std::vector{3, 4, 5}));
 
     std::cout << "vec: " << vec << std::endl;
+}
+
+TEST(Utils, SortIndividual)
+{
+    {
+        std::vector<int> vec{1, 4, 2, 3, 5}; //
+        auto it = std::find(vec.begin(), vec.end(), 4);
+        const auto newPositionIt = vic::sort_individual(vec.begin(), vec.end(), it);
+        EXPECT_EQ(vec, (std::vector<int>{1, 2, 3, 4, 5}));
+        EXPECT_EQ(*newPositionIt, 4);
+    }
+
+    {
+        std::vector<int> vec{1, 3, 2, 5}; //
+        auto it = std::find(vec.begin(), vec.end(), 2);
+        const auto newPositionIt = vic::sort_individual(vec.begin(), vec.end(), it);
+        EXPECT_EQ(vec, (std::vector<int>{1, 2, 3, 5}));
+        EXPECT_EQ(*newPositionIt, 2);
+    }
+
+    {
+        std::vector<int> vec{5, 1, 2, 3, 4}; //
+        auto it = std::find(vec.begin(), vec.end(), 5);
+        const auto newPositionIt = vic::sort_individual(vec.begin(), vec.end(), it);
+        EXPECT_EQ(vec, (std::vector<int>{1, 2, 3, 4, 5}));
+        EXPECT_EQ(*newPositionIt, 5);
+    }
+
+    {
+        std::vector<int> vec{2, 3, 4, 5, 1}; //
+        auto it = std::find(vec.begin(), vec.end(), 1);
+        const auto newPositionIt = vic::sort_individual(vec.begin(), vec.end(), it);
+        EXPECT_EQ(vec, (std::vector<int>{1, 2, 3, 4, 5}));
+        EXPECT_EQ(*newPositionIt, 1);
+    }
+}
+
+TEST(Utils, Indexing)
+{
+    // NOTE: this set of functions expects indices with the least significant digit in the last index of the array
+    // translating them to reverse order should not be too complicated
+
+    using namespace vic::indexing;
+
+    // regardgess of shape, index [0,0,0,0,...] should always translate to flat index 0
+    EXPECT_EQ(0, NdIndexToFlat<uint64_t>(std::vector{{9, 4, 12, 576324}}, std::vector{{0, 0, 0, 0}}));
+    EXPECT_EQ(0, NdIndexToFlat<uint64_t>(std::vector{{8, 7, 6, 5, 4, 3, 2, 1}}, std::vector{{0, 0, 0, 0, 0, 0, 0, 0}}));
+
+    const std::vector<uint32_t> shape = {2, 3, 4, 5};
+    const std::size_t fullSize = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<uint32_t>());
+
+    ASSERT_EQ(0, NdIndexToFlat<uint64_t>(shape, std::vector{{0, 0, 0, 0}}));
+    ASSERT_EQ(4, NdIndexToFlat<uint64_t>(shape, std::vector{{0, 0, 0, 4}}));
+    ASSERT_EQ(5, NdIndexToFlat<uint64_t>(shape, std::vector{{0, 0, 1, 0}}));
+
+    const auto tmp = FlatToNdIndex<std::size_t>(shape, 5);
+
+    // check that each valid nd-index translates to a unique flat index
+    std::set<uint64_t> indices;
+    for(std::size_t i = 0; i < shape[0]; ++i)
+        for(std::size_t j = 0; j < shape[1]; ++j)
+            for(std::size_t k = 0; k < shape[2]; ++k)
+                for(std::size_t l = 0; l < shape[3]; ++l)
+                {
+                    const auto ndIndex = std::vector{{i, j, k, l}};
+                    const auto flatIdx = NdIndexToFlat<uint64_t>(shape, ndIndex);
+                    indices.insert(flatIdx);
+                    const auto reconstructedNdIndex = FlatToNdIndex<std::size_t>(shape, flatIdx);
+                    if(ndIndex != reconstructedNdIndex)
+                        EXPECT_EQ(ndIndex, reconstructedNdIndex);
+                }
+    EXPECT_EQ(indices.size(), fullSize);
 }

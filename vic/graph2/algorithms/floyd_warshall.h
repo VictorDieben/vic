@@ -11,62 +11,7 @@ namespace vic
 {
 namespace graph2
 {
-//template <typename CostType, typename VertexIdType>
-//struct FWData
-//{
-//    CostType cost{std::numeric_limits<CostType>::max()};
-//    VertexIdType next{0};
-//};
-//
-//template <typename CostType, typename VertexIdType>
-//using FWMatrix = std::vector<std::vector<FWData<CostType, VertexIdType>>>;
-//
-//template <typename TGraph, typename TEdgeCostFunctor, bool directed = false>
-//auto FloydWarshall(const TGraph& graph, //
-//                   TEdgeCostFunctor edgeCostFunctor)
-//{
-//    using GraphType = TGraph;
-//    using VertexIdType = typename GraphType::VertexIdType;
-//    using EdgeIdType = typename GraphType::EdgeIdType;
-//    using CostType = decltype(edgeCostFunctor(VertexIdType{}, VertexIdType{}));
-//
-//    using Data = FWData<CostType, VertexIdType>;
-//
-//    const auto n = graph.NumVertices();
-//
-//    const std::vector<Data> tmp{n, Data{}};
-//    FWMatrix<CostType, VertexIdType> matrix{n, tmp};
-//
-//    const auto vertices = VertexIterator(graph);
-//
-//    for(const auto i : vertices)
-//        matrix[i][i] = Data{0., i};
-//
-//    for(const auto& edge : EdgeIterator(graph))
-//    {
-//        const auto edgeCost = edgeCostFunctor(edge.first, edge.second);
-//        matrix[edge.first][edge.second] = Data{edgeCost, edge.second};
-//        if constexpr(!directed)
-//            matrix[edge.second][edge.first] = Data{edgeCost, edge.first};
-//    }
-//
-//    for(const auto& vk : vertices)
-//    {
-//        for(const auto& vi : vertices)
-//        {
-//            for(const auto& vj : vertices)
-//            {
-//                const double sum_ik_kj = matrix[vi][vk].cost + matrix[vk][vj].cost;
-//                if(matrix[vi][vj].cost > sum_ik_kj)
-//                {
-//                    matrix[vi][vj] = Data{sum_ik_kj, matrix[vi][vk].next};
-//                }
-//            }
-//        }
-//    }
-//
-//    return matrix;
-//}
+
 
 // Calculate the matrix of shortest distances and shortest paths
 // Can be used by other algorithms for policy.
