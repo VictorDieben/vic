@@ -327,7 +327,7 @@ public:
         while(!heap.empty())
         {
             std::pop_heap(heap.begin(), heap.end(), compareF);
-            std::swap(current, heap.back()); // avoid destructing current, just swap it to the heap
+            current = heap.back();
             heap.pop_back();
 
             if(current.vertex == targetArray)

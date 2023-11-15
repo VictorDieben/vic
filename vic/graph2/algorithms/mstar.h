@@ -121,14 +121,14 @@ private:
     }
 };
 
-template <typename TGraph, typename TCost>
-void Backprop(const TGraph& graph, //
-              const std::vector<typename TGraph::VertexIdType>& vertex,
-              const CollisionSet collisionSet,
-              std::vector<uint64_t>& openList)
-{
-    //
-}
+//template <typename TGraph, typename TCost>
+//void Backprop(const TGraph& graph, //
+//              const std::vector<typename TGraph::VertexIdType>& vertex,
+//              const CollisionSet collisionSet,
+//              std::vector<uint64_t>& openList)
+//{
+//    //
+//}
 
 template <typename CartesianVertexType, typename TPolicy>
 void ConstructPolicy(const TPolicy& policy,
@@ -214,6 +214,26 @@ CollisionSet FindCollisions(const CartesianVertexType& from, const CartesianVert
     return collisionSet;
 }
 
+template <typename TVertex>
+using MStarVertex = std::vector<TVertex>;
+
+template <typename TCost, typename TVertex>
+struct MStarExploredObject
+{
+    MStarVertex<TVertex> previous{};
+    TCost g{std::numeric_limits<TCost>::max()};
+
+    CollisionSet collisionSet;
+    std::set<MStarVertex<TVertex>> backpropSet; // todo: (unordered) flat map?
+};
+
+template <typename TCost, typename TVertex>
+struct MStarHeapObject
+{
+    MStarVertex<TVertex> vertex{};
+    TCost f{std::numeric_limits<TCost>::max()};
+};
+
 template <typename TCost, typename TGraph>
 struct MStar
 {
@@ -235,20 +255,6 @@ private:
     BaseOutVertexIterator<TGraph> mOutIterator;
 
 public:
-    struct ExploredObject
-    {
-        CartesianVertexType previous{}; // previous vertex
-        CollisionSet collisionSet;
-
-        CostType f{std::numeric_limits<CostType>::max()};
-        CostType g{std::numeric_limits<CostType>::max()};
-
-        std::set<CartesianVertexType> backpropSet; // todo: (unordered) flat map?
-    };
-
-    std::map<CartesianVertexType, ExploredObject> mExploredMap;
-    std::vector<CartesianVertexType> mHeap;
-
     template <typename TEdgeCostFunctor, typename THeuristicFunctor, typename TPolicy>
         requires ConceptEdgeCost<TEdgeCostFunctor> && ConceptEdgeCost<THeuristicFunctor>
     auto Run(const CartesianVertexType& start, //
@@ -257,66 +263,73 @@ public:
              const THeuristicFunctor& heuristicFunctor,
              const TPolicy& policy)
     {
-        mExploredMap.clear();
-        mExploredMap[start] = ExploredObject(start, CollisionSet{}, 0., 0., {});
+        using VertexType = MStarVertex<VertexIdType>;
+        using ExploredObject = MStarExploredObject<CostType, VertexIdType>;
+        using HeapObject = MStarHeapObject<CostType, VertexIdType>;
 
-        mHeap.clear();
-        mHeap.push_back(start);
+        std::map<VertexType, ExploredObject> exploredMap;
+        std::vector<HeapObject> heap;
+
+        // exploredMap[start] = ExploredObject(start, CollisionSet{}, 0., 0., {});
+
+        heap.push_back(HeapObject{start, 0.});
 
         std::set<CartesianVertexType> closedSet;
 
         SubsetOutIterator subsetIterator(mGraph, mOutIterator);
 
         // note: > because default make_heap behaviour is max heap for operator<
-        const auto compareF = [&](const CartesianVertexType v1, const CartesianVertexType v2) { return mExploredMap.at(v1).f > mExploredMap.at(v2).f; };
+        const auto compareF = [&](const auto& v1, const auto& v2) { return v1.f > v2.f; };
 
-        CartesianVertexType current;
-        CartesianVertexType policyDirection;
+        HeapObject current;
+        VertexType policyDirection;
 
-        while(!mHeap.empty())
+        while(!heap.empty())
         {
-            std::pop_heap(mHeap.begin(), mHeap.end(), compareF);
-            std::swap(current, mHeap.back());
-            mHeap.pop_back();
+            std::pop_heap(heap.begin(), heap.end(), compareF);
+            current = heap.back();
+            heap.pop_back();
 
-            if(current == target)
+            if(current.vertex == target)
                 break;
 
-            ConstructPolicy(policy, current, target, policyDirection);
+            ConstructPolicy(policy, current.vertex, target, policyDirection);
 
             // const CollisionSet collisionSet = ConstructCollisionSet(policy, current, target);
-            const CollisionSet policyCollisionSet = FindCollisions(current, policyDirection);
+            const CollisionSet policyCollisionSet = FindCollisions(current.vertex, policyDirection);
 
-            const auto currentGScore = mExploredMap[current].g;
+            const auto currentGScore = exploredMap[current.vertex].g;
 
-            subsetIterator.ForeachOutVertex(current, policyDirection, policyCollisionSet, [&](const CartesianVertexType& other) {
+            subsetIterator.ForeachOutVertex(current.vertex, policyDirection, policyCollisionSet, [&](const CartesianVertexType& other) {
                 // append
-                ExploredObject& item = mExploredMap[other]; // inserts if it does not exist
+                ExploredObject& item = exploredMap[other]; // inserts if it does not exist
+
                 const bool itemIsNew = item.backpropSet.empty();
 
-                item.backpropSet.insert(current);
+                item.backpropSet.insert(current.vertex);
 
-                const auto edgeCost = edgeCostFunctor(current, other);
+                const auto edgeCost = edgeCostFunctor(current.vertex, other);
                 const auto newGScore = currentGScore + edgeCost;
 
                 // const auto collisionSet = ConstructCollisionSet();
                 if(newGScore < item.g)
                 {
                     // set neighbour data to new values
-                    const auto hscore = heuristicFunctor(other, target);
-                    item.previous = current;
-                    item.f = newGScore + hscore;
+                    const CostType hscore = heuristicFunctor(other, target);
+                    const CostType newFScore = newGScore + hscore;
+
+                    item.previous = current.vertex;
                     item.g = newGScore;
 
                     if(itemIsNew)
                     {
-                        mHeap.push_back(other);
-                        std::push_heap(mHeap.begin(), mHeap.end(), compareF);
+                        heap.push_back(HeapObject{other, newFScore});
+                        std::push_heap(heap.begin(), heap.end(), compareF);
                     }
                     else if(closedSet.contains(other))
                     {
-                        mHeap.push_back(other);
-                        std::push_heap(mHeap.begin(), mHeap.end(), compareF);
+                        heap.push_back(HeapObject{other, newFScore});
+                        std::push_heap(heap.begin(), heap.end(), compareF);
                         closedSet.erase(other);
                     }
                     else
@@ -334,19 +347,19 @@ public:
 
         std::vector<CartesianVertexType> path{};
 
-        if(current != target)
+        auto currentVertex = current.vertex;
+        if(currentVertex != target)
             return path;
 
         // todo: backtrack
         path.push_back(target);
 
-        current = target;
-        while(current != start) // note: for multi-robot, we cannot assume than number of vertices is really the upper limit, 4x should be enough
+        while(currentVertex != start) // note: for multi-robot, we cannot assume than number of vertices is really the upper limit, 4x should be enough
         {
             if(path.size() > 1000)
                 return std::vector<CartesianVertexType>{};
-            current = mExploredMap[current].previous;
-            path.push_back(current);
+            currentVertex = exploredMap[currentVertex].previous;
+            path.push_back(currentVertex);
         }
 
         std::reverse(path.begin(), path.end());

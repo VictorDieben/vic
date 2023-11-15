@@ -13,14 +13,17 @@ namespace vic
 namespace indexing
 {
 
-template <uint8_t dimensions>
-using Shape = std::array<uint32_t, dimensions>;
-
 // todo: a constexpr version for the cases where we know the size at compile time
+
+template <typename TRes, typename TShape>
+constexpr TRes FlatSize(const std::vector<TShape>& shape)
+{
+    return std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<uint32_t>());
+}
 
 template <typename TShape, typename TIndex>
     requires std::integral<TShape> && std::integral<TIndex>
-bool IsValidNdIndex(const std::vector<TShape>& shape, const std::vector<TIndex>& ndIndex)
+constexpr bool IsValidNdIndex(const std::vector<TShape>& shape, const std::vector<TIndex>& ndIndex)
 {
     if(shape.empty())
         return false; // todo: should a 0-dimensional array evaluate to false? there is no possible value for any flat index, so I think yes. However, an empty index array could still be considered "correct"
@@ -36,13 +39,12 @@ template <typename TShape, typename TIndex>
     requires std::integral<TShape> && std::integral<TIndex>
 bool IsValidFlatIndex(const std::vector<TShape>& shape, const TIndex& index)
 {
-    const uint64_t fullSize = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<uint64_t>());
-    return index < fullSize;
+    return index < FlatSize<TIndex>(shape);
 }
 
 template <typename TRes, typename TShape, typename TIndex>
     requires std::integral<TRes> && std::integral<TShape> && std::integral<TIndex>
-constexpr TRes NdIndexToFlat(const std::vector<TShape>& shape, const std::vector<TIndex>& index)
+constexpr TRes NdToFlatIndex(const std::vector<TShape>& shape, const std::vector<TIndex>& index)
 {
     assert(IsValidNdIndex(shape, index) && "invalid nd-index for this shape!");
     TRes result = index.back();

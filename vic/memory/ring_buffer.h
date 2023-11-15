@@ -143,7 +143,6 @@ public:
     bool empty() const { return (mHead == mTail); }
     void clear()
     {
-        // mData.clear(); // todo: reset values?
         mHead = 0;
         mTail = 0;
     }
@@ -197,10 +196,12 @@ private:
         const std::size_t newSize = 2 * mDataSize; // simply double, maybe look what vector does
         auto newData = std::make_unique<T[]>(newSize);
 
-        // sorry for this weird for loop
         std::size_t ni = 0;
         for(std::size_t i = mTail; i != mHead; i = NextIndex(i, mDataSize))
-            newData[ni++] = std::move(mData[i]); // NOTE: ni++, we want to increase it _after_ setting index
+        {
+            newData[ni] = std::move(mData[i]); // NOTE: ni++, we want to increase it _after_ setting index
+            ni++;
+        }
 
         mTail = 0;
         mHead = mDataSize;

@@ -5,6 +5,7 @@
 #include "vic/utils.h"
 #include "vic/utils/algorithms.h"
 #include "vic/utils/counted.h"
+#include "vic/utils/heap.h"
 #include "vic/utils/indexing.h"
 #include "vic/utils/math.h"
 #include "vic/utils/observable.h"
@@ -592,15 +593,15 @@ TEST(Utils, Indexing)
     using namespace vic::indexing;
 
     // regardgess of shape, index [0,0,0,0,...] should always translate to flat index 0
-    EXPECT_EQ(0, NdIndexToFlat<uint64_t>(std::vector{{9, 4, 12, 576324}}, std::vector{{0, 0, 0, 0}}));
-    EXPECT_EQ(0, NdIndexToFlat<uint64_t>(std::vector{{8, 7, 6, 5, 4, 3, 2, 1}}, std::vector{{0, 0, 0, 0, 0, 0, 0, 0}}));
+    EXPECT_EQ(0, NdToFlatIndex<uint64_t>(std::vector{9, 4, 12, 576324}, std::vector{0, 0, 0, 0}));
+    EXPECT_EQ(0, NdToFlatIndex<uint64_t>(std::vector{8, 7, 6, 5, 4, 3, 2, 1}, std::vector{0, 0, 0, 0, 0, 0, 0, 0}));
 
     const std::vector<uint32_t> shape = {2, 3, 4, 5};
-    const std::size_t fullSize = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<uint32_t>());
+    const uint64_t flatSize = FlatSize<uint64_t>(shape);
 
-    ASSERT_EQ(0, NdIndexToFlat<uint64_t>(shape, std::vector{{0, 0, 0, 0}}));
-    ASSERT_EQ(4, NdIndexToFlat<uint64_t>(shape, std::vector{{0, 0, 0, 4}}));
-    ASSERT_EQ(5, NdIndexToFlat<uint64_t>(shape, std::vector{{0, 0, 1, 0}}));
+    ASSERT_EQ(0, NdToFlatIndex<uint64_t>(shape, std::vector{0, 0, 0, 0}));
+    ASSERT_EQ(4, NdToFlatIndex<uint64_t>(shape, std::vector{0, 0, 0, 4}));
+    ASSERT_EQ(5, NdToFlatIndex<uint64_t>(shape, std::vector{0, 0, 1, 0}));
 
     // check that each valid nd-index translates to a unique flat index
     std::set<uint64_t> indices;
@@ -610,10 +611,87 @@ TEST(Utils, Indexing)
                 for(std::size_t l = 0; l < shape[3]; ++l)
                 {
                     const auto ndIndex = std::vector{{i, j, k, l}};
-                    const auto flatIdx = NdIndexToFlat<uint64_t>(shape, ndIndex);
+                    const auto flatIdx = NdToFlatIndex<uint64_t>(shape, ndIndex);
                     indices.insert(flatIdx);
                     const auto reconstructedNdIndex = FlatToNdIndex<std::size_t>(shape, flatIdx);
                     EXPECT_EQ(ndIndex, reconstructedNdIndex);
                 }
-    EXPECT_EQ(indices.size(), fullSize);
+    ASSERT_EQ(indices.size(), flatSize);
+    EXPECT_TRUE(*indices.rbegin() < flatSize);
+}
+
+TEST(Utils, UpdateHeap)
+{
+    EXPECT_EQ(LeftChild(0), 1);
+    EXPECT_EQ(RightChild(0), 2);
+
+    EXPECT_EQ(LeftChild(1), 3);
+    EXPECT_EQ(RightChild(1), 4);
+
+    EXPECT_EQ(LeftChild(2), 5);
+    EXPECT_EQ(RightChild(2), 6);
+
+    EXPECT_EQ(Parent(1), 0);
+    EXPECT_EQ(Parent(2), 0);
+    EXPECT_EQ(Parent(3), 1);
+    EXPECT_EQ(Parent(4), 1);
+    EXPECT_EQ(Parent(5), 2);
+    EXPECT_EQ(Parent(6), 2);
+
+    const auto compareLambda = [](const auto& a, const auto& b) { return a > b; };
+
+    // decrease_key
+    auto decrease = std::vector{1, 3, 4, 2, 5};
+
+    auto itDecreased = std::find(decrease.begin(), decrease.end(), 2);
+    auto it = decrease_key(decrease.begin(), itDecreased, compareLambda);
+
+    EXPECT_EQ(decrease, (std::vector{1, 2, 4, 3, 5}));
+    EXPECT_EQ(it, decrease.begin() + 1);
+    EXPECT_EQ(*it, 2);
+    EXPECT_TRUE(std::is_heap(decrease.begin(), decrease.end(), compareLambda));
+
+    // increase_key
+    auto increase = std::vector{1, 2, 3, 4, 5};
+    EXPECT_TRUE(std::is_heap(increase.begin(), increase.end(), compareLambda));
+    increase[0] = 6; // increase the value
+    it = increase_key(increase.begin(), increase.end(), increase.begin() + 0, compareLambda);
+    EXPECT_EQ(*it, 6);
+    EXPECT_TRUE(std::is_heap(increase.begin(), increase.end(), compareLambda));
+
+    std::default_random_engine rng;
+    std::uniform_real_distribution dist(0.0001, 100.);
+
+    const std::size_t heapSize = 100;
+    std::uniform_int_distribution<std::size_t> randomIndex(0, heapSize - 1);
+
+    for(auto run : Range(10))
+    {
+        // make a heap
+        std::vector<double> vec;
+        for(std::size_t i = 0; i < heapSize; ++i)
+            vec.push_back(dist(rng));
+        std::make_heap(vec.begin(), vec.end(), compareLambda);
+
+        ASSERT_TRUE(std::is_heap(vec.begin(), vec.end(), compareLambda));
+
+        for(auto i : Range(10))
+        {
+            // change some value in it
+            const auto changeIndex = randomIndex(rng);
+            const auto oldValue = vec[changeIndex];
+            const auto newValue = dist(rng);
+            vec[changeIndex] = newValue;
+
+            if(newValue < oldValue)
+                decrease_key(vec.begin(), vec.begin() + changeIndex, compareLambda);
+            else
+                increase_key(vec.begin(), vec.end(), vec.begin() + changeIndex, compareLambda);
+
+            // check that the heap is valid again
+            const auto isHeap = std::is_heap(vec.begin(), vec.end(), compareLambda);
+            if(!isHeap)
+                ASSERT_TRUE(isHeap);
+        }
+    }
 }

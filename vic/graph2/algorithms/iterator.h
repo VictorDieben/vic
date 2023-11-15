@@ -62,6 +62,8 @@ class BaseOutVertexIterator
 {
 public:
     using VertexIdType = typename TGraph::VertexIdType;
+    using EdgeIdType = typename TGraph::EdgeIdType;
+
     BaseOutVertexIterator(const TGraph& graph) { Update(graph); }
 
     void Update(const TGraph& graph)
@@ -160,16 +162,6 @@ private:
 template <typename TOutVertexIterator>
 class CartesianOutIterator
 {
-public:
-    using VertexIdType = uint16_t;
-    using EdgeIdType = uint16_t;
-
-    //// todo: this might need to be input
-    //using CartesianVertexIdType = uint64_t;
-    //using CartesianEdgeIdType = uint64_t;
-
-    //using CartesianVertexType = std::vector<VertexIdType>;
-    //using CartesianEdgeType = std::vector<EdgeIdType>;
 
 private:
     const TOutVertexIterator& mOutIterator; // todo: constrain with concept
@@ -178,6 +170,9 @@ public:
     CartesianOutIterator(const TOutVertexIterator& outIterator)
         : mOutIterator(outIterator)
     { }
+
+    using VertexIdType = typename TOutVertexIterator::VertexIdType;
+    using EdgeIdType = typename TOutVertexIterator::EdgeIdType;
 
     template <typename TVertex, typename TFunctor>
     void ForeachOutVertex(const TVertex& vert, TFunctor functor) const
