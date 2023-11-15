@@ -14,9 +14,8 @@
 #include "vic/utils/serialize.h"
 #include "vic/utils/statemachine.h"
 #include "vic/utils/timing.h"
-#include "vic/utils/unique.h"
-
 #include "vic/utils/to_string.h"
+#include "vic/utils/unique.h"
 
 #include "vic/memory/constexpr_map.h"
 

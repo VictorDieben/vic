@@ -1,6 +1,9 @@
 #pragma once
 
 #include <iterator>
+#include <type_traits>
+
+#include "vic/utils/concepts.h" // less_than_comparable
 
 namespace vic
 {
@@ -54,7 +57,7 @@ TIter sort_individual(TIter begin, //
     if(begin == end || item == end)
         return end;
 
-    auto itNewPos = std::lower_bound(begin, end, *item);
+    auto itNewPos = std::lower_bound(begin, end, *item, lambda);
     if(itNewPos == item)
         return item;
 

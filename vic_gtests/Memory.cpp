@@ -86,12 +86,16 @@ std::ostream& operator<<(std::ostream& os, const TestStruct& item)
     return os;
 }
 
+struct MyType
+{
+    int val;
+};
+
+inline bool operator<(const MyType& a, const MyType& b) { return a.val < b.val; }
+
 TEST(TestMemory, FlatMap)
 {
-    struct MyType
-    {
-        int val;
-    };
+
     vic::memory::FlatMap<uint32_t, MyType> map{};
 
     ASSERT_TRUE(map.empty());

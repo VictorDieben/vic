@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#include "vic/utils/concepts.h" // less_than_comparable
+
 namespace vic
 {
 namespace memory
@@ -15,6 +17,7 @@ namespace memory
 // stores data in a simple sorted std::vector
 // good for small amounts of data, when the main use case is iterating over all data
 template <typename TKey, typename TCompare = std::less<TKey>>
+    requires less_than_comparable<TKey>
 class FlatSet
 {
 public:
@@ -148,6 +151,7 @@ private:
 
 // should be drop-in replacement for (most of) std::unordered_set
 template <typename TKey, typename TKeyEqual = std::equal_to<TKey>>
+    requires less_than_comparable<TKey>
 class UnorderedFlatSet
 {
 public:

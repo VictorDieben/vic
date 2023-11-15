@@ -6,6 +6,9 @@
 #include <utility>
 #include <vector>
 
+#include "vic/utils/algorithms.h" // sort_individual
+#include "vic/utils/concepts.h" // less_than_comparable
+
 namespace vic
 {
 namespace memory
@@ -15,6 +18,7 @@ namespace memory
 // stores data in a simple sorted std::vector
 // good for small amounts of data, when the main use case is iterating over all data
 template <typename TKey, typename TValue>
+    requires less_than_comparable<TKey> && less_than_comparable<TValue>
 class FlatMap
 {
 public:
@@ -94,7 +98,10 @@ public:
 
             if(size != 0 && mData.at(size).first < mData.at(size - 1).first)
             {
-                Sort();
+                vic::sort_individual(mData.begin(), //
+                                     mData.end(),
+                                     mData.end() - 1,
+                                     [](const auto& item1, const auto& item2) { return item1.first < item2.first; });
                 return std::pair(find(key), true);
             }
             else
@@ -145,6 +152,9 @@ public:
 
     bool Relabel(const TKey oldKey, const TKey newKey)
     {
+        if(oldKey == newKey)
+            return true;
+
         if(find(newKey) != mData.end())
             return false; // newKey already exits, not available
 
@@ -152,18 +162,12 @@ public:
         if(it == mData.end())
             return false; // oldKey does not exist in this map
 
-        // check if we would need to re-sort if we change this label
-        bool needsSort = false;
-        if((it != mData.begin() && newKey < std::prev(it)->first) || //
-           (std::next(it) != mData.end() && std::next(it)->first < newKey))
-        {
-            needsSort = true;
-        }
-
         it->first = newKey; // change label
 
-        if(needsSort)
-            Sort();
+        vic::sort_individual(mData.begin(), //
+                             mData.end(),
+                             it,
+                             [](const auto& item1, const auto& item2) { return item1.first < item2.first; });
 
         return true;
     }
