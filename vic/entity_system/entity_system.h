@@ -111,8 +111,10 @@ private:
     // todo: think about optimized map container (specialized for many/few large/small objects?)
     // a flat map (like boost::flat_map) might be a better solution,
     // as we really need fast iteration, but don't really care about insert/remove
-    std::map<EntityId, T> mComponents{};
-    // vic::memory::FlatMap<EntityId, T> mComponents{};
+    // std::map<EntityId, T> mComponents{};
+    vic::memory::FlatMap<EntityId, T> mComponents{};
+
+    static constexpr auto FindLowerBound = [](const auto& item, const EntityId value) { return item.first < value; };
 
 public:
     // todo: make a custom component system, that does not rely on std::map
@@ -146,8 +148,8 @@ public:
     {
         auto it = mComponents.find(id);
 #ifdef _DEBUG
-    if( it == mComponents.end())
-        throw std::runtime_error("Iterate(): range is not sorted!");
+        if(it == mComponents.end())
+            throw std::runtime_error("Iterate(): range is not sorted!");
 #endif
         return it->second;
     }
@@ -156,8 +158,8 @@ public:
     {
         auto it = mComponents.find(id);
 #ifdef _DEBUG
-    if( it == mComponents.end())
-        throw std::runtime_error("Iterate(): range is not sorted!");
+        if(it == mComponents.end())
+            throw std::runtime_error("Iterate(): range is not sorted!");
 #endif
         return it->second;
     }
@@ -202,31 +204,11 @@ public:
     const_iterator cbegin() const { return mComponents.cbegin(); }
     const_iterator cend() const { return mComponents.cend(); }
 
-    iterator lower_bound(const EntityId id)
-    {
-        return mComponents.lower_bound(id); //
-    }
+    iterator lower_bound(const EntityId id) { return std::lower_bound(mComponents.begin(), mComponents.end(), id, FindLowerBound); }
+    const_iterator lower_bound(const EntityId id) const { return std::lower_bound(mComponents.begin(), mComponents.end(), id, FindLowerBound); }
 
-    const_iterator lower_bound(const EntityId id) const
-    {
-        return mComponents.lower_bound(id); //
-    }
-
-    iterator lower_bound_with_hint(const EntityId id, iterator hint)
-    {
-        return std::lower_bound(hint, //
-                                mComponents.end(),
-                                id,
-                                [](const auto& item, const EntityId value) { return item.first < value; });
-    }
-
-    iterator lower_bound_with_hint(const EntityId id, iterator hint) const
-    {
-        return std::lower_bound(hint, //
-                                mComponents.cend(),
-                                id,
-                                [](const auto& item, const EntityId value) { return item.first < value; });
-    }
+    iterator lower_bound_with_hint(const EntityId id, iterator hint) { return std::lower_bound(hint, mComponents.end(), id, FindLowerBound); }
+    iterator lower_bound_with_hint(const EntityId id, iterator hint) const { return std::lower_bound(hint, mComponents.cend(), id, FindLowerBound); }
 
     template <typename TIter>
     void Insert(TIter begin, TIter end)

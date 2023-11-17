@@ -8,6 +8,9 @@
 #include "vic/memory/refcounter.h"
 #include "vic/memory/ring_buffer.h"
 
+#include "vic/utils/map_iterate.h"
+#include "vic/utils/to_string.h"
+
 #include <algorithm>
 #include <deque>
 #include <numeric>
@@ -17,7 +20,7 @@
 
 using namespace vic::memory;
 
-TEST(TestMemory, RefCounted)
+TEST(Memory, RefCounted)
 {
     struct TestStruct
     {
@@ -93,7 +96,7 @@ struct MyType
 
 inline bool operator<(const MyType& a, const MyType& b) { return a.val < b.val; }
 
-TEST(TestMemory, FlatMap)
+TEST(Memory, FlatMap)
 {
 
     vic::memory::FlatMap<uint32_t, MyType> map{};
@@ -146,7 +149,7 @@ TEST(TestMemory, FlatMap)
     EXPECT_FALSE(map.Relabel(4, 3)); // key 3 already exists
 }
 
-TEST(TestMemory, ArrayRingBuffer)
+TEST(Memory, ArrayRingBuffer)
 {
     struct TestStruct
     {
@@ -213,7 +216,7 @@ TEST(TestMemory, ArrayRingBuffer)
     // todo: test with multiple producers/consumers
 }
 
-TEST(TestMemory, RingBuffer)
+TEST(Memory, RingBuffer)
 {
     struct MyType
     {
@@ -290,22 +293,7 @@ TEST(TestMemory, RingBuffer)
     }
 }
 
-template <typename TIter>
-void PrintIter(TIter begin, TIter end)
-{
-    std::cout << "[";
-
-    for(auto it = begin; it < end; ++it)
-    {
-        std::cout << *it;
-        if(it != std::prev(end))
-            std::cout << "; ";
-    }
-
-    std::cout << "]" << std::endl;
-}
-
-TEST(TestMemory, MergeSort)
+TEST(Memory, MergeSort)
 {
     // construct a vector with increasing numbers
     std::vector<int> answer;
@@ -330,20 +318,22 @@ TEST(TestMemory, MergeSort)
     EXPECT_EQ(values, answer);
 }
 
-TEST(TestMemory, MergeSort2)
+TEST(Memory, MergeSort2)
 {
+    using namespace vic;
+
     std::vector<int> vec = {1, 3, 7, 9, 11, 2, 4, 8, 10, 12}; //
-    PrintIter(vec.begin(), vec.end());
+    std::cout << vec << std::endl;
 
     vic::sorting::merge_sort(vec.begin(), vec.begin() + 5, vec.end());
-    PrintIter(vec.begin(), vec.end());
+    std::cout << vec << std::endl;
 
     const std::vector<int> answer = {1, 2, 3, 4, 7, 8, 9, 10, 11, 12};
 
     EXPECT_EQ(vec, answer);
 }
 
-TEST(TestMemory, MergeSortEdgeCases)
+TEST(Memory, MergeSortEdgeCases)
 {
     // sort an empty list, should work
     std::vector<int> vec = {};
@@ -378,7 +368,7 @@ TEST(TestMemory, MergeSortEdgeCases)
     }
 }
 
-TEST(TestMemory, MergeSortFailure)
+TEST(Memory, MergeSortFailure)
 {
     // check that merge sorting a vector that does not comply does not get stuck in an infinite loop
     // note: not really needed, I just wanted to see what the output would be.
@@ -399,7 +389,7 @@ TEST(TestMemory, MergeSortFailure)
     }
 }
 
-TEST(TestMemory, MergeSortRotate)
+TEST(Memory, MergeSortRotate)
 {
     // test the case where we need to rotate
     std::vector<int> vec;
@@ -419,12 +409,12 @@ TEST(TestMemory, MergeSortRotate)
     }
 }
 
-TEST(TestMemory, MergeSortFunctor)
+TEST(Memory, MergeSortFunctor)
 {
     // test merge_sort with a custom comparison operator
 }
 
-TEST(TestMemory, MergeSortBackInserter)
+TEST(Memory, MergeSortBackInserter)
 {
     // test merge_sort with back insertion into another vector
 
@@ -457,7 +447,7 @@ TEST(TestMemory, MergeSortBackInserter)
     EXPECT_EQ(result3, answer);
 }
 
-TEST(TestMemory, UnorderedFlatSet)
+TEST(Memory, UnorderedFlatSet)
 {
     std::set<uint32_t> stdSet;
     vic::memory::FlatSet<uint32_t> flatSet;
@@ -502,4 +492,36 @@ TEST(TestMemory, UnorderedFlatSet)
             EXPECT_TRUE(unorderedFlatSet.contains(value));
         }
     }
+}
+
+TEST(Memory, MapOverlap)
+{
+    using KeyType = uint32_t;
+    struct A
+    {
+        KeyType a;
+    };
+    struct B
+    {
+        KeyType b;
+    };
+
+    std::map<KeyType, A> map1{{{1, {1}}, //
+                               {3, {3}},
+                               {5, {5}},
+                               {7, {7}}}};
+    std::map<KeyType, B> map2{{{2, {2}}, //
+                               {3, {3}},
+                               {4, {4}},
+                               {7, {7}}}};
+
+    std::set<KeyType> keys;
+    for(const auto& [key, first, second] : vic::Overlap(map1, map2))
+    {
+        EXPECT_EQ(key, first.a);
+        EXPECT_EQ(key, second.b);
+        keys.insert(key);
+    }
+
+    EXPECT_EQ(keys, (std::set<KeyType>{3, 7}));
 }

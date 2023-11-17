@@ -40,6 +40,9 @@ public:
 private:
     std::vector<value_type> mData{};
 
+    static constexpr auto CompareKeys = [](const value_type& item1, const value_type& item2) -> bool { return item1 < item2; };
+    static constexpr auto LowerBoundCompare = [](const value_type& item, const key_type& k) -> bool { return item < k; };
+
 public:
     using iterator = decltype(mData.begin());
     using const_iterator = decltype(mData.cbegin());
@@ -86,9 +89,12 @@ public:
             const auto size = mData.size();
             mData.push_back(key);
 
-            if(size != 0 && mData.at(size) < mData.at(size - 1))
+            if(size != 0 && mData[size] < mData[size - 1])
             {
-                Sort();
+                vic::sort_individual(mData.begin(), //
+                                     mData.end(),
+                                     mData.end() - 1,
+                                     CompareKeys);
                 return std::pair(find(key), true);
             }
             else
@@ -113,20 +119,13 @@ public:
     size_type count(const TKey& key) const noexcept { return find(key) == mData.end() ? 0 : 1; }
     iterator find(const TKey& key) noexcept
     {
-        auto it = mData.begin();
-        for(; it != mData.end(); ++it)
-            if(*it == key)
-                return it;
-        return it;
+        auto it = std::lower_bound(mData.begin(), mData.end(), key, LowerBoundCompare);
+        return (it != mData.end() && *it == key) ? it : mData.end();
     }
     const_iterator find(const TKey& key) const noexcept
     {
-        // todo: binary search
-        auto it = mData.cbegin();
-        for(; it != mData.cend(); ++it)
-            if(*it == key)
-                return it;
-        return it;
+        auto it = std::lower_bound(mData.begin(), mData.end(), key, LowerBoundCompare);
+        return (it != mData.end() && *it == key) ? it : mData.end();
     }
     bool contains(const TKey& key) const noexcept { return find(key) != mData.end(); }
 
@@ -139,12 +138,7 @@ public:
     auto Reserve(const std::size_t size) noexcept { mData.reserve(size); }
 
     // call sort after multiple insert<false>()
-    void Sort() noexcept
-    {
-        std::sort(mData.begin(),
-                  mData.end(), //
-                  [&](const auto& item1, const auto& item2) { return item1 < item2; });
-    }
+    void Sort() noexcept { std::sort(mData.begin(), mData.end(), CompareKeys); }
 
 private:
 };

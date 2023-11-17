@@ -43,7 +43,7 @@ TIter remove_duplicates(TIter begin, TIter end, TEquality lambda)
         }
     }
 
-    return itWrite; // todo
+    return itWrite;
 }
 
 // re-sort 1 value in an otherwise sorted array
