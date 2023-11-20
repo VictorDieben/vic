@@ -72,7 +72,8 @@ TEST(ECS, ComponentSystem)
     EXPECT_EQ(refComponents.Get(1).val, 1u);
 
     for(auto it = refComponents.begin(); it != refComponents.end(); ++it)
-    { }
+    {
+    }
 
     std::optional<vic::ecs::EntityId> previous;
     for(const auto& comp : refComponents)
@@ -282,6 +283,12 @@ TEST(ECS, Filter)
         // namePtr->mName = "bla"; // <-- this should not compile! assigning to const ptr
         buzzPtr->buzzName = namePtr->mName;
     }
+
+    //// Overlap
+    //for(auto& [id, name, buzz] : system.Overlap<Name, Buzz>())
+    //{
+    //    buzz.buzzName = name.mName;
+    //}
 }
 
 TEST(ECS, Remove)
@@ -690,4 +697,14 @@ TEST(ECS, Extend)
     Ecs ecs;
 
     // using ExtendedEcs = vic::ecs::ECS<Ecs, C, D>; // todo
+}
+
+TEST(ECS, Test)
+{
+    std::map<int, std::string> data = {{2, "bla"}, {1, "bla"}};
+
+    auto it = data.begin();
+
+    for(auto& [a, b] : data)
+        std::cout << a << "; " << b << std::endl;
 }

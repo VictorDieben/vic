@@ -139,7 +139,7 @@ void ConstructPolicy(const TPolicy& policy,
     const auto numDims = position.size();
     buffer.clear();
     for(std::size_t i = 0; i < numDims; ++i)
-        buffer.push_back(policy.Policy(position.at(i), target.at(i)));
+        buffer.push_back(policy.Policy(position[i], target[i]));
 }
 
 template <typename CartesianVertexType, typename TPolicy>

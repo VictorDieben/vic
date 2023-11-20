@@ -10,6 +10,7 @@
 #include "vic/entity_system/algorithms.h"
 #include "vic/entity_system/definitions.h"
 #include "vic/memory/flat_map.h"
+#include "vic/utils/map_iterate.h"
 #include "vic/utils/templates.h"
 
 namespace vic
@@ -255,6 +256,9 @@ public:
 
     EntityId Minimum() const { return mComponents.size() == 0 ? std::numeric_limits<EntityId>::max() : mComponents.begin()->first; }
     EntityId Maximum() const { return mComponents.size() == 0 ? std::numeric_limits<EntityId>::min() : std::prev(mComponents.end())->first; }
+
+    auto& Data() { return mComponents; };
+    const auto& Data() const { return mComponents; };
 };
 
 template <typename... TComponents>
@@ -441,6 +445,15 @@ public:
         static_assert(templates::Contains<T3, TComponents...>(), "Unknown component T3");
         return algorithms::Filter<T1, T2, T3>(*this);
     }
+
+    //// Overlap
+    //template <typename T1, typename T2>
+    //auto Overlap()
+    //{
+    //    static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
+    //    static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
+    //    return vic::Overlap(ComponentSystem<T1>::Data(), ComponentSystem<T2>::Data());
+    //}
 
     // Iterate 1d
 

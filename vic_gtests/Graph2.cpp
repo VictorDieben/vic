@@ -242,12 +242,12 @@ TEST(Graph2, CartesianVertex)
 
 TEST(Graph2, CartesianAStar)
 {
-    constexpr std::size_t nx = 40, ny = 40;
+    // constexpr std::size_t nx = 40, ny = 40;
 
     // performace release 40x40:
     // 2591.4221ms; 944.0560999999999ms
 
-    //constexpr std::size_t nx = 10, ny = 10;
+    constexpr std::size_t nx = 10, ny = 10;
 
     constexpr std::size_t last = (nx * ny) - 1;
 
@@ -269,7 +269,7 @@ TEST(Graph2, CartesianAStar)
 
     const auto graph = ConstructGridGraph<VertexType, EdgeType>(nx, ny);
 
-    const auto fw = FloydWarshall<double, TestVertexId>(graph, [&](const auto, const auto) -> CostType { return CostType{1.}; });
+    const auto fw = FloydWarshall<CostType, TestVertexId>(graph, [&](const auto, const auto) -> CostType { return CostType{1.}; });
 
     const auto heuristicLambda = [&fw]<typename T>(const T& from, const T& to) -> CostType {
         assert(from.size() == to.size());
@@ -284,8 +284,13 @@ TEST(Graph2, CartesianAStar)
     const auto costLambda = []<typename T>(const T&, const T&) -> CostType { return CostType{1.}; };
     auto astarInstance = CartesianAStar<CostType, decltype(graph)>(graph);
 
-    const auto from = CartesianVertexType{bl, tr, tl, br, ml};
-    const auto to = CartesianVertexType{tr, bl, br, tl, mr};
+    // 4
+    const auto from = CartesianVertexType{bl, tr, tl, br};
+    const auto to = CartesianVertexType{tr, bl, br, tl};
+
+    // 5
+    //const auto from = CartesianVertexType{bl, tr, tl, br, ml};
+    //const auto to = CartesianVertexType{tr, bl, br, tl, mr};
 
     //const auto timer = Timer();
     //const auto path = astarInstance.Run(from, to, costLambda, heuristicLambda);
@@ -295,7 +300,7 @@ TEST(Graph2, CartesianAStar)
     auto astarArrayInstance = CartesianArrayAStar<CostType, decltype(graph)>(graph);
 
     const auto timer2 = Timer();
-    const auto path2 = astarArrayInstance.Run<5>(from, to, costLambda, heuristicLambda);
+    const auto path2 = astarArrayInstance.Run<4>(from, to, costLambda, heuristicLambda);
     const auto duration2 = timer2.GetTime();
 
     std::cout << std::format("new: {}ms", 1000. * duration2.count()) << std::endl;

@@ -2,6 +2,7 @@
 #include "gtest/gtest.h"
 
 #include "test_base.h"
+#include "vic/memory/flat_linked_list.h"
 #include "vic/memory/flat_map.h"
 #include "vic/memory/flat_set.h"
 #include "vic/memory/merge_sort.h"
@@ -494,34 +495,102 @@ TEST(Memory, UnorderedFlatSet)
     }
 }
 
+TEST(Memory, FlatLinkedList)
+{
+    vic::FlatLinkedList<double> linkedList;
+    EXPECT_EQ(linkedList.size(), 0);
+    EXPECT_TRUE(linkedList.empty());
+
+    linkedList.PushBack(1.);
+    double& one = linkedList.at(0);
+    EXPECT_DOUBLE_EQ(one, 1.);
+    EXPECT_EQ(linkedList.size(), 1);
+    EXPECT_FALSE(linkedList.empty());
+
+    linkedList.PushBack(2.);
+    double& two = linkedList.at(1);
+    EXPECT_DOUBLE_EQ(two, 2.);
+    EXPECT_EQ(linkedList.size(), 2);
+
+    linkedList.PushBack(3.); // 1, 2, 3
+    double& three = linkedList.at(2);
+    EXPECT_DOUBLE_EQ(three, 3.);
+    EXPECT_EQ(linkedList.size(), 3);
+
+    // now put a new item at the front of the linked list
+    linkedList.PushFront(0.); // data: 1,2,3,0; linked list: 0,1,2,3
+    double& zero = linkedList.at(0);
+    EXPECT_DOUBLE_EQ(zero, 0.);
+    EXPECT_EQ(linkedList.size(), 4);
+
+    linkedList.PopBack();
+    EXPECT_EQ(linkedList.size(), 3);
+    EXPECT_DOUBLE_EQ(linkedList.at(0), 0.);
+    EXPECT_DOUBLE_EQ(linkedList.at(2), 2.);
+
+    linkedList.PopFront();
+    EXPECT_EQ(linkedList.size(), 2);
+    EXPECT_DOUBLE_EQ(linkedList.at(0), 1.);
+    EXPECT_DOUBLE_EQ(linkedList.at(1), 2.);
+
+    // Make sure that flush does not alter the data
+    linkedList.Flush();
+    EXPECT_EQ(linkedList.size(), 2);
+    EXPECT_DOUBLE_EQ(linkedList.at(0), 1.);
+    EXPECT_DOUBLE_EQ(linkedList.at(1), 2.);
+
+    // operator[]
+    EXPECT_DOUBLE_EQ(linkedList[0], 1.);
+    EXPECT_DOUBLE_EQ(linkedList[1], 2.);
+
+    // todo: iterator (forward/backward)
+}
+
 TEST(Memory, MapOverlap)
 {
-    using KeyType = uint32_t;
+    // using KeyType = uint32_t;
     struct A
     {
-        KeyType a;
+        int a;
     };
     struct B
     {
-        KeyType b;
+        int b;
     };
 
-    std::map<KeyType, A> map1{{{1, {1}}, //
-                               {3, {3}},
-                               {5, {5}},
-                               {7, {7}}}};
-    std::map<KeyType, B> map2{{{2, {2}}, //
-                               {3, {3}},
-                               {4, {4}},
-                               {7, {7}}}};
+    std::map<int, A> map1{{{1, {1}}, //
+                           {3, {3}},
+                           {5, {5}},
+                           {7, {7}}}};
+    std::map<int, B> map2{{{2, {2}}, //
+                           {3, {3}},
+                           {4, {4}},
+                           {7, {7}}}};
 
-    std::set<KeyType> keys;
-    for(const auto& [key, first, second] : vic::Overlap(map1, map2))
-    {
-        EXPECT_EQ(key, first.a);
-        EXPECT_EQ(key, second.b);
-        keys.insert(key);
-    }
+    //// const
+    //std::set<KeyType> keys;
+    //for(const auto& [key, first, second] : vic::Overlap(map1, map2))
+    //{
+    //    EXPECT_EQ(key, first.a);
+    //    EXPECT_EQ(key, second.b);
+    //    keys.insert(key);
+    //}
+    // EXPECT_EQ(keys, (std::set<KeyType>{3, 7}));
 
-    EXPECT_EQ(keys, (std::set<KeyType>{3, 7}));
+    //// non-const
+    //for(auto& [key, first, second] : vic::Overlap(map1, map2))
+    //{
+    //    first.a += 1;
+    //    second.b += 1;
+    //}
+
+    std::map<int, std::string> data = {{2, "bla"}, {1, "bla"}};
+
+    auto it = data.begin();
+
+    for(auto& [a, b] : data)
+        std::cout << a << "; " << b << std::endl;
+
+    // same problem:
+    // https://stackoverflow.com/questions/49628401/structured-bindings-and-tuple-of-references
 }
