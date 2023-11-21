@@ -25,6 +25,8 @@ public:
         T data;
     };
 
+    using NodeType = Node<T>;
+
     T& at(const std::size_t index)
     {
         // todo: for indices near the end, count backwards
@@ -106,8 +108,8 @@ public:
             Reset();
         else
         {
-            Node<T>& first = mData.at(mFirstIndex);
-            Node<T>& next = mData.at(first.next);
+            NodeType& first = mData.at(mFirstIndex);
+            NodeType& next = mData.at(first.next);
 
             next.previous = first.next; // second last item is now last}
             mFilled--;
@@ -122,8 +124,8 @@ public:
             Reset();
         else
         {
-            Node<T>& last = mData.at(mLastIndex);
-            Node<T>& previous = mData.at(last.previous);
+            NodeType& last = mData.at(mLastIndex);
+            NodeType& previous = mData.at(last.previous);
 
             previous.next = last.previous; // second last item is now last}
             mFilled--;

@@ -528,11 +528,20 @@ TEST(Graph2, MStar)
     const auto graph = ConstructGridGraph<VertexType, EdgeType>(nx, ny);
 
     const auto costLambda = [&](const CartesianVertexType&, const CartesianVertexType&) -> double { return 1.; };
-    const auto fw = FloydWarshall<double, TestVertexId>(graph, [](const auto, const auto) -> double { return 1.; });
+    const auto fw = FloydWarshall<double, TestVertexId>(graph, [](const auto& a, const auto& b) -> double {
+        const int ax = a % nx;
+        const int ay = a / ny;
+        const int bx = b % nx;
+        const int by = b / ny;
+        const double cx = (by - ay) * (ax + bx - 2);
+        const double cy = -(bx - ax) * (ay + by - 2);
+        const double cost = 1. + (0.000001 * (cx + cy));
+        return cost;
+    });
     const auto heuristicLambda = [&](const CartesianVertexType& from, const CartesianVertexType& to) -> double {
         double cost = 0.;
         for(std::size_t i = 0; i < from.size(); ++i)
-            cost += fw.Cost(from.at(i), to.at(i));
+            cost += fw.Cost(from[i], to[i]);
         cost = cost / double(from.size());
         return 1.00001 * cost; // slightly overestimate the remaining part of path
     };
@@ -540,18 +549,17 @@ TEST(Graph2, MStar)
     // todo: figure out why graph type is not automatically deduced
     MStar<double, decltype(graph)> mstar{graph};
 
-    const auto path = mstar.Run(CartesianVertexType{0, 8}, //
-                                CartesianVertexType{8, 0},
-                                costLambda,
+    const auto path = mstar.Run(CartesianVertexType{0, 8, 6, 2}, //
+                                CartesianVertexType{8, 0, 2, 6},
+                                costLambda, //costLambda,
                                 heuristicLambda,
                                 fw);
 
-    //const auto path = MStar(
-    //    graph, //
-    //    [&](const CartesianVertexType, const CartesianVertexType) -> double { return 1.; },
-    //    heuristicLambda,
-    //    CartesianVertexType{0, 8},
-    //    CartesianVertexType{8, 0});
+    EXPECT_EQ(path.size(), 5);
 
-    //EXPECT_EQ(path.size(), 5);
+    std::cout << "path:" << std::endl;
+    for(const auto& p : path)
+        std::cout << "  " << p << std::endl;
+
+    EXPECT_TRUE(false);
 }
