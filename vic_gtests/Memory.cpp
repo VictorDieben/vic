@@ -9,6 +9,7 @@
 #include "vic/memory/refcounter.h"
 #include "vic/memory/ring_buffer.h"
 
+#include "vic/utils/counted.h"
 #include "vic/utils/map_iterate.h"
 #include "vic/utils/to_string.h"
 
@@ -593,4 +594,32 @@ TEST(Memory, MapOverlap)
 
     // same problem:
     // https://stackoverflow.com/questions/49628401/structured-bindings-and-tuple-of-references
+}
+
+TEST(Memory, MoveMerge)
+{
+    using Item = std::vector<int>;
+
+    std::vector<Item> a;
+    for(int i = 0; i < 6; i++)
+        a.push_back(Item{i});
+    std::vector<Item> b;
+    for(int i = 6; i < 10; i++)
+        b.push_back(Item{i});
+
+    std::vector<Item> c;
+    vic::sorting::move_merge(a.begin(), //
+                             a.end(),
+                             b.begin(),
+                             b.end(),
+                             std::back_inserter(c));
+
+    for(const auto& item : a)
+        EXPECT_EQ(item.size(), 0);
+
+    for(const auto& item : b)
+        EXPECT_EQ(item.size(), 0);
+
+    for(std::size_t i = 0; i < c.size() - 1; ++i)
+        EXPECT_LT(c.at(i).at(0), c.at(i + 1).at(0));
 }

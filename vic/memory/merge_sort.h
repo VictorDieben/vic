@@ -7,6 +7,46 @@ namespace vic
 namespace sorting
 {
 
+template <typename TIter1, typename TIter2, typename TBackInserter, typename TCompare>
+void move_merge(TIter1 begin1, //
+                TIter1 end1,
+                TIter2 begin2,
+                TIter2 end2,
+                TBackInserter inserter,
+                TCompare compare)
+{
+    // same merge algorithm as std::merge, but explicitly moves instead of copies
+    while(true) //
+    {
+        const bool reachedEnd1 = (begin1 == end1);
+        const bool reachedEnd2 = (begin2 == end2);
+        if(reachedEnd1 && reachedEnd2)
+            break;
+
+        if(!reachedEnd1 && *begin1 < *begin2)
+        {
+            *inserter = std::move(*begin1);
+            ++begin1;
+        }
+        else
+        {
+            *inserter = std::move(*begin2);
+            ++begin2;
+        }
+        inserter++;
+    }
+}
+
+template <typename TIter1, typename TIter2, typename TBackInserter>
+void move_merge(TIter1 begin1, //
+                TIter1 end1,
+                TIter2 begin2,
+                TIter2 end2,
+                TBackInserter inserter)
+{
+    return move_merge(begin1, end1, begin2, end2, inserter, std::less{});
+}
+
 // merge sorting algorithm
 // sorts an array, where the subregions [begin; midpoint> and [midpoint; end> are already sorted.
 // O(n) when the entire vector is sorted, ~O(n^2) if the second half is entirely smaller than the first
