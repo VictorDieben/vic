@@ -5,6 +5,7 @@
 #include "vic/graph2/algorithms/iterator.h"
 
 #include "vic/memory/flat_set.h"
+#include "vic/memory/merge_sort.h"
 
 #include <algorithm>
 #include <map>
@@ -390,12 +391,22 @@ public:
             // merge the old heap and the newly added items, write result to buffer heap, the swap
             heapBuffer.clear();
             heapBuffer.reserve(heap.size());
-            std::merge(heap.begin() + 1, // skip first, it was the current node this iteration
-                       heap.begin() + heapSize,
-                       heap.begin() + heapSize,
-                       heap.begin() + heapNewSize,
-                       std::back_inserter(heapBuffer),
-                       compareF);
+
+            // todo: analyze if this makes any difference
+            //
+            //std::merge(heap.begin() + 1, // skip first, it was the current node this iteration
+            //           heap.begin() + heapSize,
+            //           heap.begin() + heapSize,
+            //           heap.begin() + heapNewSize,
+            //           std::back_inserter(heapBuffer),
+            //           compareF);
+
+            vic::sorting::move_merge(heap.begin() + 1, // skip first, it was the current node this iteration
+                                     heap.begin() + heapSize,
+                                     heap.begin() + heapSize,
+                                     heap.begin() + heapNewSize,
+                                     std::back_inserter(heapBuffer),
+                                     compareF);
 
             std::swap(heap, heapBuffer);
 

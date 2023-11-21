@@ -598,6 +598,7 @@ TEST(Memory, MapOverlap)
 
 TEST(Memory, MoveMerge)
 {
+    // define some type that benefits from moving over copying
     using Item = std::vector<int>;
 
     std::vector<Item> a;
@@ -622,4 +623,6 @@ TEST(Memory, MoveMerge)
 
     for(std::size_t i = 0; i < c.size() - 1; ++i)
         EXPECT_LT(c.at(i).at(0), c.at(i + 1).at(0));
+
+    // todo
 }

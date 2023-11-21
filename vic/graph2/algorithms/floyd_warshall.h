@@ -12,7 +12,6 @@ namespace vic
 namespace graph2
 {
 
-
 // Calculate the matrix of shortest distances and shortest paths
 // Can be used by other algorithms for policy.
 template <typename TCost, typename TVertexId, bool directed = false>
@@ -77,7 +76,7 @@ public:
                 for(const auto& vj : vertices)
                 {
                     const double sum_ik_kj = mCostMatrix[vi][vk] + mCostMatrix[vk][vj];
-                    if(mCostMatrix[vi][vj] > sum_ik_kj)
+                    if(sum_ik_kj < mCostMatrix[vi][vj])
                     {
                         mCostMatrix[vi][vj] = sum_ik_kj;
                         mPolicyMatrix[vi][vj] = mPolicyMatrix[vi][vk];

@@ -23,7 +23,7 @@ void move_merge(TIter1 begin1, //
         if(reachedEnd1 && reachedEnd2)
             break;
 
-        if(!reachedEnd1 && *begin1 < *begin2)
+        if(!reachedEnd1 && compare(*begin1, *begin2))
         {
             *inserter = std::move(*begin1);
             ++begin1;
