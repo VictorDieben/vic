@@ -40,7 +40,7 @@ using MatmulResultShape = Shape<TShape1::rows, TShape2::cols>;
 
 // todo: TriDiagonal x vector
 template <typename TMat, typename TVec>
-requires ConceptTriDiagonal<TMat> && ConceptVector<TVec>
+    requires ConceptTriDiagonal<TMat> && ConceptVector<TVec>
 constexpr auto MatmulTriDiagVector(const TMat& mat, const TVec& vec)
 {
     // multiplication between square diagonal and vector
@@ -79,7 +79,7 @@ constexpr auto MatmulTriDiagVector(const TMat& mat, const TVec& vec)
 }
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptVector<TMat2>
+    requires ConceptMatrix<TMat1> && ConceptVector<TMat2>
 constexpr auto MatmulDiagonalVector(const TMat1& mat1, const TMat2& mat2)
 {
     // multiplication between square diagonal and vector
@@ -98,7 +98,7 @@ constexpr auto MatmulDiagonalVector(const TMat1& mat1, const TMat2& mat2)
 }
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto MatmulDiagonal(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetColumns() == mat2.GetRows());
@@ -113,7 +113,7 @@ constexpr auto MatmulDiagonal(const TMat1& mat1, const TMat2& mat2)
 }
 
 template <typename TMat1, typename TMat2>
-requires ConceptRowStack<TMat1> && ConceptVector<TMat2>
+    requires ConceptRowStack<TMat1> && ConceptVector<TMat2>
 constexpr auto MatmulRowStack(const TMat1& mat1, const TMat2& mat2)
 {
     // todo: if mat2 is a vector, perform the two sub-multiplications separately,
@@ -129,7 +129,7 @@ constexpr auto MatmulRowStack(const TMat1& mat1, const TMat2& mat2)
 }
 
 template <typename TMat, typename TVec>
-requires ConceptColStack<TMat> && ConceptVector<TVec>
+    requires ConceptColStack<TMat> && ConceptVector<TVec>
 constexpr auto MatmulColStack(const TMat& mat, const TVec& vec)
 {
     // todo: if mat2 is a vector, perform the two sub-multiplications separately,
@@ -157,7 +157,7 @@ constexpr auto MatmulColStack(const TMat& mat, const TVec& vec)
 }
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto MatmulFull(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetColumns() == mat2.GetRows());
@@ -171,11 +171,21 @@ constexpr auto MatmulFull(const TMat1& mat1, const TMat2& mat2)
             for(MatrixSize k = 0; k < mat1.GetColumns(); ++k)
                 result.At(i, j) += (mat1.Get(i, k) * mat2.Get(k, j));
 
+    // note: I tried transposing the second matrix first, but it did not result in performance improvements
+    // I think because the size of the matrix is known at compile time, the compiler is capable of reordering the operations nicely.
+    // about 20ns for one 4x4d multiplication is good enough for now
+
+    //const auto tmp2 = Transpose(mat2);
+    //for(Row i = 0; i < mat1.GetRows(); ++i)
+    //    for(Row j = 0; j < tmp2.GetRows(); ++j)
+    //        for(MatrixSize k = 0; k < mat1.GetColumns(); ++k)
+    //            result.At(i, j) += (mat1.Get(i, k) * tmp2.Get(j, k));
+
     return result;
 }
 
 template <typename TMat, typename TValue>
-requires ConceptMatrix<TMat>
+    requires ConceptMatrix<TMat>
 constexpr auto MatmulConstant(const TMat& mat, const TValue& value)
 {
     using TResType = decltype(typename TMat::DataType() * TValue());
@@ -204,7 +214,7 @@ constexpr auto MatmulConstant(const TMat& mat, const TValue& value)
 
 // selector for the most efficient type of matrix multiplication
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto MatmulMatrix(const TMat1& mat1, const TMat2& mat2)
 {
     constexpr auto distribution = MatmulDistribution(TMat1::Distribution, TMat2::Distribution);
@@ -217,7 +227,7 @@ constexpr auto MatmulMatrix(const TMat1& mat1, const TMat2& mat2)
     else if constexpr(ConceptIdentity<TMat1> || ConceptIdentity<TMat2>)
     {
         // todo: if datatype of mat1 is not equal to mat2, we might need to cast the matrix to another data type
-        if constexpr(ConceptIdentity<TMat1>) 
+        if constexpr(ConceptIdentity<TMat1>)
             return mat2;
         else // TMat2 is identity
             return mat1;

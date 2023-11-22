@@ -10,7 +10,8 @@ include (GoogleTest)
 
 
 ADD_EXECUTABLE(VicBenchmark 
-    "FirstBenchmark.cpp")
+    "FirstBenchmark.cpp" 
+    "LinalgMatmul.cpp")
  
 TARGET_LINK_LIBRARIES(VicBenchmark  
 PRIVATE

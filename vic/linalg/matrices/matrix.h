@@ -64,6 +64,8 @@ struct MatrixConst : public MatrixBaseSelector<TShape>
         return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
     }
 
+    constexpr T* data() { return mData.data(); }
+
 private:
     std::array<T, ArraySize> mData{};
 };
@@ -91,6 +93,8 @@ struct MatrixRowConst : public MatrixBaseSelector<TShape>
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[ColMayorRowColToIndex<TShape::rows>(i, j)];
     }
+
+    constexpr T* data() { return mData.data(); }
 
 private:
     std::vector<T> mData{};
@@ -133,6 +137,8 @@ struct MatrixColConst : public MatrixBaseSelector<TShape>
         return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
     }
 
+    constexpr T* data() { return mData.data(); }
+
 private:
     std::vector<T> mData{};
 };
@@ -160,6 +166,8 @@ struct MatrixDynamic : public MatrixBaseSelector<TShape>
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[RowMayorRowColToIndex(i, j, MatrixBase::GetColumns())];
     }
+
+    constexpr T* data() { return mData.data(); }
 
 private:
     std::vector<T> mData{};
@@ -238,14 +246,6 @@ using Vector3d = VectorN<double, 3>;
 using Vector4d = VectorN<double, 4>;
 using Vector5d = VectorN<double, 5>;
 using Vector6d = VectorN<double, 6>;
-
-//template <typename... Ts>
-//constexpr auto MakeVector(Ts&&... ts)
-//{
-//    using CT = std::common_type_t<Ts...>;
-//    std::array<CT, sizeof...(Ts)> data{std::forward<CT>(ts)...};
-//    return VectorN<CT, sizeof...(Ts)>(data);
-//}
 
 template <typename TMat>
     requires ConceptMatrix<TMat>
