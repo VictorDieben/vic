@@ -1,5 +1,5 @@
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "vic/graph2/graph.h"
 

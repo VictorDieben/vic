@@ -1,5 +1,4 @@
-
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "vic/geometry/algorithms/algorithms.h"
 #include "vic/geometry/algorithms/assignment_problem.h"

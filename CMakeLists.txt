@@ -18,3 +18,6 @@ add_subdirectory ("vic")
 
 # Testing 
 add_subdirectory ("vic_gtests")
+
+# Benchmarking 
+add_subdirectory ("vic_benchmark")
