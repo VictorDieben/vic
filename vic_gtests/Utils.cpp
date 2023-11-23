@@ -595,7 +595,7 @@ TEST(Utils, Indexing)
     EXPECT_EQ(0, NdToFlatIndex<uint64_t>(std::vector{9, 4, 12, 576324}, std::vector{0, 0, 0, 0}));
     EXPECT_EQ(0, NdToFlatIndex<uint64_t>(std::vector{8, 7, 6, 5, 4, 3, 2, 1}, std::vector{0, 0, 0, 0, 0, 0, 0, 0}));
 
-    const std::vector<uint32_t> shape = {2, 3, 4, 5};
+    const std::vector<std::size_t> shape = {2, 3, 4, 5};
     const uint64_t flatSize = FlatSize<uint64_t>(shape);
 
     ASSERT_EQ(0, NdToFlatIndex<uint64_t>(shape, std::vector{0, 0, 0, 0}));

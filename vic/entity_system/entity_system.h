@@ -112,10 +112,12 @@ private:
     // todo: think about optimized map container (specialized for many/few large/small objects?)
     // a flat map (like boost::flat_map) might be a better solution,
     // as we really need fast iteration, but don't really care about insert/remove
-    // std::map<EntityId, T> mComponents{};
-    vic::memory::FlatMap<EntityId, T> mComponents{};
+    std::map<EntityId, T> mComponents{};
+    // vic::memory::FlatMap<EntityId, T> mComponents{};
 
     static constexpr auto FindLowerBound = [](const auto& item, const EntityId value) { return item.first < value; };
+
+    static_assert(std::is_move_constructible_v<T> && std::is_move_assignable_v<T>, "T cannot be moved!");
 
 public:
     // todo: make a custom component system, that does not rely on std::map

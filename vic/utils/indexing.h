@@ -18,7 +18,7 @@ namespace indexing
 template <typename TRes, typename TShape>
 constexpr TRes FlatSize(const std::vector<TShape>& shape)
 {
-    return std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<uint32_t>());
+    return std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<TRes>());
 }
 
 template <typename TShape, typename TIndex>

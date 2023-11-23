@@ -253,13 +253,13 @@ public:
     using CostType = TCost;
 
     MStar(const TGraph& graph)
-        : mGraph(graph)
-        , mOutIterator(graph)
+        : mOutIterator(graph)
+        , mSubsetIterator(graph, mOutIterator)
     { }
 
 private:
-    const TGraph& mGraph;
     BaseOutVertexIterator<TGraph> mOutIterator;
+    SubsetOutIterator<TGraph, BaseOutVertexIterator<TGraph>> mSubsetIterator;
 
 public:
     template <typename TEdgeCostFunctor, typename THeuristicFunctor, typename TPolicy>
@@ -286,7 +286,7 @@ public:
 
         std::map<VertexType, ClosedObject> closedMap;
 
-        SubsetOutIterator subsetIterator(mGraph, mOutIterator);
+        // SubsetOutIterator subsetIterator(mGraph, mOutIterator);
 
         // note: > because default make_heap behaviour is max heap for operator<
         const auto compareF = [&](const auto& v1, const auto& v2) { return v1.f < v2.f; };
@@ -336,7 +336,7 @@ public:
 
             auto heapSize = heap.size();
 
-            subsetIterator.ForeachOutVertex(current.vertex, policyDirection, policyCollisionSet, [&](const CartesianVertexType& other) {
+            mSubsetIterator.ForeachOutVertex(current.vertex, policyDirection, policyCollisionSet, [&](const CartesianVertexType& other) {
                 // append
                 ExploredObject& item = exploredMap[other]; // inserts if it does not exist
 
