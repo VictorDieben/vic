@@ -116,24 +116,36 @@ public:
     template <bool sort = true>
     std::pair<iterator, bool> insert(value_type&& pair)
     {
-        const auto copy = pair;
-        return insert<sort>(copy); // tmp, do proper move later
+        // const auto copy = pair;
+        return insert<sort>(pair); // tmp, do proper move later
     }
 
     template <class... Args>
     std::pair<iterator, bool> emplace(Args&&... args)
     {
+        // make sure we can move this type if we want to emplace
+        static_assert(std::is_move_constructible_v<TValue>, "T cannot be moved!");
+
         // similar to map emplace, we may construct the item and directly destruct it if needed
-        mData.emplace_back(args...);
+        mData.emplace_back(std::forward<Args>(args)...);
+        if(mData.size() == 1)
+            return std::pair(mData.begin(), true); // first item, don't compare
+
+        const auto size = mData.size();
+        if(SortValueType(mData[size - 2], mData[size - 2]))
+            return std::pair(std::prev(mData.end()), true); // newly added item is in correct spot already
+
         const auto key = mData.back().first;
-        const auto itToFirst = find(key);
-        if(itToFirst == std::prev(mData.end()))
+        const auto oneBeforeEnd = std::prev(mData.end());
+
+        const auto itToFirst = std::lower_bound(mData.begin(), oneBeforeEnd, key, LowerBoundCompare);
+        if(itToFirst != oneBeforeEnd && itToFirst->first == key)
         {
             mData.pop_back();
             return std::pair(itToFirst, false);
         }
 
-        auto itNewPos = vic::sort_individual(mData.begin(), mData.end(), std::prev(mData.end()), SortValueType);
+        auto itNewPos = vic::sort_individual(mData.begin(), mData.end(), oneBeforeEnd, SortValueType);
         return std::pair(itNewPos, true);
     }
 

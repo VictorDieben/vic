@@ -35,12 +35,12 @@ struct EntityHandle
 
     operator bool() const { return (mId != 0) && (mSystem != nullptr); }
 
-    template <typename TComponent>
-    EntityHandle<T> Add(auto&&... args)
+    template <typename TComponent, typename... Args>
+    EntityHandle<T> Add(Args&&... args)
     {
         static_assert(SystemType::template ContainsComponent<TComponent>(), "Unknown component T");
         assert(mSystem && mId);
-        mSystem->Add<TComponent>(mId, std::forward<decltype(args)>(args)...);
+        mSystem->Add<TComponent>(mId, std::forward<Args>(args)...);
         return *this; // return copy of self
     }
 
@@ -137,8 +137,11 @@ public:
         //                               std::forward_as_tuple(id),
         //                               std::forward_as_tuple(args...));
 
-        auto res = mComponents.emplace(std::pair(id, std::move(T{std::forward<decltype(args)>(args)...})));
-        return res.first->second;
+        // auto res = mComponents.emplace(std::pair(id, std::move(T{std::forward<decltype(args)>(args)...})));
+        // return res.first->second;
+
+        mComponents.emplace(id, T{std::forward<decltype(args)>(args)...});
+        return mComponents[id];
     }
 
     T& Set(const EntityId id, const T& component)

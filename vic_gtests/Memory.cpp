@@ -100,7 +100,6 @@ inline bool operator<(const MyType& a, const MyType& b) { return a.val < b.val; 
 
 TEST(Memory, FlatMap)
 {
-
     vic::memory::FlatMap<uint32_t, MyType> map{};
 
     ASSERT_TRUE(map.empty());
@@ -116,6 +115,8 @@ TEST(Memory, FlatMap)
     EXPECT_TRUE(it == map.end());
     ASSERT_EQ(map.count(0), 0);
     ASSERT_EQ(map.count(5), 1);
+    ASSERT_EQ(map.find(5), map.begin());
+    ASSERT_NE(map.find(5), map.end());
 
     map[4] = {2};
     map[5] = {3};
@@ -124,6 +125,7 @@ TEST(Memory, FlatMap)
     ASSERT_EQ(map.size(), 2);
     ASSERT_EQ(map.count(0), 0);
     ASSERT_EQ(map.count(5), 1);
+    ASSERT_EQ(map.at(5).val, 3);
 
     map.erase(5);
     ASSERT_EQ(map.size(), 1);
@@ -147,8 +149,55 @@ TEST(Memory, FlatMap)
 
     EXPECT_TRUE(map.Relabel(7, 3));
     EXPECT_EQ(map.begin()->first, 3);
+    EXPECT_EQ(map.begin()->second.val, 7);
 
     EXPECT_FALSE(map.Relabel(4, 3)); // key 3 already exists
+}
+
+TEST(Memory, FlatMapConstructors)
+{
+    vic::memory::FlatMap<uint32_t, std::vector<int>> map{};
+
+    map[4] = {4};
+    EXPECT_EQ(map[4], std::vector<int>{4});
+    map[3] = {3};
+    EXPECT_EQ(map[3], std::vector<int>{3});
+    EXPECT_EQ(map[4], std::vector<int>{4});
+    EXPECT_EQ(map[5], std::vector<int>{});
+
+    auto vec = std::vector<int>{6};
+    map.emplace(6, std::move(vec));
+    EXPECT_EQ(map[6], std::vector<int>{6});
+    EXPECT_TRUE(vec.empty()); // todo: there is no good way to detect if a vector has been moved, the standards gives no guarantee
+
+    struct NonDefaultConstructible
+    {
+        explicit NonDefaultConstructible(int x)
+            : val(x)
+        { }
+        NonDefaultConstructible() = delete; // disable default construct
+        NonDefaultConstructible& operator=(const NonDefaultConstructible& other) = delete;
+        NonDefaultConstructible(const NonDefaultConstructible&) = delete; // disable copy construct
+
+        NonDefaultConstructible& operator=(NonDefaultConstructible&& other) noexcept = default;
+        NonDefaultConstructible(NonDefaultConstructible&&) noexcept = default; //  allow move
+        int val;
+    };
+    NonDefaultConstructible a(1);
+    NonDefaultConstructible b = std::move(a);
+    // NonDefaultConstructible c = b; // should not work
+
+    vic::memory::FlatMap<uint32_t, NonDefaultConstructible> map2{};
+    map2.emplace(1, NonDefaultConstructible(1));
+    map2.emplace(0, 0);
+
+    EXPECT_EQ(map2.at(0).val, 0);
+    EXPECT_EQ(map2.at(1).val, 1);
+
+    auto movable = NonDefaultConstructible(2);
+    map2.emplace(2, std::move(movable));
+
+    EXPECT_EQ(map2.at(2).val, 2);
 }
 
 TEST(Memory, ArrayRingBuffer)

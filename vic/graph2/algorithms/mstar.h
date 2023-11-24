@@ -57,8 +57,7 @@ public:
     using CartesianEdgeType = std::vector<EdgeIdType>;
 
     SubsetOutIterator(const TGraph& graph, const TOutVertexIterator& outIterator)
-        : mGraph(graph)
-        , mOutIterator(outIterator)
+        : mOutIterator(outIterator)
     { }
 
     template <typename TFunctor>
@@ -73,7 +72,6 @@ public:
     }
 
 private:
-    const Graph& mGraph;
     const TOutVertexIterator& mOutIterator; // todo: constrain with concept
 
     using OccupiedSetType = vic::memory::UnorderedFlatSet<VertexIdType>;
