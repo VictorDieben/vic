@@ -269,6 +269,20 @@ TEST(Memory, ArrayRingBuffer)
 
 TEST(Memory, RingBuffer)
 {
+    for(std::size_t ringSize : {4, 8, 16, 32})
+    {
+        for(std::size_t index : vic::Range<std::size_t>(0, ringSize))
+        {
+            const auto next = NextRingIndex(index, ringSize);
+            const auto previousNext = PreviousRingIndex(next, ringSize);
+            EXPECT_EQ(index, previousNext);
+
+            const auto previous = PreviousRingIndex(index, ringSize);
+            const auto nextPrevious = NextRingIndex(previous, ringSize);
+            EXPECT_EQ(index, nextPrevious);
+        }
+    }
+
     struct MyType
     {
         int a;
@@ -291,12 +305,12 @@ TEST(Memory, RingBuffer)
     EXPECT_EQ(buffer.front().a, 1);
     EXPECT_EQ(buffer.back().a, 3);
 
-    buffer.pop_back(); // <., [2, 3]>
+    buffer.pop_front(); // <., [2, 3]>
     EXPECT_EQ(buffer.size(), 2);
     EXPECT_EQ(buffer.front().a, 2);
     EXPECT_EQ(buffer.back().a, 3);
 
-    buffer.pop_back(); // <., ., [3]>
+    buffer.pop_front(); // <., ., [3]>
     EXPECT_EQ(buffer.size(), 1);
     EXPECT_EQ(buffer.front().a, 3);
     EXPECT_EQ(buffer.back().a, 3);
@@ -328,20 +342,28 @@ TEST(Memory, RingBuffer)
     EXPECT_EQ(buffer.front().a, 2);
     EXPECT_EQ(buffer.back().a, 7);
 
-    // todo: construct an std::deque. Perform the same operations on a ringbuffer and queue, check that they agree.
-    buffer.clear();
-    std::deque<MyType> verification;
-    for(std::size_t step = 0; step < 99; ++step)
-    {
-        // todo: push some items to front or back
+    // pop front when front is at the end
+    buffer.pop_front(); // <[3, 4, 5, 6, 7], ., ., ., >
+    EXPECT_EQ(buffer.size(), 5);
+    EXPECT_EQ(buffer.front().a, 3);
+    EXPECT_EQ(buffer.back().a, 7);
 
-        // todo: pop some items from front or back
+    // pop
 
-        // todo: verify that both lists agree
-        ASSERT_EQ(buffer.size(), verification.size());
-        for(std::size_t i = 0; i < buffer.size(); ++i)
-            ASSERT_EQ(buffer.at(i).a, verification.at(i).a);
-    }
+    //// todo: construct an std::deque. Perform the same operations on a ringbuffer and queue, check that they agree.
+    //buffer.clear();
+    //std::deque<MyType> verification;
+    //for(std::size_t step = 0; step < 99; ++step)
+    //{
+    //    // todo: push some items to front or back
+
+    //    // todo: pop some items from front or back
+
+    //    // todo: verify that both lists agree
+    //    ASSERT_EQ(buffer.size(), verification.size());
+    //    for(std::size_t i = 0; i < buffer.size(); ++i)
+    //        ASSERT_EQ(buffer.at(i).a, verification.at(i).a);
+    //}
 }
 
 //TEST(Memory, MergeSort)
