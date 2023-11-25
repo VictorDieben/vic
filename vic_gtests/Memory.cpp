@@ -289,6 +289,8 @@ TEST(Memory, RingBuffer)
     };
     RingBuffer<MyType> buffer; // <[]>
     EXPECT_EQ(buffer.size(), 0);
+    EXPECT_EQ(buffer.try_pop_front(), std::nullopt);
+    EXPECT_EQ(buffer.try_pop_back(), std::nullopt);
 
     buffer.push_back(MyType{1}); // <[1]>
     EXPECT_EQ(buffer.size(), 1);
@@ -305,12 +307,14 @@ TEST(Memory, RingBuffer)
     EXPECT_EQ(buffer.front().a, 1);
     EXPECT_EQ(buffer.back().a, 3);
 
-    buffer.pop_front(); // <., [2, 3]>
+    MyType res = buffer.pop_front(); // <., [2, 3]>
+    EXPECT_EQ(res.a, 1);
     EXPECT_EQ(buffer.size(), 2);
     EXPECT_EQ(buffer.front().a, 2);
     EXPECT_EQ(buffer.back().a, 3);
 
-    buffer.pop_front(); // <., ., [3]>
+    res = buffer.pop_front(); // <., ., [3]>
+    EXPECT_EQ(res.a, 2);
     EXPECT_EQ(buffer.size(), 1);
     EXPECT_EQ(buffer.front().a, 3);
     EXPECT_EQ(buffer.back().a, 3);
@@ -343,12 +347,18 @@ TEST(Memory, RingBuffer)
     EXPECT_EQ(buffer.back().a, 7);
 
     // pop front when front is at the end
-    buffer.pop_front(); // <[3, 4, 5, 6, 7], ., ., ., >
+    res = buffer.pop_front(); // <[3, 4, 5, 6, 7], ., ., ., >
+    EXPECT_EQ(res.a, 2);
     EXPECT_EQ(buffer.size(), 5);
     EXPECT_EQ(buffer.front().a, 3);
     EXPECT_EQ(buffer.back().a, 7);
 
     // pop
+    res = buffer.pop_back();
+    EXPECT_EQ(res.a, 7);
+    EXPECT_EQ(buffer.size(), 4);
+    EXPECT_EQ(buffer.front().a, 3);
+    EXPECT_EQ(buffer.back().a, 6);
 
     //// todo: construct an std::deque. Perform the same operations on a ringbuffer and queue, check that they agree.
     //buffer.clear();

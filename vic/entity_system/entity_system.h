@@ -139,9 +139,9 @@ public:
 
         // auto res = mComponents.emplace(std::pair(id, std::move(T{std::forward<decltype(args)>(args)...})));
         // return res.first->second;
-
-        mComponents.emplace(id, T{std::forward<decltype(args)>(args)...});
-        return mComponents[id];
+        
+        auto res = mComponents.emplace(id, T{std::forward<decltype(args)>(args)...});
+        return res.first->second;
     }
 
     T& Set(const EntityId id, const T& component)

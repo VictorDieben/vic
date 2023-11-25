@@ -244,7 +244,7 @@ private:
         auto newData = std::make_unique<T[]>(newSize);
 
         std::size_t ni = 0;
-        for(std::size_t i = mTail; i != mHead; ++i)
+        for(std::size_t i = mTail; i < mHead; ++i)
         {
             newData[ni] = std::move(mData[i % mDataSize]);
             ni++;

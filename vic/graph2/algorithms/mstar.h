@@ -92,7 +92,7 @@ private:
         }
         const VertexIdType vertexAtDim = vertex.at(dim);
 
-        if(!NthBitIsSet(collisionSet, dim)) // agent not in collision, step in policy direction
+        if(!NthBitIsSet(collisionSet, (uint8_t) dim)) // agent not in collision, step in policy direction
         {
             if(occupiedVertices.insert(policy[dim]).second)
             {
