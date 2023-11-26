@@ -37,18 +37,27 @@ TEST(Memory, ref)
 
 TEST(Memory, intrusive_ref)
 {
-    struct IntrusiveMyType : public vic::intrusive_ref<IntrusiveMyType>
+    int destructorCalls = 0;
+    struct IntrusiveTestType : public vic::intrusive_ref<IntrusiveTestType>
     {
-        //
+        explicit IntrusiveTestType(int& destructorCalls)
+            : mDestructorCalls(destructorCalls)
+        { }
+        ~IntrusiveTestType() { mDestructorCalls++; }
+
+        int& mDestructorCalls;
     };
 
-    vic::intrusive<IntrusiveMyType> intrusivePtr; // empty ptr
+    vic::intrusive<IntrusiveTestType> intrusivePtr; // empty ptr
     EXPECT_TRUE(intrusivePtr.empty());
     EXPECT_EQ(intrusivePtr.count(), 0);
+    EXPECT_FALSE(intrusivePtr);
 
-    intrusivePtr = IntrusiveMyType::make();
+    intrusivePtr = vic::make_intrusive<IntrusiveTestType>(destructorCalls);
+
     EXPECT_FALSE(intrusivePtr.empty());
     EXPECT_EQ(intrusivePtr.count(), 1);
+    EXPECT_TRUE(intrusivePtr);
 
     {
         auto copy = intrusivePtr;
@@ -63,10 +72,13 @@ TEST(Memory, intrusive_ref)
     EXPECT_EQ(intrusivePtr.count(), 0);
     EXPECT_FALSE(moved.empty());
     EXPECT_EQ(moved.count(), 1);
+    EXPECT_TRUE(moved);
+    EXPECT_FALSE(intrusivePtr);
 
     moved.clear();
     EXPECT_TRUE(moved.empty());
     EXPECT_EQ(moved.count(), 0);
+    EXPECT_EQ(destructorCalls, 1);
 }
 
 TEST(Memory, RefCounted)

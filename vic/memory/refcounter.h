@@ -127,7 +127,9 @@ struct intrusive
     intrusive() = default;
     intrusive(T* ptr)
         : mPtr(ptr)
-    { }
+    {
+        mPtr->Add();
+    }
     ~intrusive()
     {
         if(mPtr)
@@ -169,20 +171,17 @@ struct intrusive
         mPtr = nullptr;
     }
 
+    T& operator->() const { return *mPtr; }
+    operator bool() const { return mPtr != nullptr; }
+
 private:
     T* mPtr{nullptr};
 };
 
+// crtp class
 template <typename T>
 struct intrusive_ref
 {
-    static intrusive<T> make()
-    {
-        T* raw = new T();
-        raw->Add();
-        return std::move(intrusive<T>(raw));
-    }
-
     std::size_t count() const { return mCount; }
 
     // temp solution, find a better one
@@ -198,5 +197,11 @@ struct intrusive_ref
 private:
     std::size_t mCount{};
 };
+
+template <typename T, typename... Args>
+intrusive<T> make_intrusive(Args&&... args)
+{
+    return intrusive<T>(new T{std::forward<Args>(args)...});
+}
 
 } // namespace vic
