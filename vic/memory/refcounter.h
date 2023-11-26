@@ -87,5 +87,116 @@ private:
         mObject = nullptr;
     }
 };
+
 } // namespace memory
+
+template <typename T>
+struct ref
+{
+    ref(T* ptr)
+        : mPtr(ptr)
+    { }
+
+private:
+    T* mPtr;
+};
+
+template <typename T, typename... Args>
+ref<T> make_refcounted(Args... args)
+{
+    T* raw = new T(std::forward<Args>(args)...);
+    return ref(raw);
+}
+
+//
+//
+//
+
+//template <typename T>
+//concept ConceptIsIntrusiveCRTP = requires(T t) {
+// T::TmpIsIntrusiveCRTP == true; //
+//{
+//    t.count()
+//} -> uint64_t;
+//};
+
+template <typename T>
+// requires ConceptIsIntrusiveCRTP<T> // note: seems not to work with crtp
+struct intrusive
+{
+    intrusive() = default;
+    intrusive(T* ptr)
+        : mPtr(ptr)
+    { }
+    ~intrusive()
+    {
+        if(mPtr)
+            if(mPtr->Subtract())
+                delete mPtr; // delete here, because I don't think we can destroy an object in its own member function
+        mPtr = nullptr;
+    }
+
+    intrusive(intrusive&& other) noexcept
+    {
+        this->mPtr = other.mPtr;
+        other.mPtr = nullptr;
+    }
+    intrusive& operator=(intrusive&& other) noexcept
+    {
+        this->mPtr = other.mPtr;
+        other.mPtr = nullptr;
+        return *this;
+    }
+    intrusive(intrusive& other)
+    {
+        this->mPtr = other.mPtr;
+        this->mPtr->Add();
+    }
+    intrusive& operator=(intrusive& other)
+    {
+        this->mPtr = other.mPtr;
+        this->mPtr->Add();
+        return *this;
+    }
+
+    bool empty() const { return mPtr == nullptr; }
+    std::size_t count() const { return mPtr ? mPtr->count() : 0; }
+    void clear()
+    {
+        if(mPtr)
+            if(mPtr->Subtract())
+                delete mPtr; // delete here, because I don't think we can destroy an object in its own member function
+        mPtr = nullptr;
+    }
+
+private:
+    T* mPtr{nullptr};
+};
+
+template <typename T>
+struct intrusive_ref
+{
+    static intrusive<T> make()
+    {
+        T* raw = new T();
+        raw->Add();
+        return std::move(intrusive<T>(raw));
+    }
+
+    std::size_t count() const { return mCount; }
+
+    // temp solution, find a better one
+    static constexpr bool TmpIsIntrusiveCRTP = true; //
+
+    void Add() { mCount++; }
+    bool Subtract()
+    {
+        mCount--;
+        return mCount == 0; // return true if we need to destruct
+    }
+
+private:
+    std::size_t mCount{};
+};
+
 } // namespace vic

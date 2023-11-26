@@ -22,6 +22,53 @@
 
 using namespace vic::memory;
 
+TEST(Memory, ref)
+{
+    struct MyType
+    {
+        MyType(int x)
+            : val(x)
+        { }
+        int val;
+    };
+
+    auto refptr = vic::make_refcounted<MyType>(1);
+}
+
+TEST(Memory, intrusive_ref)
+{
+    struct IntrusiveMyType : public vic::intrusive_ref<IntrusiveMyType>
+    {
+        //
+    };
+
+    vic::intrusive<IntrusiveMyType> intrusivePtr; // empty ptr
+    EXPECT_TRUE(intrusivePtr.empty());
+    EXPECT_EQ(intrusivePtr.count(), 0);
+
+    intrusivePtr = IntrusiveMyType::make();
+    EXPECT_FALSE(intrusivePtr.empty());
+    EXPECT_EQ(intrusivePtr.count(), 1);
+
+    {
+        auto copy = intrusivePtr;
+        EXPECT_FALSE(copy.empty());
+        EXPECT_EQ(copy.count(), 2);
+        EXPECT_FALSE(intrusivePtr.empty());
+        EXPECT_EQ(intrusivePtr.count(), 2);
+    }
+
+    auto moved = std::move(intrusivePtr);
+    EXPECT_TRUE(intrusivePtr.empty());
+    EXPECT_EQ(intrusivePtr.count(), 0);
+    EXPECT_FALSE(moved.empty());
+    EXPECT_EQ(moved.count(), 1);
+
+    moved.clear();
+    EXPECT_TRUE(moved.empty());
+    EXPECT_EQ(moved.count(), 0);
+}
+
 TEST(Memory, RefCounted)
 {
     struct TestStruct
