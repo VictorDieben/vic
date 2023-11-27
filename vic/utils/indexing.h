@@ -52,7 +52,7 @@ constexpr TRes NdToFlatIndex(const std::vector<TShape>& shape, const std::vector
     TRes blockSize = 1; // todo: blocksize can be precomputed, usefull if we are transforming large amounts of data
 
     // iterate backward over vector, skipping last
-    for(int i = shape.size() - 2; i >= 0; --i)
+    for(int i = (int) shape.size() - 2; i >= 0; --i)
     {
         blockSize *= shape[i + 1];
         result += index[i] * blockSize;

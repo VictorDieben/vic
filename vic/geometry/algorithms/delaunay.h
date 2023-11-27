@@ -193,9 +193,9 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
     std::sort(indices.begin(), indices.end(), [&](const auto& a, const auto& b) { return points[a].Get(0) < points[b].Get(0); });
 
     // placeholders for temp vertices
-    const IndexType tmp1 = points.size();
-    const IndexType tmp2 = points.size() + 1;
-    const IndexType tmp3 = points.size() + 2;
+    const auto tmp1 = (IndexType)points.size();
+    const auto tmp2 = (IndexType)points.size() + 1;
+    const auto tmp3 = (IndexType)points.size() + 2;
 
     // todo: find workaround for copying all data, just to add three more items
     const auto allPoints = [&]() {

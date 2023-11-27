@@ -22,18 +22,40 @@ void move_merge(TIter1 begin1, //
         const bool reachedEnd2 = (begin2 == end2);
         if(reachedEnd1 && reachedEnd2)
             break;
-
-        if(!reachedEnd1 && compare(*begin1, *begin2))
+        else if(reachedEnd1 && !reachedEnd2)
         {
-            *inserter = std::move(*begin1);
-            ++begin1;
+            // add the rest of range 2
+            while(begin2 != end2)
+            {
+                *inserter = std::move(*begin2);
+                ++begin2;
+                inserter++;
+            }
+        }
+        else if(!reachedEnd1 && reachedEnd2)
+        {
+            // add the rest of range 1
+            while(begin1 != end1)
+            {
+                *inserter = std::move(*begin1);
+                ++begin1;
+                inserter++;
+            }
         }
         else
         {
-            *inserter = std::move(*begin2);
-            ++begin2;
+            if(compare(*begin1, *begin2))
+            {
+                *inserter = std::move(*begin1);
+                ++begin1;
+            }
+            else
+            {
+                *inserter = std::move(*begin2);
+                ++begin2;
+            }
+            inserter++;
         }
-        inserter++;
     }
 }
 

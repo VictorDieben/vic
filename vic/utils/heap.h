@@ -50,7 +50,7 @@ template <typename TIter, typename TCompare>
     requires std::random_access_iterator<TIter>
 constexpr TIter increase_key(TIter begin, TIter end, TIter increase, TCompare compare)
 {
-    const auto size = std::distance(begin, end);
+    const std::size_t size = std::distance(begin, end);
     std::size_t index = std::distance(begin, increase);
 
     while(index < size)

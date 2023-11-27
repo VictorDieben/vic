@@ -42,7 +42,7 @@ public:
         // todo: use Matrix from vic::linalg
         // initialize
         const auto n = graph.NumVertices();
-        constexpr CostType maxval = std::numeric_limits<CostType>::max() / 4.;
+        constexpr CostType maxval = std::numeric_limits<CostType>::max() / CostType{4.};
         mCostMatrix = InitializeEmpty<CostType>(maxval, n, n);
         mPolicyMatrix = InitializeEmpty<VertexIdType>(n, n);
 
@@ -51,7 +51,7 @@ public:
         // vertex to itself costs zero
         for(const auto& id : vertices)
         {
-            mCostMatrix[id][id] = 0.;
+            mCostMatrix[id][id] = (CostType)0.;
             mPolicyMatrix[id][id] = id;
         }
 
@@ -60,11 +60,11 @@ public:
         // set value of the direct edges
         for(const auto& [source, sink] : EdgeIterator(graph))
         {
-            mCostMatrix[source][sink] = functor(source, sink);
+            mCostMatrix[source][sink] = (CostType)functor(source, sink);
             mPolicyMatrix[source][sink] = sink;
             if constexpr(!directed)
             {
-                mCostMatrix[sink][source] = functor(sink, source);
+                mCostMatrix[sink][source] = (CostType)functor(sink, source);
                 mPolicyMatrix[sink][source] = source;
             }
         }
@@ -78,7 +78,7 @@ public:
                     const double sum_ik_kj = mCostMatrix[vi][vk] + mCostMatrix[vk][vj];
                     if(sum_ik_kj < mCostMatrix[vi][vj])
                     {
-                        mCostMatrix[vi][vj] = sum_ik_kj;
+                        mCostMatrix[vi][vj] = (CostType)sum_ik_kj;
                         mPolicyMatrix[vi][vj] = mPolicyMatrix[vi][vk];
                     }
                 }
