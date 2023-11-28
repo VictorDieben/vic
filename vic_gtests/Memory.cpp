@@ -435,160 +435,6 @@ TEST(Memory, RingBuffer)
     //}
 }
 
-//TEST(Memory, MergeSort)
-//{
-//    // construct a vector with increasing numbers
-//    std::vector<int> answer;
-//    answer.resize(10);
-//    std::iota(answer.begin(), answer.end(), 0);
-//
-//    // make a shuffled copy
-//    auto values = answer;
-//    std::random_device rd;
-//    std::mt19937 g(1234);
-//    std::shuffle(values.begin(), values.end(), g);
-//
-//    // sort two halves of the vector separately
-//    auto midpoint = values.begin() + 6;
-//    std::sort(values.begin(), midpoint);
-//    std::sort(midpoint, values.end());
-//
-//    // now combine the two sorted halves
-//    vic::sorting::merge_sort(values.begin(), midpoint, values.end());
-//
-//    // check values
-//    EXPECT_EQ(values, answer);
-//}
-//
-//TEST(Memory, MergeSort2)
-//{
-//    using namespace vic;
-//
-//    std::vector<int> vec = {1, 3, 7, 9, 11, 2, 4, 8, 10, 12}; //
-//    std::cout << vec << std::endl;
-//
-//    vic::sorting::merge_sort(vec.begin(), vec.begin() + 5, vec.end());
-//    std::cout << vec << std::endl;
-//
-//    const std::vector<int> answer = {1, 2, 3, 4, 7, 8, 9, 10, 11, 12};
-//
-//    EXPECT_EQ(vec, answer);
-//}
-//
-//TEST(Memory, MergeSortEdgeCases)
-//{
-//    // sort an empty list, should work
-//    std::vector<int> vec = {};
-//    std::vector<int> answer = {};
-//    vic::sorting::merge_sort(vec.begin(), vec.begin(), vec.end());
-//    EXPECT_EQ(vec, answer);
-//
-//    // sort a list with only 1 item in it, for both pivot points
-//    vec = {1};
-//    answer = {1};
-//
-//    vic::sorting::merge_sort(vec.begin(), vec.begin(), vec.end());
-//    EXPECT_EQ(vec, answer);
-//
-//    vic::sorting::merge_sort(vec.begin(), vec.begin() + 1, vec.end());
-//    EXPECT_EQ(vec, answer);
-//
-//    // sort the smallest list where work could be done
-//    vec = {2, 1};
-//    answer = {1, 2};
-//    vic::sorting::merge_sort(vec.begin(), vec.begin() + 1, vec.end());
-//    EXPECT_EQ(vec, answer);
-//
-//    // make sure that sorting a sorted array returns the same vector, regardless of pivot
-//    vec.resize(100);
-//    std::iota(vec.begin(), vec.end(), 0);
-//    for(std::size_t i = 0; i < 100; i++)
-//    {
-//        auto copy = vec;
-//        vic::sorting::merge_sort(copy.begin(), copy.begin() + i, copy.end());
-//        EXPECT_EQ(copy, vec);
-//    }
-//}
-
-//TEST(Memory, MergeSortFailure)
-//{
-//    // check that merge sorting a vector that does not comply does not get stuck in an infinite loop
-//    // note: not really needed, I just wanted to see what the output would be.
-//
-//    // sooo.. it turns out that the sorting algorithm still works, even if the subvectors are not sorted.
-//    // It is not going to be efficient though.
-//
-//    std::vector<int> vec;
-//    vec.resize(10);
-//    std::iota(vec.begin(), vec.end(), 0);
-//
-//    auto reversed = vec;
-//    std::reverse(reversed.begin(), reversed.end());
-//    for(std::size_t i = 0; i < 10; i++)
-//    {
-//        auto copy = reversed;
-//        vic::sorting::merge_sort(copy.begin(), copy.begin() + i, copy.end());
-//    }
-//}
-//
-//TEST(Memory, MergeSortRotate)
-//{
-//    // test the case where we need to rotate
-//    std::vector<int> vec;
-//    vec.resize(10);
-//    std::iota(vec.begin(), vec.end(), 0);
-//
-//    for(std::size_t i = 0; i < 10; i++)
-//    {
-//        auto copy = vec;
-//
-//        // rotate to the right.
-//        std::rotate(copy.rbegin(), copy.rbegin() + i, copy.rend());
-//
-//        vic::sorting::merge_sort(copy.begin(), copy.begin() + i, copy.end());
-//
-//        EXPECT_EQ(copy, vec);
-//    }
-//}
-//
-//TEST(Memory, MergeSortFunctor)
-//{
-//    // test merge_sort with a custom comparison operator
-//}
-//
-//TEST(Memory, MergeSortBackInserter)
-//{
-//    // test merge_sort with back insertion into another vector
-//
-//    std::vector<int> answer;
-//    answer.resize(10);
-//    std::iota(answer.begin(), answer.end(), 0);
-//
-//    // make a shuffled copy
-//    auto values = answer;
-//    std::random_device rd;
-//    std::mt19937 g(1234);
-//    std::shuffle(values.begin(), values.end(), g);
-//
-//    // sort two halves of the vector separately
-//    auto midpoint = values.begin() + 6;
-//    std::sort(values.begin(), midpoint);
-//    std::sort(midpoint, values.end());
-//
-//    // use back insertion version of merge_sort
-//    std::vector<int> result;
-//    vic::sorting::merge_sort_back_insertion(values.begin(), midpoint, values.end(), std::back_inserter(result));
-//    EXPECT_EQ(result, answer);
-//
-//    std::vector<int> result2;
-//    vic::sorting::merge_sort_back_insertion(answer.begin(), answer.begin(), answer.end(), std::back_inserter(result2));
-//    EXPECT_EQ(result2, answer);
-//
-//    std::vector<int> result3;
-//    vic::sorting::merge_sort_back_insertion(answer.begin(), answer.end(), answer.end(), std::back_inserter(result3));
-//    EXPECT_EQ(result3, answer);
-//}
-
 TEST(Memory, UnorderedFlatSet)
 {
     std::set<uint32_t> stdSet;
@@ -764,5 +610,34 @@ TEST(Memory, MoveMerge)
     for(std::size_t i = 0; i < c.size() - 1; ++i)
         EXPECT_LT(c.at(i).at(0), c.at(i + 1).at(0));
 
-    // todo
+    //  randomized test
+
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> dist(-100., 100.); // todo: log norm
+    std::uniform_int_distribution<> size(0, 1000);
+
+    for(auto iter : vic::Range(10))
+    {
+        std::vector<double> vec1;
+        for(auto i : vic::Range(size(g)))
+            vec1.push_back(dist(g));
+        std::sort(vec1.begin(), vec1.end());
+
+        std::vector<double> vec2;
+        for(auto i : vic::Range(size(g)))
+            vec2.push_back(dist(g));
+        std::sort(vec2.begin(), vec2.end());
+
+        std::vector<double> full;
+        std::copy(vec1.begin(), vec1.end(), std::back_inserter(full));
+        std::copy(vec2.begin(), vec2.end(), std::back_inserter(full));
+        std::sort(full.begin(), full.end());
+
+        std::vector<double> moveMerge;
+        vic::sorting::move_merge(vec1.begin(), vec1.end(), vec2.begin(), vec2.end(), std::back_inserter(moveMerge));
+
+        ASSERT_EQ(full.size(), moveMerge.size());
+        for(std::size_t i = 0; i < full.size(); ++i)
+            ASSERT_DOUBLE_EQ(full.at(i), moveMerge.at(i)) << i;
+    }
 }

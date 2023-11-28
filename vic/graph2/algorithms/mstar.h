@@ -92,14 +92,18 @@ private:
         }
         const VertexIdType vertexAtDim = vertex.at(dim);
 
-        if(!NthBitIsSet(collisionSet, (uint8_t) dim)) // agent not in collision, step in policy direction
+        if(!NthBitIsSet(collisionSet, (uint8_t)dim)) // agent not in collision, step in policy direction
         {
-            if(occupiedVertices.insert(policy[dim]).second)
+            const bool atDestination = (vertex[dim] == policy[dim]);
+            const bool inserted = atDestination ? false : occupiedVertices.insert(policy[dim]).second;
+
+            if(atDestination || inserted)
             {
                 vertex[dim] = policy[dim];
                 ForeachOutVertexRecursive(vertex, occupiedVertices, policy, collisionSet, dim + 1, dims, functor);
                 vertex[dim] = vertexAtDim;
-                occupiedVertices.pop_back();
+                if(inserted)
+                    occupiedVertices.pop_back();
             }
         }
         else // agent in collision, fully expand this dimension
@@ -298,10 +302,12 @@ public:
             const auto backprop_recursive = [&](const CartesianVertexType& vertex, //
                                                 const CollisionSet collisionSet,
                                                 auto& self) {
-                const auto& currentMapEntry = exploredMap[vertex];
+                auto& currentMapEntry = exploredMap[vertex];
                 // if the current collision set fully contains the new collision set, ignore
                 if(CollisionSetContains(currentMapEntry.collisionSet, collisionSet))
                     return;
+
+                currentMapEntry.collisionSet |= collisionSet;
 
                 // if we already closed this vertex, remove from closed set and re-open
                 if(closedMap.contains(vertex))
@@ -309,6 +315,9 @@ public:
                     heap.push_back(HeapObject{vertex, closedMap.at(vertex).f});
                     closedMap.erase(vertex);
                 }
+                //else
+                //{
+                //}
 
                 // recurse
                 for(const auto& parent : exploredMap[vertex].backpropSet)
@@ -318,12 +327,18 @@ public:
             return backprop_recursive(vertex, collisionSet, backprop_recursive);
         };
 
-        while(!heap.empty())
+        while(true)
         {
+            if(heap.empty())
+                break;
+
             current = std::move(heap.front());
 
             if(current.vertex == target)
                 break;
+
+            if(closedMap.contains(current.vertex))
+                continue;
 
             const auto currentExploredItem = exploredMap[current.vertex];
             const auto currentGScore = currentExploredItem.g;
