@@ -263,6 +263,17 @@ private:
     BaseOutVertexIterator<TGraph> mOutIterator;
     SubsetOutIterator<TGraph, BaseOutVertexIterator<TGraph>> mSubsetIterator;
 
+    using VertexType = MStarVertex<VertexIdType>;
+    using ExploredObject = MStarExploredObject<CostType, VertexIdType>;
+    using HeapObject = MStarHeapObject<CostType, VertexIdType>;
+    using ClosedObject = MStarClosedMapItem<CostType>;
+
+    // working data
+    std::map<VertexType, ExploredObject> mExploredMap;
+    std::vector<HeapObject> mHeap;
+    std::vector<HeapObject> mHeapBuffer; // placeholder vec that will contain the sorted elements each iteration
+    std::map<VertexType, ClosedObject> mClosedMap;
+
 public:
     template <typename TEdgeCostFunctor, typename THeuristicFunctor, typename TPolicy>
         requires ConceptEdgeCost<TEdgeCostFunctor> && ConceptEdgeCost<THeuristicFunctor>
@@ -272,21 +283,20 @@ public:
              const THeuristicFunctor& heuristicFunctor,
              const TPolicy& policy)
     {
-        using VertexType = MStarVertex<VertexIdType>;
-        using ExploredObject = MStarExploredObject<CostType, VertexIdType>;
-        using HeapObject = MStarHeapObject<CostType, VertexIdType>;
-        using ClosedObject = MStarClosedMapItem<CostType>;
 
-        std::map<VertexType, ExploredObject> exploredMap;
+        //std::map<VertexType, ExploredObject> exploredMap;
+        //std::vector<HeapObject> heap;
+        //std::vector<HeapObject> heapBuffer; // placeholder vec that will contain the sorted elements each iteration
+        //std::map<VertexType, ClosedObject> closedMap;
 
-        std::vector<HeapObject> heap;
-        std::vector<HeapObject> heapBuffer; // placeholder vec that will contain the sorted elements each iteration
+        mExploredMap.clear();
+        mHeap.clear();
+        mHeapBuffer.clear();
+        mClosedMap.clear();
 
-        exploredMap[start] = ExploredObject(start, 0., CollisionSet{}, {});
+        mExploredMap[start] = ExploredObject(start, 0., CollisionSet{}, {});
 
-        heap.push_back(HeapObject{start, 0.});
-
-        std::map<VertexType, ClosedObject> closedMap;
+        mHeap.push_back(HeapObject{start, 0.});
 
         // SubsetOutIterator subsetIterator(mGraph, mOutIterator);
 
@@ -302,7 +312,7 @@ public:
             const auto backprop_recursive = [&](const CartesianVertexType& vertex, //
                                                 const CollisionSet collisionSet,
                                                 auto& self) {
-                auto& currentMapEntry = exploredMap[vertex];
+                auto& currentMapEntry = mExploredMap[vertex];
                 // if the current collision set fully contains the new collision set, ignore
                 if(CollisionSetContains(currentMapEntry.collisionSet, collisionSet))
                     return;
@@ -310,17 +320,17 @@ public:
                 currentMapEntry.collisionSet |= collisionSet;
 
                 // if we already closed this vertex, remove from closed set and re-open
-                if(closedMap.contains(vertex))
+                if(mClosedMap.contains(vertex))
                 {
-                    heap.push_back(HeapObject{vertex, closedMap.at(vertex).f});
-                    closedMap.erase(vertex);
+                    mHeap.push_back(HeapObject{vertex, mClosedMap.at(vertex).f});
+                    mClosedMap.erase(vertex);
                 }
                 //else
                 //{
                 //}
 
                 // recurse
-                for(const auto& parent : exploredMap[vertex].backpropSet)
+                for(const auto& parent : mExploredMap[vertex].backpropSet)
                     self(parent, collisionSet, self);
             };
 
@@ -329,28 +339,28 @@ public:
 
         while(true)
         {
-            if(heap.empty())
+            if(mHeap.empty())
                 break;
 
-            current = std::move(heap.front());
+            current = std::move(mHeap.front());
 
             if(current.vertex == target)
                 break;
 
-            if(closedMap.contains(current.vertex))
+            if(mClosedMap.contains(current.vertex))
             {
-                heap.erase(heap.begin());
+                mHeap.erase(mHeap.begin());
                 continue;
             }
 
-            const auto& currentExploredItem = exploredMap[current.vertex];
+            const auto& currentExploredItem = mExploredMap[current.vertex];
             const auto currentGScore = currentExploredItem.g;
 
             ConstructPolicy(policy, current.vertex, target, policyDirection);
 
             const CollisionSet policyCollisionSet = currentExploredItem.collisionSet | FindCollisions(current.vertex, policyDirection);
 
-            auto heapSize = heap.size();
+            auto heapSize = mHeap.size();
 
             bool updatedHeap = false;
 
@@ -358,7 +368,7 @@ public:
 
             mSubsetIterator.ForeachOutVertex(current.vertex, policyDirection, policyCollisionSet, [&](const CartesianVertexType& other) {
                 // append
-                ExploredObject& item = exploredMap[other]; // inserts if it does not exist
+                ExploredObject& item = mExploredMap[other]; // inserts if it does not exist
 
                 const bool itemIsNew = item.backpropSet.empty(); // NOTE: it would be WAY better if we can detect directly if the operator[] added a new item, this is a hack
 
@@ -382,20 +392,20 @@ public:
 
                     if(itemIsNew)
                     {
-                        heap.push_back(HeapObject{other, newFScore});
+                        mHeap.push_back(HeapObject{other, newFScore});
                     }
-                    else if(closedMap.contains(other))
+                    else if(mClosedMap.contains(other))
                     {
-                        heap.push_back(HeapObject{other, newFScore});
-                        closedMap.erase(other);
+                        mHeap.push_back(HeapObject{other, newFScore});
+                        mClosedMap.erase(other);
                     }
                     else
                     {
                         // item is not new and not closed, so it is already in the heap.
                         // the old f score is no longer valid
                         // todo:
-                        auto it = std::find_if(heap.begin(), heap.begin() + heapSize, [&](const auto& heapItem) { return heapItem.vertex == other; });
-                        if(it == heap.begin() + heapSize)
+                        auto it = std::find_if(mHeap.begin(), mHeap.begin() + heapSize, [&](const auto& heapItem) { return heapItem.vertex == other; });
+                        if(it == mHeap.begin() + heapSize)
                             return; // error
 
                         it->f = newFScore; // note: store that we updated items in the existing heap?
@@ -405,14 +415,14 @@ public:
             });
 
             // sort new items
-            auto heapNewSize = heap.size();
+            auto heapNewSize = mHeap.size();
             if(updatedHeap) // we might have updated some values, skip first because we need to remove it
-                std::sort(heap.begin() + 1, heap.begin() + heapSize, compareF);
-            std::sort(heap.begin() + heapSize, heap.begin() + heapNewSize, compareF); // these are completely unsorted
+                std::sort(mHeap.begin() + 1, mHeap.begin() + heapSize, compareF);
+            std::sort(mHeap.begin() + heapSize, mHeap.begin() + heapNewSize, compareF); // these are completely unsorted
 
             // merge the old heap and the newly added items, write result to buffer heap, the swap
-            heapBuffer.clear();
-            heapBuffer.reserve(heap.size());
+            mHeapBuffer.clear();
+            mHeapBuffer.reserve(mHeap.size());
 
             // todo: analyze if this makes any difference
             //
@@ -423,17 +433,17 @@ public:
             //           std::back_inserter(heapBuffer),
             //           compareF);
 
-            vic::sorting::move_merge(heap.begin() + 1, // skip first, it was the current node this iteration
-                                     heap.begin() + heapSize,
-                                     heap.begin() + heapSize,
-                                     heap.begin() + heapNewSize,
-                                     std::back_inserter(heapBuffer),
+            vic::sorting::move_merge(mHeap.begin() + 1, // skip first, it was the current node this iteration
+                                     mHeap.begin() + heapSize,
+                                     mHeap.begin() + heapSize,
+                                     mHeap.begin() + heapNewSize,
+                                     std::back_inserter(mHeapBuffer),
                                      compareF);
 
-            std::swap(heap, heapBuffer);
+            std::swap(mHeap, mHeapBuffer);
 
             // closedSet.insert(std::move(current.vertex));
-            closedMap[std::move(current.vertex)] = ClosedObject{current.f, policyCollisionSet};
+            mClosedMap[current.vertex] = ClosedObject{current.f, policyCollisionSet};
         }
 
         // https://github.com/jdonszelmann/research-project/blob/master/python/mstar/rewrite/find_path.py
@@ -451,7 +461,7 @@ public:
         {
             if(path.size() > 1000)
                 return std::vector<CartesianVertexType>{};
-            currentVertex = exploredMap[currentVertex].previous;
+            currentVertex = mExploredMap[currentVertex].previous;
             path.push_back(currentVertex);
         }
 
