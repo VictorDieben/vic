@@ -338,9 +338,12 @@ public:
                 break;
 
             if(closedMap.contains(current.vertex))
+            {
+                heap.erase(heap.begin());
                 continue;
+            }
 
-            const auto currentExploredItem = exploredMap[current.vertex];
+            const auto& currentExploredItem = exploredMap[current.vertex];
             const auto currentGScore = currentExploredItem.g;
 
             ConstructPolicy(policy, current.vertex, target, policyDirection);
@@ -348,6 +351,10 @@ public:
             const CollisionSet policyCollisionSet = currentExploredItem.collisionSet | FindCollisions(current.vertex, policyDirection);
 
             auto heapSize = heap.size();
+
+            bool updatedHeap = false;
+
+            // todo: if this item was previously expanded already, only expand in a subset
 
             mSubsetIterator.ForeachOutVertex(current.vertex, policyDirection, policyCollisionSet, [&](const CartesianVertexType& other) {
                 // append
@@ -392,13 +399,15 @@ public:
                             return; // error
 
                         it->f = newFScore; // note: store that we updated items in the existing heap?
+                        updatedHeap = true;
                     }
                 }
             });
 
             // sort new items
             auto heapNewSize = heap.size();
-            std::sort(heap.begin() + 1, heap.begin() + heapSize, compareF); // we might have updated some values, skip first because we need to remove it
+            if(updatedHeap) // we might have updated some values, skip first because we need to remove it
+                std::sort(heap.begin() + 1, heap.begin() + heapSize, compareF);
             std::sort(heap.begin() + heapSize, heap.begin() + heapNewSize, compareF); // these are completely unsorted
 
             // merge the old heap and the newly added items, write result to buffer heap, the swap
