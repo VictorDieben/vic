@@ -17,10 +17,10 @@ template <typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
 {
     os << "[";
-    for(auto it = vec.begin(); it < vec.end(); ++it)
+    for(auto it = vec.begin(); it != vec.end(); ++it)
     {
         os << *it;
-        if(it < std::prev(vec.end()))
+        if(it != std::prev(vec.end()))
             os << ", ";
     }
     os << "]";
@@ -31,10 +31,10 @@ template <typename T, std::size_t N>
 std::ostream& operator<<(std::ostream& os, const std::array<T, N>& vec)
 {
     os << "[";
-    for(auto it = vec.begin(); it < vec.end(); ++it)
+    for(auto it = vec.cbegin(); it != vec.cend(); ++it)
     {
         os << *it;
-        if(it < std::prev(vec.end()))
+        if(it != std::prev(vec.end()))
             os << ", ";
     }
     os << "]";
@@ -45,10 +45,10 @@ template <typename T>
 std::ostream& operator<<(std::ostream& os, const std::set<T>& vec)
 {
     os << "[";
-    for(auto it = vec.begin(); it < vec.end(); ++it)
+    for(auto it = vec.cbegin(); it != vec.cend(); ++it)
     {
         os << *it;
-        if(it < std::prev(vec.end()))
+        if(it != std::prev(vec.end()))
             os << ", ";
     }
     os << "]";
@@ -59,10 +59,24 @@ template <typename T>
 std::ostream& operator<<(std::ostream& os, const std::unordered_set<T>& vec)
 {
     os << "[";
-    for(auto it = vec.begin(); it < vec.end(); ++it)
+    for(const auto it = vec.begin(); it != vec.end(); ++it)
     {
         os << *it;
-        if(it < std::prev(vec.end()))
+        if(it != std::prev(vec.end()))
+            os << ", ";
+    }
+    os << "]";
+    return os;
+}
+
+template <typename T1, typename T2>
+std::ostream& operator<<(std::ostream& os, const std::map<T1, T2>& map)
+{
+    os << "[";
+    for(auto it = map.begin(); it != map.end(); ++it)
+    {
+        os << "(" << it->first << "," << it->second << ")";
+        if(it != std::prev(map.end()))
             os << ", ";
     }
     os << "]";

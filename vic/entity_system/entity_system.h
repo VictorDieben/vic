@@ -139,7 +139,7 @@ public:
 
         // auto res = mComponents.emplace(std::pair(id, std::move(T{std::forward<decltype(args)>(args)...})));
         // return res.first->second;
-        
+
         auto res = mComponents.emplace(id, T{std::forward<decltype(args)>(args)...});
         return res.first->second;
     }
@@ -266,6 +266,8 @@ public:
     const auto& Data() const { return mComponents; };
 };
 
+using ComponentIndexType = int;
+
 template <typename... TComponents>
 class ECS : public ComponentSystem<TComponents>...
 {
@@ -363,6 +365,31 @@ public:
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::Remove(id);
+    }
+
+    //template <typename T, typename TRange>
+    //bool RemoveRange(const TRange& range)
+    //{
+    //    for (
+    //}
+
+    template <typename T, typename TIterable>
+    bool RemoveRange(const TIterable& iterable)
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return algorithms::Iterate<T>(*this, iterable.begin(), iterable.end());
+    }
+
+    template <typename T, typename TIter>
+    bool RemoveRange(const TIter begin, const TIter end)
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+
+        // todo: optimize
+        bool res = true;
+        for(auto it = begin; it != end; ++it)
+            res = res && Remove(*it);
+        return res;
     }
 
     template <typename T>
@@ -578,9 +605,9 @@ public:
     }
 
     template <typename T>
-    static constexpr int GetIndex()
+    static constexpr ComponentIndexType GetIndex()
     {
-        return templates::GetIndex<T, TComponents...>();
+        return (ComponentIndexType)templates::GetIndex<T, TComponents...>();
     }
 
     template <int index>

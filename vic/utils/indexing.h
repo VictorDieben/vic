@@ -18,7 +18,7 @@ namespace indexing
 template <typename TRes, typename TShape>
 constexpr TRes FlatSize(const std::vector<TShape>& shape)
 {
-    return std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<TRes>());
+    return std::accumulate(shape.begin(), shape.end(), (TRes)1, std::multiplies<TRes>());
 }
 
 template <typename TShape, typename TIndex>
@@ -52,7 +52,7 @@ constexpr TRes NdToFlatIndex(const std::vector<TShape>& shape, const std::vector
     TRes blockSize = 1; // todo: blocksize can be precomputed, usefull if we are transforming large amounts of data
 
     // iterate backward over vector, skipping last
-    for(int i = (int) shape.size() - 2; i >= 0; --i)
+    for(int i = (int)shape.size() - 2; i >= 0; --i)
     {
         blockSize *= shape[i + 1];
         result += index[i] * blockSize;
@@ -80,7 +80,7 @@ void FlatToNdIndex(const std::vector<TShape>& shape, //
 
     for(std::size_t i = 0; i < shape.size() - 1; ++i)
     {
-        blocksize = std::accumulate(shape.begin() + 1 + i, shape.end(), 1, std::multiplies<TBuffer>()); // todo: precompute?
+        blocksize = std::accumulate(shape.begin() + 1 + i, shape.end(), (uint64_t)1, std::multiplies<TBuffer>()); // todo: precompute?
 
         quotient = value / blocksize;
         remainder = value % blocksize;

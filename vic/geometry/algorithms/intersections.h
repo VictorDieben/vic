@@ -213,25 +213,57 @@ struct TriTriIntersectionResult
 template <typename T>
 TriTriIntersectionResult<T> TriTriIntersection(const Triangle<T, 3>& tri1, const Triangle<T, 3>& tri2)
 {
-    const Point<T, 3> e11 = Subtract(tri1.points[1], tri1.points[0]);
-    const Point<T, 3> e12 = Subtract(tri1.points[2], tri1.points[0]);
+    return TriTriIntersection(tri1.points[0], //
+                              tri1.points[1],
+                              tri1.points[2],
+                              tri2.points[0],
+                              tri2.points[1],
+                              tri2.points[2]);
+}
 
-    const Point<T, 3> e21 = Subtract(tri2.points[1], tri2.points[0]);
-    const Point<T, 3> e22 = Subtract(tri2.points[2], tri2.points[0]);
+template <typename T>
+Point<T, 3> Projection(const Point<T, 3>& a, const Point<T, 3>& b)
+{
+    const auto a_dot_b = Dot(a, b);
+    const auto b_dot_b = Dot(b, b);
+    return Matmul(a_dot_b / b_dot_b, b);
+}
+
+template <typename T>
+std::pair<Point<T, 3>, Point<T, 3>> ProjectionRejection(const Point<T, 3>& a, const Point<T, 3>& b)
+{
+    const auto projection = Projection(a, b);
+    const auto rejection = Subtract(a, projection);
+    return std::pair(projection, rejection);
+}
+
+template <typename T>
+TriTriIntersectionResult<T> TriTriIntersection(const Point<T, 3>& tri1_1, //
+                                               const Point<T, 3>& tri1_2,
+                                               const Point<T, 3>& tri1_3,
+                                               const Point<T, 3>& tri2_1, //
+                                               const Point<T, 3>& tri2_2,
+                                               const Point<T, 3>& tri2_3)
+{
+    const Point<T, 3> e11 = Subtract(tri1_2, tri1_1);
+    const Point<T, 3> e12 = Subtract(tri1_3, tri1_1);
+
+    const Point<T, 3> e21 = Subtract(tri2_2, tri2_1);
+    const Point<T, 3> e22 = Subtract(tri2_3, tri2_1);
 
     const auto n1 = Cross(e11, e12);
     const auto n2 = Cross(e21, e22);
 
-    const auto sign11 = Sign(Dot(Subtract(tri1.points[0], tri2.points[0]), n2));
-    const auto sign12 = Sign(Dot(Subtract(tri1.points[1], tri2.points[0]), n2));
-    const auto sign13 = Sign(Dot(Subtract(tri1.points[2], tri2.points[0]), n2));
+    const auto sign11 = Sign(Dot(Subtract(tri1_1, tri2_1), n2));
+    const auto sign12 = Sign(Dot(Subtract(tri1_2, tri2_1), n2));
+    const auto sign13 = Sign(Dot(Subtract(tri1_3, tri2_1), n2));
 
     if(sign11 == sign12 && sign12 == sign13)
         return {}; // all points of tri1 are on one side of tri2
 
-    const auto sign21 = Sign(Dot(Subtract(tri2.points[0], tri1.points[0]), n1));
-    const auto sign22 = Sign(Dot(Subtract(tri2.points[1], tri1.points[0]), n1));
-    const auto sign23 = Sign(Dot(Subtract(tri2.points[2], tri1.points[0]), n1));
+    const auto sign21 = Sign(Dot(Subtract(tri2_1, tri1_1), n1));
+    const auto sign22 = Sign(Dot(Subtract(tri2_2, tri1_1), n1));
+    const auto sign23 = Sign(Dot(Subtract(tri2_3, tri1_1), n1));
 
     if(sign21 == sign22 && sign22 == sign23)
         return {}; // all points of tri2 are on one side of tri1
@@ -240,31 +272,24 @@ TriTriIntersectionResult<T> TriTriIntersection(const Triangle<T, 3>& tri1, const
     // so we have to perform the projections
     const auto intersectionDir = Cross(n1, n2);
 
-    // make indices offset, such that the uniquely-sided point is on index 0
-    // todo: branchless?
-    const std::size_t offset1 = (sign12 == sign13) ? 0u : //
-                                    (sign11 == sign12) ? 2u
-                                                       : 1u;
-    const std::size_t offset2 = (sign22 == sign23) ? 0u : //
-                                    (sign21 == sign22) ? 2u
-                                                       : 1u;
+    // calculate some point on the line, by taking one of the points as an imaginary extra plane
+    const auto intersectionPos = PlanePlanePlaneIntersection(tri1_1, n1, tri2_1, n2, tri1_1, intersectionDir);
 
-    // calculate the position/direction of the intersection
-    const auto intersectionPos = Point<T, 3>{};
+    Interval<T> interval1;
+    Interval<T> interval2;
+    if(sign12 == sign13)
+        interval1 = GetTriIntersectionInterval(tri1_1, tri1_2, tri1_3, intersectionPos, intersectionDir);
+    else if(sign11 == sign12)
+        interval1 = GetTriIntersectionInterval(tri1_3, tri1_2, tri1_1, intersectionPos, intersectionDir);
+    else
+        interval1 = GetTriIntersectionInterval(tri1_2, tri1_1, tri1_3, intersectionPos, intersectionDir);
 
-    // find the interval of the intersection of tri1
-    const auto interval1 = GetTriIntersectionInterval(tri1.points[(0 + offset1) % 3], //
-                                                      tri1.points[(1 + offset1) % 3],
-                                                      tri1.points[(2 + offset1) % 3],
-                                                      intersectionPos,
-                                                      intersectionDir);
-
-    // find the interval of the intersection of tri2
-    const auto interval2 = GetTriIntersectionInterval(tri2.points[(0 + offset2) % 3], //
-                                                      tri2.points[(1 + offset2) % 3],
-                                                      tri2.points[(2 + offset2) % 3],
-                                                      intersectionPos,
-                                                      intersectionDir);
+    if(sign22 == sign23)
+        interval2 = GetTriIntersectionInterval(tri2_1, tri2_2, tri2_3, intersectionPos, intersectionDir);
+    else if(sign21 == sign22)
+        interval2 = GetTriIntersectionInterval(tri2_3, tri2_2, tri2_1, intersectionPos, intersectionDir);
+    else
+        interval2 = GetTriIntersectionInterval(tri2_2, tri2_1, tri2_3, intersectionPos, intersectionDir);
 
     // calculate the overlap of the two intersections (if any)
     return TriTriIntersectionResult{intersectionPos, intersectionDir, Overlap(interval1, interval2)};
@@ -355,4 +380,51 @@ bool PointInsideSphere(const Point<T, dims>& point, const Sphere<T, dims>& spher
     return Norm(Subtract(sphere.pos, point)) < sphere.rad;
 }
 
+template <typename T>
+struct PlanePlaneIntersectionResult
+{
+    Point<T, 3> origin;
+    Point<T, 3> direction;
+};
+
+template <typename T>
+PlanePlaneIntersectionResult<T> PlanePlaneIntersection(const Point<T, 3>& p1, //
+                                                       const Point<T, 3>& n1,
+                                                       const Point<T, 3>& p2,
+                                                       const Point<T, 3>& n2)
+{
+    PlanePlaneIntersectionResult<T> result{};
+
+    result.direction = Cross(n1, n2);
+    // result.origin = TODO: find a solution that does not depend on setting one dimension to a fixed value, for numerical accuracy reasons
+
+    return result;
+}
+
+template <typename T>
+Point<T, 3> PlanePlanePlaneIntersection(const Point<T, 3>& p1, //
+                                        const Point<T, 3>& n1,
+                                        const Point<T, 3>& p2,
+                                        const Point<T, 3>& n2,
+                                        const Point<T, 3>& p3,
+                                        const Point<T, 3>& n3)
+{
+    const auto t1 = Matmul(Dot(p1, n1), Cross(n2, n3));
+    const auto t2 = Matmul(Dot(p2, n2), Cross(n3, n1));
+    const auto t3 = Matmul(Dot(p3, n3), Cross(n1, n2));
+
+    const T n1n2n3 = Matrix3<T>(t1.Get(0), //
+                                t2.Get(0),
+                                t3.Get(0),
+                                t1.Get(1),
+                                t2.Get(1),
+                                t3.Get(1),
+                                t1.Get(2),
+                                t2.Get(2),
+                                t3.Get(2));
+
+    const auto invDet = (T)1. / Determinant3x3(n1n2n3);
+
+    return Matmul(invDet, Add(t1, t2, t3));
+}
 } // namespace vic::geom

@@ -289,9 +289,9 @@ TriMesh<T> GenerateCone(const T rad, //
 
     for(MeshIndex i = 0; i < n; ++i)
     {
-        const auto ratio = (double)i / (double)n;
-        const T x = (T)-rad * std::sin(ratio * 2. * std::numbers::pi);
-        const T z = (T)rad * std::cos(ratio * 2. * std::numbers::pi);
+        const T ratio = (T)i / (T)n;
+        const T x = (T)-rad * std::sin(ratio * (T)2. * std::numbers::pi);
+        const T z = (T)rad * std::cos(ratio * (T)2. * std::numbers::pi);
         mesh.vertices.push_back(Vertex<T>{{x, (T)0., z}});
     }
     mesh.vertices.push_back(top);
@@ -376,8 +376,8 @@ EdgeMesh<T> GenerateCircle(const T radius, const uint32_t n)
     for(MeshIndex i = 0; i < n; ++i)
     {
         const T ratio = (T)i / (T)n;
-        const T x = radius * (T)std::sin(ratio * 2. * std::numbers::pi);
-        const T y = radius * (T)std::cos(ratio * 2. * std::numbers::pi);
+        const T x = radius * (T)std::sin(ratio * (T)2. * std::numbers::pi);
+        const T y = radius * (T)std::cos(ratio * (T)2. * std::numbers::pi);
         result.vertices.push_back(Vertex<T>(x, y, 0.));
         result.edges.push_back({i, (i + 1) % n});
     }
@@ -540,18 +540,51 @@ std::vector<UV<T>> GenerateVertexUVsPolar(const TriMesh<T>& mesh, const Vertex<T
     return uvs;
 }
 
-
 template <typename T>
 vic::mesh::TriMesh<T> GenerateSquareMesh()
 {
     using namespace vic::mesh;
     TriMesh<T> mesh;
     mesh.vertices = {{Vertex((T)-0.5, (T)-0.5, (T)0.), //
-                      Vertex((T)0.5,(T) 0.5, (T)0.),
-                      Vertex((T)-0.5,(T) 0.5, (T)0.),
-                      Vertex((T)0.5, (T)-0.5,(T) 0.)}};
+                      Vertex((T)0.5, (T)0.5, (T)0.),
+                      Vertex((T)-0.5, (T)0.5, (T)0.),
+                      Vertex((T)0.5, (T)-0.5, (T)0.)}};
     mesh.tris = {Tri{0, 1, 2}, Tri{0, 1, 3}};
     return mesh;
+}
+
+//template <typename T>
+//struct TriMesh
+//{
+//    std::vector<Vertex<T>> vertices;
+//    std::vector<Tri> tris;
+//};
+
+// combine two meshes, but do not calculate mesh intersections.
+template <typename T>
+vic::mesh::TriMesh<T> Merge(const vic::mesh::TriMesh<T>& mesh1, const vic::mesh::TriMesh<T>& mesh2)
+{
+    vic::mesh::TriMesh<T> result = mesh1; // copy
+
+    result.vertices.insert(result.vertices.end(), mesh2.vertices.begin(), mesh2.vertices.end());
+
+    result.tris.reserve(mesh1.tris.size() + mesh2.tris.size());
+    const auto offset = mesh1.vertices.size();
+
+    for(const auto& tri : mesh2.tris)
+        result.tris.push_back(Tri{std::get<0>(tri) + offset, //
+                                  std::get<1>(tri) + offset,
+                                  std::get<2>(tri) + offset});
+
+    return result;
+}
+
+template <typename T>
+vic::mesh::TriMesh<T> Union(const vic::mesh::TriMesh<T>& mesh1, const vic::mesh::TriMesh<T>& mesh2)
+{
+    //
+
+    return {};
 }
 
 } // namespace mesh

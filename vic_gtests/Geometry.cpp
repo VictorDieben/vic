@@ -945,6 +945,7 @@ TEST(Geom, ConvexHull)
 
     const std::size_t numPoints = 1000000;
 
+    // construct random 2d point cloud
     std::vector<Vector2d> vertices;
     for(std::size_t i = 0; i < numPoints; ++i)
         vertices.push_back(Vector2d(pos(g), pos(g)));
@@ -972,4 +973,28 @@ TEST(Geom, ConvexHull)
     ASSERT_EQ(failures, 0);
 
     ASSERT_TRUE(false);
+}
+
+TEST(Geom, ProjectionRejection)
+{
+    std::default_random_engine g{123};
+    std::uniform_real_distribution<double> factor(-10., 10.);
+
+    for(auto i : Range(10))
+    {
+        Point3d vec{0, 0, factor(g)};
+        const auto [projection, rejection] = ProjectionRejection(vec, Point3d{0, 0, factor(g)});
+        EXPECT_TRUE(IsEqual(projection, vec));
+        EXPECT_TRUE(IsEqual(rejection, Point3d{0, 0, 0}));
+    }
+}
+
+TEST(Geom, TriTriIntersection)
+{
+    //
+}
+
+TEST(Geom, Merge)
+{
+    //
 }

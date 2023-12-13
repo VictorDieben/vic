@@ -65,7 +65,7 @@ struct to_unique
 //
 
 template <typename T, typename U, typename... Us>
-constexpr auto GetIndex()
+constexpr int GetIndex()
 {
     if constexpr(std::is_same_v<T, U>)
     {
@@ -75,7 +75,8 @@ constexpr auto GetIndex()
     {
         if constexpr(sizeof...(Us) > 0)
         {
-            return 1 + GetIndex<T, Us...>();
+            const auto idx = GetIndex<T, Us...>();
+            return idx == -1 ? -1 : 1 + idx;
         }
         else
         {

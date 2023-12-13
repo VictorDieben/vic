@@ -83,4 +83,26 @@ TIter sort_individual(TIter begin, //
     return sort_individual(begin, end, item, std::less<>{});
 }
 
+template <typename TBegin, typename TEnd>
+    requires std::forward_iterator<TBegin> && std::forward_iterator<TEnd>
+auto flatten(TBegin begin, TEnd end)
+{
+    using TData = decltype(std::begin(*begin));
+    std::vector<TData> data;
+
+    // calculate size
+    std::size_t size = 0;
+    for(auto it = begin; it != end; ++it)
+        size += it->size();
+
+    data.reserve(size);
+
+    std::size_t size = 0;
+    for(auto it = begin; it != end; ++it)
+        for(auto it2 = std::begin(*it); it2 != std::end(*it); ++it2)
+            data.push_back(*it2);
+
+    return data;
+}
+
 } // namespace vic
