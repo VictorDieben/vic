@@ -290,8 +290,8 @@ TriMesh<T> GenerateCone(const T rad, //
     for(MeshIndex i = 0; i < n; ++i)
     {
         const T ratio = (T)i / (T)n;
-        const T x = (T)-rad * std::sin(ratio * (T)2. * std::numbers::pi);
-        const T z = (T)rad * std::cos(ratio * (T)2. * std::numbers::pi);
+        const T x = -rad * std::sin((T)ratio * 2. * std::numbers::pi);
+        const T z = rad * std::cos((T)ratio * 2. * std::numbers::pi);
         mesh.vertices.push_back(Vertex<T>{{x, (T)0., z}});
     }
     mesh.vertices.push_back(top);
@@ -378,7 +378,7 @@ EdgeMesh<T> GenerateCircle(const T radius, const uint32_t n)
         const T ratio = (T)i / (T)n;
         const T x = radius * (T)std::sin(ratio * (T)2. * std::numbers::pi);
         const T y = radius * (T)std::cos(ratio * (T)2. * std::numbers::pi);
-        result.vertices.push_back(Vertex<T>(x, y, 0.));
+        result.vertices.push_back(Vertex<T>(x, y, (T)0.));
         result.edges.push_back({i, (i + 1) % n});
     }
 

@@ -47,7 +47,8 @@ public:
     template <typename T, typename... Targs>
     void EmplaceBack(Targs&&... args)
     {
-        mEvents.emplace_back(new T(std::forward<Targs>...));
+        // mEvents.emplace_back(new T(std::forward<Targs>...));
+        mEvents.emplace_back(std::make_unique<T>(std::forward<Targs>...));
     }
 
     bool Next()
@@ -81,6 +82,7 @@ private:
     std::deque<std::unique_ptr<Event>> mEvents{};
 
     // todo: separate vector for every type of event? useful if we have a lot of listeners
+    // todo: ring buffer?
     std::vector<BaseEventListener*> mListeners{};
 };
 

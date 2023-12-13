@@ -55,8 +55,8 @@ static void LinalgMatmul4x4d(benchmark::State& state)
 
     for(auto _ : state)
     {
-        Matrix4<float> mat1{val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++};
-        Matrix4<float> mat2{val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++};
+        Matrix4<double> mat1{val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++};
+        Matrix4<double> mat2{val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++, val++};
 
         const auto res = Matmul(mat1, mat2);
         benchmark::DoNotOptimize(res);

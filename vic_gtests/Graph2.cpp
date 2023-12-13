@@ -278,7 +278,7 @@ TEST(Graph2, CartesianAStar)
         for(std::size_t i = 0; i < size; ++i)
             cost += fw.Cost(from[i], to[i]);
         cost = cost / CostType(size);
-        return 1.00001 * cost; // slightly overestimate the remaining part of path
+        return (CostType)1.00001 * cost; // slightly overestimate the remaining part of path
     };
 
     const auto costLambda = []<typename T>(const T&, const T&) -> CostType { return CostType{1.}; };

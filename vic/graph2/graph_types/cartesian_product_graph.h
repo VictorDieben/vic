@@ -35,7 +35,7 @@ std::vector<TBaseId> ToVector(const TCartesianId cartesianId, //
 
 template <typename TCartesianId, typename TBaseId>
 TCartesianId ToId(const std::vector<TBaseId>& buffer, //
-                  const uint32_t size)
+                  const uint64_t size)
 {
     // todo: rewrite FromBase to do a fixed number of iterations, equal to size
     return FromBase<TCartesianId>(buffer, size);

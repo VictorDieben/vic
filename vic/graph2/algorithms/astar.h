@@ -239,7 +239,7 @@ struct ArrayHasher
 {
     int operator()(const std::array<T, dims>& arr) const
     {
-        int hash = arr.size();
+        int hash = (int)arr.size();
         for(const auto& i : arr)
         {
             hash ^= i + 0x9e3779b9 + (hash << 6) + (hash >> 2);
