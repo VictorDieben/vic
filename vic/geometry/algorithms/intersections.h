@@ -427,4 +427,20 @@ Point<T, 3> PlanePlanePlaneIntersection(const Point<T, 3>& p1, //
 
     return Matmul(invDet, Add(t1, t2, t3));
 }
+
+template <typename T>
+Plane<T, 3> PointNormalToPlane(const Point<T, 3>& p, //
+                               const Point<T, 3>& n)
+{
+    return {};
+}
+
+template <typename T>
+Plane<T, 3> PlaneThroughPoints(const Point<T, 3>& p1, //
+                               const Point<T, 3>& p2,
+                               const Point<T, 3>& p3)
+{
+    //
+}
+
 } // namespace vic::geom

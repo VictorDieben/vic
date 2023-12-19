@@ -38,7 +38,7 @@ struct MatrixConst : public MatrixBaseSelector<TShape>
     template <typename... Ts>
         requires(std::is_convertible_v<Ts, T> && ...) && (sizeof...(Ts) == ArraySize)
     constexpr MatrixConst(Ts&&... data)
-        : mData(std::forward<Ts>(data)...)
+        : mData({static_cast<T>(data)...})
     { }
 
     constexpr T Get(const Row i, const Col j) const
@@ -204,14 +204,14 @@ template <typename T>
 using Matrix6 = MatrixMxN<T, 6, 6>;
 
 using Matrix11f = MatrixMxN<float, 1, 1>;
-using Matrix22f = MatrixMxN<float, 2, 3>;
+using Matrix22f = MatrixMxN<float, 2, 2>;
 using Matrix33f = MatrixMxN<float, 3, 3>;
 using Matrix44f = MatrixMxN<float, 4, 4>;
 using Matrix55f = MatrixMxN<float, 5, 5>;
 using Matrix66f = MatrixMxN<float, 6, 6>;
 
 using Matrix11d = MatrixMxN<double, 1, 1>;
-using Matrix22d = MatrixMxN<double, 2, 3>;
+using Matrix22d = MatrixMxN<double, 2, 2>;
 using Matrix33d = MatrixMxN<double, 3, 3>;
 using Matrix44d = MatrixMxN<double, 4, 4>;
 using Matrix55d = MatrixMxN<double, 5, 5>;

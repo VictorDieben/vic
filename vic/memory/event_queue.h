@@ -82,7 +82,6 @@ private:
     std::deque<std::unique_ptr<Event>> mEvents{};
 
     // todo: separate vector for every type of event? useful if we have a lot of listeners
-    // todo: ring buffer?
     std::vector<BaseEventListener*> mListeners{};
 };
 

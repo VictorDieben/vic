@@ -385,7 +385,7 @@ public:
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
 
-        // todo: optimize
+        // todo: optimize, assume [begin; end> is sorted
         bool res = true;
         for(auto it = begin; it != end; ++it)
             res = res && Remove(*it);

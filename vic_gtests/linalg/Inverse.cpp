@@ -15,7 +15,7 @@ TEST(Linalg, InverseDiagonal)
     constexpr auto diag1 = Diagonal3<double>({1, 2, 3});
     constexpr Diagonal3<double> diagInv1 = Inverse(diag1);
     EXPECT_TRUE(IsEqual(Matmul(diag1, diagInv1), Identity3<double>{}));
-} // namespace vic::linalg
+}
 
 TEST(Linalg, InverseRandom)
 {
@@ -53,4 +53,30 @@ TEST(Linalg, InverseRandom)
 
         EXPECT_TRUE(IsEqual(result, identity, 1E-8)); // A^-1 * A == I
     }
+}
+
+TEST(Linalg, Inverse2x2)
+{
+    static constexpr Matrix22d mat2x2{1, 2, 3, 4}; //
+    static constexpr Matrix22d inv2x2 = Inverse2x2(mat2x2);
+
+    EXPECT_TRUE(IsEqual(Matmul(mat2x2, inv2x2), Identity2d{}));
+}
+
+TEST(Linalg, Inverse3x3)
+{
+    static constexpr Matrix33d mat3x3{1, 2, -1, 2, 1, 2, -1, 2, 1}; //
+
+    static constexpr double invdet = -1. / 16.;
+    static constexpr Matrix33d inverseSolution{-3. * invdet, -4. * invdet, 5. * invdet, -4. * invdet, 0, -4. * invdet, 5. * invdet, -4. * invdet, -3. * invdet};
+
+    const auto sol = Matmul(inverseSolution, mat3x3);
+    EXPECT_TRUE(IsEqual(sol, Identity3d{}));
+
+    Matrix33d inv3x3 = Inverse3x3(mat3x3);
+
+    EXPECT_TRUE(IsEqual(inv3x3, inverseSolution));
+
+    const auto tmp = Matmul(mat3x3, inv3x3);
+    EXPECT_TRUE(IsEqual(tmp, Identity3d{}));
 }
