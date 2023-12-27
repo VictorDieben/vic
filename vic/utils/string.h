@@ -7,9 +7,9 @@
 namespace vic
 {
 
-void Split(std::vector<std::string_view>& buffer, //
-           const std::string_view& str,
-           const std::string_view& delimiter)
+inline void Split(std::vector<std::string_view>& buffer, //
+                  const std::string_view& str,
+                  const std::string_view& delimiter)
 {
     buffer.clear();
 
@@ -35,12 +35,26 @@ void Split(std::vector<std::string_view>& buffer, //
     }
 }
 
-std::vector<std::string_view> Split(const std::string_view& str, //
-                                    const std::string_view& delimiter)
+inline std::vector<std::string_view> Split(const std::string_view& str, //
+                                           const std::string_view& delimiter)
 {
     std::vector<std::string_view> buffer;
     Split(buffer, str, delimiter);
     return buffer;
+}
+
+template <typename T>
+T ToIntegral(const std::string_view& sv)
+{
+    // todo: really inefficient, there should just be a standard way of doing this
+    auto tostring = std::string{sv};
+
+    if constexpr(std::is_same_v<T, int>)
+        return std::stoi(tostring);
+    if constexpr(std::is_same_v<T, long>)
+        return std::stol(tostring);
+    if constexpr(std::is_same_v<T, long long>)
+        return std::stoll(tostring);
 }
 
 } // namespace vic

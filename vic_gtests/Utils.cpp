@@ -729,3 +729,14 @@ TEST(Utils, SplitString)
         EXPECT_EQ(substrings.at(0), "abc");
     }
 }
+
+TEST(Utils, ToIntegral)
+{
+
+    EXPECT_EQ(ToIntegral<int>("1234"), 1234);
+    EXPECT_EQ(ToIntegral<int>("-1234"), -1234);
+
+    EXPECT_EQ(ToIntegral<long>("1234"), 1234);
+    EXPECT_EQ(ToIntegral<long>(" 1234"), 1234);
+    EXPECT_EQ(ToIntegral<long>("1234 "), 1234);
+}
