@@ -279,6 +279,12 @@ public:
 
     ECS() = default;
 
+    // disable move and copy, because we will pass the ecs adress along with handles etc.
+    ECS(const ECS&) = delete;
+    ECS(ECS&&) = delete;
+    ECS& operator=(const ECS&) = delete;
+    ECS& operator=(ECS&&) = delete;
+
     Handle NewEntity()
     {
         EntityHandle newEntity(mEntityCounter, this);

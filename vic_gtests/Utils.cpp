@@ -13,6 +13,7 @@
 #include "vic/utils/ranges.h"
 #include "vic/utils/serialize.h"
 #include "vic/utils/statemachine.h"
+#include "vic/utils/string.h"
 #include "vic/utils/timing.h"
 #include "vic/utils/to_string.h"
 #include "vic/utils/unique.h"
@@ -692,5 +693,33 @@ TEST(Utils, UpdateHeap)
             if(!isHeap)
                 ASSERT_TRUE(isHeap);
         }
+    }
+}
+
+TEST(Utils, SplitString)
+{
+    {
+        const std::string testString = "a bc  def ";
+        const auto substrings = Split(testString, " ");
+
+        EXPECT_EQ(substrings.size(), 3);
+        EXPECT_EQ(substrings.at(0), "a");
+        EXPECT_EQ(substrings.at(1), "bc");
+        EXPECT_EQ(substrings.at(2), "def");
+    }
+
+    {
+        const auto substrings = Split("", " ");
+        EXPECT_EQ(substrings.size(), 0);
+    }
+
+    {
+        const auto substrings = Split(" ", " ");
+        EXPECT_EQ(substrings.size(), 0);
+    }
+
+    {
+        const auto substrings = Split("  ", " ");
+        EXPECT_EQ(substrings.size(), 0);
     }
 }
