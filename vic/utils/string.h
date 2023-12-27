@@ -26,7 +26,7 @@ void Split(std::vector<std::string_view>& buffer, //
 
         if(nextIndex == std::string::npos)
         {
-            buffer.push_back(std::string_view(str.begin() + index, str.begin() + str.size() - 1));
+            buffer.push_back(std::string_view(str.begin() + index, str.begin() + str.size()));
             return;
         }
 

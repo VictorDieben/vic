@@ -722,4 +722,10 @@ TEST(Utils, SplitString)
         const auto substrings = Split("  ", " ");
         EXPECT_EQ(substrings.size(), 0);
     }
+
+    {
+        const auto substrings = Split("abc", " ");
+        EXPECT_EQ(substrings.size(), 1);
+        EXPECT_EQ(substrings.at(0), "abc");
+    }
 }
