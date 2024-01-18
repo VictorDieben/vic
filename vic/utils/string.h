@@ -13,10 +13,9 @@ inline void Split(std::vector<std::string_view>& buffer, //
 {
     buffer.clear();
 
-    typename std::size_t index = 0;
+    std::size_t index = 0;
     while(index < str.size())
     {
-
         const std::size_t nextIndex = str.find(delimiter, index);
         if(index == nextIndex)
         {
@@ -35,8 +34,8 @@ inline void Split(std::vector<std::string_view>& buffer, //
     }
 }
 
-inline std::vector<std::string_view> Split(const std::string_view& str, //
-                                           const std::string_view& delimiter)
+inline std::vector<std::string_view> Split(const std::string_view str, //
+                                           const std::string_view delimiter)
 {
     std::vector<std::string_view> buffer;
     Split(buffer, str, delimiter);
@@ -44,7 +43,7 @@ inline std::vector<std::string_view> Split(const std::string_view& str, //
 }
 
 template <typename T>
-T ToIntegral(const std::string_view& sv)
+T ToIntegral(const std::string_view sv)
 {
     // todo: really inefficient, there should just be a standard way of doing this
     auto tostring = std::string{sv};
@@ -55,6 +54,7 @@ T ToIntegral(const std::string_view& sv)
         return std::stol(tostring);
     if constexpr(std::is_same_v<T, long long>)
         return std::stoll(tostring);
+    return T{}; // todo: this should be a compile error
 }
 
 } // namespace vic

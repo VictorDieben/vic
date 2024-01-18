@@ -37,6 +37,18 @@ public:
     //using pointer =
     //using const_pointer =
 
+    FlatSet() = default;
+
+    template <typename TBegin, typename TEnd>
+    FlatSet(TBegin begin, TEnd end)
+    {
+        if constexpr(std::contiguous_iterator<TBegin>)
+            mData.reserve(std::distance(begin, end));
+
+        for(auto it = begin; it != end; ++it)
+            insert(*it);
+    }
+
 private:
     std::vector<value_type> mData{};
 

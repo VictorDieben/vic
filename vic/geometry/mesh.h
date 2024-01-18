@@ -290,8 +290,8 @@ TriMesh<T> GenerateCone(const T rad, //
     for(MeshIndex i = 0; i < n; ++i)
     {
         const T ratio = (T)i / (T)n;
-        const T x = -rad * std::sin((T)ratio * 2. * std::numbers::pi);
-        const T z = rad * std::cos((T)ratio * 2. * std::numbers::pi);
+        const T x = -rad * (T)std::sin(ratio * 2. * std::numbers::pi);
+        const T z = rad * (T)std::cos(ratio * 2. * std::numbers::pi);
         mesh.vertices.push_back(Vertex<T>{{x, (T)0., z}});
     }
     mesh.vertices.push_back(top);

@@ -229,7 +229,10 @@ auto Delaunay2d(const std::vector<vic::linalg::Vector2<T>>& points)
     triangles.push_back(TriangleData(Triangle({tmp1, tmp2, tmp3}), CircumscribedCircle(allPoints[tmp1], allPoints[tmp2], allPoints[tmp3]), true));
 
     std::vector<Edge> edges; // loop data
-    edges.reserve(std::ceil(std::sqrt(points.size())));
+
+    // for any triangulation, the number of edges will be (3*Npoints -3 -NPointsOnConvexHull)
+    // assume worst case (only 3 points on convex hull) for edge reservation
+    edges.reserve(std::max<std::size_t>(3, (3 * points.size()) - 6));
 
     for(const auto& vertexIndex : indices)
     {

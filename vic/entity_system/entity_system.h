@@ -373,29 +373,24 @@ public:
         return ComponentSystem<T>::Remove(id);
     }
 
-    //template <typename T, typename TRange>
-    //bool RemoveRange(const TRange& range)
-    //{
-    //    for (
-    //}
+    template <typename T, typename TIter>
+    bool RemoveRange(const TIter begin, const TIter end)
+    {
+        assert(std::is_sorted(begin, end));
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+
+        // todo: optimize, [begin; end> is sorted
+        bool res = true;
+        for(auto it = begin; it != end; ++it)
+            res = res && Remove<T>(*it);
+        return res;
+    }
 
     template <typename T, typename TIterable>
     bool RemoveRange(const TIterable& iterable)
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
-        return algorithms::Iterate<T>(*this, iterable.begin(), iterable.end());
-    }
-
-    template <typename T, typename TIter>
-    bool RemoveRange(const TIter begin, const TIter end)
-    {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
-
-        // todo: optimize, assume [begin; end> is sorted
-        bool res = true;
-        for(auto it = begin; it != end; ++it)
-            res = res && Remove(*it);
-        return res;
+        return RemoveRange<T>(iterable.begin(), iterable.end());
     }
 
     template <typename T>
