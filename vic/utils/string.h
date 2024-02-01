@@ -54,7 +54,8 @@ T ToIntegral(const std::string_view sv)
         return std::stol(tostring);
     if constexpr(std::is_same_v<T, long long>)
         return std::stoll(tostring);
-    return T{}; // todo: this should be a compile error
+
+    return static_cast<T>(std::stoll(tostring)); // todo: should this be a compile error?
 }
 
 } // namespace vic

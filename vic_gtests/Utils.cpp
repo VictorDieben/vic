@@ -5,6 +5,7 @@
 #include "vic/utils.h"
 #include "vic/utils/algorithms.h"
 #include "vic/utils/counted.h"
+#include "vic/utils/decimal.h"
 #include "vic/utils/heap.h"
 #include "vic/utils/indexing.h"
 #include "vic/utils/math.h"
@@ -16,6 +17,7 @@
 #include "vic/utils/string.h"
 #include "vic/utils/timing.h"
 #include "vic/utils/to_string.h"
+#include "vic/utils/try.h"
 #include "vic/utils/unique.h"
 
 #include "vic/memory/constexpr_map.h"
@@ -739,4 +741,26 @@ TEST(Utils, ToIntegral)
     EXPECT_EQ(ToIntegral<long>("1234"), 1234);
     EXPECT_EQ(ToIntegral<long>(" 1234"), 1234);
     EXPECT_EQ(ToIntegral<long>("1234 "), 1234);
+}
+
+TEST(Utils, Decimal)
+{
+    using namespace decimal;
+
+    dec1 d1{5}; // 0.5
+    dec1 d2{5}; // 0.5
+
+    auto sum = vic::decimal::Add<dec0>(d1, d2); // 0.5 + 0.5 should be 1
+
+    EXPECT_EQ(sum.val, 1);
+}
+
+TEST(Utils, Try)
+{
+    vic::Try([]() { return true; });
+}
+
+TEST(Utils, Deadline)
+{
+    vic::Deadline([]() { return true; }, std::chrono::seconds(1));
 }
