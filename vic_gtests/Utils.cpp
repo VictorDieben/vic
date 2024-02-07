@@ -747,12 +747,51 @@ TEST(Utils, Decimal)
 {
     using namespace decimal;
 
-    dec1 d1{5}; // 0.5
-    dec1 d2{5}; // 0.5
+    // initialize
 
-    auto sum = vic::decimal::Add<dec0>(d1, d2); // 0.5 + 0.5 should be 1
+    EXPECT_EQ(dec1::FromIntegral(1).val, 10);
+    EXPECT_EQ(dec1::FromIntegral(1).val, 10);
+    EXPECT_EQ(dec2::FromIntegral(1).val, 100);
 
-    EXPECT_EQ(sum.val, 1);
+    EXPECT_EQ(exp0::FromIntegral(1000).val, 1000);
+    EXPECT_EQ(exp1::FromIntegral(1000).val, 100);
+    EXPECT_EQ(exp2::FromIntegral(1000).val, 10);
+    EXPECT_EQ(exp3::FromIntegral(1000).val, 1);
+
+    EXPECT_EQ(dec1::FromFloat(1.).val, 10);
+    EXPECT_EQ(dec2::FromFloat(1.).val, 100);
+    EXPECT_EQ(dec3::FromFloat(1.).val, 1000);
+
+    EXPECT_EQ(exp0::FromFloat(1000.).val, 1000);
+    EXPECT_EQ(exp1::FromFloat(1000.).val, 100);
+    EXPECT_EQ(exp2::FromFloat(1000.).val, 10);
+    EXPECT_EQ(exp3::FromFloat(1000.).val, 1);
+
+    // to
+
+    EXPECT_EQ(To<dec2>(dec1::FromIntegral(1)).val, 100);
+    EXPECT_EQ(To<dec3>(dec1::FromIntegral(1)).val, 1000);
+
+    const dec1 d1{5}; // 0.5
+    const dec1 d2{5}; // 0.5
+
+    EXPECT_EQ(To<dec1>(d1).val, 5);
+    EXPECT_EQ(To<dec2>(d1).val, 50);
+    EXPECT_EQ(To<dec3>(d1).val, 500);
+
+    const auto d3 = dec3::FromIntegral(5);
+
+    EXPECT_EQ(To<dec1>(d3).val, 50);
+    EXPECT_EQ(To<dec2>(d3).val, 500);
+    EXPECT_EQ(To<dec3>(d3).val, 5000);
+
+    // add
+
+    // NOTE: currently flooring, might not be what we want.
+    // we could calculate the sum in the highest common representation, and then convert to the actual representation
+    EXPECT_EQ(vic::decimal::Add<dec0>(d1, d2).val, 0);
+    EXPECT_EQ(vic::decimal::Add<dec1>(d1, d2).val, 10);
+    EXPECT_EQ(vic::decimal::Add<dec2>(d1, d2).val, 100);
 }
 
 TEST(Utils, Try)

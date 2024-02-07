@@ -28,10 +28,13 @@ bool Deadline(TLambda lambda, TDuration timeout, TPollingRate pollingRate)
     const auto startTime = std::chrono::high_resolution_clock::now();
     while(startTime + timeout > std::chrono::high_resolution_clock::now())
     {
-        Try([&]() {
+        try
+        {
             if(lambda())
                 return true;
-        });
+        }
+        catch(...)
+        { }
 
         std::this_thread::sleep_for(pollingRate);
     }

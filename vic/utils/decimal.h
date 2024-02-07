@@ -14,6 +14,56 @@ using ExponentType = int64_t;
 template <typename T, ExponentType base10exponent>
 struct Decimal
 {
+    using ThisType = Decimal<T, base10exponent>;
+
+    explicit Decimal()
+        : val(0)
+    { }
+
+    explicit Decimal(const T decimalValue)
+        : val(decimalValue)
+    { }
+
+    template <typename TIntegral>
+        requires std::integral<TIntegral>
+    static Decimal<T, base10exponent> FromIntegral(const TIntegral value)
+    {
+        if constexpr(base10exponent == 0)
+            return ThisType{value};
+        else if constexpr(base10exponent < 0)
+        {
+            // Multiply input.val by a power of 10
+            static constexpr auto exponent = vic::Power<ExponentType>(10, -base10exponent);
+            return ThisType{value * exponent};
+        }
+        else
+        {
+            // todo: round of input to the nearest
+            static constexpr auto inverseExponent = vic::Power<ExponentType>(10, base10exponent);
+            return ThisType{value / inverseExponent};
+        }
+    }
+
+    template <typename TFloat>
+        requires std::floating_point<TFloat>
+    static Decimal<T, base10exponent> FromFloat(const TFloat value)
+    {
+        if constexpr(base10exponent == 0)
+            return ThisType{static_cast<T>(value)};
+        else if constexpr(base10exponent < 0)
+        {
+            // Multiply input.val by a power of 10
+            static constexpr auto exponent = vic::Power<ExponentType>(10, -base10exponent);
+            return ThisType{static_cast<T>(value * exponent)};
+        }
+        else
+        {
+            // todo: round of input to the nearest
+            static constexpr auto inverseExponent = vic::Power<ExponentType>(10, base10exponent);
+            return ThisType{static_cast<T>(value / inverseExponent)};
+        }
+    }
+
     using DataType = T;
     static constexpr ExponentType exp10 = base10exponent; // note: allowed to be negative
 
@@ -32,9 +82,22 @@ concept ConceptDecimal = requires(T& decimal) {
 
 template <typename TResult, typename TInput>
     requires ConceptDecimal<TResult> && ConceptDecimal<TInput>
-TResult To(TInput input)
+TResult To(const TInput input)
 {
-    return TResult{};
+    if constexpr(TResult::exp10 == TInput::exp10)
+        return input;
+    else if constexpr(TResult::exp10 < TInput::exp10)
+    {
+        const ExponentType p = TInput::exp10 - TResult::exp10;
+        const auto exponent = vic::Power<typename TResult::DataType>(10, p); // todo: constexpr once finished
+        return TResult{input.val * exponent};
+    }
+    else // TResult::exp10 > TInput::exp10
+    {
+        const ExponentType inverseP = TResult::exp10 - TInput::exp10;
+        const auto inverseExponent = vic::Power<typename TResult::DataType>(10, inverseP); // todo: constexpr once finished
+        return TResult{input.val / inverseExponent}; // NOTE: for now just floors, do we want to round?
+    }
 }
 
 template <typename TRes, typename T1, typename T2>
@@ -53,8 +116,6 @@ TRes Add(const T1 first, const T2 second)
     TRes result = To<TRes>(first);
     result.val += To<TRes>(second).val;
 
-    static constexpr ExponentType lowestCommon = std::max(T1::exp10, T2::exp10);
-
     return result;
 }
 
@@ -70,6 +131,17 @@ using dec6 = dec<-6>;
 using dec7 = dec<-7>;
 using dec8 = dec<-8>;
 
+// todo: name,
+using exp0 = dec<0>;
+using exp1 = dec<1>;
+using exp2 = dec<2>;
+using exp3 = dec<3>;
+using exp4 = dec<4>;
+using exp5 = dec<5>;
+using exp6 = dec<6>;
+using exp7 = dec<7>;
+using exp8 = dec<8>;
+
 template <int64_t base10exponent>
 using udec = Decimal<uint64_t, base10exponent>;
 using udec0 = udec<0>;
@@ -81,6 +153,16 @@ using udec5 = udec<-5>;
 using udec6 = udec<-6>;
 using udec7 = udec<-7>;
 using udec8 = udec<-8>;
+
+using uexp0 = udec<0>;
+using uexp1 = udec<1>;
+using uexp2 = udec<2>;
+using uexp3 = udec<3>;
+using uexp4 = udec<4>;
+using uexp5 = udec<5>;
+using uexp6 = udec<6>;
+using uexp7 = udec<7>;
+using uexp8 = udec<8>;
 
 } // namespace decimal
 } // namespace vic
