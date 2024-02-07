@@ -5,6 +5,7 @@
 
 #include "vic/linalg/linalg.h"
 
+using namespace vic;
 using namespace vic::linalg;
 
 TEST(Linalg, Transpose)

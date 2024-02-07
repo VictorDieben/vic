@@ -1,16 +1,14 @@
 #pragma once
 
+#include "to.h"
 #include <cstdint>
 
 namespace vic
 {
 
-namespace decimal
-{
-
 using ExponentType = int64_t;
 
-// todo: make a generic template for any base, not just 10
+// todo: make a generic template for any base, not just powers of 10
 template <typename T, ExponentType base10exponent>
 struct Decimal
 {
@@ -64,6 +62,24 @@ struct Decimal
         }
     }
 
+    template <typename TIntegral = T>
+        requires std::integral<TIntegral>
+    TIntegral ToIntegral() const
+    {
+        if constexpr(base10exponent == 0)
+            return static_cast<TIntegral>(val);
+        else if constexpr(base10exponent < 0)
+        {
+            static constexpr auto exponent = vic::Power<ExponentType>(10, -base10exponent);
+            return static_cast<TIntegral>(val / exponent);
+        }
+        else // base10exponent > 0
+        {
+            static constexpr auto exponent = vic::Power<ExponentType>(10, base10exponent);
+            return static_cast<TIntegral>(val * exponent);
+        }
+    }
+
     using DataType = T;
     static constexpr ExponentType exp10 = base10exponent; // note: allowed to be negative
 
@@ -79,26 +95,6 @@ concept ConceptDecimal = requires(T& decimal) {
         T::Exponent()
     } -> std::integral;
 };
-
-template <typename TResult, typename TInput>
-    requires ConceptDecimal<TResult> && ConceptDecimal<TInput>
-TResult To(const TInput input)
-{
-    if constexpr(TResult::exp10 == TInput::exp10)
-        return input;
-    else if constexpr(TResult::exp10 < TInput::exp10)
-    {
-        const ExponentType p = TInput::exp10 - TResult::exp10;
-        const auto exponent = vic::Power<typename TResult::DataType>(10, p); // todo: constexpr once finished
-        return TResult{input.val * exponent};
-    }
-    else // TResult::exp10 > TInput::exp10
-    {
-        const ExponentType inverseP = TResult::exp10 - TInput::exp10;
-        const auto inverseExponent = vic::Power<typename TResult::DataType>(10, inverseP); // todo: constexpr once finished
-        return TResult{input.val / inverseExponent}; // NOTE: for now just floors, do we want to round?
-    }
-}
 
 template <typename TRes, typename T1, typename T2>
     requires ConceptDecimal<TRes> && ConceptDecimal<T1> && ConceptDecimal<T2>
@@ -164,5 +160,24 @@ using uexp6 = udec<6>;
 using uexp7 = udec<7>;
 using uexp8 = udec<8>;
 
-} // namespace decimal
+template <class TResult, class TInput>
+    requires ConceptDecimal<TResult> && ConceptDecimal<TInput>
+TResult To(const TInput& input)
+{
+    if constexpr(TResult::exp10 == TInput::exp10)
+        return input;
+    else if constexpr(TResult::exp10 < TInput::exp10)
+    {
+        const ExponentType p = TInput::exp10 - TResult::exp10;
+        const auto exponent = vic::Power<typename TResult::DataType>(10, p); // todo: constexpr once finished
+        return TResult{input.val * exponent};
+    }
+    else // TResult::exp10 > TInput::exp10
+    {
+        const ExponentType inverseP = TResult::exp10 - TInput::exp10;
+        const auto inverseExponent = vic::Power<typename TResult::DataType>(10, inverseP); // todo: constexpr once finished
+        return TResult{input.val / inverseExponent}; // NOTE: for now just floors, do we want to round?
+    }
+}
+
 } // namespace vic

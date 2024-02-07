@@ -8,6 +8,7 @@
 
 #include <random>
 
+using namespace vic;
 using namespace vic::linalg;
 
 template <typename TMat>

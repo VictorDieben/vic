@@ -745,11 +745,10 @@ TEST(Utils, ToIntegral)
 
 TEST(Utils, Decimal)
 {
-    using namespace decimal;
 
     // initialize
 
-    EXPECT_EQ(dec1::FromIntegral(1).val, 10);
+    EXPECT_EQ(dec0::FromIntegral(1).val, 1);
     EXPECT_EQ(dec1::FromIntegral(1).val, 10);
     EXPECT_EQ(dec2::FromIntegral(1).val, 100);
 
@@ -766,6 +765,16 @@ TEST(Utils, Decimal)
     EXPECT_EQ(exp1::FromFloat(1000.).val, 100);
     EXPECT_EQ(exp2::FromFloat(1000.).val, 10);
     EXPECT_EQ(exp3::FromFloat(1000.).val, 1);
+
+    // ToUnit
+
+    EXPECT_EQ(dec0::FromIntegral(1).ToIntegral(), 1);
+    EXPECT_EQ(dec1::FromIntegral(1).ToIntegral(), 1);
+    EXPECT_EQ(dec2::FromIntegral(1).ToIntegral(), 1);
+
+    EXPECT_EQ(exp0::FromIntegral(1000).ToIntegral(), 1000);
+    EXPECT_EQ(exp1::FromIntegral(1000).ToIntegral(), 1000);
+    EXPECT_EQ(exp2::FromIntegral(1000).ToIntegral(), 1000);
 
     // to
 
@@ -789,9 +798,9 @@ TEST(Utils, Decimal)
 
     // NOTE: currently flooring, might not be what we want.
     // we could calculate the sum in the highest common representation, and then convert to the actual representation
-    EXPECT_EQ(vic::decimal::Add<dec0>(d1, d2).val, 0);
-    EXPECT_EQ(vic::decimal::Add<dec1>(d1, d2).val, 10);
-    EXPECT_EQ(vic::decimal::Add<dec2>(d1, d2).val, 100);
+    EXPECT_EQ(vic::Add<dec0>(d1, d2).val, 0);
+    EXPECT_EQ(vic::Add<dec1>(d1, d2).val, 10);
+    EXPECT_EQ(vic::Add<dec2>(d1, d2).val, 100);
 }
 
 TEST(Utils, Try)

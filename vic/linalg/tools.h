@@ -6,6 +6,7 @@
 #include "vic/linalg/algorithms/matmul.h"
 
 #include "vic/utils.h"
+#include "vic/utils/to.h"
 
 #include <random>
 
@@ -259,41 +260,6 @@ constexpr auto Subtract(const TMat1& mat1, const TMat2& mat2) // mat1 - mat2
     return Add(mat1, Negative(mat2)); //
 }
 
-template <typename TTarget, typename TSource>
-    requires ConceptMatrix<TSource> && ConceptMatrix<TTarget>
-constexpr auto To(const TSource& mat)
-{
-    // todo: check if user made a specialization
-
-    // todo: sparse
-
-    if constexpr(ConceptIdentity<TTarget>)
-    {
-        return Identity<typename TSource::DataType, typename TSource::ShapeType>{mat.GetRows(), mat.GetColumns()};
-    }
-    else if constexpr(ConceptZeros<TTarget>)
-    {
-        return Zeros<typename TSource::DataType, typename TSource::ShapeType>{mat.GetRows(), mat.GetColumns()};
-    }
-    else if constexpr(ConceptDiagonal<TTarget>)
-    {
-        static_assert(ConceptAssignable<TTarget>);
-        TTarget res{mat.GetRows(), mat.GetColumns()};
-        for(MatrixSize i = 0; i < Min(mat.GetRows(), mat.GetColumns()); ++i)
-            res.At(i, i) = (typename TTarget::DataType)mat.Get(i, i);
-        return res;
-    }
-    else
-    {
-        static_assert(ConceptAssignable<TTarget>);
-        TTarget res{mat.GetRows(), mat.GetColumns()};
-        for(Row i = 0; i < mat.GetRows(); ++i)
-            for(Col j = 0; j < mat.GetColumns(); ++j)
-                res.At(i, j) =(typename TTarget::DataType) mat.Get(i, j);
-        return res;
-    }
-}
-
 template <typename TMat>
 void RandomFill(TMat& mat)
 {
@@ -401,4 +367,41 @@ constexpr Matrix3<T> Rotate(const Vector3<T>& vec, const T angle)
 }
 
 } // namespace linalg
+
+template <typename TResult, typename TInput>
+    requires linalg::ConceptMatrix<TInput> && linalg::ConceptMatrix<TResult>
+constexpr TResult To(const TInput& mat)
+{
+    using namespace linalg;
+    // todo: check if user made a specialization
+
+    // todo: sparse
+
+    if constexpr(ConceptIdentity<TResult>)
+    {
+        return Identity<typename TInput::DataType, typename TInput::ShapeType>{mat.GetRows(), mat.GetColumns()};
+    }
+    else if constexpr(ConceptZeros<TResult>)
+    {
+        return Zeros<typename TInput::DataType, typename TInput::ShapeType>{mat.GetRows(), mat.GetColumns()};
+    }
+    else if constexpr(ConceptDiagonal<TResult>)
+    {
+        static_assert(ConceptAssignable<TResult>);
+        TResult res{mat.GetRows(), mat.GetColumns()};
+        for(MatrixSize i = 0; i < Min(mat.GetRows(), mat.GetColumns()); ++i)
+            res.At(i, i) = (typename TResult::DataType)mat.Get(i, i);
+        return res;
+    }
+    else
+    {
+        static_assert(ConceptAssignable<TResult>);
+        TResult res{mat.GetRows(), mat.GetColumns()};
+        for(Row i = 0; i < mat.GetRows(); ++i)
+            for(Col j = 0; j < mat.GetColumns(); ++j)
+                res.At(i, j) = (typename TResult::DataType)mat.Get(i, j);
+        return res;
+    }
+}
+
 } // namespace vic
