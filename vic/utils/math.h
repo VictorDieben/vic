@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstddef>
+#include <numeric>
 #include <ranges>
 
 namespace vic
@@ -234,6 +235,59 @@ constexpr auto ConstructPartitions()
     constexpr uint64_t numberOfPartitions = NumberOfPermutations<n>();
     return ConstructPartitionsHelper<n, numberOfPartitions>();
 }
+
+//
+//
+//
+
+//template <typename T1, typename T2>
+//constexpr auto GCD_detail(const T1 first, const T2 second)
+//{
+//    // Greatest common denominator of first and second.
+//    // this function performs the actual computation
+//}
+
+//template <typename T1, typename T2>
+//constexpr auto GCD(const T1 first, const T2 second)
+//{
+//    // Greatest common denominator of first and second.
+//
+//    if(second == 0)
+//        return first;
+//    else
+//        return GCD(second, first % second);
+//}
+
+// todo: make a general lookup wrapper?
+template <typename T, std::size_t sizeI, std::size_t sizeJ>
+struct GCDLookup
+{
+    static constexpr std::size_t sTableSizeI = sizeI;
+    static constexpr std::size_t sTableSizeJ = sizeJ;
+
+    using TableType = std::array<std::array<T, sizeJ>, sizeI>;
+    //
+
+    constexpr T GCD(const T first, const T second) const
+    {
+        // if we precomputed up to this point, return lookup
+        if(first < sTableSizeI && second < sTableSizeJ)
+            return sLookuptable[first][second];
+        // else, compute
+        return std::gcd(first, second);
+    }
+
+private:
+    static constexpr TableType ConstructGCDLookupTable()
+    {
+        TableType table{};
+        for(std::size_t i = 0; i < sTableSizeI; ++i)
+            for(std::size_t j = 0; j < sTableSizeJ; ++j)
+                table[i][j] = std::gcd(i, j);
+        return table;
+    }
+    static constexpr TableType sLookuptable = ConstructGCDLookupTable();
+};
 
 } // namespace math
 } // namespace vic

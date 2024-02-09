@@ -6,6 +6,7 @@
 #include "test_base.h"
 
 #include <array>
+#include <numeric>
 #include <random>
 
 using namespace vic;
@@ -60,4 +61,23 @@ TEST(Math, Partition)
         std::cout << permutation << std::endl;
 
     std::cout << "permutations(8): " << permutations_8.size() << std::endl;
+}
+
+TEST(Math, GCD_lookup)
+{
+    // Greatest common denominator
+    // should be constexpr map lookup up to a point
+
+    EXPECT_EQ(std::gcd(1, 1), 1);
+
+    EXPECT_EQ(std::gcd(100, 10), 10);
+    EXPECT_EQ(std::gcd(10, 100), 10);
+
+    EXPECT_EQ(std::gcd(3, 9), 3);
+    EXPECT_EQ(std::gcd(9, 3), 3);
+
+    GCDLookup<uint64_t, 50, 50> lookup;
+
+    EXPECT_EQ(lookup.GCD(9, 3), 3);
+    EXPECT_EQ(lookup.GCD(3, 9), 3);
 }
