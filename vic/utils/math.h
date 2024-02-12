@@ -289,5 +289,21 @@ private:
     static constexpr TableType sLookuptable = ConstructGCDLookupTable();
 };
 
+template <typename TLambda>
+struct LookupTable
+{
+public:
+    // using InputType =
+    // uisng ResultType = std::result_of
+    constexpr LookupTable(TLambda lambda)
+        : mLambda(lambda)
+    {
+        //
+    }
+
+private:
+    TLambda mLambda;
+};
+
 } // namespace math
 } // namespace vic

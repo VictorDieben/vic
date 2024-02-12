@@ -5,6 +5,7 @@
 #include "vic/utils.h"
 #include "vic/utils/algorithms.h"
 #include "vic/utils/counted.h"
+#include "vic/utils/crc32.h"
 #include "vic/utils/decimal.h"
 #include "vic/utils/heap.h"
 #include "vic/utils/indexing.h"
@@ -811,4 +812,19 @@ TEST(Utils, Try)
 TEST(Utils, Deadline)
 {
     vic::Deadline([]() { return true; }, std::chrono::seconds(1));
+}
+
+TEST(Utils, CRC32)
+{
+    const char* trivial = "";
+    EXPECT_EQ(crc32(trivial, strlen(trivial)), 0x00000000);
+
+    const char* text1 = "The quick brown fox jumps over the lazy dog";
+    EXPECT_EQ(crc32(text1, strlen(text1)), 0x414FA339);
+
+    const char* text2 = "various CRC algorithms input data";
+    EXPECT_EQ(crc32(text2, strlen(text2)), 0x9BD366AE);
+
+    const char* text3 = "Test vector from febooti.com";
+    EXPECT_EQ(crc32(text3, strlen(text3)), 0x0C877F61);
 }

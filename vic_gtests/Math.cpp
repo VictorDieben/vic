@@ -81,3 +81,8 @@ TEST(Math, GCD_lookup)
     EXPECT_EQ(lookup.GCD(9, 3), 3);
     EXPECT_EQ(lookup.GCD(3, 9), 3);
 }
+
+TEST(Math, LookupTable)
+{
+    LookupTable table([](const double x) -> double { return x * x; });
+}
