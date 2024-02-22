@@ -44,4 +44,7 @@ concept ConceptSameKey = ConceptMap<TMap1> && ConceptMap<TMap2> && requires(TMap
     std::is_same_v<typename TMap1::key_type, typename TMap2::key_type>; //
 };
 
+template <class T>
+concept Numeric = std::is_arithmetic_v<std::decay_t<T>>; // todo: replace with arithmetic type once in standard
+
 } // namespace vic

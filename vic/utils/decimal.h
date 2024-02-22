@@ -92,7 +92,8 @@ template <typename T>
 concept ConceptDecimal = requires(T& decimal) {
     typename T::DataType; //
     {
-        T::Exponent()
+        decltype(T::Exponent())(T::Exponent())
+
     } -> std::integral;
 };
 
@@ -114,6 +115,13 @@ TRes Add(const T1 first, const T2 second)
 
     return result;
 }
+
+//template <typename TDecimal>
+//    requires ConceptDecimal<TDecimal>
+//TDecimal Add(const TDecimal first, const TDecimal second)
+//{
+//    return Add<TDecimal>(first, second);
+//}
 
 template <int64_t base10exponent>
 using dec = Decimal<int64_t, base10exponent>;

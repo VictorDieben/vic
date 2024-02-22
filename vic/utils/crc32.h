@@ -15,7 +15,7 @@ uint32_t crc32(const char* data, const uint64_t length)
 
     for(uint64_t i = 0; i < length; i++)
     {
-        tmp ^= (unsigned char)data[i]; // must be zero extended
+        tmp ^= (unsigned char)data[i]; // todo: avoid zero extended requirement using tmp variable?
         for(uint64_t bit = 0; bit < 8; bit++)
             if(tmp & 0x01)
                 tmp = (tmp >> 1) ^ polynomial;

@@ -13,6 +13,7 @@
 #include "vic/utils/observable.h"
 #include "vic/utils/permutations.h"
 #include "vic/utils/ranges.h"
+#include "vic/utils/rational.h"
 #include "vic/utils/serialize.h"
 #include "vic/utils/statemachine.h"
 #include "vic/utils/string.h"
@@ -827,4 +828,55 @@ TEST(Utils, CRC32)
 
     const char* text3 = "Test vector from febooti.com";
     EXPECT_EQ(crc32(text3, strlen(text3)), 0x0C877F61);
+}
+
+TEST(Utils, Rational)
+{
+    using Milli = Rational<int, 1, 1000>;
+    static_assert(ConceptRational<Milli>);
+
+    // simplify type
+    static_assert(std::is_same_v<rational_simplify<Rational<int, 2, 2000>>::type, Milli>);
+    static_assert(std::is_same_v<rational_simplify<Rational<int, 13, 13>>::type, Rational<int, 1, 1>>);
+    static_assert(std::is_same_v<rational_simplify<Rational<int, 2000, 20>>::type, Rational<int, 100, 1>>);
+    static_assert(std::is_same_v<rational_simplify<Rational<int, 5, 500>>::type, Rational<int, 1, 100>>);
+
+    static_assert(std::is_same_v<rational_addition_t<Rational<int, 1, 2>, //
+                                                     Rational<int, 1, 2>>, //
+                                 Rational<int, 1, 2>>);
+
+    // empty construction
+    Milli empty;
+    Milli empty2{};
+
+    // construct a rational from normal value
+    Milli m1(1000);
+    Milli m2{2000};
+    Milli m3 = 3000;
+
+    EXPECT_EQ(m1.val, 1000);
+    EXPECT_EQ(m2.val, 2000);
+    EXPECT_EQ(m3.val, 3000);
+
+    // check conversion to int
+    EXPECT_EQ((int)m1, 1000);
+    EXPECT_EQ((int)m2, 2000);
+    EXPECT_EQ((int)m3, 3000);
+
+    // test conversion to bool
+    EXPECT_FALSE((bool)Milli{});
+    EXPECT_TRUE((bool)Milli{1});
+
+    // assigning value of one to the other
+    m2 = m1;
+    EXPECT_EQ(m2.val, 1000);
+    m3 = 1000;
+    EXPECT_EQ(m3.val, 1000);
+
+    // addition
+    const auto add1 = vic::Add(Milli(1000), Milli(1000));
+    EXPECT_EQ((int)add1, 2000);
+
+    const Milli add2 = Milli(1000) + Milli(1000);
+    EXPECT_EQ((int)add2, 2000);
 }

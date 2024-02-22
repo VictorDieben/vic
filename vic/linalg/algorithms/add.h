@@ -128,11 +128,10 @@ constexpr auto AddMatrix(const TMat1& mat1, const TMat2& mat2)
 }
 
 template <typename TMat1, typename TMat2>
+    requires(ConceptMatrix<TMat1> || ConceptMatrix<TMat2>)
 constexpr auto Add(const TMat1& mat1, const TMat2& mat2)
 {
-    if constexpr(!ConceptMatrix<TMat1> && !ConceptMatrix<TMat2>)
-        return mat1 + mat2;
-    else if constexpr(ConceptMatrix<TMat1> && !ConceptMatrix<TMat2>)
+    if constexpr(ConceptMatrix<TMat1> && !ConceptMatrix<TMat2>)
         return AddConstant(mat1, mat2);
     else if constexpr(!ConceptMatrix<TMat1> && ConceptMatrix<TMat2>)
         return AddConstant(mat2, mat1);
@@ -143,7 +142,7 @@ constexpr auto Add(const TMat1& mat1, const TMat2& mat2)
 template <typename TMat1, typename TMat2, typename... Types>
 constexpr auto Add(const TMat1& mat1, const TMat2& mat2, const Types... others)
 {
-    return Add(Add(mat1, mat2), others...);
+    return ::vic::linalg::Add(::vic::linalg::Add(mat1, mat2), others...);
 }
 
 } // namespace linalg
