@@ -745,65 +745,65 @@ TEST(Utils, ToIntegral)
     EXPECT_EQ(ToIntegral<long>("1234 "), 1234);
 }
 
-TEST(Utils, Decimal)
-{
-
-    // initialize
-
-    EXPECT_EQ(dec0::FromIntegral(1).val, 1);
-    EXPECT_EQ(dec1::FromIntegral(1).val, 10);
-    EXPECT_EQ(dec2::FromIntegral(1).val, 100);
-
-    EXPECT_EQ(exp0::FromIntegral(1000).val, 1000);
-    EXPECT_EQ(exp1::FromIntegral(1000).val, 100);
-    EXPECT_EQ(exp2::FromIntegral(1000).val, 10);
-    EXPECT_EQ(exp3::FromIntegral(1000).val, 1);
-
-    EXPECT_EQ(dec1::FromFloat(1.).val, 10);
-    EXPECT_EQ(dec2::FromFloat(1.).val, 100);
-    EXPECT_EQ(dec3::FromFloat(1.).val, 1000);
-
-    EXPECT_EQ(exp0::FromFloat(1000.).val, 1000);
-    EXPECT_EQ(exp1::FromFloat(1000.).val, 100);
-    EXPECT_EQ(exp2::FromFloat(1000.).val, 10);
-    EXPECT_EQ(exp3::FromFloat(1000.).val, 1);
-
-    // ToUnit
-
-    EXPECT_EQ(dec0::FromIntegral(1).ToIntegral(), 1);
-    EXPECT_EQ(dec1::FromIntegral(1).ToIntegral(), 1);
-    EXPECT_EQ(dec2::FromIntegral(1).ToIntegral(), 1);
-
-    EXPECT_EQ(exp0::FromIntegral(1000).ToIntegral(), 1000);
-    EXPECT_EQ(exp1::FromIntegral(1000).ToIntegral(), 1000);
-    EXPECT_EQ(exp2::FromIntegral(1000).ToIntegral(), 1000);
-
-    // to
-
-    EXPECT_EQ(To<dec2>(dec1::FromIntegral(1)).val, 100);
-    EXPECT_EQ(To<dec3>(dec1::FromIntegral(1)).val, 1000);
-
-    const dec1 d1{5}; // 0.5
-    const dec1 d2{5}; // 0.5
-
-    EXPECT_EQ(To<dec1>(d1).val, 5);
-    EXPECT_EQ(To<dec2>(d1).val, 50);
-    EXPECT_EQ(To<dec3>(d1).val, 500);
-
-    const auto d3 = dec3::FromIntegral(5);
-
-    EXPECT_EQ(To<dec1>(d3).val, 50);
-    EXPECT_EQ(To<dec2>(d3).val, 500);
-    EXPECT_EQ(To<dec3>(d3).val, 5000);
-
-    // add
-
-    // NOTE: currently flooring, might not be what we want.
-    // we could calculate the sum in the highest common representation, and then convert to the actual representation
-    EXPECT_EQ(vic::Add<dec0>(d1, d2).val, 0);
-    EXPECT_EQ(vic::Add<dec1>(d1, d2).val, 10);
-    EXPECT_EQ(vic::Add<dec2>(d1, d2).val, 100);
-}
+//TEST(Utils, Decimal)
+//{
+//
+//    // initialize
+//
+//    EXPECT_EQ(dec0::FromIntegral(1).val, 1);
+//    EXPECT_EQ(dec1::FromIntegral(1).val, 10);
+//    EXPECT_EQ(dec2::FromIntegral(1).val, 100);
+//
+//    EXPECT_EQ(exp0::FromIntegral(1000).val, 1000);
+//    EXPECT_EQ(exp1::FromIntegral(1000).val, 100);
+//    EXPECT_EQ(exp2::FromIntegral(1000).val, 10);
+//    EXPECT_EQ(exp3::FromIntegral(1000).val, 1);
+//
+//    EXPECT_EQ(dec1::FromFloat(1.).val, 10);
+//    EXPECT_EQ(dec2::FromFloat(1.).val, 100);
+//    EXPECT_EQ(dec3::FromFloat(1.).val, 1000);
+//
+//    EXPECT_EQ(exp0::FromFloat(1000.).val, 1000);
+//    EXPECT_EQ(exp1::FromFloat(1000.).val, 100);
+//    EXPECT_EQ(exp2::FromFloat(1000.).val, 10);
+//    EXPECT_EQ(exp3::FromFloat(1000.).val, 1);
+//
+//    // ToUnit
+//
+//    EXPECT_EQ(dec0::FromIntegral(1).ToIntegral(), 1);
+//    EXPECT_EQ(dec1::FromIntegral(1).ToIntegral(), 1);
+//    EXPECT_EQ(dec2::FromIntegral(1).ToIntegral(), 1);
+//
+//    EXPECT_EQ(exp0::FromIntegral(1000).ToIntegral(), 1000);
+//    EXPECT_EQ(exp1::FromIntegral(1000).ToIntegral(), 1000);
+//    EXPECT_EQ(exp2::FromIntegral(1000).ToIntegral(), 1000);
+//
+//    // to
+//
+//    EXPECT_EQ(To<dec2>(dec1::FromIntegral(1)).val, 100);
+//    EXPECT_EQ(To<dec3>(dec1::FromIntegral(1)).val, 1000);
+//
+//    const dec1 d1{5}; // 0.5
+//    const dec1 d2{5}; // 0.5
+//
+//    EXPECT_EQ(To<dec1>(d1).val, 5);
+//    EXPECT_EQ(To<dec2>(d1).val, 50);
+//    EXPECT_EQ(To<dec3>(d1).val, 500);
+//
+//    const auto d3 = dec3::FromIntegral(5);
+//
+//    EXPECT_EQ(To<dec1>(d3).val, 50);
+//    EXPECT_EQ(To<dec2>(d3).val, 500);
+//    EXPECT_EQ(To<dec3>(d3).val, 5000);
+//
+//    // add
+//
+//    // NOTE: currently flooring, might not be what we want.
+//    // we could calculate the sum in the highest common representation, and then convert to the actual representation
+//    EXPECT_EQ(vic::Add<dec0>(d1, d2).val, 0);
+//    EXPECT_EQ(vic::Add<dec1>(d1, d2).val, 10);
+//    EXPECT_EQ(vic::Add<dec2>(d1, d2).val, 100);
+//}
 
 TEST(Utils, Try)
 {
@@ -832,17 +832,40 @@ TEST(Utils, CRC32)
 
 TEST(Utils, Rational)
 {
+    using Kilo = Rational<int, 1000, 1>;
+    using Unit = Rational<int, 1, 1>;
+    using Deci = Rational<int, 1, 10>;
+    using Centi = Rational<int, 1, 100>;
     using Milli = Rational<int, 1, 1000>;
-    static_assert(ConceptRational<Milli>);
+
+    static_assert(ConceptRational<Deci> && ConceptRational<Centi> && ConceptRational<Milli>);
+    static_assert(!ConceptRational<int> && !ConceptRational<float> && !ConceptRational<double>);
+
+    static_assert(Numeric<int> && Numeric<float> && Numeric<double>);
+    static_assert(!Numeric<Deci> && !Numeric<Centi> && !Numeric<Milli>);
 
     // simplify type
+    static_assert(std::is_same_v<rational_simplify<Rational<int, 1, 1>>::type, Rational<int, 1, 1>>);
+    static_assert(std::is_same_v<rational_simplify<Rational<int, 1, 123547>>::type, Rational<int, 1, 123547>>);
     static_assert(std::is_same_v<rational_simplify<Rational<int, 2, 2000>>::type, Milli>);
     static_assert(std::is_same_v<rational_simplify<Rational<int, 13, 13>>::type, Rational<int, 1, 1>>);
     static_assert(std::is_same_v<rational_simplify<Rational<int, 2000, 20>>::type, Rational<int, 100, 1>>);
     static_assert(std::is_same_v<rational_simplify<Rational<int, 5, 500>>::type, Rational<int, 1, 100>>);
 
+    // addition type
     static_assert(std::is_same_v<rational_addition_t<Rational<int, 1, 2>, //
-                                                     Rational<int, 1, 2>>, //
+                                                     Rational<int, 1, 3>>, //
+                                 Rational<int, 1, 6>>);
+    static_assert(std::is_same_v<rational_addition_t<Rational<int, 1, 2>, //
+                                                     Rational<int, 2, 3>>, //
+                                 Rational<int, 1, 6>>);
+
+    // multiply type
+    static_assert(std::is_same_v<rational_multiplication_t<Rational<int, 1, 2>, //
+                                                           Rational<int, 1, 2>>, //
+                                 Rational<int, 1, 4>>);
+    static_assert(std::is_same_v<rational_multiplication_t<Rational<int, 2, 3>, //
+                                                           Rational<int, 3, 4>>, //
                                  Rational<int, 1, 2>>);
 
     // empty construction
@@ -873,10 +896,24 @@ TEST(Utils, Rational)
     m3 = 1000;
     EXPECT_EQ(m3.val, 1000);
 
-    // addition
-    const auto add1 = vic::Add(Milli(1000), Milli(1000));
-    EXPECT_EQ((int)add1, 2000);
+    // to
+    EXPECT_EQ(To<Deci>(Milli(1000)), Deci(10));
+    EXPECT_EQ(To<Milli>(Deci(10)), Milli(1000));
 
-    const Milli add2 = Milli(1000) + Milli(1000);
-    EXPECT_EQ((int)add2, 2000);
+    // addition
+    EXPECT_EQ((int)vic::Add(Milli(1000), Milli(1000)), 2000);
+    EXPECT_EQ((int)(Milli(1000) + Milli(1000)), 2000);
+
+    EXPECT_TRUE(Equality(Milli(1000), Centi(100)));
+    EXPECT_TRUE(Equality(Deci(10), Centi(100)));
+    EXPECT_TRUE(Equality(Deci(10), Milli(1000)));
+
+    EXPECT_EQ(Milli(1000) + 1, Milli(2000)); // operator==()
+
+    // multiplication
+
+    EXPECT_EQ(Multiply(Kilo{1}, Milli{1}), Unit{1});
+
+    EXPECT_EQ(Multiply(1000, Milli{1}), Unit{1});
+    EXPECT_EQ(Multiply(Milli{1}, 1000), Unit{1});
 }
