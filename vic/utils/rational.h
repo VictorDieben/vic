@@ -31,18 +31,6 @@ struct Rational;
 template <typename T1, typename T2>
 constexpr auto Add(const T1 first, const T2 second);
 
-template <typename T1, typename T2>
-    requires ConceptRational<T1> && ConceptRational<T2>
-constexpr bool Equality(const T1 first, const T2 second)
-{
-    // x * (a/b) == y * (c/d)
-    // x * (ad/bd) == y * (cb/bd)
-    // x * ad == y * cb
-
-    // todo: this might lead to overflow problems, but there is no good way to solve it otherwise.
-    return first.val * (T1::Num * T2::Denom) == second.val * (T2::Num * T1::Denom);
-}
-
 template <typename T>
     requires ConceptRational<T>
 struct rational_simplify
@@ -92,11 +80,41 @@ struct rational_multiplication
 
 template <typename T1, typename T2>
     requires ConceptRational<T1> && ConceptRational<T2>
+struct rational_division
+{
+    // x*(a/b) / y*(c/d)  == (x ad) / (y bc) == (x/y) * (ad/bc)
+
+    using data_type = decltype(std::declval<typename T1::DataType>() / std::declval<typename T2::DataType>());
+
+    using S1 = rational_simplify_t<T1>;
+    using S2 = rational_simplify_t<T2>;
+
+    using type = rational_simplify_t<Rational<data_type, S1::Num * S2::Denom, S1::Denom * S2::Num>>;
+};
+
+template <typename T1, typename T2>
+    requires ConceptRational<T1> && ConceptRational<T2>
 using rational_addition_t = rational_addition<T1, T2>::type;
 
 template <typename T1, typename T2>
     requires ConceptRational<T1> && ConceptRational<T2>
+using rational_subtraction = rational_addition<T1, T2>; // todo: different type? i don't think it is needed
+
+template <typename T1, typename T2>
+    requires ConceptRational<T1> && ConceptRational<T2>
+using rational_subtraction_t = rational_subtraction<T1, T2>::type;
+
+template <typename T1, typename T2>
+    requires ConceptRational<T1> && ConceptRational<T2>
 using rational_multiplication_t = rational_multiplication<T1, T2>::type;
+
+//template <typename T1, typename T2>
+//    requires ConceptRational<T1> && ConceptRational<T2>
+//using rational_division = rational_multiplication<T1, T2>; // todo: new type
+
+template <typename T1, typename T2>
+    requires ConceptRational<T1> && ConceptRational<T2>
+using rational_division_t = rational_division<T1, T2>::type;
 
 //
 //
@@ -151,7 +169,97 @@ constexpr auto Add(const T1 first, const T2 second)
     }
     else if constexpr(Numeric<T1> && ConceptRational<T2>)
     {
-        return Add(second, Rational<T1, 1, 1>{first});
+        return Add(Rational<T1, 1, 1>{first}, second);
+    }
+    else
+    {
+        return 0; // static assert? Should not be reachable
+    }
+}
+
+template <typename T1, typename T2>
+    requires(ConceptRational<T1> && ConceptRational<T2>) || //
+            (ConceptRational<T1> && Numeric<T2>) || //
+            (Numeric<T1> && ConceptRational<T2>)
+constexpr auto Subtract(const T1 first, const T2 second) // first - second
+{
+    if constexpr(ConceptRational<T1> && ConceptRational<T2>)
+    {
+        if constexpr(std::is_same_v<T1, T2>)
+            return T1(first.val - second.val);
+        else
+        {
+            // x * (a/b) - y * (c/d)
+            using SubtractType = rational_subtraction_t<T1, T2>;
+            const SubtractType t1 = To<SubtractType>(first);
+            const SubtractType t2 = To<SubtractType>(second);
+            return SubtractType{t1.val - t2.val};
+        }
+    }
+    else if constexpr(ConceptRational<T1> && Numeric<T2>)
+    {
+        return Subtract(first, Rational<T2, 1, 1>{second});
+    }
+    else if constexpr(Numeric<T1> && ConceptRational<T2>)
+    {
+        return Subtract(Rational<T1, 1, 1>{first}, second);
+    }
+    else
+    {
+        return 0; // static assert? Should not be reachable
+    }
+}
+
+template <typename T1, typename T2>
+    requires(ConceptRational<T1> && ConceptRational<T2>) || //
+            (ConceptRational<T1> && Numeric<T2>) || //
+            (Numeric<T1> && ConceptRational<T2>)
+constexpr auto Devide(const T1 first, const T2 second) // first / second
+{
+    if constexpr(ConceptRational<T1> && ConceptRational<T2>)
+    {
+        // x * (a/b) - y * (c/d)
+        using DivisionType = rational_division_t<T1, T2>;
+        const DivisionType t1 = To<DivisionType>(first);
+        const DivisionType t2 = To<DivisionType>(second);
+        return DivisionType{t1.val / t2.val};
+    }
+    else if constexpr(ConceptRational<T1> && Numeric<T2>)
+    {
+        return Devide(first, Rational<T2, 1, 1>{second});
+    }
+    else if constexpr(Numeric<T1> && ConceptRational<T2>)
+    {
+        return Devide(Rational<T1, 1, 1>{first}, second);
+    }
+    else
+    {
+        return 0; // static assert? Should not be reachable
+    }
+}
+
+template <typename T1, typename T2>
+    requires(ConceptRational<T1> && ConceptRational<T2>) || //
+            (ConceptRational<T1> && Numeric<T2>) || //
+            (Numeric<T1> && ConceptRational<T2>)
+constexpr std::strong_ordering Spaceship(const T1 first, const T2 second) // first <=> second
+{
+    if constexpr(ConceptRational<T1> && ConceptRational<T2>)
+    {
+        // x * (a/b) <=> y * (c/d)
+        // x * ad <=> y * bc
+
+        constexpr Numerator ad = (T1::Num * T2::Denom);
+        constexpr Numerator bc = (T1::Denom * T2::Num);
+        return first.val * ad <=> second.val * bc;
+    }
+    else if constexpr(ConceptRational<T1> && Numeric<T2>)
+    {
+        return LessThan(first, Rational<T2, 1, 1>{second});
+    }
+    else if constexpr(Numeric<T1> && ConceptRational<T2>)
+    {
+        return LessThan(Rational<T1, 1, 1>{first}, second);
     }
     else
     {
@@ -170,8 +278,16 @@ TResult To(const TInput input)
     // x*(a/b) => y*(c/d)
     // x* (ad/bc) => y
 
+    // the fraction ad/bc can be computed at compile time,
+    // but we need to do some extra work to avoid overflow as much as possible
+    static constexpr auto ad = TInput::Num * TResult::Denom;
+    static constexpr auto bc = TInput::Denom * TResult::Num;
+    static constexpr auto gcd = std::gcd(ad, bc);
+    static constexpr auto _ad = ad / gcd;
+    static constexpr auto _bc = bc / gcd;
+
     // todo: this will create roundoff errors, think about how to properly do this
-    return TResult{(input.val * TInput::Num * TResult::Denom) / (TInput::Denom * TResult::Num)};
+    return TResult{(input.val * _ad) / _bc};
 }
 
 //template <typename TRational>
@@ -219,15 +335,59 @@ struct Rational
     {
         return ::vic::Add(*this, other);
     }
+    template <typename TOther>
+        requires vic::Numeric<TOther> || ConceptRational<TOther>
+    auto operator-(const TOther other)
+    {
+        return ::vic::Subtract(*this, other);
+    }
+    template <typename TOther>
+        requires vic::Numeric<TOther> || ConceptRational<TOther>
+    auto operator*(const TOther other)
+    {
+        return ::vic::Multiply(*this, other);
+    }
+    template <typename TOther>
+        requires vic::Numeric<TOther> || ConceptRational<TOther>
+    auto operator/(const TOther other)
+    {
+        return ::vic::Devide(*this, other);
+    }
 
     explicit operator T() const { return val; }
     explicit operator bool() const { return val; }
 
     template <typename TOther>
         requires ConceptRational<TOther>
+    std::strong_ordering operator<=>(const TOther& other) const
+    {
+        return Spaceship(*this, other);
+    }
+
+    // todo: how can i automatically generate all options?
+    template <typename TOther>
+        requires ConceptRational<TOther>
     bool operator==(const TOther other) const
     {
-        return Equality(*this, other);
+        return Spaceship(*this, other) == std::strong_ordering::equal;
+    }
+    template <typename TOther>
+        requires ConceptRational<TOther>
+    bool operator<(const TOther other) const
+    {
+        return Spaceship(*this, other) == std::strong_ordering::less;
+    }
+    template <typename TOther>
+        requires ConceptRational<TOther>
+    bool operator>(const TOther other) const
+    {
+        return Spaceship(*this, other) == std::strong_ordering::greater;
+    }
+    template <typename TOther>
+        requires ConceptRational<TOther>
+    bool operator!=(const TOther other) const
+    {
+        return Spaceship(*this, other) != std::strong_ordering::equal;
     }
 
     T val{};

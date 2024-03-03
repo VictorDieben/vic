@@ -904,16 +904,25 @@ TEST(Utils, Rational)
     EXPECT_EQ((int)vic::Add(Milli(1000), Milli(1000)), 2000);
     EXPECT_EQ((int)(Milli(1000) + Milli(1000)), 2000);
 
-    EXPECT_TRUE(Equality(Milli(1000), Centi(100)));
-    EXPECT_TRUE(Equality(Deci(10), Centi(100)));
-    EXPECT_TRUE(Equality(Deci(10), Milli(1000)));
+    EXPECT_EQ(Milli(1000) + 1, Milli(2000));
 
-    EXPECT_EQ(Milli(1000) + 1, Milli(2000)); // operator==()
+    // subtract
+    EXPECT_EQ((int)vic::Subtract(Milli(1000), Milli(1000)), 0);
 
     // multiplication
-
     EXPECT_EQ(Multiply(Kilo{1}, Milli{1}), Unit{1});
-
     EXPECT_EQ(Multiply(1000, Milli{1}), Unit{1});
     EXPECT_EQ(Multiply(Milli{1}, 1000), Unit{1});
+
+    // division
+    EXPECT_EQ(Devide(Kilo{1}, Milli{1}), Unit{1});
+    EXPECT_EQ(Devide(1000, Milli{1}), Unit{1});
+    EXPECT_EQ(Devide(Milli{1}, 1000), Unit{1});
+
+    // equality
+    EXPECT_EQ(Milli(1000), Centi(100));
+    EXPECT_EQ(Deci(10), Centi(100));
+    EXPECT_EQ(Deci(10), Milli(1000));
+
+    // less than
 }
