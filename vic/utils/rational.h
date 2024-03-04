@@ -108,10 +108,6 @@ template <typename T1, typename T2>
     requires ConceptRational<T1> && ConceptRational<T2>
 using rational_multiplication_t = rational_multiplication<T1, T2>::type;
 
-//template <typename T1, typename T2>
-//    requires ConceptRational<T1> && ConceptRational<T2>
-//using rational_division = rational_multiplication<T1, T2>; // todo: new type
-
 template <typename T1, typename T2>
     requires ConceptRational<T1> && ConceptRational<T2>
 using rational_division_t = rational_division<T1, T2>::type;
@@ -218,11 +214,19 @@ constexpr auto Devide(const T1 first, const T2 second) // first / second
 {
     if constexpr(ConceptRational<T1> && ConceptRational<T2>)
     {
-        // x * (a/b) - y * (c/d)
+        // x*(a/b) / y*(c/d)  == (x ad) / (y bc) == (x/y) * (ad/bc)
+
         using DivisionType = rational_division_t<T1, T2>;
         const DivisionType t1 = To<DivisionType>(first);
         const DivisionType t2 = To<DivisionType>(second);
-        return DivisionType{t1.val / t2.val};
+
+        //const auto ad = T1::Num * T2::Denom;
+        //const auto bc = T1::Denom * T2::Num;
+        // const auto newval = (first.val * ad) / (second.val * bc);
+        //return DivisionType{(newval * bc) / ad};
+
+        const auto newval = t1.val / t2.val;
+        return DivisionType{newval};
     }
     else if constexpr(ConceptRational<T1> && Numeric<T2>)
     {
@@ -391,6 +395,52 @@ struct Rational
     }
 
     T val{};
+};
+
+//
+//
+//
+
+template <typename T>
+using Giga = Rational<T, 1'000'000'000, 1>;
+
+template <typename T>
+using Mega = Rational<T, 1'000'000, 1>;
+
+template <typename T>
+using Kilo = Rational<T, 1'000, 1>;
+
+template <typename T>
+using Unit = Rational<T, 1, 1>; // todo: SI has no name for this ratio
+
+template <typename T>
+using Deci = Rational<T, 1, 10>;
+
+template <typename T>
+using Centi = Rational<T, 1, 100>;
+
+template <typename T>
+using Milli = Rational<T, 1, 1000>;
+
+template <typename T>
+using Micro = Rational<T, 1, 1'000'000>;
+
+// todo: definitions for quarter etc.
+
+//
+//
+//
+
+template <typename T>
+concept ConceptDecimal = ConceptRational<T> && requires(T& rational) {
+    typename T::DataType; //
+    {
+        decltype(T::Num)(T::Num)
+    } -> std::integral;
+    {
+        decltype(T::Denom)(T::Denom)
+    } -> std::integral;
+    // todo: check that numerator and denominator are powers of 10
 };
 
 } // namespace vic

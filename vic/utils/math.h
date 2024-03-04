@@ -37,24 +37,24 @@ struct factorial_info<double>
 namespace detail
 {
 
-template <typename T>
-constexpr T pow_recursive(const T x, std::size_t n) noexcept
-{
-    if(n == 0)
-        return T(1); // todo: move outside of recursive function
-    else if(n == 1)
-        return x;
-    else if(n % 2 == 0)
-    {
-        const T tmp = exp_recursive<T, n / 2>(x);
-        return tmp * tmp;
-    }
-    else
-    {
-        const T tmp = exp_recursive<T, n - 1>(x);
-        return x * tmp;
-    }
-}
+//template <typename T>
+//constexpr T pow_recursive(const T x, std::size_t n) noexcept
+//{
+//    if(n == 0)
+//        return T(1); // todo: move outside of recursive function
+//    else if(n == 1)
+//        return x;
+//    else if(n % 2 == 0)
+//    {
+//        const T tmp = exp_recursive<T, n / 2>(x);
+//        return tmp * tmp;
+//    }
+//    else
+//    {
+//        const T tmp = exp_recursive<T, n - 1>(x);
+//        return x * tmp;
+//    }
+//}
 
 template <typename T, std::size_t n, double f>
 inline constexpr T exp_recursive(const T x, const T p) noexcept
@@ -79,11 +79,11 @@ inline constexpr T exp_recursive(const T x, const T p) noexcept
 
 } // namespace detail
 
-template <typename T>
-constexpr T Pow(const T x, std::size_t n) noexcept
-{
-    return detail::pow_recursive<T>(x, n);
-}
+//template <typename T>
+//constexpr T Pow(const T x, std::size_t n) noexcept
+//{
+//    return detail::pow_recursive<T>(x, n);
+//}
 
 template <typename T>
 constexpr T exp(const T x) noexcept
@@ -97,6 +97,39 @@ template <typename T>
 int sign(T val)
 {
     return (T(0) < val) - (val < T(0));
+}
+
+// Log10 for integers, rounding down
+template <typename T>
+    requires std::integral<T>
+constexpr uint64_t Log10(const T val)
+{
+    // integer version can only ever return 0 as the lowest value
+    T exp10 = 10;
+    for(uint64_t i = 0; i < 20; i++)
+    {
+        if(val < exp10)
+            return i;
+        exp10 *= 10;
+    }
+    return 20; // max possible value for uint64_t
+}
+
+template <typename T>
+    requires std::integral<T>
+constexpr bool IsPowerOf10(const T val)
+{
+    uint64_t exp10 = 1;
+    for(uint64_t i = 0; i < 21; i++)
+    {
+        if(val == exp10)
+            return true;
+        else if(val < exp10)
+            return false;
+        else // val > exp10
+            exp10 *= 10;
+    }
+    return false;
 }
 
 //

@@ -86,3 +86,32 @@ TEST(Math, LookupTable)
 {
     LookupTable table([](const double x) -> double { return x * x; });
 }
+
+TEST(Math, Log10)
+{
+    EXPECT_EQ(vic::math::Log10(0), 0);
+    EXPECT_EQ(vic::math::Log10(1), 0);
+
+    EXPECT_EQ(vic::math::Log10(9), 0);
+    EXPECT_EQ(vic::math::Log10(10), 1);
+
+    EXPECT_EQ(vic::math::Log10(99), 1);
+    EXPECT_EQ(vic::math::Log10(100), 2);
+
+    EXPECT_EQ(vic::math::Log10(999), 2);
+    EXPECT_EQ(vic::math::Log10(1000), 3);
+
+    EXPECT_EQ(vic::math::Log10(9999), 3);
+    EXPECT_EQ(vic::math::Log10(10000), 4);
+
+    EXPECT_FALSE(IsPowerOf10(0));
+    EXPECT_TRUE(IsPowerOf10(1));
+    EXPECT_TRUE(IsPowerOf10(10));
+    EXPECT_TRUE(IsPowerOf10(100));
+    EXPECT_TRUE(IsPowerOf10(1000));
+    EXPECT_TRUE(IsPowerOf10(10000));
+    EXPECT_TRUE(IsPowerOf10(100000));
+
+    EXPECT_FALSE(IsPowerOf10(100000 - 1));
+    EXPECT_FALSE(IsPowerOf10(100000 + 1));
+}

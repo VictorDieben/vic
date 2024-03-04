@@ -837,6 +837,7 @@ TEST(Utils, Rational)
     using Deci = Rational<int, 1, 10>;
     using Centi = Rational<int, 1, 100>;
     using Milli = Rational<int, 1, 1000>;
+    using Micro = Rational<int, 1, 1000000>;
 
     static_assert(ConceptRational<Deci> && ConceptRational<Centi> && ConceptRational<Milli>);
     static_assert(!ConceptRational<int> && !ConceptRational<float> && !ConceptRational<double>);
@@ -915,9 +916,9 @@ TEST(Utils, Rational)
     EXPECT_EQ(Multiply(Milli{1}, 1000), Unit{1});
 
     // division
-    EXPECT_EQ(Devide(Kilo{1}, Milli{1}), Unit{1});
-    EXPECT_EQ(Devide(1000, Milli{1}), Unit{1});
-    EXPECT_EQ(Devide(Milli{1}, 1000), Unit{1});
+    EXPECT_EQ(Devide(Kilo{1}, Milli{1}), Unit{1000000});
+    EXPECT_EQ(Devide(1000, Milli{1}), Unit{1000000});
+    EXPECT_EQ(Devide(Micro{1000}, 1000), Micro{1});
 
     // equality
     EXPECT_EQ(Milli(1000), Centi(100));
