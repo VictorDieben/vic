@@ -37,25 +37,6 @@ struct factorial_info<double>
 namespace detail
 {
 
-//template <typename T>
-//constexpr T pow_recursive(const T x, std::size_t n) noexcept
-//{
-//    if(n == 0)
-//        return T(1); // todo: move outside of recursive function
-//    else if(n == 1)
-//        return x;
-//    else if(n % 2 == 0)
-//    {
-//        const T tmp = exp_recursive<T, n / 2>(x);
-//        return tmp * tmp;
-//    }
-//    else
-//    {
-//        const T tmp = exp_recursive<T, n - 1>(x);
-//        return x * tmp;
-//    }
-//}
-
 template <typename T, std::size_t n, double f>
 inline constexpr T exp_recursive(const T x, const T p) noexcept
 {
@@ -79,12 +60,6 @@ inline constexpr T exp_recursive(const T x, const T p) noexcept
 
 } // namespace detail
 
-//template <typename T>
-//constexpr T Pow(const T x, std::size_t n) noexcept
-//{
-//    return detail::pow_recursive<T>(x, n);
-//}
-
 template <typename T>
 constexpr T exp(const T x) noexcept
 {
@@ -102,7 +77,7 @@ int sign(T val)
 // Log10 for integers, rounding down
 template <typename T>
     requires std::integral<T>
-constexpr uint64_t Log10(const T val)
+constexpr uint64_t IntegralLog10(const T val)
 {
     // integer version can only ever return 0 as the lowest value
     T exp10 = 10;
@@ -112,15 +87,19 @@ constexpr uint64_t Log10(const T val)
             return i;
         exp10 *= 10;
     }
-    return 20; // max possible value for uint64_t
+    return 19; // max possible value for uint64_t
 }
 
 template <typename T>
     requires std::integral<T>
 constexpr bool IsPowerOf10(const T val)
 {
+    // todo: consider val==0 a power of 10?
+    if(val == 0)
+        return true;
+
     uint64_t exp10 = 1;
-    for(uint64_t i = 0; i < 21; i++)
+    for(uint64_t i = 0; i < 20; i++)
     {
         if(val == exp10)
             return true;
@@ -272,24 +251,6 @@ constexpr auto ConstructPartitions()
 //
 //
 //
-
-//template <typename T1, typename T2>
-//constexpr auto GCD_detail(const T1 first, const T2 second)
-//{
-//    // Greatest common denominator of first and second.
-//    // this function performs the actual computation
-//}
-
-//template <typename T1, typename T2>
-//constexpr auto GCD(const T1 first, const T2 second)
-//{
-//    // Greatest common denominator of first and second.
-//
-//    if(second == 0)
-//        return first;
-//    else
-//        return GCD(second, first % second);
-//}
 
 // todo: make a general lookup wrapper?
 template <typename T, std::size_t sizeI, std::size_t sizeJ>
