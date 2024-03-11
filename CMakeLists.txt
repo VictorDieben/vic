@@ -9,15 +9,17 @@ message("toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 
 project ("vic")
 
-enable_testing()
- 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory ("vic")
 
 # Testing 
-add_subdirectory ("vic_gtests")
+if (NOT DEFINED VIC_NO_TESTS)
+	add_subdirectory ("vic_gtests")
+endif()
 
 # Benchmarking 
-add_subdirectory ("vic_benchmark")
+if (NOT DEFINED VIC_NO_BENCHMARK)
+	add_subdirectory ("vic_benchmark")
+endif()

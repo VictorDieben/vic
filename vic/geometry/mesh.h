@@ -30,13 +30,6 @@ using Tri = std::tuple<MeshIndex, MeshIndex, MeshIndex>;
 using Quad = std::tuple<MeshIndex, MeshIndex, MeshIndex>;
 
 template <typename T>
-Vertex<T> ToVertex(const T x, const T y, const T z)
-{
-    // helper, linalg vecs don't have this constructor
-    return Vertex<T>(x, y, z);
-}
-
-template <typename T>
 struct EdgeMesh
 {
     std::vector<Vertex<T>> vertices;
@@ -49,13 +42,6 @@ template <typename T>
 struct TriMesh
 {
     std::vector<Vertex<T>> vertices;
-    std::vector<Tri> tris;
-};
-
-template <typename T>
-struct UVTriMesh
-{
-    std::vector<UV<T>> uvs;
     std::vector<Tri> tris;
 };
 
@@ -91,6 +77,7 @@ bool IsClosed(const vic::mesh::TriMesh<T>& mesh)
     return true;
 }
 
+// A mesh is closed if each vertex used in the list of edges is used once as a source, and once as a sink
 template <typename T>
 bool IsClosed(const vic::mesh::EdgeMesh<T>& mesh)
 {
@@ -160,15 +147,15 @@ TriMesh<T> GenerateBboxCube(const vic::geom::AABB<T, 3>& box)
     result.vertices.reserve(8);
     result.tris.reserve(12);
 
-    result.vertices.push_back(Vertex<T>{{lx, ly, lz}}); // 0
-    result.vertices.push_back(Vertex<T>{{ux, ly, lz}}); // 1
-    result.vertices.push_back(Vertex<T>{{lx, uy, lz}}); // 2
-    result.vertices.push_back(Vertex<T>{{ux, uy, lz}}); // 3
+    result.vertices.push_back(Vertex<T>{lx, ly, lz}); // 0
+    result.vertices.push_back(Vertex<T>{ux, ly, lz}); // 1
+    result.vertices.push_back(Vertex<T>{lx, uy, lz}); // 2
+    result.vertices.push_back(Vertex<T>{ux, uy, lz}); // 3
 
-    result.vertices.push_back(Vertex<T>{{lx, ly, uz}}); // 4
-    result.vertices.push_back(Vertex<T>{{ux, ly, uz}}); // 5
-    result.vertices.push_back(Vertex<T>{{lx, uy, uz}}); // 6
-    result.vertices.push_back(Vertex<T>{{ux, uy, uz}}); // 7
+    result.vertices.push_back(Vertex<T>{lx, ly, uz}); // 4
+    result.vertices.push_back(Vertex<T>{ux, ly, uz}); // 5
+    result.vertices.push_back(Vertex<T>{lx, uy, uz}); // 6
+    result.vertices.push_back(Vertex<T>{ux, uy, uz}); // 7
 
     result.tris.push_back(Tri{0, 1, 2}); // bottom
     result.tris.push_back(Tri{2, 3, 2});
@@ -292,7 +279,7 @@ TriMesh<T> GenerateCone(const T rad, //
         const T ratio = (T)i / (T)n;
         const T x = -rad * (T)std::sin(ratio * 2. * std::numbers::pi);
         const T z = rad * (T)std::cos(ratio * 2. * std::numbers::pi);
-        mesh.vertices.push_back(Vertex<T>{{x, (T)0., z}});
+        mesh.vertices.push_back(Vertex<T>{x, (T)0., z});
     }
     mesh.vertices.push_back(top);
     mesh.vertices.push_back(bottom);

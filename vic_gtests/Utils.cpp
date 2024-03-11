@@ -833,6 +833,7 @@ TEST(Utils, CRC32)
 TEST(Utils, Rational)
 {
     using Kilo = Rational<int, 1000, 1>;
+    using Hecto = Rational<int, 100, 1>;
     using Unit = Rational<int, 1, 1>;
     using Deci = Rational<int, 1, 10>;
     using Centi = Rational<int, 1, 100>;

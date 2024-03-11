@@ -36,24 +36,24 @@ TEST(Geom, Initialization)
     ASSERT_NEAR(d1.Get(0), 0.1, 1E-10);
     ASSERT_NEAR(d1.Get(1), 10., 1E-10);
 
-    Line<int, 2> l1{Point2i{{0, 1}}, Point2i{{2, 3}}};
+    Line<int, 2> l1{Point2i{0, 1}, Point2i{2, 3}};
     ASSERT_EQ(l1.pos.Get(0), 0);
     ASSERT_EQ(l1.pos.Get(1), 1);
     ASSERT_EQ(l1.dir.Get(0), 2);
     ASSERT_EQ(l1.dir.Get(1), 3);
 
-    LineSegment<int, 2> seg1{Point2i{{0, 1}}, Point2i{{1, 0}}};
+    LineSegment<int, 2> seg1{Point2i{0, 1}, Point2i{1, 0}};
     ASSERT_EQ(seg1.p1.Get(0), 0);
     ASSERT_EQ(seg1.p1.Get(1), 1);
     ASSERT_EQ(seg1.p2.Get(0), 1);
     ASSERT_EQ(seg1.p2.Get(1), 0);
 
-    ASSERT_TRUE(IsEqual(Point2i{{0, 0}}, Point2i{{0, 0}}));
+    ASSERT_TRUE(IsEqual(Point2i{0, 0}, Point2i{0, 0}));
 
-    Triangle<int, 2> tri1{Point2i{{0, 0}}, Point2i{{1, 0}}, Point2i{{0, 1}}};
-    ASSERT_TRUE(IsEqual(tri1.points[0], Point2i{{0, 0}}));
-    ASSERT_TRUE(IsEqual(tri1.points[1], Point2i{{1, 0}}));
-    ASSERT_TRUE(IsEqual(tri1.points[2], Point2i{{0, 1}}));
+    Triangle<int, 2> tri1{Point2i{0, 0}, Point2i{1, 0}, Point2i{0, 1}};
+    ASSERT_TRUE(IsEqual(tri1.points[0], Point2i{0, 0}));
+    ASSERT_TRUE(IsEqual(tri1.points[1], Point2i{1, 0}));
+    ASSERT_TRUE(IsEqual(tri1.points[2], Point2i{0, 1}));
 
     Interval<int> interval1{-1, 1};
     ASSERT_EQ(interval1.min, -1);
@@ -63,8 +63,8 @@ TEST(Geom, Initialization)
                        Interval<int>{-2, 2},
                        Interval<int>{-3, 3}};
 
-    Cylinder<double, 3> cylinder{Point3d{{-1, 0, 0}}, //
-                                 Point3d{{1, 0, 0}},
+    Cylinder<double, 3> cylinder{Point3d{-1, 0, 0}, //
+                                 Point3d{1, 0, 0},
                                  1.};
 }
 
@@ -77,23 +77,23 @@ TEST(Geom, TriLineIntersection)
                std::fabs(s1.t - s2.t) < 1E-10;
     };
 
-    constexpr Triangle<double, 3> tri{Point3d{{0, 0, 0}}, //
-                                      Point3d{{1, 0, 0}},
-                                      Point3d{{0, 1, 0}}};
+    constexpr Triangle<double, 3> tri{Point3d{0, 0, 0}, //
+                                      Point3d{1, 0, 0},
+                                      Point3d{0, 1, 0}};
 
-    constexpr LineSegment<double, 3> seg{Point3d{{0, 0, 1}}, //
-                                         Point3d{{0, 0, -1}}};
+    constexpr LineSegment<double, 3> seg{Point3d{0, 0, 1}, //
+                                         Point3d{0, 0, -1}};
 
     constexpr auto res = TriLineIntersection(tri, seg);
     EXPECT_TRUE(ResultEqual(res, Result{0, 0, .5}));
 
-    auto ans = TriLineIntersection(tri, LineSegment<double, 3>{Point3d{{1, 0, 1}}, Point3d{{1, 0, -1}}});
+    auto ans = TriLineIntersection(tri, LineSegment<double, 3>{Point3d{1, 0, 1}, Point3d{1, 0, -1}});
     EXPECT_TRUE(ResultEqual(Result{1., 0, .5}, ans));
 
-    ans = TriLineIntersection(tri, LineSegment<double, 3>{Point3d{{0, 1, 1}}, Point3d{{0, 1, -1}}});
+    ans = TriLineIntersection(tri, LineSegment<double, 3>{Point3d{0, 1, 1}, Point3d{0, 1, -1}});
     EXPECT_TRUE(ResultEqual(Result{0., 1., .5}, ans));
 
-    ans = TriLineIntersection(tri, LineSegment<double, 3>{Point3d{{1, 1, 1}}, Point3d{{1, 1, -1}}});
+    ans = TriLineIntersection(tri, LineSegment<double, 3>{Point3d{1, 1, 1}, Point3d{1, 1, -1}});
     EXPECT_TRUE(ResultEqual(Result{1., 1., .5}, ans));
 
     std::default_random_engine g;
@@ -102,9 +102,9 @@ TEST(Geom, TriLineIntersection)
     // ~45.5m iterations/s
     for(const auto i : Range(1000))
     {
-        const auto t1 = Point3d{{dist(g), dist(g), dist(g)}};
-        const auto t2 = Point3d{{dist(g) + 1., dist(g), dist(g)}};
-        const auto t3 = Point3d{{dist(g), dist(g) + 1., dist(g)}};
+        const auto t1 = Point3d{dist(g), dist(g), dist(g)};
+        const auto t2 = Point3d{dist(g) + 1., dist(g), dist(g)};
+        const auto t3 = Point3d{dist(g), dist(g) + 1., dist(g)};
 
         const auto e12 = Subtract(t2, t1);
         const auto e13 = Subtract(t3, t1);
@@ -114,8 +114,8 @@ TEST(Geom, TriLineIntersection)
         const auto o1 = 0., o2 = 0., o3 = 0.;
         const auto d1 = dist(g), d2 = dist(g), d3 = dist(g);
 
-        const auto s1 = Point3d{{o1 + d1, o2 + d2, o3 + d3}};
-        const auto s2 = Point3d{{o1 - d1, o2 - d2, o3 - d3}};
+        const auto s1 = Point3d{o1 + d1, o2 + d2, o3 + d3};
+        const auto s2 = Point3d{o1 - d1, o2 - d2, o3 - d3};
 
         const auto dir = Subtract(s2, s1); // line direction
 
@@ -157,7 +157,7 @@ TEST(Geom, SphereLineIntersection)
 
         const double r = 1. + offset(g);
 
-        const Sphere<double, 3> sphere{Point3d{{x + offset(g), y + offset(g), z + offset(g)}}, r};
+        const Sphere<double, 3> sphere{Point3d{x + offset(g), y + offset(g), z + offset(g)}, r};
 
         const double dx = dxyz(g);
         const double dy = dxyz(g);
@@ -192,36 +192,36 @@ TEST(Geom, AABBLineIntersection)
 
     // simple intersection
     auto res = AABBLineIntersection(bbox,
-                                    Line<double, 3>{Point<double, 3>{{0, 1.5, 1.5}}, //
-                                                    Direction<double, 3>{{1, 0, 0}}});
+                                    Line<double, 3>{Point<double, 3>{0, 1.5, 1.5}, //
+                                                    Direction<double, 3>{1, 0, 0}});
     EXPECT_DOUBLE_EQ(res.interval.min, 1.);
     EXPECT_DOUBLE_EQ(res.interval.max, 2.);
 
     // intersection starting inside bbox
     auto res2 = AABBLineIntersection(bbox,
-                                     Line<double, 3>{Point<double, 3>{{1.5, 1.5, 1.5}}, //
-                                                     Direction<double, 3>{{0, 1, 0}}});
+                                     Line<double, 3>{Point<double, 3>{1.5, 1.5, 1.5}, //
+                                                     Direction<double, 3>{0, 1, 0}});
     EXPECT_DOUBLE_EQ(res2.interval.min, -0.5);
     EXPECT_DOUBLE_EQ(res2.interval.max, 0.5);
 
     // intersection cutting through a corner
     auto res3 = AABBLineIntersection(bbox,
-                                     Line<double, 3>{Point<double, 3>{{0, 0, 1.5}}, //
-                                                     Direction<double, 3>{{1, 1, 0}}});
+                                     Line<double, 3>{Point<double, 3>{0, 0, 1.5}, //
+                                                     Direction<double, 3>{1, 1, 0}});
     EXPECT_DOUBLE_EQ(res3.interval.min, 1.);
     EXPECT_DOUBLE_EQ(res3.interval.max, 2.);
 
     // zero direction
     auto res4 = AABBLineIntersection(bbox,
-                                     Line<double, 3>{Point<double, 3>{{1.5, 1.5, 1.5}}, //
-                                                     Direction<double, 3>{{0, 0, 0}}});
+                                     Line<double, 3>{Point<double, 3>{1.5, 1.5, 1.5}, //
+                                                     Direction<double, 3>{0, 0, 0}});
     EXPECT_DOUBLE_EQ(res4.interval.min, -std::numeric_limits<double>::infinity());
     EXPECT_DOUBLE_EQ(res4.interval.max, std::numeric_limits<double>::infinity());
 
     // intersection in negative direction
     auto res5 = AABBLineIntersection(bbox,
-                                     Line<double, 3>{Point<double, 3>{{3, 3, 3}}, //
-                                                     Direction<double, 3>{{-1, -1, -1}}});
+                                     Line<double, 3>{Point<double, 3>{3, 3, 3}, //
+                                                     Direction<double, 3>{-1, -1, -1}});
     EXPECT_DOUBLE_EQ(res5.interval.min, 1.);
     EXPECT_DOUBLE_EQ(res5.interval.max, 2.);
 }
@@ -323,7 +323,7 @@ TEST(Geom, BoxTree)
         TestObject object{};
         const double px = pos(g), py = pos(g), pz = pos(g);
         for(const auto i : Range(10))
-            object.push_back(Point<double, 3>{{px + eps(g), py + eps(g), pz + eps(g)}});
+            object.push_back(Point<double, 3>{px + eps(g), py + eps(g), pz + eps(g)});
         return object;
     };
 
@@ -567,55 +567,6 @@ TEST(Geom, PyramidVector)
     ASSERT_EQ(secondLevel.end(), thirdLevel.begin());
 }
 
-//TEST(Geom, BTreeVector)
-//{
-//    EXPECT_EQ(NextPowerOf2(0u), 1); // todo: probably not what we want
-//    EXPECT_EQ(NextPowerOf2(1u), 1);
-//    EXPECT_EQ(NextPowerOf2(2u), 2);
-//    EXPECT_EQ(NextPowerOf2(3u), 4);
-//    EXPECT_EQ(NextPowerOf2(4u), 4);
-//    EXPECT_EQ(NextPowerOf2(7u), 8);
-//    EXPECT_EQ(NextPowerOf2(8u), 8);
-//
-//    BTreeVector<double> vec{};
-//    EXPECT_EQ(vec.GetLevel(), 0);
-//    EXPECT_EQ(vec.GetCapacity(), 1);
-//
-//    vec.push_back({});
-//    EXPECT_EQ(vec.GetLevel(), 0);
-//    EXPECT_EQ(vec.GetCapacity(), 1);
-//
-//    vec.push_back({});
-//    EXPECT_EQ(vec.GetLevel(), 1);
-//    EXPECT_EQ(vec.GetCapacity(), 2);
-//
-//    vec.push_back({});
-//    EXPECT_EQ(vec.GetLevel(), 2);
-//    EXPECT_EQ(vec.GetSize(), 3);
-//    EXPECT_EQ(vec.GetCapacity(), 4);
-//
-//    vec.push_back({});
-//    EXPECT_EQ(vec.GetLevel(), 2);
-//    EXPECT_EQ(vec.GetSize(), 4);
-//    EXPECT_EQ(vec.GetCapacity(), 4);
-//
-//    vec.push_back({});
-//    EXPECT_EQ(vec.GetLevel(), 3);
-//    EXPECT_EQ(vec.GetSize(), 5);
-//    EXPECT_EQ(vec.GetCapacity(), 8);
-//
-//    // now pop the back items
-//    vec.pop_back();
-//    EXPECT_EQ(vec.GetLevel(), 3);
-//    EXPECT_EQ(vec.GetSize(), 4);
-//    EXPECT_EQ(vec.GetCapacity(), 8);
-//
-//    vec.pop_back();
-//    EXPECT_EQ(vec.GetLevel(), 2);
-//    EXPECT_EQ(vec.GetSize(), 3);
-//    EXPECT_EQ(vec.GetCapacity(), 4);
-//}
-
 TEST(Geom, BalancedAABBTree)
 {
     using Key = std::size_t;
@@ -666,7 +617,7 @@ TEST(Geom, GroupPairsOfTwo)
     const auto volumeLambda = [](const Inter& left, const Inter& right) {
         const auto combined = Combine(left, right);
         return combined.max - combined.min;
-    }; // sum of volumes: 55.9504
+    };
 
     // filled fraction is a slightly better heuristic.
     // but maybe the extra computational effort is not worth it.
@@ -724,7 +675,7 @@ TEST(Geom, MeshCubeSphere)
     for(const auto& normal : vertexNormals)
         EXPECT_NEAR(vic::linalg::Norm(normal), 1., 1e-14);
 
-    const auto uvs = GenerateVertexUVsPolar<double>(mesh, Vertex<double>{{0., 0., 0.}});
+    const auto uvs = GenerateVertexUVsPolar<double>(mesh, Vertex<double>{0., 0., 0.});
     for(const auto& uv : uvs)
     {
         // todo: check that uv is within [0; 1]
@@ -763,9 +714,9 @@ TEST(Geom, MeshTorus)
 TEST(Geom, Subdivide)
 {
     TriMesh<double> triMesh;
-    triMesh.vertices = {ToVertex(0., 0., 0.), //
-                        ToVertex(1., 0., 0.),
-                        ToVertex(0., 1., 0.)};
+    triMesh.vertices = {Vertex<double>{0., 0., 0.}, //
+                        Vertex<double>{1., 0., 0.},
+                        Vertex<double>{0., 1., 0.}};
     triMesh.tris = {Tri{0, 1, 2}};
 
     auto subdivided = Subdivide(triMesh);
@@ -790,8 +741,8 @@ TEST(Geom, Revolve)
     const std::size_t n = 16;
 
     EdgeMesh<double> mesh;
-    mesh.vertices = {Vertex<double>{{1., 0., -.1}}, //
-                     Vertex<double>{{1., 0., .1}}};
+    mesh.vertices = {Vertex<double>{1., 0., -.1}, //
+                     Vertex<double>{1., 0., .1}};
     mesh.edges = {{0, 1}};
 
     const TriMesh revolvedMesh = Revolve(mesh, n, false);
