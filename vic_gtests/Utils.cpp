@@ -815,6 +815,16 @@ TEST(Utils, Deadline)
     vic::Deadline([]() { return true; }, std::chrono::seconds(1));
 }
 
+TEST(Utils, Templates)
+{
+    // make sure the statement is constexpr
+    static constexpr auto i1 = templates::GetIndex<double, double, int>();
+    static constexpr auto i2 = templates::GetIndex<double, int, double>();
+
+    EXPECT_EQ(i1, 0);
+    EXPECT_EQ(i2, 1);
+}
+
 TEST(Utils, CRC32)
 {
     const char* trivial = "";

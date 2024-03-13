@@ -6,7 +6,7 @@
 namespace vic
 {
 
-uint32_t crc32(const char* data, const uint64_t length)
+inline uint32_t crc32(const char* data, const uint64_t length)
 {
     static constexpr uint32_t initial = 0xFFFFFFFF;
     static constexpr uint32_t polynomial = 0xEDB88320;
@@ -25,7 +25,7 @@ uint32_t crc32(const char* data, const uint64_t length)
     return tmp ^ initial;
 }
 
-uint32_t crc32(const std::vector<char>& data)
+inline uint32_t crc32(const std::vector<char>& data)
 {
     return crc32(data.data(), data.size()); //
 }

@@ -75,7 +75,7 @@ constexpr int GetIndex()
     {
         if constexpr(sizeof...(Us) > 0)
         {
-            const auto idx = GetIndex<T, Us...>();
+            constexpr auto idx = GetIndex<T, Us...>();
             return idx == -1 ? -1 : 1 + idx;
         }
         else
