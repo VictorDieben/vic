@@ -110,5 +110,8 @@ std::false_type is_iterable_impl(...);
 template <typename T>
 using is_iterable = decltype(detail::is_iterable_impl<T>(0));
 
+template <typename T>
+concept is_enum = std::is_enum_v<T>;
+
 } // namespace templates
 } // namespace vic

@@ -10,17 +10,17 @@
 #include <iostream>
 #include <string>
 
-namespace vic
+namespace std
 {
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
+ostream& operator<<(ostream& os, const vector<T>& vec)
 {
     os << "[";
     for(auto it = vec.begin(); it != vec.end(); ++it)
     {
         os << *it;
-        if(it != std::prev(vec.end()))
+        if(it != prev(vec.end()))
             os << ", ";
     }
     os << "]";
@@ -28,13 +28,13 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
 }
 
 template <typename T, std::size_t N>
-std::ostream& operator<<(std::ostream& os, const std::array<T, N>& vec)
+ostream& operator<<(ostream& os, const array<T, N>& vec)
 {
     os << "[";
     for(auto it = vec.cbegin(); it != vec.cend(); ++it)
     {
         os << *it;
-        if(it != std::prev(vec.end()))
+        if(it != prev(vec.end()))
             os << ", ";
     }
     os << "]";
@@ -42,13 +42,13 @@ std::ostream& operator<<(std::ostream& os, const std::array<T, N>& vec)
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::set<T>& vec)
+ostream& operator<<(ostream& os, const set<T>& vec)
 {
     os << "[";
     for(auto it = vec.cbegin(); it != vec.cend(); ++it)
     {
         os << *it;
-        if(it != std::prev(vec.end()))
+        if(it != prev(vec.end()))
             os << ", ";
     }
     os << "]";
@@ -56,13 +56,13 @@ std::ostream& operator<<(std::ostream& os, const std::set<T>& vec)
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::unordered_set<T>& vec)
+ostream& operator<<(ostream& os, const unordered_set<T>& vec)
 {
     os << "[";
     for(const auto it = vec.begin(); it != vec.end(); ++it)
     {
         os << *it;
-        if(it != std::prev(vec.end()))
+        if(it != prev(vec.end()))
             os << ", ";
     }
     os << "]";
@@ -70,19 +70,23 @@ std::ostream& operator<<(std::ostream& os, const std::unordered_set<T>& vec)
 }
 
 template <typename T1, typename T2>
-std::ostream& operator<<(std::ostream& os, const std::map<T1, T2>& map)
+ostream& operator<<(ostream& os, const map<T1, T2>& map)
 {
     os << "[";
     for(auto it = map.begin(); it != map.end(); ++it)
     {
         os << "(" << it->first << "," << it->second << ")";
-        if(it != std::prev(map.end()))
+        if(it != prev(map.end()))
             os << ", ";
     }
     os << "]";
     return os;
 }
 
+} // namespace std
+
+namespace vic
+{
 template <typename T>
 std::string ToString(const T& item)
 {

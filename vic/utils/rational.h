@@ -2,6 +2,7 @@
 
 #include "concepts.h"
 
+#include <compare>
 #include <cstdint>
 
 namespace vic
@@ -336,7 +337,7 @@ struct Rational
     template <typename TInput>
         requires std::integral<TInput>
     constexpr Rational(const TInput _val)
-        : val(_val)
+        : val(static_cast<T>(_val))
     { }
 
     Rational& operator=(Rational other)

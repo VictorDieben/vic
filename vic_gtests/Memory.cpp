@@ -441,9 +441,6 @@ TEST(Memory, UnorderedFlatSet)
     vic::memory::FlatSet<uint32_t> flatSet;
     vic::memory::UnorderedFlatSet<uint32_t> unorderedFlatSet;
 
-    std::random_device rd;
-    std::mt19937 g(1234);
-
     auto trueOrFalse = std::bind(std::uniform_int_distribution<>(0, 3), std::default_random_engine()); // bias towards inserting
     auto randomInt = std::bind(std::uniform_int_distribution<>(0, 1000000), std::default_random_engine());
 
