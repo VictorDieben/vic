@@ -155,7 +155,7 @@ public:
         auto it = mComponents.find(id);
 #ifdef _DEBUG
         if(it == mComponents.end())
-            throw std::runtime_error("Iterate(): range is not sorted!");
+            throw std::runtime_error(std::string("Entity ") + std::to_string(id) + " has no " + typeid(T).name());
 #endif
         return it->second;
     }
@@ -165,7 +165,7 @@ public:
         auto it = mComponents.find(id);
 #ifdef _DEBUG
         if(it == mComponents.end())
-            throw std::runtime_error("Iterate(): range is not sorted!");
+            throw std::runtime_error(std::string("Entity ") + std::to_string(id) + " has no " + typeid(T).name());
 #endif
         return it->second;
     }
