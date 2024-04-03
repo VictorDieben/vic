@@ -20,7 +20,7 @@ class ForwardRobot
 
 private:
     vic::memory::Tree<Node<T>> mTree{};
-    vic::memory::DepthFirstIterator<decltype(mTree)> mIterator{mTree};
+    // vic::memory::DepthFirstIterator<decltype(mTree)> mIterator{mTree};
 
 public:
     ForwardRobot() = default;
@@ -47,14 +47,20 @@ public:
         return {};
     }
 
-    void Update() { mIterator.Update(); }
+    void Update()
+    {
+        // mIterator.Update();
+    }
 
     std::size_t GetNrJoints() const { return mTree.Size(); }
 
     const auto& GetTree() const { return mTree; }
 
-    auto begin() { return mIterator.begin(); }
-    auto end() { return mIterator.end(); }
+    auto begin() { return mTree.begin(); }
+    auto end() { return mTree.end(); }
+
+    auto begin() const { return mTree.begin(); }
+    auto end() const { return mTree.end(); }
 };
 
 } // namespace robots

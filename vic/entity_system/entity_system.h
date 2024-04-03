@@ -4,12 +4,14 @@
 #include <cassert>
 #include <map>
 #include <ranges>
+#include <string>
 #include <tuple>
 #include <vector>
 
 #include "vic/entity_system/algorithms.h"
 #include "vic/entity_system/definitions.h"
 #include "vic/memory/flat_map.h"
+#include "vic/utils/map_iterate.h"
 #include "vic/utils/templates.h"
 
 namespace vic
@@ -34,11 +36,20 @@ struct EntityHandle
 
     operator bool() const { return (mId != 0) && (mSystem != nullptr); }
 
+    template <typename TComponent, typename... Args>
+    EntityHandle<T> Add(Args&&... args)
+    {
+        static_assert(SystemType::template ContainsComponent<TComponent>(), "Unknown component T");
+        assert(mSystem && mId);
+        mSystem->Add<TComponent>(mId, std::forward<Args>(args)...);
+        return *this; // return copy of self
+    }
+
     template <typename TComponent>
-    EntityHandle<T> Add(auto&&... args)
+    EntityHandle<T> Set(const TComponent& component)
     {
         assert(mSystem && mId);
-        mSystem->Add<TComponent>(mId, std::forward<decltype(args)>(args)...);
+        mSystem->Set<TComponent>(mId, component);
         return *this; // return copy of self
     }
 
@@ -58,6 +69,13 @@ struct EntityHandle
 
     template <typename T2>
     T2* TryGet()
+    {
+        assert(mSystem && mId);
+        return mSystem->TryGet<T2>(mId);
+    }
+
+    template <typename T2>
+    const T2* TryGet() const
     {
         assert(mSystem && mId);
         return mSystem->TryGet<T2>(mId);
@@ -98,6 +116,10 @@ private:
     std::map<EntityId, T> mComponents{};
     // vic::memory::FlatMap<EntityId, T> mComponents{};
 
+    static constexpr auto FindLowerBound = [](const auto& item, const EntityId value) { return item.first < value; };
+
+    static_assert(std::is_move_constructible_v<T> && std::is_move_assignable_v<T>, "T cannot be moved!");
+
 public:
     // todo: make a custom component system, that does not rely on std::map
     // example: https://austinmorlan.com/posts/entity_component_system/
@@ -109,27 +131,56 @@ public:
 
     using value_type = std::pair<const EntityId, T>;
 
-    T& Add(EntityId id, auto&&... args)
+    T& Add(const EntityId id, auto&&... args)
     {
-        mComponents[id] = T{args...};
+        // todo: find out if piecewise construct is worth it / how to make it work with any type
+        //auto res = mComponents.emplace(std::piecewise_construct, //
+        //                               std::forward_as_tuple(id),
+        //                               std::forward_as_tuple(args...));
+
+        // auto res = mComponents.emplace(std::pair(id, std::move(T{std::forward<decltype(args)>(args)...})));
+        // return res.first->second;
+
+        auto res = mComponents.emplace(id, T{std::forward<decltype(args)>(args)...});
+        return res.first->second;
+    }
+
+    T& Set(const EntityId id, const T& component)
+    {
+        mComponents[id] = component;
         return mComponents[id];
     }
 
     T& Get(const EntityId id)
     {
         auto it = mComponents.find(id);
-        assert(it != mComponents.end());
+#ifdef _DEBUG
+        if(it == mComponents.end())
+            throw std::runtime_error(std::string("Entity ") + std::to_string(id) + " has no " + typeid(T).name());
+#endif
         return it->second;
     }
 
     const T& Get(const EntityId id) const
     {
         auto it = mComponents.find(id);
-        assert(it != mComponents.end());
+#ifdef _DEBUG
+        if(it == mComponents.end())
+            throw std::runtime_error(std::string("Entity ") + std::to_string(id) + " has no " + typeid(T).name());
+#endif
         return it->second;
     }
 
     T* TryGet(const EntityId id)
+    {
+        auto it = mComponents.find(id);
+        if(it == mComponents.end())
+            return nullptr;
+        else
+            return &(it->second);
+    }
+
+    const T* TryGet(const EntityId id) const
     {
         auto it = mComponents.find(id);
         if(it == mComponents.end())
@@ -154,24 +205,17 @@ public:
     iterator begin() { return mComponents.begin(); }
     iterator end() { return mComponents.end(); }
 
-    const_iterator begin() const { return mComponents.cbegin(); }
-    const_iterator end() const { return mComponents.cend(); }
+    const_iterator begin() const { return mComponents.begin(); }
+    const_iterator end() const { return mComponents.end(); }
 
     const_iterator cbegin() const { return mComponents.cbegin(); }
     const_iterator cend() const { return mComponents.cend(); }
 
-    iterator lower_bound(const EntityId id)
-    {
-        return mComponents.lower_bound(id); //
-    }
+    iterator lower_bound(const EntityId id) { return std::lower_bound(mComponents.begin(), mComponents.end(), id, FindLowerBound); }
+    const_iterator lower_bound(const EntityId id) const { return std::lower_bound(mComponents.begin(), mComponents.end(), id, FindLowerBound); }
 
-    iterator lower_bound_with_hint(const EntityId id, iterator hint)
-    {
-        return std::lower_bound(hint, //
-                                mComponents.end(),
-                                id,
-                                [](const auto& item, const EntityId value) { return item.first < value; });
-    }
+    iterator lower_bound_with_hint(const EntityId id, iterator hint) { return std::lower_bound(hint, mComponents.end(), id, FindLowerBound); }
+    iterator lower_bound_with_hint(const EntityId id, iterator hint) const { return std::lower_bound(hint, mComponents.cend(), id, FindLowerBound); }
 
     template <typename TIter>
     void Insert(TIter begin, TIter end)
@@ -219,12 +263,11 @@ public:
     EntityId Minimum() const { return mComponents.size() == 0 ? std::numeric_limits<EntityId>::max() : mComponents.begin()->first; }
     EntityId Maximum() const { return mComponents.size() == 0 ? std::numeric_limits<EntityId>::min() : std::prev(mComponents.end())->first; }
 
-    //template <typename TFunctor>
-    //void Foreach(TFunctor functor)
-    //{
-    //    //
-    //}
+    auto& Data() { return mComponents; };
+    const auto& Data() const { return mComponents; };
 };
+
+using ComponentIndexType = int;
 
 template <typename... TComponents>
 class ECS : public ComponentSystem<TComponents>...
@@ -236,6 +279,12 @@ public:
     using Handle = EntityHandle<ECS<TComponents...>>;
 
     ECS() = default;
+
+    // disable move and copy, because we will pass the ecs adress along with handles etc.
+    ECS(const ECS&) = delete;
+    ECS(ECS&&) = delete;
+    ECS& operator=(const ECS&) = delete;
+    ECS& operator=(ECS&&) = delete;
 
     Handle NewEntity()
     {
@@ -250,6 +299,12 @@ public:
         // No list of valid ids is stored anywhere.
         // we could make EntityId only constructable by EntitySystem,
         // that waywe can at least be sure that it was valid at some point in time
+
+        // other note: if a user makes a deserializer (from json or something), they will want to be able to create objects with specific ids.
+        // GetEntity() could be used (bit hacky but whatever),
+        // but the counter will need to be updated if the id is larger than any we've seen so far.
+        if(id >= mEntityCounter)
+            mEntityCounter = id + 1;
         return EntityHandle(id, this);
     }
 
@@ -263,6 +318,13 @@ public:
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         ComponentSystem<T>::Add(id, std::forward<decltype(args)>(args)...);
+    }
+
+    template <typename T>
+    void Set(EntityId id, const T& component)
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        ComponentSystem<T>::Set(id, component);
     }
 
     template <typename T>
@@ -287,6 +349,13 @@ public:
     }
 
     template <typename T>
+    const T* TryGet(EntityId id) const
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return ComponentSystem<T>::TryGet(id);
+    }
+
+    template <typename T>
     bool Has(EntityId id) const
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
@@ -303,6 +372,26 @@ public:
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::Remove(id);
+    }
+
+    template <typename T, typename TIter>
+    bool RemoveRange(const TIter begin, const TIter end)
+    {
+        assert(std::is_sorted(begin, end));
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+
+        // todo: optimize, [begin; end> is sorted
+        bool res = true;
+        for(auto it = begin; it != end; ++it)
+            res = res && Remove<T>(*it);
+        return res;
+    }
+
+    template <typename T, typename TIterable>
+    bool RemoveRange(const TIterable& iterable)
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return RemoveRange<T>(iterable.begin(), iterable.end());
     }
 
     template <typename T>
@@ -332,11 +421,25 @@ public:
     auto begin() const
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
-        return ComponentSystem<T>::cbegin();
+        return ComponentSystem<T>::begin();
     }
 
     template <typename T>
     auto end() const
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return ComponentSystem<T>::end();
+    }
+
+    template <typename T>
+    auto cbegin() const
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return ComponentSystem<T>::cbegin();
+    }
+
+    template <typename T>
+    auto cend() const
     {
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::cend();
@@ -377,6 +480,17 @@ public:
         return algorithms::Filter<T1, T2, T3>(*this);
     }
 
+    //// Overlap
+    //template <typename T1, typename T2>
+    //auto Overlap()
+    //{
+    //    static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
+    //    static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
+    //    return vic::Overlap(ComponentSystem<T1>::Data(), ComponentSystem<T2>::Data());
+    //}
+
+    // Iterate 1d
+
     template <typename T, typename TIter>
     auto Iterate(const TIter begin, const TIter end)
     {
@@ -390,6 +504,23 @@ public:
         static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return algorithms::Iterate<T>(*this, iterable.begin(), iterable.end());
     }
+
+    template <typename T, typename TIter>
+    auto Iterate(const TIter begin, const TIter end) const
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        const auto& thisRef = *this;
+        return algorithms::Iterate<T>(thisRef, begin, end);
+    }
+
+    template <typename T, typename TIterable>
+    auto Iterate(const TIterable& iterable) const
+    {
+        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
+        return algorithms::Iterate<T>(*this, iterable.begin(), iterable.end());
+    }
+
+    //
 
     template <typename T1, typename T2, typename TIter>
     auto Iterate2d(const TIter begin, const TIter end)
@@ -406,6 +537,28 @@ public:
         static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
         return algorithms::Iterate2d<T1, T2>(*this, iterable.begin(), iterable.end());
     }
+
+    //
+
+    template <typename T1, typename T2, typename T3, typename TIter>
+    auto Iterate3d(const TIter begin, const TIter end)
+    {
+        static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
+        static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
+        static_assert(templates::Contains<T3, TComponents...>(), "Unknown component T3");
+        return algorithms::Iterate3d<T1, T2, T3>(*this, begin, end);
+    }
+
+    template <typename T1, typename T2, typename T3, typename TIterable>
+    auto Iterate3d(const TIterable& iterable)
+    {
+        static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
+        static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
+        static_assert(templates::Contains<T3, TComponents...>(), "Unknown component T3");
+        return algorithms::Iterate3d<T1, T2, T3>(*this, iterable.begin(), iterable.end());
+    }
+
+    //
 
     template <typename T, typename TIter>
     auto Insert(TIter begin, TIter end)
@@ -443,10 +596,20 @@ public:
         (functor.template operator()<TComponents>(), ...);
     }
 
-    template <typename T>
-    static constexpr int GetIndex()
+    template <typename TFunctor>
+    void ForeachEntity(TFunctor functor)
     {
-        return templates::GetIndex<T, TComponents...>();
+        const auto minimum = Minimum();
+        const auto maximum = Maximum();
+        for(auto i = minimum; i <= maximum; ++i)
+            if(HasAny(i))
+                functor(i); // todo: inefficient, there might be a better way
+    }
+
+    template <typename T>
+    static constexpr ComponentIndexType GetIndex()
+    {
+        return (ComponentIndexType)templates::GetIndex<T, TComponents...>();
     }
 
     template <int index>

@@ -248,6 +248,26 @@ constexpr auto SolveThomasAlgorithm(const TMatrix& matrix, const TVector& vector
     return x;
 }
 
+template <typename TMatrix, typename TVector>
+    requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+constexpr auto Solve3x3(const TMatrix& matrix, const TVector& vector)
+{
+    assert(matrix.GetRows() == 3 && matrix.GetColumns() == 3 && vector.GetRows() == 3);
+
+    const auto inverse = Inverse3x3(matrix);
+    return Matmul(inverse, vector);
+}
+
+template <typename TMatrix, typename TVector>
+    requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
+constexpr auto Solve4x4(const TMatrix& matrix, const TVector& vector)
+{
+    assert(matrix.GetRows() == 4 && matrix.GetColumns() == 4 && vector.GetRows() == 4);
+
+    const auto inverse = Inverse3x3(matrix);
+    return Matmul(inverse, vector);
+}
+
 // Selector for Inverse algorithm
 template <typename TMatrix, typename TVector>
     requires ConceptMatrix<TMatrix> && ConceptVector<TVector>

@@ -8,10 +8,8 @@
 
 #include <random>
 
-namespace vic
-{
-namespace linalg
-{
+using namespace vic;
+using namespace vic::linalg;
 
 template <typename TMat>
 void VerifyMatrix(TMat& mat)
@@ -22,20 +20,20 @@ void VerifyMatrix(TMat& mat)
     EXPECT_TRUE(IsEqual(mat, copy));
 }
 
-TEST(Matrices, InitBase)
+TEST(Linalg, InitBase)
 {
-    static constexpr MatrixBaseSelector<Shape<3, 3>> m33{3, 3};
-    static constexpr MatrixBaseSelector<Shape<3, UnknownSize>> mr3{3, 3};
-    static constexpr MatrixBaseSelector<Shape<UnknownSize, 3>> mc3{3, 3};
-    static constexpr MatrixBaseSelector<Shape<UnknownSize, UnknownSize>> md{3, 3};
+    static constexpr MatrixBaseSelector<Shape<3, 3>> m33(3, 3);
+    static constexpr MatrixBaseSelector<Shape<3, UnknownSize>> mr3(3, 3);
+    static constexpr MatrixBaseSelector<Shape<UnknownSize, 3>> mc3(3, 3);
+    static constexpr MatrixBaseSelector<Shape<UnknownSize, UnknownSize>> md(3, 3);
 }
 
-TEST(Matrices, InitZeros)
+TEST(Linalg, InitZeros)
 {
-    static constexpr Zeros<double, Shape<3, 3>> m33{3, 3};
-    static constexpr Zeros<double, Shape<3, UnknownSize>> mr3{3, 3};
-    static constexpr Zeros<double, Shape<UnknownSize, 3>> mc3{3, 3};
-    static constexpr Zeros<double, Shape<UnknownSize, UnknownSize>> md{3, 3};
+    static constexpr Zeros<double, Shape<3, 3>> m33(3, 3);
+    static constexpr Zeros<double, Shape<3, UnknownSize>> mr3(3, 3);
+    static constexpr Zeros<double, Shape<UnknownSize, 3>> mc3(3, 3);
+    static constexpr Zeros<double, Shape<UnknownSize, UnknownSize>> md(3, 3);
     VerifyMatrix(m33);
     VerifyMatrix(mr3);
     VerifyMatrix(mc3);
@@ -46,7 +44,7 @@ TEST(Matrices, InitZeros)
     EXPECT_TRUE(ConceptZeros<decltype(md)>);
 }
 
-TEST(Matrices, InitDiagonal)
+TEST(Linalg, InitDiagonal)
 {
     static constexpr Diagonal<double, Shape<3, 3>> m33{3, 3};
     Diagonal<double, Shape<3, UnknownSize>> mr3{3, 3};
@@ -62,7 +60,7 @@ TEST(Matrices, InitDiagonal)
     EXPECT_TRUE(ConceptDiagonal<decltype(md)>);
 }
 
-TEST(Matrices, InitIdentity)
+TEST(Linalg, InitIdentity)
 {
     static constexpr Identity<double, Shape<3, 3>> m33{3, 3};
     static constexpr Identity<double, Shape<3, UnknownSize>> mr3{3, 3};
@@ -83,7 +81,7 @@ TEST(Matrices, InitIdentity)
     EXPECT_TRUE(ConceptDiagonal<decltype(md)>);
 }
 
-TEST(Matrices, InitMatrix)
+TEST(Linalg, InitMatrix)
 {
     static constexpr Matrix<double, Shape<3, 3>> static33{3, 3};
     Matrix<double, Shape<3, 3>> m33{3, 3};
@@ -96,7 +94,7 @@ TEST(Matrices, InitMatrix)
     VerifyMatrix(md);
 }
 
-TEST(Matrices, InitSparse)
+TEST(Linalg, InitSparse)
 {
     Sparse<double, Shape<3, 3>> m33{3, 3};
     Sparse<double, Shape<3, UnknownSize>> mr3{3, 3};
@@ -108,7 +106,7 @@ TEST(Matrices, InitSparse)
     VerifyMatrix(md);
 }
 
-TEST(Matrices, InitBracket)
+TEST(Linalg, InitBracket)
 {
     Vector3<double> vec{};
     Bracket3<double> bracket{vec};
@@ -116,7 +114,7 @@ TEST(Matrices, InitBracket)
     EXPECT_TRUE(ConceptConstexprMatrix<decltype(bracket)>);
 }
 
-TEST(Matrices, InitRowStack)
+TEST(Linalg, InitRowStack)
 {
     // stack two constexpr sized matrices, check that result is constexpr
     constexpr Matrix3<double> mat33;
@@ -134,7 +132,7 @@ TEST(Matrices, InitRowStack)
     EXPECT_DOUBLE_EQ(rowstack.Get(1, 0), 2.);
 }
 
-TEST(Matrices, InitColStack)
+TEST(Linalg, InitColStack)
 {
     // stack two constexpr sized matrices, check that result is constexpr
     constexpr Matrix3<double> mat33;
@@ -155,9 +153,9 @@ TEST(Matrices, InitColStack)
     EXPECT_DOUBLE_EQ(colstack.Get(0, 1), 2.);
 }
 
-TEST(Matrices, InitTriDiagonal)
+TEST(Linalg, InitTriDiagonal)
 {
-    constexpr Matrix3<double> mat33{{1, 2, 0, 3, 4, 5, 0, 6, 7}};
+    constexpr Matrix3<double> mat33(1, 2, 0, 3, 4, 5, 0, 6, 7);
 
     constexpr auto tri3 = ToTriDiagonal(mat33);
     static_assert(ConceptMatrix<decltype(tri3)>);
@@ -171,5 +169,18 @@ TEST(Matrices, InitTriDiagonal)
     EXPECT_TRUE(IsEqual(d33, trid3));
 }
 
-} // namespace linalg
-} // namespace vic
+//TEST(Linalg, MakeVector)
+//{
+//    constexpr Vector1<double> d1 = MakeVector(1.);
+//    constexpr Vector2<double> d2 = MakeVector(1., 2.);
+//    constexpr Vector3<double> d3 = MakeVector(1., 2., 3.);
+//
+//    constexpr Vector1<float> f1 = MakeVector(1.f);
+//    constexpr Vector2<float> f2 = MakeVector(1.f, 2.f);
+//    constexpr Vector3<float> f3 = MakeVector(1.f, 2.f, 3.f);
+//}
+
+TEST(Linalg, ConstMatrixConstructor)
+{
+    constexpr Vector1<double> d1(1.); //
+}

@@ -1,11 +1,11 @@
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <string>
 #include <string_view>
 #include <variant>
 
-#include <iostream>
 namespace vic
 {
 namespace symbolic
@@ -129,6 +129,3 @@ std::string Represent(const Symbol& symbol)
 
 } // namespace symbolic
 } // namespace vic
-
-//} // namespace symbolic
-//} // namespace vic

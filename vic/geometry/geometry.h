@@ -39,20 +39,15 @@ struct Triangle
     const Point<T, dims>& p3() const { return points[2]; }
 };
 
-// todo: Circle is just a 2d sphere?
-//template <typename T, std::size_t dims>
-//struct Circle
-//{
-//    Point<T, dims> pos{};
-//    T rad{};
-//};
-
 template <typename T, std::size_t dims>
 struct Sphere
 {
     Point<T, dims> pos{};
     T rad{};
 };
+
+template <typename T>
+using Circle = Sphere<T, 2>;
 
 template <typename T>
 struct Interval
@@ -92,6 +87,18 @@ using Line2d = Line<double, 2>;
 using Line3d = Line<double, 3>;
 
 // todo: euler spiral (linearly changing curvature curve)
+
+template <typename T, std::size_t dims>
+struct Plane // ax + by + cz = d
+{
+    vic::linalg::MatrixMxN<T, dims + 1, 1> abcd;
+};
+
+template <typename T>
+using Plane2d = Plane<T, 2>;
+
+template <typename T>
+using Plane3d = Plane<T, 3>;
 
 } // namespace geom
 } // namespace vic

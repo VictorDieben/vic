@@ -1,11 +1,10 @@
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "vic/entity_system/ecs.h"
 
 #include <optional>
 
-namespace vic::ecs
-{
+using namespace vic::ecs;
 
 struct A
 { };
@@ -72,6 +71,10 @@ TEST(ECS, ComponentSystem)
     const ComponentSystem& refComponents = components;
     EXPECT_EQ(refComponents.Get(1).val, 1u);
 
+    for(auto it = refComponents.begin(); it != refComponents.end(); ++it)
+    {
+    }
+
     std::optional<vic::ecs::EntityId> previous;
     for(const auto& comp : refComponents)
     {
@@ -135,24 +138,24 @@ TEST(ECS, Iterate)
     const auto entities = std::vector<EntityId>{1, 2, 3, 4};
     const auto iterationA = ecs.Iterate<A>(entities.begin(), entities.end());
     EXPECT_EQ(iterationA.size(), 2u);
-    for(const auto [entityId, aPtr] : iterationA)
+    for(const auto& [entityId, aPtr] : iterationA)
         EXPECT_TRUE(ecs.Has<A>(entityId));
 
     const auto iterationB = ecs.Iterate<B>(entities.begin(), entities.end());
     EXPECT_EQ(iterationB.size(), 1u);
-    for(const auto [entityId, bPtr] : iterationB)
+    for(const auto& [entityId, bPtr] : iterationB)
         EXPECT_TRUE(ecs.Has<B>(entityId));
 
     const auto entitiesC = std::vector<EntityId>{4, 8, 12, 16, 20, 24, 28, 32};
     const auto iterationC = ecs.Iterate<C>(entitiesC.begin(), entitiesC.end());
     EXPECT_EQ(entitiesC.size(), iterationC.size());
-    for(const auto [entityId, cPtr] : iterationC)
+    for(const auto& [entityId, cPtr] : iterationC)
         EXPECT_TRUE(ecs.Has<C>(entityId));
 
     std::set<EntityId> entitySet{2, 4, 6};
     const auto setIteration = ecs.Iterate<A>(entitySet.begin(), entitySet.end());
     EXPECT_EQ(setIteration.size(), 3);
-    for(const auto [entityId, aPtr] : setIteration)
+    for(const auto& [entityId, aPtr] : setIteration)
         EXPECT_TRUE(ecs.Has<A>(entityId));
 
     // todo: iterate 2d
@@ -163,6 +166,42 @@ TEST(ECS, Iterate)
         EXPECT_EQ(aPtr != nullptr, ecs.Has<A>(id));
         EXPECT_EQ(bPtr != nullptr, ecs.Has<B>(id));
     }
+}
+
+TEST(ECS, ConstIterate)
+{
+    using Ecs = ECS<A, B, C>;
+    Ecs ecs;
+
+    std::vector<EntityId> allIds;
+    for(std::size_t i = 1; i < 100; ++i)
+    {
+        auto handle = ecs.NewEntity();
+        const auto id = handle.Id();
+        allIds.push_back(id);
+
+        if((id % 2) == 0)
+            handle.Add<A>();
+        if((id % 3) == 0)
+            handle.Add<B>();
+        if((id % 4) == 0)
+            handle.Add<C>();
+    }
+
+    const Ecs& constRefEcs = ecs;
+
+    std::set<EntityId> entitySet{2, 4, 6};
+
+    for(auto it = constRefEcs.begin<A>(); it != constRefEcs.end<A>(); ++it)
+    {
+        EXPECT_TRUE(it->first % 2 == 0);
+        EXPECT_TRUE(constRefEcs.Has<A>(it->first));
+    }
+
+    const auto entitiesIteration = constRefEcs.Iterate<A>(entitySet.begin(), entitySet.end());
+
+    for(const auto& [entityId, aPtr] : entitiesIteration)
+        EXPECT_TRUE(ecs.Has<A>(entityId));
 }
 
 TEST(ECS, Filter)
@@ -214,7 +253,7 @@ TEST(ECS, Filter)
 
     // now filter out all objects with both the Fizz and Buzz component
     int sum = 0;
-    for(auto [entId, fizzPtr, buzzPtr] : Filter<Fizz, Buzz>(system))
+    for(const auto& [entId, fizzPtr, buzzPtr] : Filter<Fizz, Buzz>(system))
     {
         const int& index = system.Get<Name>(entId).mI;
         EXPECT_TRUE((index % 3 == 0));
@@ -226,7 +265,7 @@ TEST(ECS, Filter)
     // todo: filter all objects with a Fizz _or_ Buzz component
 
     // iterate 3d;
-    for(auto [entId, namePtr, fizzPtr, buzzPtr] : Filter<Name, Fizz, Buzz>(system))
+    for(const auto& [entId, namePtr, fizzPtr, buzzPtr] : Filter<Name, Fizz, Buzz>(system))
     {
         // no need to do anything, this should just compile
     }
@@ -244,6 +283,12 @@ TEST(ECS, Filter)
         // namePtr->mName = "bla"; // <-- this should not compile! assigning to const ptr
         buzzPtr->buzzName = namePtr->mName;
     }
+
+    //// Overlap
+    //for(auto& [id, name, buzz] : system.Overlap<Name, Buzz>())
+    //{
+    //    buzz.buzzName = name.mName;
+    //}
 }
 
 TEST(ECS, Remove)
@@ -340,10 +385,10 @@ TEST(ECS, TryGet)
     auto secondEnt = system.NewEntity();
     secondEnt.Add<Component>(5);
 
-    if(auto nonexistantA = firstEnt.TryGet<Component>())
+    if(auto* nonexistantA = firstEnt.TryGet<Component>())
         ASSERT_TRUE(false); // should not be reachable
 
-    if(auto existingA = secondEnt.TryGet<Component>())
+    if(auto* existingA = secondEnt.TryGet<Component>())
         ASSERT_EQ(existingA->val, 5);
     else
         ASSERT_TRUE(false); // should not be reachable
@@ -592,7 +637,7 @@ TEST(ECS, ExecuteSystems)
 
     vic::ecs::SystemExecutor executor{&sys1, &sys2, &sys3, &sys4, &sys5};
 
-    executor.Run();
+    executor.Run(); // todo: test that systems that can run simultaneously do so.
 }
 
 TEST(ECS, ForeachComponentType)
@@ -612,4 +657,54 @@ TEST(ECS, ForeachComponentType)
     EXPECT_EQ(componentTypeCount, 7);
 }
 
-} // namespace vic::ecs
+TEST(ECS, ForeachEntity)
+{
+    using ECS = vic::ecs::ECS<A, B, C, D, E, F, G>;
+    ECS ecs;
+    ecs.NewEntity().Add<A>();
+    ecs.NewEntity().Add<B>();
+    ecs.NewEntity().Add<C>();
+    ecs.NewEntity().Add<D>();
+    ecs.NewEntity().Add<E>();
+    ecs.NewEntity().Add<F>();
+    ecs.NewEntity().Add<G>();
+
+    std::set<EntityId> entities;
+    ecs.ForeachEntity([&](const EntityId id) {
+        entities.insert(id);
+        std::size_t count = 0;
+        ecs.ForeachComponentType([&]<typename T>() {
+            if(ecs.Has<T>(id))
+                count++; //
+        });
+        EXPECT_EQ(count, 1); // every entity should have 1 component
+    });
+
+    EXPECT_EQ(entities, (std::set<EntityId>{1, 2, 3, 4, 5, 6, 7}));
+}
+
+TEST(ECS, Set)
+{
+    using ECS = vic::ecs::ECS<A, B, C, D, E, F, G>;
+    ECS ecs;
+    A a{};
+    auto handle = ecs.NewEntity().Set<A>(a);
+}
+
+TEST(ECS, Extend)
+{
+    using Ecs = vic::ecs::ECS<A, B>;
+    Ecs ecs;
+
+    // using ExtendedEcs = vic::ecs::ECS<Ecs, C, D>; // todo
+}
+
+TEST(ECS, Test)
+{
+    std::map<int, std::string> data = {{2, "bla"}, {1, "bla"}};
+
+    auto it = data.begin();
+
+    for(auto& [a, b] : data)
+        std::cout << a << "; " << b << std::endl;
+}

@@ -47,6 +47,7 @@ struct Vertex
     { }
     const VertexIdType Id() const { return mId; }
     VertexDataType& Data() { return mData; }
+    const VertexDataType& Data() const { return mData; }
     VertexIdType mId{};
     VertexDataType mData{};
 };
@@ -73,6 +74,7 @@ struct Edge
 
     const EdgeIdType Id() const { return mId; }
     EdgeDataType& Data() { return mData; }
+    const EdgeDataType& Data() const { return mData; }
     VertexIdType Source() const { return mSource; }
     VertexIdType Sink() const { return mSink; }
 
@@ -116,10 +118,27 @@ public:
         return mEdges.back();
     }
     VertexType& GetVertex(const VertexIdType id) { return mVertices.at(id); } // id is also index
+    const VertexType& GetVertex(const VertexIdType id) const { return mVertices.at(id); } // id is also index
+
     EdgeType& GetEdge(const EdgeIdType id) { return mEdges.at(id); } // id is also index
+    const EdgeType& GetEdge(const EdgeIdType id) const { return mEdges.at(id); } // id is also index
+
     EdgeType* GetEdge(const VertexIdType source, const VertexIdType sink)
     {
         for(auto& edge : mEdges)
+        {
+            if(edge.Source() == source && edge.Sink() == sink)
+                return &edge;
+            // todo: check if graph is directed
+            if(edge.Source() == sink && edge.Sink() == source)
+                return &edge;
+        }
+        return nullptr;
+    }
+
+    const EdgeType* GetEdge(const VertexIdType source, const VertexIdType sink) const
+    {
+        for(const auto& edge : mEdges)
         {
             if(edge.Source() == source && edge.Sink() == sink)
                 return &edge;
@@ -135,7 +154,9 @@ public:
 
     // todo: iterators
     std::vector<VertexType>& Vertices() { return mVertices; }
+    const std::vector<VertexType>& Vertices() const { return mVertices; }
     std::vector<EdgeType>& Edges() { return mEdges; }
+    const std::vector<EdgeType>& Edges() const { return mEdges; }
 
 private:
     std::vector<VertexType> mVertices{};

@@ -39,19 +39,14 @@ public:
     template <typename TGraph>
     TensorVertex(const TGraph& graph, const TensorVertexId& id)
     {
-        FromId(graph, id);
+        FromId<TGraph>(graph, id);
     }
 
-    template <typename TGraph>
-    TensorVertex(const TGraph& graph, const std::vector<VertexIdType>& verts)
+    explicit TensorVertex(const std::vector<VertexIdType>& verts)
         : mVertices(verts)
     { }
 
-    template <typename TGraph>
-    TensorVertexId FromVertexIds(const TGraph& graph, const std::vector<VertexIdType>& verts) const
-    {
-        mVertices = verts;
-    }
+    TensorVertexId FromVertexIds(const std::vector<VertexIdType>& verts) const { mVertices = verts; }
 
     template <typename TGraph>
     TensorVertexId ToId(const TGraph& graph) const

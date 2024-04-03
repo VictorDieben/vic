@@ -36,7 +36,7 @@ template <typename TGraph>
 class VertexIterator
 {
 public:
-    VertexIterator(TGraph& graph)
+    VertexIterator(const TGraph& graph)
         : mGraph(graph)
     { }
     // TODO: true iterator
@@ -44,7 +44,7 @@ public:
     auto end() { return mGraph.Vertices().end(); }
 
 private:
-    TGraph& mGraph;
+    const TGraph& mGraph;
 };
 
 // iterate over all vertices
@@ -52,14 +52,14 @@ template <typename TGraph>
 class EdgeIterator
 {
 public:
-    EdgeIterator(TGraph& graph)
+    EdgeIterator(const TGraph& graph)
         : mGraph(graph)
     { }
     auto begin() { return mGraph.Edges().begin(); }
     auto end() { return mGraph.Edges().end(); }
 
 private:
-    TGraph& mGraph;
+    const TGraph& mGraph;
 };
 
 // iterate over all out edges of a certain vertex
@@ -67,7 +67,7 @@ template <typename TGraph, bool directed = false>
 class OutIterator
 {
 public:
-    OutIterator(TGraph& graph)
+    OutIterator(const TGraph& graph)
         : mGraph(graph)
     { }
 
@@ -116,7 +116,7 @@ public:
     }
 
 private:
-    TGraph& mGraph;
+    const TGraph& mGraph;
     std::vector<std::vector<EdgeIdType>> mOutEdges{};
     std::vector<std::vector<VertexIdType>> mOutVertices{};
     std::vector<std::vector<std::pair<EdgeIdType, VertexIdType>>> mOutEdgeVertices{};

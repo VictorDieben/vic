@@ -3,6 +3,9 @@
 #include "gtest/gtest.h"
 
 #include "vic/linalg/linalg.h"
+#include "vic/utils/to_string.h"
+
+#include <chrono>
 #include <random>
 
 using namespace vic::linalg;

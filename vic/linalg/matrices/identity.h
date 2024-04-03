@@ -64,5 +64,19 @@ using Identity5 = IdentityN<T, 5>;
 template <typename T>
 using Identity6 = IdentityN<T, 6>;
 
+using Identity1d = IdentityN<double, 1>;
+using Identity2d = IdentityN<double, 2>;
+using Identity3d = IdentityN<double, 3>;
+using Identity4d = IdentityN<double, 4>;
+using Identity5d = IdentityN<double, 5>;
+using Identity6d = IdentityN<double, 6>;
+
+using Identity1f = IdentityN<float, 1>;
+using Identity2f = IdentityN<float, 2>;
+using Identity3f = IdentityN<float, 3>;
+using Identity4f = IdentityN<float, 4>;
+using Identity5f = IdentityN<float, 5>;
+using Identity6f = IdentityN<float, 6>;
+
 } // namespace linalg
 } // namespace vic

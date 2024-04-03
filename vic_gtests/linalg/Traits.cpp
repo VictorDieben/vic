@@ -1,28 +1,25 @@
 #include "../test_base.h"
 #include "gtest/gtest.h"
 
-#include "vic/linalg/linalg.h" 
+#include "vic/linalg/linalg.h"
 
-namespace vic
-{
-namespace linalg
-{
+using namespace vic::linalg;
 
-TEST(Concepts, TestConceptRows)
+TEST(Linalg, ConceptRows)
 {
     struct s1
     {
-        constexpr static std::size_t GetRows() { return 1; }
+        constexpr static Row GetRows() { return 1; }
     };
 
     struct s2
     {
-        static std::size_t GetRows() { return 1; }
+        static Row GetRows() { return 1; }
     };
 
     struct s3
     {
-        std::size_t GetRows() const { return 1; }
+        Row GetRows() const { return 1; }
     };
 
     EXPECT_TRUE(ConceptConstexprRows<s1>);
@@ -30,7 +27,7 @@ TEST(Concepts, TestConceptRows)
     EXPECT_FALSE(ConceptConstexprRows<s3>);
 }
 
-TEST(Concepts, TestConcepts)
+TEST(Linalg, Concepts)
 {
     //using mat = Matrix<float, 1, 1>;
     //using identity = Identity<float, 1>;
@@ -89,6 +86,3 @@ TEST(Concepts, TestConcepts)
     //EXPECT_FALSE((ConceptVector<Matrix<float, 1, 2>>));
     //EXPECT_FALSE((ConceptVector<Matrix<float, 12, 124>>));
 }
-
-} // namespace linalg
-} // namespace vic

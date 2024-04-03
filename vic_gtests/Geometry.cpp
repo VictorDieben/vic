@@ -1,9 +1,9 @@
-
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "vic/geometry/algorithms/algorithms.h"
 #include "vic/geometry/algorithms/assignment_problem.h"
 #include "vic/geometry/algorithms/bbox_tree.h"
+#include "vic/geometry/algorithms/delaunay.h"
 #include "vic/geometry/algorithms/intersections.h"
 #include "vic/geometry/algorithms/interval_heap.h"
 #include "vic/geometry/geometry.h"
@@ -20,12 +20,7 @@
 #include <random>
 
 using namespace vic;
-
-namespace vic
-{
-namespace geom
-{
-
+using namespace vic::geom;
 using namespace vic::linalg;
 using namespace vic::mesh;
 
@@ -41,24 +36,24 @@ TEST(Geom, Initialization)
     ASSERT_NEAR(d1.Get(0), 0.1, 1E-10);
     ASSERT_NEAR(d1.Get(1), 10., 1E-10);
 
-    Line<int, 2> l1{Point2i{{0, 1}}, Point2i{{2, 3}}};
+    Line<int, 2> l1{Point2i{0, 1}, Point2i{2, 3}};
     ASSERT_EQ(l1.pos.Get(0), 0);
     ASSERT_EQ(l1.pos.Get(1), 1);
     ASSERT_EQ(l1.dir.Get(0), 2);
     ASSERT_EQ(l1.dir.Get(1), 3);
 
-    LineSegment<int, 2> seg1{Point2i{{0, 1}}, Point2i{{1, 0}}};
+    LineSegment<int, 2> seg1{Point2i{0, 1}, Point2i{1, 0}};
     ASSERT_EQ(seg1.p1.Get(0), 0);
     ASSERT_EQ(seg1.p1.Get(1), 1);
     ASSERT_EQ(seg1.p2.Get(0), 1);
     ASSERT_EQ(seg1.p2.Get(1), 0);
 
-    ASSERT_TRUE(IsEqual(Point2i{{0, 0}}, Point2i{{0, 0}}));
+    ASSERT_TRUE(IsEqual(Point2i{0, 0}, Point2i{0, 0}));
 
-    Triangle<int, 2> tri1{Point2i{{0, 0}}, Point2i{{1, 0}}, Point2i{{0, 1}}};
-    ASSERT_TRUE(IsEqual(tri1.points[0], Point2i{{0, 0}}));
-    ASSERT_TRUE(IsEqual(tri1.points[1], Point2i{{1, 0}}));
-    ASSERT_TRUE(IsEqual(tri1.points[2], Point2i{{0, 1}}));
+    Triangle<int, 2> tri1{Point2i{0, 0}, Point2i{1, 0}, Point2i{0, 1}};
+    ASSERT_TRUE(IsEqual(tri1.points[0], Point2i{0, 0}));
+    ASSERT_TRUE(IsEqual(tri1.points[1], Point2i{1, 0}));
+    ASSERT_TRUE(IsEqual(tri1.points[2], Point2i{0, 1}));
 
     Interval<int> interval1{-1, 1};
     ASSERT_EQ(interval1.min, -1);
@@ -68,8 +63,8 @@ TEST(Geom, Initialization)
                        Interval<int>{-2, 2},
                        Interval<int>{-3, 3}};
 
-    Cylinder<double, 3> cylinder{Point3d{{-1, 0, 0}}, //
-                                 Point3d{{1, 0, 0}},
+    Cylinder<double, 3> cylinder{Point3d{-1, 0, 0}, //
+                                 Point3d{1, 0, 0},
                                  1.};
 }
 
@@ -82,23 +77,23 @@ TEST(Geom, TriLineIntersection)
                std::fabs(s1.t - s2.t) < 1E-10;
     };
 
-    constexpr Triangle<double, 3> tri{Point3d{{0, 0, 0}}, //
-                                      Point3d{{1, 0, 0}},
-                                      Point3d{{0, 1, 0}}};
+    constexpr Triangle<double, 3> tri{Point3d{0, 0, 0}, //
+                                      Point3d{1, 0, 0},
+                                      Point3d{0, 1, 0}};
 
-    constexpr LineSegment<double, 3> seg{Point3d{{0, 0, 1}}, //
-                                         Point3d{{0, 0, -1}}};
+    constexpr LineSegment<double, 3> seg{Point3d{0, 0, 1}, //
+                                         Point3d{0, 0, -1}};
 
     constexpr auto res = TriLineIntersection(tri, seg);
     EXPECT_TRUE(ResultEqual(res, Result{0, 0, .5}));
 
-    auto ans = TriLineIntersection(tri, LineSegment<double, 3>{Point3d{{1, 0, 1}}, Point3d{{1, 0, -1}}});
+    auto ans = TriLineIntersection(tri, LineSegment<double, 3>{Point3d{1, 0, 1}, Point3d{1, 0, -1}});
     EXPECT_TRUE(ResultEqual(Result{1., 0, .5}, ans));
 
-    ans = TriLineIntersection(tri, LineSegment<double, 3>{Point3d{{0, 1, 1}}, Point3d{{0, 1, -1}}});
+    ans = TriLineIntersection(tri, LineSegment<double, 3>{Point3d{0, 1, 1}, Point3d{0, 1, -1}});
     EXPECT_TRUE(ResultEqual(Result{0., 1., .5}, ans));
 
-    ans = TriLineIntersection(tri, LineSegment<double, 3>{Point3d{{1, 1, 1}}, Point3d{{1, 1, -1}}});
+    ans = TriLineIntersection(tri, LineSegment<double, 3>{Point3d{1, 1, 1}, Point3d{1, 1, -1}});
     EXPECT_TRUE(ResultEqual(Result{1., 1., .5}, ans));
 
     std::default_random_engine g;
@@ -107,9 +102,9 @@ TEST(Geom, TriLineIntersection)
     // ~45.5m iterations/s
     for(const auto i : Range(1000))
     {
-        const auto t1 = Point3d{{dist(g), dist(g), dist(g)}};
-        const auto t2 = Point3d{{dist(g) + 1., dist(g), dist(g)}};
-        const auto t3 = Point3d{{dist(g), dist(g) + 1., dist(g)}};
+        const auto t1 = Point3d{dist(g), dist(g), dist(g)};
+        const auto t2 = Point3d{dist(g) + 1., dist(g), dist(g)};
+        const auto t3 = Point3d{dist(g), dist(g) + 1., dist(g)};
 
         const auto e12 = Subtract(t2, t1);
         const auto e13 = Subtract(t3, t1);
@@ -119,8 +114,8 @@ TEST(Geom, TriLineIntersection)
         const auto o1 = 0., o2 = 0., o3 = 0.;
         const auto d1 = dist(g), d2 = dist(g), d3 = dist(g);
 
-        const auto s1 = Point3d{{o1 + d1, o2 + d2, o3 + d3}};
-        const auto s2 = Point3d{{o1 - d1, o2 - d2, o3 - d3}};
+        const auto s1 = Point3d{o1 + d1, o2 + d2, o3 + d3};
+        const auto s2 = Point3d{o1 - d1, o2 - d2, o3 - d3};
 
         const auto dir = Subtract(s2, s1); // line direction
 
@@ -162,7 +157,7 @@ TEST(Geom, SphereLineIntersection)
 
         const double r = 1. + offset(g);
 
-        const Sphere<double, 3> sphere{Point3d{{x + offset(g), y + offset(g), z + offset(g)}}, r};
+        const Sphere<double, 3> sphere{Point3d{x + offset(g), y + offset(g), z + offset(g)}, r};
 
         const double dx = dxyz(g);
         const double dy = dxyz(g);
@@ -197,36 +192,36 @@ TEST(Geom, AABBLineIntersection)
 
     // simple intersection
     auto res = AABBLineIntersection(bbox,
-                                    Line<double, 3>{Point<double, 3>{{0, 1.5, 1.5}}, //
-                                                    Direction<double, 3>{{1, 0, 0}}});
+                                    Line<double, 3>{Point<double, 3>{0, 1.5, 1.5}, //
+                                                    Direction<double, 3>{1, 0, 0}});
     EXPECT_DOUBLE_EQ(res.interval.min, 1.);
     EXPECT_DOUBLE_EQ(res.interval.max, 2.);
 
     // intersection starting inside bbox
     auto res2 = AABBLineIntersection(bbox,
-                                     Line<double, 3>{Point<double, 3>{{1.5, 1.5, 1.5}}, //
-                                                     Direction<double, 3>{{0, 1, 0}}});
+                                     Line<double, 3>{Point<double, 3>{1.5, 1.5, 1.5}, //
+                                                     Direction<double, 3>{0, 1, 0}});
     EXPECT_DOUBLE_EQ(res2.interval.min, -0.5);
     EXPECT_DOUBLE_EQ(res2.interval.max, 0.5);
 
     // intersection cutting through a corner
     auto res3 = AABBLineIntersection(bbox,
-                                     Line<double, 3>{Point<double, 3>{{0, 0, 1.5}}, //
-                                                     Direction<double, 3>{{1, 1, 0}}});
+                                     Line<double, 3>{Point<double, 3>{0, 0, 1.5}, //
+                                                     Direction<double, 3>{1, 1, 0}});
     EXPECT_DOUBLE_EQ(res3.interval.min, 1.);
     EXPECT_DOUBLE_EQ(res3.interval.max, 2.);
 
     // zero direction
     auto res4 = AABBLineIntersection(bbox,
-                                     Line<double, 3>{Point<double, 3>{{1.5, 1.5, 1.5}}, //
-                                                     Direction<double, 3>{{0, 0, 0}}});
+                                     Line<double, 3>{Point<double, 3>{1.5, 1.5, 1.5}, //
+                                                     Direction<double, 3>{0, 0, 0}});
     EXPECT_DOUBLE_EQ(res4.interval.min, -std::numeric_limits<double>::infinity());
     EXPECT_DOUBLE_EQ(res4.interval.max, std::numeric_limits<double>::infinity());
 
     // intersection in negative direction
     auto res5 = AABBLineIntersection(bbox,
-                                     Line<double, 3>{Point<double, 3>{{3, 3, 3}}, //
-                                                     Direction<double, 3>{{-1, -1, -1}}});
+                                     Line<double, 3>{Point<double, 3>{3, 3, 3}, //
+                                                     Direction<double, 3>{-1, -1, -1}});
     EXPECT_DOUBLE_EQ(res5.interval.min, 1.);
     EXPECT_DOUBLE_EQ(res5.interval.max, 2.);
 }
@@ -328,7 +323,7 @@ TEST(Geom, BoxTree)
         TestObject object{};
         const double px = pos(g), py = pos(g), pz = pos(g);
         for(const auto i : Range(10))
-            object.push_back(Point<double, 3>{{px + eps(g), py + eps(g), pz + eps(g)}});
+            object.push_back(Point<double, 3>{px + eps(g), py + eps(g), pz + eps(g)});
         return object;
     };
 
@@ -336,7 +331,7 @@ TEST(Geom, BoxTree)
         objects.push_back(makeObject());
 
     {
-        CTimer timer{};
+        Timer timer{};
         for(auto& object : objects)
             boxtree.Insert(object);
         const auto totalTime = timer.GetTime();
@@ -422,13 +417,13 @@ TEST(Geom, IntervalHeap)
     // find overlaps using algorithm
     std::chrono::duration<double> time, bruteForceTime;
     std::vector<Key> overlap;
-    CTimer timer{};
+    Timer timer{};
     heapX.Overlap(overlapInterval, overlap);
     time = timer.GetTime();
 
     // find overlaps using brute force
     std::vector<Key> bruteForce;
-    CTimer bruteForceTimer{};
+    Timer bruteForceTimer{};
     for(Key i = 0; i < boxes.size(); ++i)
         if(Overlaps(overlapInterval, lambdax(i)))
             bruteForce.push_back(i);
@@ -572,55 +567,6 @@ TEST(Geom, PyramidVector)
     ASSERT_EQ(secondLevel.end(), thirdLevel.begin());
 }
 
-//TEST(Geom, BTreeVector)
-//{
-//    EXPECT_EQ(NextPowerOf2(0u), 1); // todo: probably not what we want
-//    EXPECT_EQ(NextPowerOf2(1u), 1);
-//    EXPECT_EQ(NextPowerOf2(2u), 2);
-//    EXPECT_EQ(NextPowerOf2(3u), 4);
-//    EXPECT_EQ(NextPowerOf2(4u), 4);
-//    EXPECT_EQ(NextPowerOf2(7u), 8);
-//    EXPECT_EQ(NextPowerOf2(8u), 8);
-//
-//    BTreeVector<double> vec{};
-//    EXPECT_EQ(vec.GetLevel(), 0);
-//    EXPECT_EQ(vec.GetCapacity(), 1);
-//
-//    vec.push_back({});
-//    EXPECT_EQ(vec.GetLevel(), 0);
-//    EXPECT_EQ(vec.GetCapacity(), 1);
-//
-//    vec.push_back({});
-//    EXPECT_EQ(vec.GetLevel(), 1);
-//    EXPECT_EQ(vec.GetCapacity(), 2);
-//
-//    vec.push_back({});
-//    EXPECT_EQ(vec.GetLevel(), 2);
-//    EXPECT_EQ(vec.GetSize(), 3);
-//    EXPECT_EQ(vec.GetCapacity(), 4);
-//
-//    vec.push_back({});
-//    EXPECT_EQ(vec.GetLevel(), 2);
-//    EXPECT_EQ(vec.GetSize(), 4);
-//    EXPECT_EQ(vec.GetCapacity(), 4);
-//
-//    vec.push_back({});
-//    EXPECT_EQ(vec.GetLevel(), 3);
-//    EXPECT_EQ(vec.GetSize(), 5);
-//    EXPECT_EQ(vec.GetCapacity(), 8);
-//
-//    // now pop the back items
-//    vec.pop_back();
-//    EXPECT_EQ(vec.GetLevel(), 3);
-//    EXPECT_EQ(vec.GetSize(), 4);
-//    EXPECT_EQ(vec.GetCapacity(), 8);
-//
-//    vec.pop_back();
-//    EXPECT_EQ(vec.GetLevel(), 2);
-//    EXPECT_EQ(vec.GetSize(), 3);
-//    EXPECT_EQ(vec.GetCapacity(), 4);
-//}
-
 TEST(Geom, BalancedAABBTree)
 {
     using Key = std::size_t;
@@ -671,7 +617,7 @@ TEST(Geom, GroupPairsOfTwo)
     const auto volumeLambda = [](const Inter& left, const Inter& right) {
         const auto combined = Combine(left, right);
         return combined.max - combined.min;
-    }; // sum of volumes: 55.9504
+    };
 
     // filled fraction is a slightly better heuristic.
     // but maybe the extra computational effort is not worth it.
@@ -729,7 +675,7 @@ TEST(Geom, MeshCubeSphere)
     for(const auto& normal : vertexNormals)
         EXPECT_NEAR(vic::linalg::Norm(normal), 1., 1e-14);
 
-    const auto uvs = GenerateVertexUVsPolar<double>(mesh, Vertex<double>{{0., 0., 0.}});
+    const auto uvs = GenerateVertexUVsPolar<double>(mesh, Vertex<double>{0., 0., 0.});
     for(const auto& uv : uvs)
     {
         // todo: check that uv is within [0; 1]
@@ -740,7 +686,7 @@ TEST(Geom, MeshCube)
 {
     const AABB<double, 3> bbox{Interval<double>{1, 2}, Interval<double>{1, 2}, Interval<double>{1, 2}};
 
-    const auto cubeMesh = GenerateCube(bbox);
+    const auto cubeMesh = GenerateBboxCube(bbox);
     EXPECT_TRUE(IsClosed(cubeMesh));
 
     const auto subdividedCube = Subdivide(cubeMesh);
@@ -768,9 +714,9 @@ TEST(Geom, MeshTorus)
 TEST(Geom, Subdivide)
 {
     TriMesh<double> triMesh;
-    triMesh.vertices = {ToVertex(0., 0., 0.), //
-                        ToVertex(1., 0., 0.),
-                        ToVertex(0., 1., 0.)};
+    triMesh.vertices = {Vertex<double>{0., 0., 0.}, //
+                        Vertex<double>{1., 0., 0.},
+                        Vertex<double>{0., 1., 0.}};
     triMesh.tris = {Tri{0, 1, 2}};
 
     auto subdivided = Subdivide(triMesh);
@@ -795,8 +741,8 @@ TEST(Geom, Revolve)
     const std::size_t n = 16;
 
     EdgeMesh<double> mesh;
-    mesh.vertices = {Vertex<double>{{1., 0., -.1}}, //
-                     Vertex<double>{{1., 0., .1}}};
+    mesh.vertices = {Vertex<double>{1., 0., -.1}, //
+                     Vertex<double>{1., 0., .1}};
     mesh.edges = {{0, 1}};
 
     const TriMesh revolvedMesh = Revolve(mesh, n, false);
@@ -810,5 +756,196 @@ TEST(Geom, EulerPoincare)
     //
 }
 
-} // namespace geom
-} // namespace vic
+TEST(Geom, CircumscribedCircle)
+{
+    Point2d p1{1., 0.};
+    Point2d p2{1., 1.};
+    Point2d p3{0., 1.};
+
+    const auto circle = CircumscribedCircle(p1, p2, p3);
+
+    EXPECT_TRUE(IsEqual(circle.pos, Point2d(.5, .5)));
+    EXPECT_EQ(circle.rad, std::sqrt(.5));
+
+    // test a bunch of random circles
+    std::default_random_engine g{1234};
+    std::uniform_real_distribution<double> rand(-1., 1.);
+    std::uniform_real_distribution<double> radius(.1, 10.);
+
+    for(std::size_t i = 0; i < 1000; ++i)
+    {
+        const double x = rand(g);
+        const double y = rand(g);
+        const double rad = radius(g);
+
+        const double theta1 = 2. * std::numbers::pi * rand(g);
+        p1 = Point2d(x + (rad * std::sin(theta1)), y + (rad * std::cos(theta1)));
+
+        const double theta2 = 2. * std::numbers::pi * rand(g);
+        p2 = Point2d(x + (rad * std::sin(theta2)), y + (rad * std::cos(theta2)));
+
+        const double theta3 = 2. * std::numbers::pi * rand(g);
+        p3 = Point2d(x + (rad * std::sin(theta3)), y + (rad * std::cos(theta3)));
+
+        const auto circumscribedCircle = CircumscribedCircle(p1, p2, p3);
+
+        EXPECT_TRUE(IsEqual(circumscribedCircle.pos, Point2d(x, y), 1e-6));
+        EXPECT_NEAR(circumscribedCircle.rad, rad, 1e-6);
+    }
+}
+
+TEST(Geom, SuperTriangle)
+{
+
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> pos(-1., 1.);
+
+    const std::size_t numVertices = 1000;
+
+    std::vector<Vector2d> vertices;
+    for(std::size_t i = 0; i < numVertices; ++i)
+        vertices.push_back(Vector2d(pos(g), pos(g)));
+
+    const auto [a, b, c] = SuperTriangle(vertices);
+
+    const auto circumCircle = CircumscribedCircle(vertices.at(a), vertices.at(b), vertices.at(c));
+
+    std::vector<double> distances;
+
+    for(std::size_t i = 0; i < numVertices; ++i)
+    {
+        distances.push_back(Norm(Subtract(vertices.at(i), circumCircle.pos)));
+
+        if(i == a || i == b || i == c)
+            continue;
+
+        ASSERT_TRUE(PointInsideSphere(vertices.at(i), circumCircle));
+    }
+
+    std::sort(distances.begin(), distances.end());
+
+    // verify that the three largest distances are almost equal to rad
+    EXPECT_NEAR(circumCircle.rad, distances.at(numVertices - 1), 1e-10);
+    EXPECT_NEAR(circumCircle.rad, distances.at(numVertices - 2), 1e-10);
+    EXPECT_NEAR(circumCircle.rad, distances.at(numVertices - 3), 1e-10);
+}
+
+TEST(Geom, Delaunay2d)
+{
+    std::default_random_engine g{123};
+    std::uniform_real_distribution<double> pos(-1., 1.);
+
+    const std::size_t numPoints = 120000;
+
+    // performance [points ; seconds]:
+    // 1000         0.00363
+    // 10000        0.175
+    // 40000        2.359
+    // 60000        4.995
+    // 80000        10.0
+    // 100000       18.6
+    // 120000       34.07
+
+    std::vector<Vector2d> vertices;
+    for(std::size_t i = 0; i < numPoints; ++i)
+        vertices.push_back(Vector2d(pos(g), pos(g)));
+
+    const vic::Timer timer;
+    const auto tris = Delaunay2d(vertices);
+    std::cout << std::format("duration: {}ms", timer.GetTime().count() * 1000.) << std::endl;
+
+    // verify that each vertex occurs at least once
+    std::set<std::size_t> indices;
+    for(const auto& [a, b, c] : tris)
+    {
+        indices.insert(a);
+        indices.insert(b);
+        indices.insert(c);
+    }
+
+    ASSERT_EQ(numPoints, indices.size());
+
+    // ASSERT_TRUE(false); // to see test output (ffs vs)
+
+    std::size_t incorrectCount = 0;
+
+    for(const auto& [a, b, c] : tris)
+    {
+        const auto circumCircle = CircumscribedCircle(vertices.at(a), vertices.at(b), vertices.at(c));
+
+        for(std::size_t i = 0; i < numPoints; ++i)
+        {
+            if(i != a && i != b && i != c)
+            {
+                const auto& vert = vertices.at(i);
+                //const auto inside = PointInsideSphere(vert, circumCircle);
+                const double distance = Norm(Subtract(vert, circumCircle.pos));
+                if((distance / circumCircle.rad) < 0.999)
+                    incorrectCount++; // quite large epsilon because of chance of colinearity
+            }
+        }
+    }
+
+    ASSERT_EQ(incorrectCount, 0);
+}
+
+TEST(Geom, ConvexHull)
+{
+    std::default_random_engine g{123};
+    std::uniform_real_distribution<double> pos(-1., 1.);
+
+    const std::size_t numPoints = 1000000;
+
+    // construct random 2d point cloud
+    std::vector<Vector2d> vertices;
+    for(std::size_t i = 0; i < numPoints; ++i)
+        vertices.push_back(Vector2d(pos(g), pos(g)));
+
+    const vic::Timer timer;
+    const auto hull = ConvexHull(vertices);
+    std::cout << std::format("duration: {}ms", timer.GetTime().count() * 1000.) << std::endl;
+
+    const std::set<std::size_t> hullSet(hull.begin(), hull.end());
+
+    ASSERT_EQ(hull.size(), hullSet.size());
+
+    std::size_t failures = 0;
+
+    for(std::size_t idx = 0; idx < numPoints; ++idx)
+    {
+        if(hullSet.contains(idx))
+            continue;
+
+        for(std::size_t iHull = 0; iHull < hull.size() - 1; ++iHull)
+            if(IsCCW(vertices.at(hull.at(iHull)), vertices.at(hull.at(iHull + 1)), vertices.at(idx)) < 0.)
+                failures++;
+    }
+
+    ASSERT_EQ(failures, 0);
+
+    ASSERT_TRUE(false);
+}
+
+TEST(Geom, ProjectionRejection)
+{
+    std::default_random_engine g{123};
+    std::uniform_real_distribution<double> factor(-10., 10.);
+
+    for(auto i : Range(10))
+    {
+        Point3d vec{0, 0, factor(g)};
+        const auto [projection, rejection] = ProjectionRejection(vec, Point3d{0, 0, factor(g)});
+        EXPECT_TRUE(IsEqual(projection, vec));
+        EXPECT_TRUE(IsEqual(rejection, Point3d{0, 0, 0}));
+    }
+}
+
+TEST(Geom, TriTriIntersection)
+{
+    //
+}
+
+TEST(Geom, Merge)
+{
+    //
+}

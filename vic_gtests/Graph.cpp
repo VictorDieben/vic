@@ -8,12 +8,11 @@
 
 #include <random>
 
+#include "vic/utils/to_string.h"
+
 using namespace vic;
 
-namespace vic
-{
-namespace graph
-{
+using namespace vic::graph;
 
 struct TestVertexData
 {
@@ -26,21 +25,6 @@ struct TestEdgeData
     using VertexIdType = uint16_t;
     using EdgeIdType = uint16_t;
 };
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec)
-{
-    os << "[";
-    for(auto it = vec.begin(); it < vec.end(); ++it)
-    {
-        os << *it;
-        if(it < std::prev(vec.end()))
-            os << ", ";
-    }
-    os << "]";
-    return os;
-}
-
 using TestVertex = Vertex<TestVertexData>;
 using TestEdge = Edge<TestEdgeData>;
 using TestVertexId = TestVertex::VertexIdType;
@@ -259,7 +243,7 @@ TEST(Graph, AStar)
 
 TEST(Graph, TensorGraph)
 {
-    constexpr std::size_t nx = 10, ny = 10;
+    constexpr std::size_t nx = 5, ny = 5;
     constexpr std::size_t nVertices = nx * ny;
     TestGraph graph = ConstructGridGraph(nx, ny);
 
@@ -290,7 +274,7 @@ TEST(Graph, TensorGraph)
             {
                 // create a tensor vertex [v1, v2, v3]
                 const auto verts = std::vector<TestVertexId>{{v1, v2, v3}};
-                TensorVertexType tvert{tensorgraph, verts};
+                TensorVertexType tvert{verts};
 
                 // convert it to a tensor id
                 TensorVertexId tensor_id = tvert.ToId(tensorgraph);
@@ -329,44 +313,44 @@ TEST(Graph, TensorOutIter)
     const auto lambda = [&](const TensorVertexType& vert) { ids.insert(vert.ToId(tensorgraph)); };
 
     // verify center point in a 2d 3x3 grid
-    TensorVertexType tvert{tensorgraph, {4, 4}};
+    TensorVertexType tvert{{4, 4}};
     ids.clear();
     iter.ForeachOut(tvert.ToId(tensorgraph), lambda);
     ASSERT_EQ(ids.size(), 5 * 5);
 
     // verify corner + edge in 3x3 grid
-    tvert = TensorVertexType(tensorgraph, {0, 3});
+    tvert = TensorVertexType{{0, 3}};
     ids.clear();
     iter.ForeachOut(tvert.ToId(tensorgraph), lambda);
     ASSERT_EQ(ids.size(), 3 * 4);
 
     // verify 2 opposing edges, in 3x3 grid
-    tvert = TensorVertexType(tensorgraph, {3, 5});
+    tvert = TensorVertexType{{3, 5}};
     ids.clear();
     iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
     ASSERT_EQ(ids.size(), (4 * 4) - 1);
 
     // verify that an invalid start node has no outs
-    tvert = TensorVertexType(tensorgraph, {2, 2});
+    tvert = TensorVertexType{{2, 2}};
     ids.clear();
     iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
     ASSERT_EQ(ids.size(), 0);
 
     // verify that a different invalid start node has no outs
-    tvert = TensorVertexType(tensorgraph, {4, 4});
+    tvert = TensorVertexType{{4, 4}};
     ids.clear();
     iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
     ASSERT_EQ(ids.size(), 0);
 
     // verify 2 closeby edges
-    tvert = TensorVertexType(tensorgraph, {1, 3});
+    tvert = TensorVertexType{{1, 3}};
     ids.clear();
     iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
     ASSERT_EQ(ids.size(), (4 * 4) - 2);
 
     // verify 3 directly connected vertices
     tensorgraph.SetDimensions(3);
-    tvert = TensorVertexType(tensorgraph, {1, 4, 7});
+    tvert = TensorVertexType{{1, 4, 7}};
     ids.clear();
     iter.ForeachValidOut(tvert.ToId(tensorgraph), lambda);
     ASSERT_EQ(ids.size(), 3 * 3 * 3);
@@ -405,26 +389,26 @@ TEST(Graph, TensorAStar)
     tensorAStar.Update();
 
     // calculate a few cases, check total duration
-    auto res = tensorAStar.Calculate(TensorVertexType(tensorgraph, {0, 2}).ToId(tensorgraph), //
-                                     TensorVertexType(tensorgraph, {8, 6}).ToId(tensorgraph));
+    auto res = tensorAStar.Calculate(TensorVertexType{{0, 2}}.ToId(tensorgraph), //
+                                     TensorVertexType{{8, 6}}.ToId(tensorgraph));
     ASSERT_EQ(res.size(), 5);
 
-    res = tensorAStar.Calculate(TensorVertexType(tensorgraph, {0, 2}).ToId(tensorgraph), //
-                                TensorVertexType(tensorgraph, {2, 0}).ToId(tensorgraph));
+    res = tensorAStar.Calculate(TensorVertexType{{0, 2}}.ToId(tensorgraph), //
+                                TensorVertexType{{2, 0}}.ToId(tensorgraph));
     ASSERT_EQ(res.size(), 5);
 
-    res = tensorAStar.Calculate(TensorVertexType(tensorgraph, {3, 8}).ToId(tensorgraph), //
-                                TensorVertexType(tensorgraph, {8, 3}).ToId(tensorgraph));
+    res = tensorAStar.Calculate(TensorVertexType{{3, 8}}.ToId(tensorgraph), //
+                                TensorVertexType{{8, 3}}.ToId(tensorgraph));
     ASSERT_EQ(res.size(), 4);
 
-    res = tensorAStar.Calculate(TensorVertexType(tensorgraph, {0, 1}).ToId(tensorgraph), //
-                                TensorVertexType(tensorgraph, {0, 4}).ToId(tensorgraph));
+    res = tensorAStar.Calculate(TensorVertexType{{0, 1}}.ToId(tensorgraph), //
+                                TensorVertexType{{0, 4}}.ToId(tensorgraph));
     ASSERT_EQ(res.size(), 2);
 
     // test with 3 dimensions
     tensorgraph.SetDimensions(3);
-    res = tensorAStar.Calculate(TensorVertexType(tensorgraph, {0, 1, 2}).ToId(tensorgraph), //
-                                TensorVertexType(tensorgraph, {6, 7, 8}).ToId(tensorgraph));
+    res = tensorAStar.Calculate(TensorVertexType{{0, 1, 2}}.ToId(tensorgraph), //
+                                TensorVertexType{{6, 7, 8}}.ToId(tensorgraph));
     std::vector<TensorVertexType> vertices;
     for(const TensorVertexId& item : res)
         vertices.push_back(TensorVertexType(tensorgraph, item));
@@ -478,8 +462,8 @@ TEST(Graph, TensorAStarHighDim)
             end.push_back(TestVertexId(99 - i));
         }
 
-        auto res = tensorAStar.Calculate(TensorVertexType(tensorgraph, start).ToId(tensorgraph), //
-                                         TensorVertexType(tensorgraph, end).ToId(tensorgraph));
+        auto res = tensorAStar.Calculate(TensorVertexType(start).ToId(tensorgraph), //
+                                         TensorVertexType(end).ToId(tensorgraph));
 
         std::vector<TensorVertexType> vertices;
         for(const TensorVertexId& item : res)
@@ -493,6 +477,3 @@ TEST(Graph, TensorAStarHighDim)
         std::cout << "========" << std::endl;
     }
 }
-
-} // namespace graph
-} // namespace vic

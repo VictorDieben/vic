@@ -34,22 +34,37 @@ struct MatrixConst : public MatrixBaseSelector<TShape>
     constexpr MatrixConst(const std::array<T, ArraySize>& data)
         : mData(data)
     { }
+
+    template <typename... Ts>
+        requires(std::is_convertible_v<Ts, T> && ...) && (sizeof...(Ts) == ArraySize)
+    constexpr MatrixConst(Ts&&... data)
+        : mData({static_cast<T>(data)...})
+    { }
+
     constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
-        return mData.at(RowMayorRowColToIndex<TShape::cols>(i, j));
+        return mData[RowMayorRowColToIndex<TShape::cols>(i, j)];
     }
     constexpr T Get(const Row i) const
     {
         assert(i < MatrixBase::GetRows());
         static_assert(MatrixBase::GetColumns() == 1);
-        return mData.at(RowMayorRowColToIndex<TShape::cols>(i, 0));
+        return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
     }
     constexpr T& At(const Row i, const Col j)
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[RowMayorRowColToIndex<TShape::cols>(i, j)];
     }
+    constexpr T& At(const Row i)
+    {
+        assert(i < MatrixBase::GetRows());
+        static_assert(MatrixBase::GetColumns() == 1);
+        return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
+    }
+
+    constexpr T* data() { return mData.data(); }
 
 private:
     std::array<T, ArraySize> mData{};
@@ -71,13 +86,15 @@ struct MatrixRowConst : public MatrixBaseSelector<TShape>
     constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
-        return mData.at(ColMayorRowColToIndex<TShape::rows>(i, j));
+        return mData[ColMayorRowColToIndex<TShape::rows>(i, j)];
     }
     constexpr T& At(const Row i, const Col j)
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[ColMayorRowColToIndex<TShape::rows>(i, j)];
     }
+
+    constexpr T* data() { return mData.data(); }
 
 private:
     std::vector<T> mData{};
@@ -100,13 +117,27 @@ struct MatrixColConst : public MatrixBaseSelector<TShape>
     constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
-        return mData.at(RowMayorRowColToIndex<TShape::cols>(i, j));
+        return mData[RowMayorRowColToIndex<TShape::cols>(i, j)];
+    }
+    constexpr T Get(const Row i) const
+    {
+        assert(i < MatrixBase::GetRows());
+        static_assert(MatrixBase::GetColumns() == 1);
+        return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
     }
     constexpr T& At(const Row i, const Col j)
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[RowMayorRowColToIndex<TShape::cols>(i, j)];
     }
+    constexpr T& At(const Row i)
+    {
+        assert(i < MatrixBase::GetRows());
+        static_assert(MatrixBase::GetColumns() == 1);
+        return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
+    }
+
+    constexpr T* data() { return mData.data(); }
 
 private:
     std::vector<T> mData{};
@@ -128,13 +159,15 @@ struct MatrixDynamic : public MatrixBaseSelector<TShape>
     constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
-        return mData.at(RowMayorRowColToIndex(i, j, MatrixBase::GetColumns()));
+        return mData[RowMayorRowColToIndex(i, j, MatrixBase::GetColumns())];
     }
     constexpr T& At(const Row i, const Col j)
     {
         assert(((i < MatrixBase::GetRows()) && (j < MatrixBase::GetColumns())));
         return mData[RowMayorRowColToIndex(i, j, MatrixBase::GetColumns())];
     }
+
+    constexpr T* data() { return mData.data(); }
 
 private:
     std::vector<T> mData{};
@@ -170,6 +203,20 @@ using Matrix5 = MatrixMxN<T, 5, 5>;
 template <typename T>
 using Matrix6 = MatrixMxN<T, 6, 6>;
 
+using Matrix11f = MatrixMxN<float, 1, 1>;
+using Matrix22f = MatrixMxN<float, 2, 2>;
+using Matrix33f = MatrixMxN<float, 3, 3>;
+using Matrix44f = MatrixMxN<float, 4, 4>;
+using Matrix55f = MatrixMxN<float, 5, 5>;
+using Matrix66f = MatrixMxN<float, 6, 6>;
+
+using Matrix11d = MatrixMxN<double, 1, 1>;
+using Matrix22d = MatrixMxN<double, 2, 2>;
+using Matrix33d = MatrixMxN<double, 3, 3>;
+using Matrix44d = MatrixMxN<double, 4, 4>;
+using Matrix55d = MatrixMxN<double, 5, 5>;
+using Matrix66d = MatrixMxN<double, 6, 6>;
+
 template <typename T, Row rows>
 using VectorN = MatrixMxN<T, rows, 1>;
 
@@ -186,8 +233,22 @@ using Vector5 = VectorN<T, 5>;
 template <typename T>
 using Vector6 = VectorN<T, 6>;
 
+using Vector1f = VectorN<float, 1>;
+using Vector2f = VectorN<float, 2>;
+using Vector3f = VectorN<float, 3>;
+using Vector4f = VectorN<float, 4>;
+using Vector5f = VectorN<float, 5>;
+using Vector6f = VectorN<float, 6>;
+
+using Vector1d = VectorN<double, 1>;
+using Vector2d = VectorN<double, 2>;
+using Vector3d = VectorN<double, 3>;
+using Vector4d = VectorN<double, 4>;
+using Vector5d = VectorN<double, 5>;
+using Vector6d = VectorN<double, 6>;
+
 template <typename TMat>
-requires ConceptMatrix<TMat>
+    requires ConceptMatrix<TMat>
 constexpr auto ToFull(const TMat& mat)
 {
     Matrix<typename TMat::DataType, typename TMat::ShapeType> res{mat.GetRows(), mat.GetColumns()};

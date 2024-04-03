@@ -4,10 +4,7 @@
 #include "vic/memory/garbage_collector.h"
 #include "vic/utils.h"
 
-namespace vic
-{
-namespace memory
-{
+using namespace vic::memory;
 
 //TEST(TestGC, EmptyManaged)
 //{
@@ -60,6 +57,3 @@ namespace memory
 //                         []() {},
 //                         []() {}};
 //}
-
-} // namespace memory
-} // namespace vic

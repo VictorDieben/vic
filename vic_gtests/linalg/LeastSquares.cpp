@@ -9,10 +9,8 @@
 
 #include <random>
 
-namespace vic
-{
-namespace linalg
-{
+using namespace vic;
+using namespace vic::linalg;
 
 // todo: move to util or something
 template <typename T, std::size_t N>
@@ -54,7 +52,7 @@ private:
     std::array<T, N> mCoefficients;
 };
 
-TEST(Algorithms, LeastSquares)
+TEST(Linalg, LeastSquares)
 {
     constexpr auto nPolynomials = 10;
     constexpr auto nMeasurements = 30;
@@ -94,7 +92,7 @@ TEST(Algorithms, LeastSquares)
     EXPECT_TRUE(IsEqual(b, bHat, 1e-6));
 }
 
-TEST(Algorithms, LeastSquaresSimple)
+TEST(Linalg, LeastSquaresSimple)
 {
     auto b = Vector3<double>{{6., 0., 0.}};
     auto mat = Matrix<double, Shape<3, 2>>{{0., 1., 1., 1., 2., 1.}};
@@ -103,6 +101,3 @@ TEST(Algorithms, LeastSquaresSimple)
 
     EXPECT_TRUE(IsEqual(xHat, Vector2<double>{{-3., 5.}}, 1e-10));
 }
-
-} // namespace linalg
-} // namespace vic

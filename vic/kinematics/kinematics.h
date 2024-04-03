@@ -14,11 +14,11 @@ using namespace vic::linalg;
 
 // todo: this type is mostly for convenience.
 // We will likely never use this library with anything other than a double.
-static constexpr Vector3<double> xAxis{{1, 0, 0}};
-static constexpr Vector3<double> yAxis{{0, 1, 0}};
-static constexpr Vector3<double> zAxis{{0, 0, 1}};
+static constexpr Vector3<double> xAxis(1, 0, 0);
+static constexpr Vector3<double> yAxis(0, 1, 0);
+static constexpr Vector3<double> zAxis(0, 0, 1);
 
-constexpr double pi = 3.14159265358979323846;
+// constexpr double pi = 3.14159265358979323846;
 
 template <typename T>
 struct Screw
@@ -27,8 +27,8 @@ public:
     using DataType = T;
 
     constexpr Screw() = default;
-    constexpr Screw(const std::array<DataType, 6>& vec)
-        : mVector(vec)
+    constexpr Screw(const T a, const T b, const T c, const T d, const T e, const T f)
+        : mVector(std::array<T, 6>{a, b, c, d, e, f})
     { }
     constexpr Screw(const Vector6<DataType>& vec)
         : mVector(vec)

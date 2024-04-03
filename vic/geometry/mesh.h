@@ -30,13 +30,6 @@ using Tri = std::tuple<MeshIndex, MeshIndex, MeshIndex>;
 using Quad = std::tuple<MeshIndex, MeshIndex, MeshIndex>;
 
 template <typename T>
-Vertex<T> ToVertex(const T x, const T y, const T z)
-{
-    // helper, linalg vecs don't have this constructor
-    return Vertex<T>{{x, y, z}};
-}
-
-template <typename T>
 struct EdgeMesh
 {
     std::vector<Vertex<T>> vertices;
@@ -49,13 +42,6 @@ template <typename T>
 struct TriMesh
 {
     std::vector<Vertex<T>> vertices;
-    std::vector<Tri> tris;
-};
-
-template <typename T>
-struct UVTriMesh
-{
-    std::vector<UV<T>> uvs;
     std::vector<Tri> tris;
 };
 
@@ -91,6 +77,7 @@ bool IsClosed(const vic::mesh::TriMesh<T>& mesh)
     return true;
 }
 
+// A mesh is closed if each vertex used in the list of edges is used once as a source, and once as a sink
 template <typename T>
 bool IsClosed(const vic::mesh::EdgeMesh<T>& mesh)
 {
@@ -114,7 +101,40 @@ bool IsClosed(const vic::mesh::EdgeMesh<T>& mesh)
 }
 
 template <typename T>
-TriMesh<T> GenerateCube(const vic::geom::AABB<T, 3>& box)
+TriMesh<T> GenerateCube()
+{
+    TriMesh<T> result;
+    result.vertices.reserve(8);
+    result.tris.reserve(12);
+
+    result.vertices.push_back(Vertex<T>(-1, -1, 1)); // 0
+    result.vertices.push_back(Vertex<T>(1, -1, 1)); // 1
+    result.vertices.push_back(Vertex<T>(-1, -1, -1)); // 2
+    result.vertices.push_back(Vertex<T>(1, -1, -1)); // 3
+
+    result.vertices.push_back(Vertex<T>(-1, 1, 1)); // 4
+    result.vertices.push_back(Vertex<T>(1, 1, 1)); // 5
+    result.vertices.push_back(Vertex<T>(-1, 1, -1)); // 6
+    result.vertices.push_back(Vertex<T>(1, 1, -1)); // 7
+
+    result.tris.push_back(Tri{0, 2, 1}); // front
+    result.tris.push_back(Tri{1, 2, 3});
+    result.tris.push_back(Tri{2, 6, 3}); // bottom
+    result.tris.push_back(Tri{3, 6, 7});
+    result.tris.push_back(Tri{0, 4, 6}); // left
+    result.tris.push_back(Tri{0, 6, 2});
+    result.tris.push_back(Tri{0, 1, 4}); // top
+    result.tris.push_back(Tri{1, 5, 4});
+    result.tris.push_back(Tri{4, 5, 6}); // back
+    result.tris.push_back(Tri{5, 7, 6});
+    result.tris.push_back(Tri{1, 3, 5}); // right
+    result.tris.push_back(Tri{5, 3, 7});
+
+    return result;
+}
+
+template <typename T>
+TriMesh<T> GenerateBboxCube(const vic::geom::AABB<T, 3>& box)
 {
     const auto lx = box.intervals.at(0).min;
     const auto ux = box.intervals.at(0).max;
@@ -127,28 +147,28 @@ TriMesh<T> GenerateCube(const vic::geom::AABB<T, 3>& box)
     result.vertices.reserve(8);
     result.tris.reserve(12);
 
-    result.vertices.push_back(Vertex<T>{{lx, ly, lz}}); // 0
-    result.vertices.push_back(Vertex<T>{{ux, ly, lz}}); // 1
-    result.vertices.push_back(Vertex<T>{{lx, uy, lz}}); // 2
-    result.vertices.push_back(Vertex<T>{{ux, uy, lz}}); // 3
+    result.vertices.push_back(Vertex<T>{lx, ly, lz}); // 0
+    result.vertices.push_back(Vertex<T>{ux, ly, lz}); // 1
+    result.vertices.push_back(Vertex<T>{lx, uy, lz}); // 2
+    result.vertices.push_back(Vertex<T>{ux, uy, lz}); // 3
 
-    result.vertices.push_back(Vertex<T>{{lx, ly, uz}}); // 4
-    result.vertices.push_back(Vertex<T>{{ux, ly, uz}}); // 5
-    result.vertices.push_back(Vertex<T>{{lx, uy, uz}}); // 6
-    result.vertices.push_back(Vertex<T>{{ux, uy, uz}}); // 7
+    result.vertices.push_back(Vertex<T>{lx, ly, uz}); // 4
+    result.vertices.push_back(Vertex<T>{ux, ly, uz}); // 5
+    result.vertices.push_back(Vertex<T>{lx, uy, uz}); // 6
+    result.vertices.push_back(Vertex<T>{ux, uy, uz}); // 7
 
     result.tris.push_back(Tri{0, 1, 2}); // bottom
-    result.tris.push_back(Tri{2, 1, 3});
+    result.tris.push_back(Tri{2, 3, 2});
     result.tris.push_back(Tri{0, 1, 4}); // front
-    result.tris.push_back(Tri{4, 1, 5});
+    result.tris.push_back(Tri{4, 5, 1});
     result.tris.push_back(Tri{0, 2, 4}); // left
-    result.tris.push_back(Tri{2, 4, 6});
+    result.tris.push_back(Tri{2, 6, 4});
     result.tris.push_back(Tri{4, 5, 6}); // top
-    result.tris.push_back(Tri{6, 5, 7});
+    result.tris.push_back(Tri{6, 7, 5});
     result.tris.push_back(Tri{2, 3, 6}); // back
-    result.tris.push_back(Tri{6, 3, 7});
+    result.tris.push_back(Tri{6, 7, 3});
     result.tris.push_back(Tri{1, 3, 5}); // right
-    result.tris.push_back(Tri{5, 3, 7});
+    result.tris.push_back(Tri{5, 7, 3});
 
     return result;
 }
@@ -156,11 +176,7 @@ TriMesh<T> GenerateCube(const vic::geom::AABB<T, 3>& box)
 template <typename T>
 TriMesh<T> GenerateCubeSphere(const T radius, const uint32_t subdivisions)
 {
-    // todo: name
-    vic::geom::Interval<T> interval{-1., 1.};
-    const vic::geom::AABB<T, 3> bbox{interval, interval, interval};
-
-    auto mesh = GenerateCube(bbox);
+    auto mesh = GenerateCube<T>();
 
     for(uint32_t i = 0; i < subdivisions; ++i)
         mesh = Subdivide(mesh);
@@ -180,8 +196,8 @@ TriMesh<T> GenerateUVSphere(const T rad, //
                             const MeshIndex nv)
 {
     // simple uv sphere mesh
-    Vertex<T> top{{0., 0., rad}};
-    Vertex<T> bottom{{0., 0., -rad}};
+    Vertex<T> top(0., 0., rad);
+    Vertex<T> bottom(0., 0., -rad);
 
     std::vector<Vertex<T>> vertices;
 
@@ -251,8 +267,8 @@ TriMesh<T> GenerateCone(const T rad, //
                         const MeshIndex n)
 {
     // simple uv sphere mesh
-    const Vertex<T> top = ToVertex(0., 0., height);
-    const Vertex<T> bottom = ToVertex(0., 0., 0.);
+    const auto top = Vertex<T>((T)0., (T)height, (T)0.);
+    const auto bottom = Vertex<T>((T)0., (T)0., (T)0.);
 
     TriMesh<T> mesh{};
     mesh.vertices.reserve(n + 2);
@@ -260,10 +276,10 @@ TriMesh<T> GenerateCone(const T rad, //
 
     for(MeshIndex i = 0; i < n; ++i)
     {
-        const auto ratio = (double)i / (double)n;
-        const auto x = rad * std::sin(ratio * 2. * std::numbers::pi);
-        const auto y = rad * std::cos(ratio * 2. * std::numbers::pi);
-        mesh.vertices.push_back(Vertex<T>{{x, y, 0.}});
+        const T ratio = (T)i / (T)n;
+        const T x = -rad * (T)std::sin(ratio * 2. * std::numbers::pi);
+        const T z = rad * (T)std::cos(ratio * 2. * std::numbers::pi);
+        mesh.vertices.push_back(Vertex<T>{x, (T)0., z});
     }
     mesh.vertices.push_back(top);
     mesh.vertices.push_back(bottom);
@@ -297,9 +313,8 @@ TriMesh<T> Subdivide(const TriMesh<T>& mesh)
         else
             uniqueEdges[{v2, v1}] = {};
     };
-    for(const auto& tri : mesh.tris)
+    for(const auto& [v0, v1, v2] : mesh.tris)
     {
-        const auto& [v0, v1, v2] = tri;
         addEdge(v0, v1);
         addEdge(v1, v2);
         addEdge(v2, v0);
@@ -314,17 +329,15 @@ TriMesh<T> Subdivide(const TriMesh<T>& mesh)
     for(auto& [key, value] : uniqueEdges)
     {
         const auto& [v1, v2] = key;
-        auto newVertex = Matmul(0.5, Add(mesh.vertices.at(v1), mesh.vertices.at(v2)));
+        auto newVertex = Matmul(0.5f, Add(mesh.vertices.at(v1), mesh.vertices.at(v2)));
         result.vertices.push_back(newVertex);
 
         value = (MeshIndex)result.vertices.size() - 1;
     }
 
     // iterate over all triangles in the original mesh. perform subdivision
-    for(const auto& tri : mesh.tris)
+    for(const auto& [v0, v1, v2] : mesh.tris)
     {
-        const auto& [v0, v1, v2] = tri;
-
         const auto e0 = v0 < v1 ? std::pair(v0, v1) : std::pair(v1, v0);
         const auto e1 = v1 < v2 ? std::pair(v1, v2) : std::pair(v2, v1);
         const auto e2 = v2 < v0 ? std::pair(v2, v0) : std::pair(v0, v2);
@@ -349,10 +362,10 @@ EdgeMesh<T> GenerateCircle(const T radius, const uint32_t n)
 
     for(MeshIndex i = 0; i < n; ++i)
     {
-        const auto ratio = (double)i / (double)n;
-        const double x = radius * std::sin(ratio * 2. * std::numbers::pi);
-        const double y = radius * std::cos(ratio * 2. * std::numbers::pi);
-        result.vertices.push_back(ToVertex(x, y, 0.));
+        const T ratio = (T)i / (T)n;
+        const T x = radius * (T)std::sin(ratio * (T)2. * std::numbers::pi);
+        const T y = radius * (T)std::cos(ratio * (T)2. * std::numbers::pi);
+        result.vertices.push_back(Vertex<T>(x, y, (T)0.));
         result.edges.push_back({i, (i + 1) % n});
     }
 
@@ -371,11 +384,9 @@ TriMesh<T> Revolve(const EdgeMesh<T>& mesh, //
     // revolve around z axis
     TriMesh<T> result;
 
-    result.vertices = mesh.vertices;
-
     for(MeshIndex ring = 0; ring < n; ++ring)
     {
-        const auto zRotation = vic::linalg::Rotate(zAxis, ((double)ring / ((double)ring + 1.)) * std::numbers::pi * 2.);
+        const auto zRotation = vic::linalg::Rotate<T>(zAxis, (T)(((T)ring / (T)n) * std::numbers::pi * 2.));
         for(const auto& vertex : mesh.vertices)
             result.vertices.push_back(Matmul(zRotation, vertex));
     }
@@ -400,6 +411,18 @@ TriMesh<T> Revolve(const EdgeMesh<T>& mesh, //
 }
 
 template <typename T>
+TriMesh<T> RevolveClosed(const EdgeMesh<T>& mesh, //
+                         const std::size_t n)
+{
+    assert(mesh.vertices.size() > 2);
+    TriMesh<T> result;
+
+    // revolve the edge around the y axis, the start and end vertices should lay on the y axis
+
+    return result;
+}
+
+template <typename T>
 TriMesh<T> GenerateTorus(const T R, //
                          const T r,
                          const uint32_t nR,
@@ -407,14 +430,14 @@ TriMesh<T> GenerateTorus(const T R, //
 {
     TriMesh<T> result;
 
-    auto circleMesh = GenerateCircle(r, nr);
+    auto circleMesh = GenerateCircle<T>(r, nr);
 
     // circleMesh will be in the xy plane, in order to revolve, we need to switch y and z coords
     // todo: rotate mesh using a helper
     for(auto& vertex : circleMesh.vertices)
-        vertex = ToVertex(R + vertex.Get(0, 0), vertex.Get(2, 0), vertex.Get(1, 0));
+        vertex = Vertex<T>(R + vertex.Get(0), vertex.Get(2), vertex.Get(1));
 
-    return Revolve(circleMesh, nR, false);
+    return Revolve<T>(circleMesh, nR, false);
 }
 
 template <typename T>
@@ -425,9 +448,8 @@ std::vector<Normal<T>> GenerateTriNormals(const TriMesh<T>& mesh)
     std::vector<Normal<T>> normals;
     normals.reserve(mesh.tris.size());
 
-    for(const auto& tri : mesh.tris)
+    for(const auto& [ia, ib, ic] : mesh.tris)
     {
-        const auto [ia, ib, ic] = tri;
         const auto ab = Subtract(mesh.vertices.at(ib), mesh.vertices.at(ia));
         const auto ac = Subtract(mesh.vertices.at(ic), mesh.vertices.at(ia));
 
@@ -484,7 +506,7 @@ Vertex<T> FromSphericalCoordinates(const T radius, const T inclination, const T 
     const T x = radius * sinInclination * std::cos(azimuth);
     const T y = radius * sinInclination * std::sin(azimuth);
     const T z = radius * std::cos(inclination);
-    return Vertex<T>{{x, y, z}};
+    return Vertex<T>(x, y, z);
 }
 
 template <typename T>
@@ -499,10 +521,57 @@ std::vector<UV<T>> GenerateVertexUVsPolar(const TriMesh<T>& mesh, const Vertex<T
     {
         const auto direction = Subtract(vertex, origin);
         const auto [r, inclination, azimuth] = ToSphericalCoordinates(direction);
-        uvs.push_back(UV<double>{{inclination / std::numbers::pi, azimuth / (2. * std::numbers::pi)}}); // todo: scale to [0; 1]
+        uvs.push_back(UV<T>(inclination / std::numbers::pi, azimuth / (2. * std::numbers::pi))); // todo: scale to [0; 1]
     }
 
     return uvs;
+}
+
+template <typename T>
+vic::mesh::TriMesh<T> GenerateSquareMesh()
+{
+    using namespace vic::mesh;
+    TriMesh<T> mesh;
+    mesh.vertices = {{Vertex((T)-0.5, (T)-0.5, (T)0.), //
+                      Vertex((T)0.5, (T)0.5, (T)0.),
+                      Vertex((T)-0.5, (T)0.5, (T)0.),
+                      Vertex((T)0.5, (T)-0.5, (T)0.)}};
+    mesh.tris = {Tri{0, 1, 2}, Tri{0, 1, 3}};
+    return mesh;
+}
+
+//template <typename T>
+//struct TriMesh
+//{
+//    std::vector<Vertex<T>> vertices;
+//    std::vector<Tri> tris;
+//};
+
+// combine two meshes, but do not calculate mesh intersections.
+template <typename T>
+vic::mesh::TriMesh<T> Merge(const vic::mesh::TriMesh<T>& mesh1, const vic::mesh::TriMesh<T>& mesh2)
+{
+    vic::mesh::TriMesh<T> result = mesh1; // copy
+
+    result.vertices.insert(result.vertices.end(), mesh2.vertices.begin(), mesh2.vertices.end());
+
+    result.tris.reserve(mesh1.tris.size() + mesh2.tris.size());
+    const auto offset = mesh1.vertices.size();
+
+    for(const auto& tri : mesh2.tris)
+        result.tris.push_back(Tri{std::get<0>(tri) + offset, //
+                                  std::get<1>(tri) + offset,
+                                  std::get<2>(tri) + offset});
+
+    return result;
+}
+
+template <typename T>
+vic::mesh::TriMesh<T> Union(const vic::mesh::TriMesh<T>& mesh1, const vic::mesh::TriMesh<T>& mesh2)
+{
+    //
+
+    return {};
 }
 
 } // namespace mesh

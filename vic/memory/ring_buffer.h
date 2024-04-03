@@ -107,6 +107,24 @@ private:
     std::array<T, N> mBuffer{};
 };
 
+inline constexpr std::size_t NextRingIndex(const std::size_t i, //
+                                           const std::size_t dataSize)
+{
+    return (i + 1) % dataSize; //
+}
+
+inline constexpr std::size_t PreviousRingIndex(const std::size_t i, //
+                                               const std::size_t dataSize)
+{
+    return i == 0 ? dataSize - 1 : i - 1; //
+}
+
+//inline constexpr std::size_t ToRingIndex(const std::size_t i, //
+//                                         const std::size_t dataSize)
+//{
+//    return i % dataSize;
+//}
+
 // non-thread safe ring buffer wrapper for vector
 // mostly copies std::list/std::deque interface where possible.
 template <typename T>
@@ -131,76 +149,106 @@ public:
     using reference = value_type&;
     using const_reference = const value_type&;
 
-    size_type size() const
-    {
-        return (mHead >= mTail) //
-                   ? mHead - mTail
-                   : (mHead + mDataSize) - mTail;
-    }
+    size_type size() const { return mHead - mTail; }
 
     T& at(std::size_t i) { return mData[(mTail + i) % mDataSize]; }
 
     bool empty() const { return (mHead == mTail); }
     void clear()
     {
-        // mData.clear(); // todo: reset values?
         mHead = 0;
         mTail = 0;
     }
 
+    bool full() const { return (mHead - mTail) == mDataSize; }
+
     void push_back(const T& item)
     {
-        const std::size_t nextHead = NextIndex(mHead, mDataSize);
-        if(nextHead == mTail)
-        {
+        if(full())
             Reallocate();
-            mData[mHead] = item; // after reallocate, tail is back at 0, and there is space after head
-            mHead++;
-        }
-        else
-        {
-            mData[mHead] = item;
-            mHead = nextHead;
-        }
-    }
-    void push_front(const T& item) { (void)item; }
 
-    void pop_back()
-    {
-        assert(mHead != mTail); //
-        mTail = NextIndex(mTail, mDataSize);
+        mData[mHead % mDataSize] = item;
+        mHead++;
     }
-    void pop_front()
+    void push_front(const T& item)
     {
-        assert(mHead != mTail); //
-        mHead = PreviousIndex(mHead, mDataSize);
+        if(full())
+            Reallocate();
+
+        mTail = PreviousRingIndex(mTail, mDataSize);
+        mData[mTail] = item;
+        if(mHead < mTail)
+            mHead += mDataSize;
+    }
+
+    T pop_front()
+    {
+        assert(!empty());
+        const auto oldTail = mTail;
+        mTail += 1;
+        if((mTail / mDataSize) > 0)
+        {
+            mTail -= mDataSize;
+            mHead -= mDataSize;
+        }
+        return mData[oldTail];
+    }
+    T pop_back()
+    {
+        assert(!empty());
+        mHead -= 1;
+        return mData[mHead]; // note: head points to one past the last
+    }
+
+    std::optional<T> try_pop_front()
+    {
+        if(empty())
+            return std::nullopt;
+        return pop_front();
+    }
+
+    std::optional<T> try_pop_back()
+    {
+        if(empty())
+            return std::nullopt;
+        return pop_back();
     }
 
     T& front()
     {
-        assert(mHead != mTail);
-        return mData[mTail];
+        assert(!empty());
+        return mData[mTail % mDataSize];
     }
     T& back()
     {
-        assert(mHead != mTail);
-        return mData[mHead];
+        assert(!empty());
+        return mData[(mHead - 1) % mDataSize];
+    }
+
+    const T& front() const
+    {
+        assert(!empty());
+        return mData[mTail % mDataSize];
+    }
+
+    const T& back() const
+    {
+        assert(!empty());
+        return mData[(mHead - 1) % mDataSize];
     }
 
 private:
-    static constexpr std::size_t NextIndex(std::size_t i, std::size_t dataSize) { return (i + 1) % dataSize; }
-
-    static constexpr std::size_t PreviousIndex(std::size_t i, std::size_t dataSize) { return i == 0 ? dataSize : i - 1; }
-
     void Reallocate()
     {
         const std::size_t newSize = 2 * mDataSize; // simply double, maybe look what vector does
         auto newData = std::make_unique<T[]>(newSize);
 
-        // sorry for this weird for loop
         std::size_t ni = 0;
-        for(std::size_t i = mTail; i != mHead; i = NextIndex(i, mDataSize))
-            newData[ni++] = std::move(mData[i]); // NOTE: ni++, we want to increase it _after_ setting index
+        for(std::size_t i = mTail; i < mHead; ++i)
+        {
+            newData[ni] = std::move(mData[i % mDataSize]);
+            ni++;
+        }
 
         mTail = 0;
         mHead = mDataSize;

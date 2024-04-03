@@ -6,12 +6,10 @@
 
 #include "vic/linalg/linalg.h"
 
-namespace vic
-{
-namespace linalg
-{
+using namespace vic;
+using namespace vic::linalg;
 
-TEST(Matmul, TestMatmulScalar)
+TEST(Linalg, MatmulScalar)
 {
     constexpr Diagonal2<double> diag2 = Matmul(Identity2<double>{}, 2.);
     EXPECT_DOUBLE_EQ(diag2.Get(0, 0), 2.);
@@ -27,7 +25,7 @@ TEST(Matmul, TestMatmulScalar)
     EXPECT_DOUBLE_EQ(diag2b.Get(1, 0), 0.);
 }
 
-TEST(Matmul, TestMatmul)
+TEST(Linalg, Matmul)
 {
     EXPECT_DOUBLE_EQ(6., Matmul(2., 3.));
 
@@ -61,13 +59,14 @@ TEST(Matmul, TestMatmul)
     ExpectMatrixEqual(scalar2, Matrix2<double>({15, 18, 21, 24}));
 
     // verify DataTypes
-    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Identity1<double>{}, Identity1<double>{}))::DataType>));
-    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Identity1<double>{}, Identity1<float>{}))::DataType>));
-    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Identity1<double>{}, Identity1<int>{}))::DataType>));
-    EXPECT_TRUE((std::is_same_v<int, decltype(Matmul(Identity1<int>{}, Identity1<int>{}))::DataType>));
+    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Matrix3<double>{}, Matrix3<double>{}))::DataType>));
+    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Matrix3<double>{}, Matrix3<float>{}))::DataType>));
+    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Matrix3<float>{}, Matrix3<double>{}))::DataType>));
+    EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Matrix3<double>{}, Matrix3<int>{}))::DataType>));
+    EXPECT_TRUE((std::is_same_v<int, decltype(Matmul(Matrix3<int>{}, Matrix3<int>{}))::DataType>));
 }
 
-TEST(Matmul, TestMatmulDynamic)
+TEST(Linalg, MatmulDynamic)
 {
     // initialize
     const Matrix<double, UnknownShape> dyn1{2, 3};
@@ -102,7 +101,7 @@ TEST(Matmul, TestMatmulDynamic)
     auto res2 = Matmul(dyn3x3, dyn3x3);
 }
 
-TEST(Matmul, TestMatmulMixed)
+TEST(Linalg, MatmulMixed)
 {
     // test several series of multiplications, make sure the result is static size if it can be
     const auto mat2x3 = Matrix<double, Shape<2, 3>>{};
@@ -125,7 +124,7 @@ TEST(Matmul, TestMatmulMixed)
     const Matrix<double, Shape<3, 5>> static3x5 = Matmul(rowconst3x100, colconst100x5);
 }
 
-TEST(Matmul, TestMultivariate)
+TEST(Linalg, Multivariate)
 {
     // test multivariate
     constexpr auto M = Add(Identity3<double>{}, Identity3<double>{});
@@ -137,7 +136,7 @@ TEST(Matmul, TestMultivariate)
     ExpectMatrixEqual(ans7, Matmul(Pow<7>(2.), Identity3<double>{}));
 }
 
-TEST(Matmul, TestMatmulSparse)
+TEST(Linalg, MatmulSparse)
 {
     // todo: specialize Matmul for sparse*vec
     Matrix2<double> mat{{0, 1, 2, 3}};
@@ -153,7 +152,7 @@ TEST(Matmul, TestMatmulSparse)
     ExpectMatrixEqual(res1, res2);
 }
 
-TEST(Matmul, TestMatmulStack)
+TEST(Linalg, MatmulStack)
 {
     for(uint32_t i = 0; i < 10; ++i)
     {
@@ -183,7 +182,7 @@ TEST(Matmul, TestMatmulStack)
     }
 }
 
-TEST(Matmul, TestMatmulTriDiagonal)
+TEST(Linalg, MatmulTriDiagonal)
 {
     constexpr auto test = MatmulTriDiagVector(ToTriDiagonal(Identity6<double>{}), Vector6<double>{});
 
@@ -203,6 +202,3 @@ TEST(Matmul, TestMatmulTriDiagonal)
     const auto res2 = MatmulFull(mat6_tri, vec6);
     EXPECT_TRUE(IsEqual(res1, res2));
 }
-
-} // namespace linalg
-} // namespace vic

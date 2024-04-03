@@ -47,7 +47,8 @@ public:
     template <typename T, typename... Targs>
     void EmplaceBack(Targs&&... args)
     {
-        mEvents.emplace_back(new T(std::forward<Targs>...));
+        // mEvents.emplace_back(new T(std::forward<Targs>...));
+        mEvents.emplace_back(std::make_unique<T>(std::forward<Targs>...));
     }
 
     bool Next()

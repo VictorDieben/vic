@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstddef>
 
 // this file defines a map, similar to std::map, that can be used at compile time.
 
@@ -27,7 +28,7 @@ public:
             return it->second;
     }
 
-    // note: no [] overload, in std::map it might add the key
+    // note: no [] operator, in std::map it might add the key
 
 private:
     ArrayType mMap;

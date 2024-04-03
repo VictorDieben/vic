@@ -3,10 +3,7 @@
 
 #include "vic/linprog/seidel.h"
 
-namespace vic
-{
-namespace linprog
-{
+using namespace vic::linprog;
 
 template <typename T1, typename T2>
 bool IterablesNear(const T1& iterable1, const T2& iterable2, const double eps = 1e-10)
@@ -22,7 +19,7 @@ bool IterablesNear(const T1& iterable1, const T2& iterable2, const double eps = 
     return succes;
 }
 
-TEST(TestLinprog, MinlMaxL)
+TEST(Linprog, MinlMaxL)
 {
     const double eps = 1e-15;
     ASSERT_FALSE(MinL(1., 1., 1., 1.));
@@ -34,7 +31,7 @@ TEST(TestLinprog, MinlMaxL)
     ASSERT_TRUE(MaxL(1. + eps, 1., 1., 1.));
 }
 
-TEST(TestLinprog, 1d)
+TEST(Linprog, 1d)
 {
     Seidel<double, 1> seidel{};
     // Tests with 1 constraint: 1*x < 1
@@ -63,7 +60,7 @@ TEST(TestLinprog, 1d)
     ASSERT_EQ(res.mState, ESeidelState::INFEASIBLE);
 }
 
-TEST(TestLinprog, 2d)
+TEST(Linprog, 2d)
 {
     Seidel<double, 2> seidel{};
     seidel.AddConstraint(Constraint<double, 2>({1, 0}, 1));
@@ -74,7 +71,7 @@ TEST(TestLinprog, 2d)
     ASSERT_TRUE(IterablesNear(res.mW, std::array{0., 0.}));
 }
 
-TEST(TestLinprog, 2dUnbounded)
+TEST(Linprog, 2dUnbounded)
 {
     // Test unbounded case
     Seidel<double, 2> seidel{};
@@ -90,7 +87,7 @@ TEST(TestLinprog, 2dUnbounded)
     ASSERT_TRUE(IterablesNear(res.mW, std::array{0., 1.}));
 }
 
-TEST(TestLinprog, 3d)
+TEST(Linprog, 3d)
 {
     Seidel<double, 3> seidel{};
     seidel.AddConstraint(Constraint<double, 3>({1, 0, 0}, 1));
@@ -103,7 +100,7 @@ TEST(TestLinprog, 3d)
     ASSERT_TRUE(IterablesNear(res.mW, std::array{0., 0., 0.}));
 }
 
-TEST(TestLinprog, 4d)
+TEST(Linprog, 4d)
 {
     Seidel<double, 4> seidel{};
     seidel.AddConstraint(Constraint<double, 4>({1, 0, 0, 0}, 1));
@@ -117,12 +114,12 @@ TEST(TestLinprog, 4d)
     ASSERT_TRUE(IterablesNear(res.mW, std::array{0., 0., 0., 0.}));
 }
 
-TEST(TestLinprog, ManyConstraints)
+TEST(Linprog, ManyConstraints)
 {
     // Test with many constraints, all going through the same point
 }
 
-TEST(TestLinprog, UnitCircle)
+TEST(Linprog, UnitCircle)
 {
     // Test with many constraints on the unit circle.
     // This makes it a lot more difficult to optimize,
@@ -148,10 +145,7 @@ TEST(TestLinprog, UnitCircle)
     }
 }
 
-TEST(TestLinprog, Narrow)
+TEST(Linprog, Narrow)
 {
     // Test with 2 constraints, intersecting at a distance
 }
-
-} // namespace linprog
-} // namespace vic

@@ -7,14 +7,9 @@
 
 using namespace vic;
 
-namespace vic
-{
-namespace simulations
-{
-namespace cfd
-{
+using namespace vic::simulations::cfd;
 
-TEST(TestSimulations, Mesh)
+TEST(Simulations, Mesh)
 {
     Mesh mesh = InitializeGridMesh(11, 11);
     EXPECT_EQ(mesh.Points().size(), 11 * 11);
@@ -23,13 +18,13 @@ TEST(TestSimulations, Mesh)
     // todo: verify areas are all properly closed
 }
 
-TEST(TestSimulations, Simulation)
+TEST(Simulations, Simulation)
 {
     Mesh mesh = InitializeGridMesh(101, 101);
     Simulation2D simulation{mesh};
 }
 
-TEST(TestSimulations, ToPolygon)
+TEST(Simulations, ToPolygon)
 {
     const std::size_t nItems = 10;
     std::default_random_engine g;
@@ -57,7 +52,7 @@ TEST(TestSimulations, ToPolygon)
     EXPECT_EQ(sorted.front(), sorted.back());
 }
 
-TEST(TestSimulations, SurafaceArea)
+TEST(Simulations, SurafaceArea)
 {
     Mesh mesh{};
     mesh.AddVertex(Mesh::Vertex{{0, 0}});
@@ -73,7 +68,3 @@ TEST(TestSimulations, SurafaceArea)
     const auto res = CaclulateSurfaceArea(mesh);
     EXPECT_DOUBLE_EQ(res.at(0), 1.);
 }
-
-} // namespace cfd
-} // namespace simulations
-} // namespace vic

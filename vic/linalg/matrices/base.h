@@ -88,7 +88,7 @@ struct MatrixBaseDynamic
 {
     using ShapeType = TShape;
     static_assert(!TShape::IsRowConst() && !TShape::IsColConst());
-    constexpr MatrixBaseDynamic(const Row rows, const Col cols)
+    constexpr MatrixBaseDynamic(const Row rows, const Col cols) noexcept
         : mRows(rows)
         , mColumns(cols)
     { }

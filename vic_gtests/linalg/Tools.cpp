@@ -10,12 +10,9 @@
 
 #include <random>
 
-namespace vic
-{
-namespace linalg
-{ 
+using namespace vic::linalg;
 
-TEST(Tools, RowSplit)
+TEST(Linalg, RowSplit)
 {
     static constexpr const Vector4<double> vec4{{1, 2, 3, 4}};
 
@@ -40,5 +37,11 @@ TEST(Tools, RowSplit)
     }
 }
 
-} // namespace linalg
-} // namespace vic
+TEST(Linalg, IsOrthogonal)
+{
+    EXPECT_TRUE(ConceptMatrix<Identity3<double>>);
+    EXPECT_TRUE((ConceptMatrix<Identity<double, UnknownShape>>));
+
+    const Identity3<double> identity{};
+    // EXPECT_TRUE(IsOrthogonal(identity)); //
+}

@@ -6,6 +6,9 @@
 #include <utility>
 #include <vector>
 
+#include "vic/utils/algorithms.h" // sort_individual
+#include "vic/utils/concepts.h" // less_than_comparable
+
 namespace vic
 {
 namespace memory
@@ -15,6 +18,7 @@ namespace memory
 // stores data in a simple sorted std::vector
 // good for small amounts of data, when the main use case is iterating over all data
 template <typename TKey, typename TValue>
+    requires less_than_comparable<TKey> //  && less_than_comparable<TValue>
 class FlatMap
 {
 public:
@@ -34,9 +38,12 @@ public:
     using const_reference = const value_type&;
     using size_type = std::size_t;
 
+    static constexpr auto SortValueType = [](const value_type& item1, const value_type& item2) { return item1.first < item2.first; };
+    static constexpr auto LowerBoundCompare = [](const value_type& item, const key_type& k) -> bool { return item.first < k; };
+
     // element access
-    TValue& at(const TKey& key) { return *find(key); }
-    const TValue& at(const TKey& key) const { return *find(key); }
+    TValue& at(const TKey& key) { return find(key)->second; }
+    const TValue& at(const TKey& key) const { return find(key)->second; }
     TValue& operator[](const TKey& key)
     {
         auto it = find(key);
@@ -44,14 +51,12 @@ public:
             return it->second;
         mData.push_back({key, mapped_type{}});
         const auto n = mData.size();
-        // only sort if we need to
-        if(n > 1 && mData.at(n - 1).first < mData.at(n - 2).first)
-        {
-            Sort();
-            return find(key)->second;
-        }
-        else
-            return mData.back().second;
+        // let sorting algorithm figure out if we need to do anything
+        return vic::sort_individual(mData.begin(), //
+                                    mData.end(),
+                                    mData.end() - 1, // sort last item
+                                    SortValueType)
+            ->second;
     }
 
     // Iterators
@@ -92,9 +97,12 @@ public:
             const auto size = mData.size();
             mData.push_back(pair);
 
-            if(size != 0 && mData.at(size).first < mData.at(size - 1).first)
+            if(size != 0 && mData[size].first < mData[size - 1].first)
             {
-                Sort();
+                vic::sort_individual(mData.begin(), //
+                                     mData.end(),
+                                     mData.end() - 1,
+                                     SortValueType);
                 return std::pair(find(key), true);
             }
             else
@@ -108,8 +116,37 @@ public:
     template <bool sort = true>
     std::pair<iterator, bool> insert(value_type&& pair)
     {
-        const auto copy = pair;
-        return insert<sort>(copy); // tmp, do proper move later
+        // const auto copy = pair;
+        return insert<sort>(pair); // tmp, do proper move later
+    }
+
+    template <class... Args>
+    std::pair<iterator, bool> emplace(Args&&... args)
+    {
+        // make sure we can move this type if we want to emplace
+        static_assert(std::is_move_constructible_v<TValue>, "T cannot be moved!");
+
+        // similar to map emplace, we may construct the item and directly destruct it if needed
+        mData.emplace_back(std::forward<Args>(args)...);
+        if(mData.size() == 1)
+            return std::pair(mData.begin(), true); // first item, don't compare
+
+        const auto size = mData.size();
+        if(SortValueType(mData[size - 2], mData[size - 2]))
+            return std::pair(std::prev(mData.end()), true); // newly added item is in correct spot already
+
+        const auto key = mData.back().first;
+        const auto oneBeforeEnd = std::prev(mData.end());
+
+        const auto itToFirst = std::lower_bound(mData.begin(), oneBeforeEnd, key, LowerBoundCompare);
+        if(itToFirst != oneBeforeEnd && itToFirst->first == key)
+        {
+            mData.pop_back();
+            return std::pair(itToFirst, false);
+        }
+
+        auto itNewPos = vic::sort_individual(mData.begin(), mData.end(), oneBeforeEnd, SortValueType);
+        return std::pair(itNewPos, true);
     }
 
     iterator erase(iterator pos) { return mData.erase(pos); }
@@ -119,23 +156,13 @@ public:
     size_type count(const TKey& key) const { return find(key) == mData.end() ? 0 : 1; }
     iterator find(const TKey& key)
     {
-        for(std::size_t i = 0; i < mData.size(); ++i)
-            if(mData.at(i).first == key)
-                return mData.begin() + i;
-        return mData.end();
-
-        // todo: binary search? probably not worth the time
-
-        //const auto lambda = [](auto const& item, const key_type k) -> bool { return item.first < k; };
-        //auto it = std::lower_bound(mData.begin(), mData.end(), key, lambda);
-        //return it;
+        auto it = std::lower_bound(mData.begin(), mData.end(), key, LowerBoundCompare);
+        return (it != mData.end() && it->first == key) ? it : mData.end();
     }
     const_iterator find(const TKey& key) const
     {
-        for(std::size_t i = 0; i < mData.size(); ++i)
-            if(mData.at(i).first == key)
-                return mData.begin() + i;
-        return mData.end();
+        auto it = std::lower_bound(mData.begin(), mData.end(), key, LowerBoundCompare);
+        return (it != mData.end() && it->first == key) ? it : mData.end();
     }
     bool contains(const TKey& key) const { return find(key) != mData.end(); }
 
@@ -145,6 +172,9 @@ public:
 
     bool Relabel(const TKey oldKey, const TKey newKey)
     {
+        if(oldKey == newKey)
+            return true;
+
         if(find(newKey) != mData.end())
             return false; // newKey already exits, not available
 
@@ -152,18 +182,9 @@ public:
         if(it == mData.end())
             return false; // oldKey does not exist in this map
 
-        // check if we would need to re-sort if we change this label
-        bool needsSort = false;
-        if((it != mData.begin() && newKey < std::prev(it)->first) || //
-           (std::next(it) != mData.end() && std::next(it)->first < newKey))
-        {
-            needsSort = true;
-        }
-
         it->first = newKey; // change label
 
-        if(needsSort)
-            Sort();
+        vic::sort_individual(mData.begin(), mData.end(), it, SortValueType);
 
         return true;
     }
@@ -171,12 +192,7 @@ public:
     auto Reserve(const std::size_t size) { mData.reserve(size); }
 
     // call sort after multiple insert<false>()
-    void Sort()
-    {
-        std::sort(mData.begin(),
-                  mData.end(), //
-                  [&](const auto& item1, const auto& item2) { return item1.first < item2.first; });
-    }
+    void Sort() { std::sort(mData.begin(), mData.end(), SortValueType); }
 
 private:
 };

@@ -69,7 +69,7 @@ template <typename TShape1, typename TShape2>
 using AddResultShape = Shape<Min(TShape1::rows, TShape2::rows), Min(TShape1::cols, TShape2::cols)>;
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> // note: _not_ diagonal, this way you can add the diagonal of two non-diagonal matrices
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> // note: _not_ diagonal, this way you can add the diagonal of two non-diagonal matrices
 constexpr auto AddDiagonal(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetRows() == mat2.GetRows() && mat1.GetColumns() == mat2.GetColumns());
@@ -111,7 +111,7 @@ constexpr auto AddConstant(const TMat& mat, const TValue& value)
 }
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto AddMatrix(const TMat1& mat1, const TMat2& mat2)
 {
     constexpr auto distribution = AdditionDistribution(TMat1::Distribution, TMat2::Distribution);
@@ -128,11 +128,10 @@ constexpr auto AddMatrix(const TMat1& mat1, const TMat2& mat2)
 }
 
 template <typename TMat1, typename TMat2>
+    requires(ConceptMatrix<TMat1> || ConceptMatrix<TMat2>)
 constexpr auto Add(const TMat1& mat1, const TMat2& mat2)
 {
-    if constexpr(!ConceptMatrix<TMat1> && !ConceptMatrix<TMat2>)
-        return mat1 + mat2;
-    else if constexpr(ConceptMatrix<TMat1> && !ConceptMatrix<TMat2>)
+    if constexpr(ConceptMatrix<TMat1> && !ConceptMatrix<TMat2>)
         return AddConstant(mat1, mat2);
     else if constexpr(!ConceptMatrix<TMat1> && ConceptMatrix<TMat2>)
         return AddConstant(mat2, mat1);
@@ -143,7 +142,7 @@ constexpr auto Add(const TMat1& mat1, const TMat2& mat2)
 template <typename TMat1, typename TMat2, typename... Types>
 constexpr auto Add(const TMat1& mat1, const TMat2& mat2, const Types... others)
 {
-    return Add(Add(mat1, mat2), others...);
+    return ::vic::linalg::Add(::vic::linalg::Add(mat1, mat2), others...);
 }
 
 } // namespace linalg
