@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <map>
+#include <numeric>
 #include <vector>
 
 namespace vic
@@ -78,17 +79,17 @@ public:
         // todo: once we find the first (last) related node,
         // we know what range we can remove
         for(int i = int(mNodes.size()) - 1; i >= 0; --i)
-            if(IsRelated(id, mNodes.at(i).Id()))
+            if(IsNthChildOf(id, mNodes.at(i).Id()))
                 mNodes.erase(std::next(mNodes.begin(), i));
     }
 
-    bool IsRelated(const NodeId parent, const NodeId nth_child) const
+    bool IsNthChildOf(const NodeId parent, const NodeId nth_child) const
     {
         if(parent == nth_child)
             return true;
         if(nth_child < parent)
             return false; // id of child is always larger than parent, these 2 are not related
-        return IsRelated(parent, Get(nth_child).Parent());
+        return IsNthChildOf(parent, Get(nth_child).Parent());
     }
 
     TreeNodeType& Get(const NodeId id)
@@ -114,6 +115,9 @@ public:
         }
     }
 
+    TreeNodeType& GetIndex(const std::size_t idx) { return mNodes.at(idx); }
+    const TreeNodeType& GetIndex(const std::size_t idx) const { return mNodes.at(idx); }
+
     bool IsContinuous() const { return mNodes.size() == mIdCounter; }
     bool IsEmpty() const { return mNodes.empty(); }
 
@@ -136,6 +140,114 @@ public:
             node.mParentId = newIDs[node.mParentId];
     }
 
+    std::vector<std::size_t> GetNodeDepths() const
+    {
+        std::vector<std::size_t> result(mNodes.size());
+        for(std::size_t i = 0; i < mNodes.size(); ++i)
+        {
+            const auto& node = GetIndex(i);
+            result.at(i) = result.at(GetIndexBinarySearch(node.parent)) + 1;
+        }
+        return result;
+    }
+
+    std::vector<std::size_t> GetBreathFirstIndexOrder() const
+    {
+        std::vector<std::size_t> result(mNodes.size());
+        std::iota(result.begin(), result.end(), 0);
+
+        // NOTE: two implementations:
+        // One needs extra memory of O(n), but sort will still be O(n log(n))
+        // The other needs no extra memory but uses recursive predicate, making the sort slower.
+
+        //const auto depths = GetNodeDepths();
+        //const auto pred = [&](const auto& a, const auto& b) {
+        //    if(depths[a] == depths[b])
+        //        return a < b; // keep the order within one depth stable
+        //    return depths[a] < depths[b]; //
+        //};
+        //std::sort(result.begin(), result.end(), pred);
+
+        using Index = std::size_t;
+
+        // use a recursive predicate, might not be very efficient, but avoids extra memory
+        const auto predicate = [&](const Index a, //
+                                   const Index b) -> bool {
+            const auto& nodeA = GetIndex(a);
+            const auto& nodeB = GetIndex(b);
+            if(nodeA.IsRoot())
+                return true; // a < b
+            if(nodeB.IsRoot())
+                return false; // a > b
+
+            const auto predicate_recursive = [&](const TreeNodeType& a, //
+                                                 const TreeNodeType& b,
+                                                 const std::size_t aDepth,
+                                                 const std::size_t bDepth,
+                                                 auto& self) -> bool {
+                // end conditions
+                if(a.Parent() == b.Parent())
+                {
+                    if(aDepth == bDepth)
+                        return nodeA.Id() < nodeB.Id(); // note: captured from containing lambda
+                    else
+                        return aDepth < bDepth;
+                }
+
+                // else, recurse by popping the highest parent id
+                if(a.Parent() < b.Parent())
+                {
+                    return self(a, Get(b.Parent()), aDepth, bDepth + 1, self);
+                }
+                else // b.Parent() < a.Parent()
+                {
+                    return self(Get(a.Parent()), b, aDepth + 1, bDepth, self);
+                }
+            };
+
+            return predicate_recursive(nodeA, nodeB, 0, 0, predicate_recursive);
+        };
+
+        std::sort(result.begin(), result.end(), predicate);
+
+        return result;
+    }
+
+    std::vector<std::size_t> GetDepthFirstIndexOrder() const
+    {
+        std::vector<std::size_t> result(mNodes.size());
+        std::iota(result.begin(), result.end(), 0);
+
+        using Index = std::size_t;
+
+        // use a recursive predicate, might not be very efficient, but avoids extra memory
+        const auto predicate = [&](const Index a, //
+                                   const Index b) -> bool {
+            const auto predicate_recursive = [&](const TreeNodeType& a, //
+                                                 const TreeNodeType& b,
+                                                 auto& self) -> bool {
+                // end condition
+                if(a.Parent() == b.Parent())
+                    return a.Id < b.Id();
+
+                // else, recurse by popping the highest parent id
+                if(a.Parent() < b.Parent())
+                {
+                    return self(a, Get(b.Parent()), self);
+                }
+                else // b.Parent() < a.Parent()
+                {
+                    return self(Get(a.Parent()), b, self);
+                }
+            };
+
+            return predicate_recursive(GetIndex(a), GetIndex(b), predicate_recursive);
+        };
+
+        std::sort(result.begin(), result.end(), predicate);
+        return result;
+    }
+
     auto begin() { return mNodes.begin(); }
     auto end() { return mNodes.end(); }
 
@@ -147,7 +259,18 @@ private:
     {
         const auto pred = [](const auto& item, const NodeId id) { return item.Id() < id; };
         const auto it = std::lower_bound(mNodes.begin(), mNodes.end(), id, pred);
+        assert(it != mNodes.end());
         return it - mNodes.begin();
+    }
+    std::size_t GetIndexBinarySearch(NodeId id, //
+                                     std::vector<TreeNodeType>::iterator begin,
+                                     std::vector<TreeNodeType>::iterator end) const
+    {
+        // NOTE: returns index in the _subrange_ [begin; end>
+        const auto pred = [](const auto& item, const NodeId id) { return item.Id() < id; };
+        const auto it = std::lower_bound(begin, end, id, pred);
+        assert(it != end);
+        return it - begin;
     }
 
     std::vector<TreeNodeType> mNodes{};

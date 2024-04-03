@@ -4,6 +4,7 @@
 #include <cassert>
 #include <map>
 #include <ranges>
+#include <string>
 #include <tuple>
 #include <vector>
 
