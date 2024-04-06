@@ -684,13 +684,11 @@ TEST(Geom, MeshCubeSphere)
 
 TEST(Geom, MeshCube)
 {
-    const AABB<double, 3> bbox{Interval<double>{1, 2}, Interval<double>{1, 2}, Interval<double>{1, 2}};
-
-    const auto cubeMesh = GenerateBboxCube(bbox);
-    EXPECT_TRUE(IsClosed(cubeMesh));
+    const auto cubeMesh = GenerateCube<double>();
+    EXPECT_TRUE(IsClosedContinuous(cubeMesh));
 
     const auto subdividedCube = Subdivide(cubeMesh);
-    EXPECT_TRUE(IsClosed(subdividedCube));
+    EXPECT_TRUE(IsClosedContinuous(subdividedCube));
 }
 
 TEST(Geom, MeshCone)
@@ -705,10 +703,10 @@ TEST(Geom, MeshCone)
 TEST(Geom, MeshTorus)
 {
     const auto mesh = GenerateTorus(1., .25, 16, 8);
-    EXPECT_TRUE(IsClosed(mesh));
+    EXPECT_TRUE(IsClosedContinuous(mesh));
 
     const auto subdividedMesh = Subdivide(mesh);
-    EXPECT_TRUE(IsClosed(subdividedMesh));
+    EXPECT_TRUE(IsClosedContinuous(subdividedMesh));
 }
 
 TEST(Geom, Subdivide)

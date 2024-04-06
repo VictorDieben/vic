@@ -27,7 +27,8 @@ using UV = vic::geom::Point<T, 2>;
 using MeshIndex = uint32_t;
 using Edge = std::pair<MeshIndex, MeshIndex>;
 using Tri = std::tuple<MeshIndex, MeshIndex, MeshIndex>;
-using Quad = std::tuple<MeshIndex, MeshIndex, MeshIndex>;
+using Quad = std::tuple<MeshIndex, MeshIndex, MeshIndex, MeshIndex>;
+using Poly = std::vector<MeshIndex>;
 
 template <typename T>
 struct EdgeMesh
@@ -45,6 +46,35 @@ struct TriMesh
     std::vector<Tri> tris;
 };
 
+// todo: this is a tri mesh (each tri points to 3 indices in the vertex vector)
+// also make different types of meshes
+template <typename T>
+struct Mesh
+{
+    std::vector<Vertex<T>> vertices;
+    std::vector<Tri> tris;
+    std::vector<Quad> quads;
+    std::vector<Poly> polys;
+};
+
+inline std::array<Tri, 2> ToTris(const Quad& quad)
+{
+    const auto [a, b, c, d] = quad;
+    return std::array<Tri, 2>{Tri{a, b, d}, Tri{b, c, d}};
+}
+
+inline std::vector<Tri> ToTris(const Poly& poly)
+{
+    // todo: this is the simplest algorithm i could come up with,
+    // make a selector for the strategy, like reducing narrow tris or something
+    const auto size = poly.size();
+    assert(size > 2);
+    std::vector<Tri> tris(size - 2);
+    for(std::size_t i = 2; i < size; ++i)
+        tris[i] = Tri{poly[0], poly[i - 1], poly[i]};
+    return tris;
+}
+
 template <typename T>
 bool IsClosed(const vic::mesh::TriMesh<T>& mesh)
 {
@@ -56,6 +86,7 @@ bool IsClosed(const vic::mesh::TriMesh<T>& mesh)
 
     std::map<std::pair<MeshIndex, MeshIndex>, int> edges;
     auto addEdge = [&](const MeshIndex v1, const MeshIndex v2) {
+        assert(v1 != v2);
         if(v1 < v2)
             edges[{v1, v2}] += 1;
         else
@@ -72,6 +103,59 @@ bool IsClosed(const vic::mesh::TriMesh<T>& mesh)
 
     for(const auto& [key, value] : edges)
         if(value != 2)
+            return false;
+
+    return true;
+}
+
+template <typename T>
+bool IsClosedContinuous(const vic::mesh::TriMesh<T>& mesh)
+{
+    // verify that the mesh is closed, _and_ that each edge occurs once in either directions
+    using namespace vic::mesh;
+
+    std::vector<Edge> edges;
+    edges.reserve(mesh.tris.size() * 3);
+    for(const auto& tri : mesh.tris)
+    {
+        const auto& [v0, v1, v2] = tri;
+        edges.push_back(Edge{v0, v1});
+        edges.push_back(Edge{v1, v2});
+        edges.push_back(Edge{v2, v0});
+    }
+
+    // todo: Should we verify that the vertices mentioned in the tris do actually exist?
+    // I think we should just skip this, and assume they do.
+    // Make verification a separate step
+
+    if(edges.size() % 2)
+        return false; // odd number of edges cannot be closed
+
+    // partition all edges based on if they are increasing or decreasing
+    auto it = std::partition(edges.begin(), edges.end(), [](const auto& edge) { return edge.first < edge.second; });
+
+    if(std::distance(edges.begin(), it) != std::distance(it, edges.end()))
+        return false; // number of up and down edges are not equal
+
+    // sort first half on first index
+    std::sort(edges.begin(), it, [](const auto& a, const auto& b) -> bool {
+        return a.first == b.first //
+                   ? a.second < b.second
+                   : a.first < b.first; // note: basically default pair sorting
+    });
+
+    // sort second half on second index
+    std::sort(it, edges.end(), [](const auto& a, const auto& b) -> bool {
+        return a.second == b.second //
+                   ? a.first < b.first
+                   : a.second < b.second;
+    });
+
+    // make sure each up edge is matched with a down edge
+    auto itFirst = edges.begin();
+    auto itSecond = it;
+    for(; itFirst < it && itSecond < edges.end(); itFirst++, itSecond++)
+        if(itFirst->first != itSecond->second || itFirst->second != itSecond->first)
             return false;
 
     return true;
@@ -101,76 +185,57 @@ bool IsClosed(const vic::mesh::EdgeMesh<T>& mesh)
 }
 
 template <typename T>
-TriMesh<T> GenerateCube()
+Mesh<T> GenerateQuadCube()
 {
-    TriMesh<T> result;
+    Mesh<T> result;
     result.vertices.reserve(8);
     result.tris.reserve(12);
 
-    result.vertices.push_back(Vertex<T>(-1, -1, 1)); // 0
-    result.vertices.push_back(Vertex<T>(1, -1, 1)); // 1
-    result.vertices.push_back(Vertex<T>(-1, -1, -1)); // 2
-    result.vertices.push_back(Vertex<T>(1, -1, -1)); // 3
+    result.vertices.push_back(Vertex<T>(-1, -1, -1)); // 0
+    result.vertices.push_back(Vertex<T>(-1, -1, 1)); // 1
+    result.vertices.push_back(Vertex<T>(-1, 1, -1)); // 2
+    result.vertices.push_back(Vertex<T>(-1, 1, 1)); // 3
+    result.vertices.push_back(Vertex<T>(1, -1, -1)); // 4
+    result.vertices.push_back(Vertex<T>(1, -1, 1)); // 5
+    result.vertices.push_back(Vertex<T>(1, 1, -1)); // 6
+    result.vertices.push_back(Vertex<T>(1, 1, 1)); // 7
 
-    result.vertices.push_back(Vertex<T>(-1, 1, 1)); // 4
-    result.vertices.push_back(Vertex<T>(1, 1, 1)); // 5
-    result.vertices.push_back(Vertex<T>(-1, 1, -1)); // 6
-    result.vertices.push_back(Vertex<T>(1, 1, -1)); // 7
+    static constexpr std::array<Vertex<T>, 8> verts = {
+        Vertex<T>(-1, -1, -1), //
+        Vertex<T>(-1, -1, 1), // 1
+        Vertex<T>(-1, 1, -1), // 2
+        Vertex<T>(-1, 1, 1), // 3
+        Vertex<T>(1, -1, -1), // 4
+        Vertex<T>(1, -1, 1), // 5
+        Vertex<T>(1, 1, -1), // 6
+        Vertex<T>(1, 1, 1) // 7
+        //
+    };
 
-    result.tris.push_back(Tri{0, 2, 1}); // front
-    result.tris.push_back(Tri{1, 2, 3});
-    result.tris.push_back(Tri{2, 6, 3}); // bottom
-    result.tris.push_back(Tri{3, 6, 7});
-    result.tris.push_back(Tri{0, 4, 6}); // left
-    result.tris.push_back(Tri{0, 6, 2});
-    result.tris.push_back(Tri{0, 1, 4}); // top
-    result.tris.push_back(Tri{1, 5, 4});
-    result.tris.push_back(Tri{4, 5, 6}); // back
-    result.tris.push_back(Tri{5, 7, 6});
-    result.tris.push_back(Tri{1, 3, 5}); // right
-    result.tris.push_back(Tri{5, 3, 7});
+    static constexpr std::array<Quad, 6> quads = {Quad{0, 1, 3, 2}, //
+                                                  Quad{1, 5, 7, 3},
+                                                  Quad{5, 4, 6, 7},
+                                                  Quad{4, 0, 2, 6},
+                                                  Quad{2, 3, 7, 6},
+                                                  Quad{4, 5, 1, 0}};
 
     return result;
 }
 
 template <typename T>
-TriMesh<T> GenerateBboxCube(const vic::geom::AABB<T, 3>& box)
+TriMesh<T> GenerateCube()
 {
-    const auto lx = box.intervals.at(0).min;
-    const auto ux = box.intervals.at(0).max;
-    const auto ly = box.intervals.at(1).min;
-    const auto uy = box.intervals.at(1).max;
-    const auto lz = box.intervals.at(2).min;
-    const auto uz = box.intervals.at(2).max;
-
-    TriMesh<T> result;
-    result.vertices.reserve(8);
-    result.tris.reserve(12);
-
-    result.vertices.push_back(Vertex<T>{lx, ly, lz}); // 0
-    result.vertices.push_back(Vertex<T>{ux, ly, lz}); // 1
-    result.vertices.push_back(Vertex<T>{lx, uy, lz}); // 2
-    result.vertices.push_back(Vertex<T>{ux, uy, lz}); // 3
-
-    result.vertices.push_back(Vertex<T>{lx, ly, uz}); // 4
-    result.vertices.push_back(Vertex<T>{ux, ly, uz}); // 5
-    result.vertices.push_back(Vertex<T>{lx, uy, uz}); // 6
-    result.vertices.push_back(Vertex<T>{ux, uy, uz}); // 7
-
-    result.tris.push_back(Tri{0, 1, 2}); // bottom
-    result.tris.push_back(Tri{2, 3, 2});
-    result.tris.push_back(Tri{0, 1, 4}); // front
-    result.tris.push_back(Tri{4, 5, 1});
-    result.tris.push_back(Tri{0, 2, 4}); // left
-    result.tris.push_back(Tri{2, 6, 4});
-    result.tris.push_back(Tri{4, 5, 6}); // top
-    result.tris.push_back(Tri{6, 7, 5});
-    result.tris.push_back(Tri{2, 3, 6}); // back
-    result.tris.push_back(Tri{6, 7, 3});
-    result.tris.push_back(Tri{1, 3, 5}); // right
-    result.tris.push_back(Tri{5, 7, 3});
-
-    return result;
+    const auto quadmesh = GenerateQuadCube<T>();
+    TriMesh<T> mesh{};
+    mesh.vertices = std::move(quadmesh.vertices);
+    mesh.tris.reserve(quadmesh.quads.size() * 2);
+    for(const auto& quad : quadmesh.quads)
+    {
+        const auto& [tri1, tri2] = ToTris(quad);
+        mesh.tris.push_back(tri1);
+        mesh.tris.push_back(tri2);
+    }
+    return mesh;
 }
 
 template <typename T>
@@ -297,6 +362,42 @@ TriMesh<T> GenerateCone(const T rad, //
     return mesh;
 }
 
+// make list of edges. An edge pointing between the same vertices but in different direction is considered another edge
+template <typename T>
+std::vector<std::pair<MeshIndex, MeshIndex>> Edges(const TriMesh<T>& mesh)
+{
+    std::vector<std::pair<MeshIndex, MeshIndex>> result;
+
+    // stick all edges in the list without checking if it is already in there
+    for(const auto& [v0, v1, v2] : mesh.tris)
+    {
+        result.push_back({v0, v1});
+        result.push_back({v1, v2});
+        result.push_back({v2, v0});
+    }
+
+    return result;
+}
+
+// Make list of edges, edge a->b is the same as b->a
+template <typename T>
+std::vector<std::pair<MeshIndex, MeshIndex>> UniqueEdges(const TriMesh<T>& mesh)
+{
+    std::vector<std::pair<MeshIndex, MeshIndex>> result = Edges(mesh);
+
+    // for each edge, check if we put it in from lowest idx vertex to heighest
+    for(auto& [v1, v2] : result)
+        if(v2 < v1)
+            std::swap(v1, v2);
+
+    // make the list unique. This requires first sorting them. unique set will also be sorted
+    std::sort(result.begin(), result.end());
+    const auto it = std::unique(result.begin(), result.end());
+    result.erase(it, result.end());
+
+    return result;
+}
+
 template <typename T>
 TriMesh<T> Subdivide(const TriMesh<T>& mesh)
 {
@@ -306,19 +407,10 @@ TriMesh<T> Subdivide(const TriMesh<T>& mesh)
     // todo: Right now i construct an std::map of edges. This will not scale well. Maybe change to a sorted vector
 
     // construct list of edges
+    const auto uniqueEdgeList = UniqueEdges(mesh);
     std::map<std::pair<MeshIndex, MeshIndex>, MeshIndex> uniqueEdges;
-    auto addEdge = [&](const MeshIndex v1, const MeshIndex v2) {
-        if(v1 < v2)
-            uniqueEdges[{v1, v2}] = {};
-        else
-            uniqueEdges[{v2, v1}] = {};
-    };
-    for(const auto& [v0, v1, v2] : mesh.tris)
-    {
-        addEdge(v0, v1);
-        addEdge(v1, v2);
-        addEdge(v2, v0);
-    }
+    for(const auto& [v1, v2] : uniqueEdgeList)
+        uniqueEdges[{v1, v2}] = {};
 
     // initialize result
     TriMesh<T> result;
@@ -572,6 +664,94 @@ vic::mesh::TriMesh<T> Union(const vic::mesh::TriMesh<T>& mesh1, const vic::mesh:
     //
 
     return {};
+}
+
+template <typename T>
+vic::mesh::TriMesh<T> BevelVertices(const vic::mesh::TriMesh<T>& mesh, const T distance)
+{
+    vic::mesh::TriMesh<T> beveled;
+
+    return beveled; // todo
+}
+
+template <typename T>
+vic::mesh::TriMesh<T> BevelEdges(const vic::mesh::TriMesh<T>& mesh, const T distance)
+{
+    assert(IsClosed(mesh)); // temporary, open edges need special attention
+
+    const auto uniqueEdges = UniqueEdges(mesh);
+
+    const auto& originalTris = mesh.tris;
+    const auto& originalVertices = mesh.vertices;
+
+    vic::mesh::TriMesh<T> beveled;
+
+    // for each of the original tris, create three new vertices and the new inner tri
+    for(std::size_t i = 0; i < originalTris.size(); ++i)
+    {
+        const auto& [ov1, ov2, ov3] = originalTris.at(i);
+        const auto& v1 = originalVertices[ov1];
+        const auto& v2 = originalVertices[ov2];
+        const auto& v3 = originalVertices[ov3];
+
+        const auto delta12 = Normalize(Subtract(v2, v1));
+        const auto delta13 = Normalize(Subtract(v3, v1));
+        const auto delta23 = Normalize(Subtract(v3, v2));
+
+        const auto startSize = beveled.vertices.size();
+
+        beveled.vertices.push_back(Add(v1, //
+                                       Matmul(distance, delta12),
+                                       Matmul(distance, delta13)));
+
+        beveled.vertices.push_back(Add(v2, //
+                                       Matmul(-distance, delta12),
+                                       Matmul(distance, delta23)));
+
+        beveled.vertices.push_back(Add(v3, //
+                                       Matmul(-distance, delta13),
+                                       Matmul(-distance, delta23)));
+
+        beveled.tris.push_back(Tri{startSize, startSize + 1, startSize + 2});
+    }
+
+    // todo: same step as before, but now for quads/polys
+
+    // note: for each of the open edges, we need to add an extra vertex. For now, assume all meshes are closed
+    //using VertexPair = std::pair<Vertex, Vertex>;
+    //const auto findInnerVertexPair = [&](const Edge& edge) -> VertexPair {
+    //    VertexPair pair;
+    //    return pair;
+    //};
+
+    const auto triContainsEdge = [&](const Tri& tri, const Edge& edge) -> bool {
+        const auto& [t1, t2, t3] = tri;
+        const auto& [e1, e2] = edge;
+        // assert(e1 != e2); // sort of implied by it being an edge
+        if(e1 == t1 || e1 == t2 || e1 == t3)
+            if(e2 == t1 || e2 == t2 || e2 == t3)
+                return true;
+        return false;
+    };
+
+    std::vector<std::pair<std::size_t, std::size_t>> trisUsingEdges;
+
+    for(const auto& edge : uniqueEdges)
+    {
+        auto itFirst = std::find_if(originalTris.begin(), originalTris.end(), [&](const auto& tri) { return triContainsEdge(tri, edge); });
+        if(itFirst == originalTris.end())
+            continue; // should not happen on closed mesh
+
+        auto itSecond = std::find_if(std::next(itFirst), originalTris.end(), [&](const auto& tri) { return triContainsEdge(tri, edge); });
+        if(itSecond == originalTris.end())
+            continue; // should not happen on closed mesh
+
+        // for each side, add the new inner tri
+
+        // Add a quad (or two tis) between the two new corner tris
+    }
+
+    return beveled; // todo
 }
 
 } // namespace mesh
