@@ -26,13 +26,12 @@ using namespace vic::mesh;
 
 TEST(Geom, Initialization)
 {
-
-    Point2d p1{{0.1, 10.}};
+    Point2d p1{0.1, 10.};
     ASSERT_TRUE(IsEqual(p1, p1));
     ASSERT_NEAR(p1.Get(0), 0.1, 1E-10);
     ASSERT_NEAR(p1.Get(1), 10., 1E-10);
 
-    Direction<double, 2> d1{{0.1, 10.}};
+    Direction<double, 2> d1{0.1, 10.};
     ASSERT_NEAR(d1.Get(0), 0.1, 1E-10);
     ASSERT_NEAR(d1.Get(1), 10., 1E-10);
 
@@ -163,8 +162,8 @@ TEST(Geom, SphereLineIntersection)
         const double dy = dxyz(g);
         const double dz = dxyz(g);
 
-        const auto p1 = Point3d{{x + dx, y + dy, z + dz}};
-        const auto p2 = Point3d{{x - dx, y - dy, z - dz}};
+        const auto p1 = Point3d{x + dx, y + dy, z + dz};
+        const auto p2 = Point3d{x - dx, y - dy, z - dz};
         const LineSegment<double, 3> segment{p1, p2};
 
         // use this to get a rough performance estimate
@@ -262,40 +261,40 @@ TEST(Geom, BBox)
     std::uniform_real_distribution<double> r(-1., 1.);
 
     using Inter = Interval<double>;
-    const BBox<double, 2> bbox1{{Inter{1., 2.}, Inter{1., 2.}}};
+    const BBox<double, 2> bbox1{Inter{1., 2.}, Inter{1., 2.}};
 
     // Includes
-    ASSERT_TRUE(Includes(bbox1, BBox<double, 2>{{Inter{1.01, 1.99}, Inter{1.01, 1.99}}}));
-    ASSERT_FALSE(Includes(bbox1, BBox<double, 2>{{Inter{1.01, 1.99}, Inter{1.01, 2.01}}}));
-    ASSERT_FALSE(Includes(bbox1, BBox<double, 2>{{Inter{1.01, 2.01}, Inter{1.01, 1.99}}}));
-    ASSERT_FALSE(Includes(bbox1, BBox<double, 2>{{Inter{1.01, 2.01}, Inter{1.01, 2.01}}}));
+    ASSERT_TRUE(Includes(bbox1, BBox<double, 2>{Inter{1.01, 1.99}, Inter{1.01, 1.99}}));
+    ASSERT_FALSE(Includes(bbox1, BBox<double, 2>{Inter{1.01, 1.99}, Inter{1.01, 2.01}}));
+    ASSERT_FALSE(Includes(bbox1, BBox<double, 2>{Inter{1.01, 2.01}, Inter{1.01, 1.99}}));
+    ASSERT_FALSE(Includes(bbox1, BBox<double, 2>{Inter{1.01, 2.01}, Inter{1.01, 2.01}}));
 
     // make sure boxes always include themselves
     for(const std::size_t i : Range(1000))
     {
         const double pos = r(g), eps = r(g);
-        BBox<double, 1> box{{Inter{pos - eps, pos + eps}}};
+        BBox<double, 1> box{Inter{pos - eps, pos + eps}};
         ASSERT_TRUE(Includes(box, box));
     }
 
     // Overlaps
-    ASSERT_TRUE(Overlaps(bbox1, BBox<double, 2>{{Inter{1.99, 3.}, Inter{1.99, 3.}}}));
-    ASSERT_TRUE(Overlaps(bbox1, BBox<double, 2>{{Inter{0, 3.}, Inter{0, 3.}}}));
-    ASSERT_TRUE(Overlaps(bbox1, BBox<double, 2>{{Inter{0, 3.}, Inter{0.99, 1.01}}}));
+    ASSERT_TRUE(Overlaps(bbox1, BBox<double, 2>{Inter{1.99, 3.}, Inter{1.99, 3.}}));
+    ASSERT_TRUE(Overlaps(bbox1, BBox<double, 2>{Inter{0, 3.}, Inter{0, 3.}}));
+    ASSERT_TRUE(Overlaps(bbox1, BBox<double, 2>{Inter{0, 3.}, Inter{0.99, 1.01}}));
 
-    ASSERT_FALSE(Overlaps(bbox1, BBox<double, 2>{{Inter{3., 4}, Inter{3., 4}}}));
-    ASSERT_FALSE(Overlaps(bbox1, BBox<double, 2>{{Inter{3., 4}, Inter{1., 2.}}}));
-    ASSERT_FALSE(Overlaps(bbox1, BBox<double, 2>{{Inter{1., 2.}, Inter{3., 4}}}));
+    ASSERT_FALSE(Overlaps(bbox1, BBox<double, 2>{Inter{3., 4}, Inter{3., 4}}));
+    ASSERT_FALSE(Overlaps(bbox1, BBox<double, 2>{Inter{3., 4}, Inter{1., 2.}}));
+    ASSERT_FALSE(Overlaps(bbox1, BBox<double, 2>{Inter{1., 2.}, Inter{3., 4}}));
 
     // Combine
-    ASSERT_TRUE(BBoxEqual(Combine(bbox1, BBox<double, 2>{{Inter{1., 2.}, Inter{3., 4}}}), //
-                          BBox<double, 2>{{Inter{1., 2.}, Inter{1., 4}}}));
+    ASSERT_TRUE(BBoxEqual(Combine(bbox1, BBox<double, 2>{Inter{1., 2.}, Inter{3., 4}}), //
+                          BBox<double, 2>{Inter{1., 2.}, Inter{1., 4}}));
 
-    ASSERT_TRUE(BBoxEqual(Combine(bbox1, BBox<double, 2>{{Inter{3., 4.}, Inter{3., 4}}}), //
-                          BBox<double, 2>{{Inter{1., 4.}, Inter{1., 4}}}));
+    ASSERT_TRUE(BBoxEqual(Combine(bbox1, BBox<double, 2>{Inter{3., 4.}, Inter{3., 4}}), //
+                          BBox<double, 2>{Inter{1., 4.}, Inter{1., 4}}));
 
-    ASSERT_TRUE(BBoxEqual(Combine(bbox1, BBox<double, 2>{{Inter{1., 2.}, Inter{0., 3}}}), //
-                          BBox<double, 2>{{Inter{1., 2.}, Inter{0., 3}}}));
+    ASSERT_TRUE(BBoxEqual(Combine(bbox1, BBox<double, 2>{Inter{1., 2.}, Inter{0., 3}}), //
+                          BBox<double, 2>{Inter{1., 2.}, Inter{0., 3}}));
 }
 
 TEST(Geom, BoxTree)
@@ -335,46 +334,8 @@ TEST(Geom, BoxTree)
         for(auto& object : objects)
             boxtree.Insert(object);
         const auto totalTime = timer.GetTime();
-
-        int bla = 1;
     }
 }
-
-//TEST(Geom, TriTri)
-//{
-//    std::default_random_engine g;
-//    std::uniform_real_distribution<double> pos(-1., 1.);
-//
-//    // ~13m iters per second
-//    for(const auto i : Range(1000))
-//    {
-//        const Triangle<double, 3> tri1{Point3d{{pos(g), pos(g), pos(g)}}, //
-//                                       Point3d{{pos(g), pos(g), pos(g)}},
-//                                       Point3d{{pos(g), pos(g), pos(g)}}};
-//        const Triangle<double, 3> tri2{Point3d{{pos(g), pos(g), pos(g)}}, //
-//                                       Point3d{{pos(g), pos(g), pos(g)}},
-//                                       Point3d{{pos(g), pos(g), pos(g)}}};
-//
-//        const auto res = TriTriIntersection(tri1, tri2);
-//
-//        if(res.interval.min >= res.interval.max)
-//            continue; // not intersecting
-//
-//        const auto tarray = Linspace(res.interval.min, res.interval.max, 5);
-//        for(const auto t : tarray | std::views::drop(1) | vic::drop_last)
-//        {
-//            const auto pos = Add(res.pos, Matmul(res.dir, t));
-//
-//            const double u1 = Project(tri1.points[0], Subtract(tri1.points[1], tri1.points[0]), pos);
-//            const double v1 = Project(tri1.points[0], Subtract(tri1.points[2], tri1.points[0]), pos);
-//            // ASSERT_TRUE(u1 >= 0. && v1 >= 0. && (u1 + v1) <= 1.);
-//
-//            const double u2 = Project(tri2.points[0], Subtract(tri2.points[1], tri2.points[0]), pos);
-//            const double v2 = Project(tri2.points[0], Subtract(tri2.points[2], tri2.points[0]), pos);
-//            // ASSERT_TRUE(u2 >= 0. && v2 >= 0. && (u2 + v2) <= 1.);
-//        }
-//    }
-//}
 
 TEST(Geom, IntervalHeap)
 {
@@ -395,7 +356,7 @@ TEST(Geom, IntervalHeap)
         return Interval<double>{p - d, p + d};
     };
 
-    const auto randomBBox = [&]() { return Box{{randomInterval(), randomInterval()}}; };
+    const auto randomBBox = [&]() { return Box{randomInterval(), randomInterval()}; };
 
     // make a list of random bboxes
     std::vector<Box> boxes{};
@@ -445,8 +406,6 @@ TEST(Geom, IntervalHeap)
             ASSERT_FALSE(Overlaps(interval, overlapInterval));
         }
     }
-
-    // ASSERT_TRUE(false);
 }
 
 TEST(Geom, IntervalSorted)
@@ -610,7 +569,8 @@ TEST(Geom, GroupPairsOfTwo)
     const std::size_t nItems = 1000;
     for(auto i = 0; i < nItems; ++i)
     {
-        const auto p = pos(g), s = size(g);
+        const auto p = pos(g);
+        const auto s = size(g);
         intervals.push_back(Inter{p - s, p + s});
     }
 
@@ -694,10 +654,10 @@ TEST(Geom, MeshCube)
 TEST(Geom, MeshCone)
 {
     const auto mesh = GenerateCone(1., 2., 8);
-    EXPECT_TRUE(IsClosed(mesh));
+    EXPECT_TRUE(IsClosedContinuous(mesh));
 
     const auto subdividedMesh = Subdivide(mesh);
-    EXPECT_TRUE(IsClosed(subdividedMesh));
+    EXPECT_TRUE(IsClosedContinuous(subdividedMesh));
 }
 
 TEST(Geom, MeshTorus)
@@ -721,6 +681,17 @@ TEST(Geom, Subdivide)
 
     EXPECT_EQ(subdivided.vertices.size(), 6);
     EXPECT_EQ(subdivided.tris.size(), 4);
+}
+
+TEST(Geom, Bevel)
+{
+    const auto cube = GenerateCube<double>();
+    EXPECT_TRUE(IsClosedContinuous(cube));
+
+    const auto bevel = BevelEdges(cube, 0.1);
+    const auto bevelTris = ToTris(bevel);
+    EXPECT_TRUE(IsClosed(bevelTris));
+    EXPECT_TRUE(IsClosedContinuous(bevelTris));
 }
 
 TEST(Geom, MeshCircle)
@@ -833,7 +804,11 @@ TEST(Geom, Delaunay2d)
     std::default_random_engine g{123};
     std::uniform_real_distribution<double> pos(-1., 1.);
 
-    const std::size_t numPoints = 120000;
+#ifdef _DEBUG
+    static constexpr std::size_t numPoints = 1000;
+#else
+    static constexpr std::size_t numPoints = 120000;
+#endif
 
     // performance [points ; seconds]:
     // 1000         0.00363

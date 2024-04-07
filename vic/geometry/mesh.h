@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 #include <numbers> // std::numbers
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -38,7 +39,7 @@ struct EdgeMesh
 };
 
 // todo: this is a tri mesh (each tri points to 3 indices in the vertex vector)
-// also make different types of meshes
+// also make different types of meshes, and maybe concepts for each of the abilities (normals,uvs, etc.)
 template <typename T>
 struct TriMesh
 {
@@ -46,8 +47,6 @@ struct TriMesh
     std::vector<Tri> tris;
 };
 
-// todo: this is a tri mesh (each tri points to 3 indices in the vertex vector)
-// also make different types of meshes
 template <typename T>
 struct Mesh
 {
@@ -73,6 +72,27 @@ inline std::vector<Tri> ToTris(const Poly& poly)
     for(std::size_t i = 2; i < size; ++i)
         tris[i] = Tri{poly[0], poly[i - 1], poly[i]};
     return tris;
+}
+
+template <typename T>
+TriMesh<T> ToTris(const Mesh<T>& mesh)
+{
+    TriMesh<T> result;
+    result.vertices = mesh.vertices;
+    result.tris.reserve(mesh.tris.size() //
+                        + (2 * mesh.quads.size())); // todo: reserve for polys
+    result.tris = mesh.tris;
+    for(const auto& quad : mesh.quads)
+    {
+        const auto [t1, t2] = ToTris(quad);
+        result.tris.push_back(t1);
+        result.tris.push_back(t2);
+    }
+    for(const auto& poly : mesh.polys)
+        for(const auto& tri : ToTris(poly))
+            result.tris.push_back(tri);
+
+    return result;
 }
 
 template <typename T>
@@ -132,7 +152,7 @@ bool IsClosedContinuous(const vic::mesh::TriMesh<T>& mesh)
         return false; // odd number of edges cannot be closed
 
     // partition all edges based on if they are increasing or decreasing
-    auto it = std::partition(edges.begin(), edges.end(), [](const auto& edge) { return edge.first < edge.second; });
+    const auto it = std::partition(edges.begin(), edges.end(), [](const auto& edge) { return edge.first < edge.second; });
 
     if(std::distance(edges.begin(), it) != std::distance(it, edges.end()))
         return false; // number of up and down edges are not equal
@@ -187,19 +207,6 @@ bool IsClosed(const vic::mesh::EdgeMesh<T>& mesh)
 template <typename T>
 Mesh<T> GenerateQuadCube()
 {
-    Mesh<T> result;
-    result.vertices.reserve(8);
-    result.tris.reserve(12);
-
-    result.vertices.push_back(Vertex<T>(-1, -1, -1)); // 0
-    result.vertices.push_back(Vertex<T>(-1, -1, 1)); // 1
-    result.vertices.push_back(Vertex<T>(-1, 1, -1)); // 2
-    result.vertices.push_back(Vertex<T>(-1, 1, 1)); // 3
-    result.vertices.push_back(Vertex<T>(1, -1, -1)); // 4
-    result.vertices.push_back(Vertex<T>(1, -1, 1)); // 5
-    result.vertices.push_back(Vertex<T>(1, 1, -1)); // 6
-    result.vertices.push_back(Vertex<T>(1, 1, 1)); // 7
-
     static constexpr std::array<Vertex<T>, 8> verts = {
         Vertex<T>(-1, -1, -1), //
         Vertex<T>(-1, -1, 1), // 1
@@ -209,7 +216,6 @@ Mesh<T> GenerateQuadCube()
         Vertex<T>(1, -1, 1), // 5
         Vertex<T>(1, 1, -1), // 6
         Vertex<T>(1, 1, 1) // 7
-        //
     };
 
     static constexpr std::array<Quad, 6> quads = {Quad{0, 1, 3, 2}, //
@@ -219,23 +225,16 @@ Mesh<T> GenerateQuadCube()
                                                   Quad{2, 3, 7, 6},
                                                   Quad{4, 5, 1, 0}};
 
+    Mesh<T> result;
+    result.vertices = std::vector<Vertex<T>>{verts.begin(), verts.end()};
+    result.quads = std::vector<Quad>{quads.begin(), quads.end()};
     return result;
 }
 
 template <typename T>
 TriMesh<T> GenerateCube()
 {
-    const auto quadmesh = GenerateQuadCube<T>();
-    TriMesh<T> mesh{};
-    mesh.vertices = std::move(quadmesh.vertices);
-    mesh.tris.reserve(quadmesh.quads.size() * 2);
-    for(const auto& quad : quadmesh.quads)
-    {
-        const auto& [tri1, tri2] = ToTris(quad);
-        mesh.tris.push_back(tri1);
-        mesh.tris.push_back(tri2);
-    }
-    return mesh;
+    return ToTris(GenerateQuadCube<T>());
 }
 
 template <typename T>
@@ -362,18 +361,40 @@ TriMesh<T> GenerateCone(const T rad, //
     return mesh;
 }
 
+inline std::array<Edge, 3> Edges(const Tri& tri)
+{
+    const auto& [v0, v1, v2] = tri;
+    return std::array<Edge, 3>{Edge{v0, v1}, Edge{v1, v2}, Edge{v2, v0}};
+}
+
+inline std::array<Edge, 4> Edges(const Quad& quad)
+{
+    const auto& [v0, v1, v2, v3] = quad;
+    return std::array<Edge, 4>{Edge{v0, v1}, Edge{v1, v2}, Edge{v2, v3}, Edge{v3, v0}};
+}
+
+inline std::vector<Edge> Edges(const Poly& poly)
+{
+    const auto size = poly.size();
+    std::vector<Edge> edges;
+    edges.reserve(size);
+    for(std::size_t i = 0; i < size; ++i)
+        edges.push_back(Edge{poly[i], poly[i % size]});
+    return edges;
+}
+
 // make list of edges. An edge pointing between the same vertices but in different direction is considered another edge
 template <typename T>
 std::vector<std::pair<MeshIndex, MeshIndex>> Edges(const TriMesh<T>& mesh)
 {
-    std::vector<std::pair<MeshIndex, MeshIndex>> result;
+    std::vector<Edge> result;
+    result.reserve(mesh.tris.size() * 3);
 
     // stick all edges in the list without checking if it is already in there
-    for(const auto& [v0, v1, v2] : mesh.tris)
+    for(const auto& tri : mesh.tris)
     {
-        result.push_back({v0, v1});
-        result.push_back({v1, v2});
-        result.push_back({v2, v0});
+        const auto edges = Edges(tri);
+        result.insert(result.end(), edges.begin(), edges.end());
     }
 
     return result;
@@ -675,16 +696,14 @@ vic::mesh::TriMesh<T> BevelVertices(const vic::mesh::TriMesh<T>& mesh, const T d
 }
 
 template <typename T>
-vic::mesh::TriMesh<T> BevelEdges(const vic::mesh::TriMesh<T>& mesh, const T distance)
+vic::mesh::Mesh<T> BevelEdges(const vic::mesh::TriMesh<T>& mesh, const T distance)
 {
-    assert(IsClosed(mesh)); // temporary, open edges need special attention
-
-    const auto uniqueEdges = UniqueEdges(mesh);
+    assert(IsClosedContinuous(mesh)); // temporary, open edges need special attention
 
     const auto& originalTris = mesh.tris;
     const auto& originalVertices = mesh.vertices;
 
-    vic::mesh::TriMesh<T> beveled;
+    vic::mesh::Mesh<T> beveled;
 
     // for each of the original tris, create three new vertices and the new inner tri
     for(std::size_t i = 0; i < originalTris.size(); ++i)
@@ -698,7 +717,7 @@ vic::mesh::TriMesh<T> BevelEdges(const vic::mesh::TriMesh<T>& mesh, const T dist
         const auto delta13 = Normalize(Subtract(v3, v1));
         const auto delta23 = Normalize(Subtract(v3, v2));
 
-        const auto startSize = beveled.vertices.size();
+        const MeshIndex startSize = (MeshIndex)beveled.vertices.size();
 
         beveled.vertices.push_back(Add(v1, //
                                        Matmul(distance, delta12),
@@ -718,37 +737,80 @@ vic::mesh::TriMesh<T> BevelEdges(const vic::mesh::TriMesh<T>& mesh, const T dist
     // todo: same step as before, but now for quads/polys
 
     // note: for each of the open edges, we need to add an extra vertex. For now, assume all meshes are closed
-    //using VertexPair = std::pair<Vertex, Vertex>;
-    //const auto findInnerVertexPair = [&](const Edge& edge) -> VertexPair {
-    //    VertexPair pair;
-    //    return pair;
-    //};
 
-    const auto triContainsEdge = [&](const Tri& tri, const Edge& edge) -> bool {
-        const auto& [t1, t2, t3] = tri;
-        const auto& [e1, e2] = edge;
-        // assert(e1 != e2); // sort of implied by it being an edge
-        if(e1 == t1 || e1 == t2 || e1 == t3)
-            if(e2 == t1 || e2 == t2 || e2 == t3)
-                return true;
-        return false;
+    const auto uniqueEdges = UniqueEdges(mesh);
+
+    using OptionalIndex = std::optional<std::size_t>;
+    std::vector<std::pair<OptionalIndex, OptionalIndex>> trisUsingEdges;
+    trisUsingEdges.resize(uniqueEdges.size());
+
+    for(std::size_t i = 0; i < originalTris.size(); ++i)
+    {
+        const auto& tri = originalTris.at(i);
+        const auto edges = Edges(tri);
+        for(auto [e1, e2] : edges)
+        {
+            const bool up = e1 < e2;
+            if(!up)
+                std::swap(e1, e2);
+
+            // find the index of this (unique) edge, write result to temp vector
+            auto it = std::find(uniqueEdges.begin(), uniqueEdges.end(), Edge{e1, e2});
+            auto& item = trisUsingEdges.at(std::distance(uniqueEdges.begin(), it));
+
+            if(up)
+            {
+                assert(!item.first.has_value());
+                item.first = i;
+            }
+            else
+            {
+                assert(!item.second.has_value());
+                item.second = i;
+            }
+        }
+    }
+
+    // tmp: check that all optionals are filled
+    for(const auto& pair : trisUsingEdges)
+        if((!pair.first.has_value()) || (!pair.second.has_value()))
+            throw std::runtime_error("invalid mesh!");
+
+    const auto vertexIndex = [](const Tri& tri, const MeshIndex vertexId) {
+        if(std::get<0>(tri) == vertexId)
+            return 0;
+        else if(std::get<1>(tri) == vertexId)
+            return 1;
+        else if(std::get<2>(tri) == vertexId)
+            return 2;
+        std::cout << "Problem!" << std::endl; // todo: turn last "else if" into "else", once algorithm is stable
+        return -1;
     };
 
-    std::vector<std::pair<std::size_t, std::size_t>> trisUsingEdges;
-
-    for(const auto& edge : uniqueEdges)
+    // for each of the unique edges, add the corner quad
+    for(std::size_t i = 0; i < uniqueEdges.size(); ++i)
     {
-        auto itFirst = std::find_if(originalTris.begin(), originalTris.end(), [&](const auto& tri) { return triContainsEdge(tri, edge); });
-        if(itFirst == originalTris.end())
-            continue; // should not happen on closed mesh
+        const auto& [e1, e2] = uniqueEdges.at(i);
+        const auto triIndex1 = trisUsingEdges.at(i).first.value(); // we previously verified existance
+        const auto triIndex2 = trisUsingEdges.at(i).second.value();
 
-        auto itSecond = std::find_if(std::next(itFirst), originalTris.end(), [&](const auto& tri) { return triContainsEdge(tri, edge); });
-        if(itSecond == originalTris.end())
-            continue; // should not happen on closed mesh
+        const MeshIndex idx1 = (3 * triIndex1) + vertexIndex(originalTris.at(triIndex1), e1);
+        const MeshIndex idx2 = (3 * triIndex1) + vertexIndex(originalTris.at(triIndex1), e2);
 
-        // for each side, add the new inner tri
+        const MeshIndex idx3 = (3 * triIndex2) + vertexIndex(originalTris.at(triIndex2), e2); // note: other direction
+        const MeshIndex idx4 = (3 * triIndex2) + vertexIndex(originalTris.at(triIndex2), e1);
 
-        // Add a quad (or two tis) between the two new corner tris
+        beveled.quads.push_back(Quad{idx1, idx2, idx3, idx4});
+
+        // add root corner tri
+        const auto rootCornerid = beveled.vertices.size();
+        beveled.vertices.push_back(originalVertices.at(e1));
+        beveled.tris.push_back(Tri{rootCornerid, idx1, idx4});
+
+        // add tip corner tri
+        const auto tipCornerid = beveled.vertices.size();
+        beveled.vertices.push_back(originalVertices.at(e2));
+        beveled.tris.push_back(Tri{tipCornerid, idx3, idx2});
     }
 
     return beveled; // todo
