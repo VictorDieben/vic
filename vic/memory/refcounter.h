@@ -32,7 +32,11 @@ public:
         std::size_t mCount{0};
 
         void Add() { mCount++; }
-        void Subtract() { mCount--; }
+        bool Subtract()
+        {
+            mCount--;
+            return mCount == 0;
+        }
         std::size_t GetCount() const { return mCount; }
         friend RefCounted<T>;
     };
@@ -62,12 +66,8 @@ public:
     ~RefCounted()
     {
         // check if we still point to an object (might have been moved)
-        if(mObject)
-        {
-            mObject->Subtract();
-            if(mObject->GetCount() == 0)
-                Destroy();
-        }
+        if(mObject && mObject->Subtract())
+            Destroy();
     }
 
     T* Get() { return mObject ? &(mObject->mData) : nullptr; }
@@ -185,7 +185,7 @@ struct intrusive_ref
     std::size_t count() const { return mCount; }
 
     // temp solution, find a better one
-    static constexpr bool TmpIsIntrusiveCRTP = true; //
+    static constexpr bool TmpIsIntrusiveCRTP = true;
 
     void Add() { mCount++; }
     bool Subtract()

@@ -33,7 +33,7 @@ class ArrayRingBuffer
 {
 public:
     static_assert(N > 1);
-    static_assert(std::is_default_constructible_v<T>); // needed for emtpy array
+    static_assert(std::is_default_constructible_v<T>); // needed for empty array
     static_assert(std::is_copy_constructible_v<T>); // needed for inserting into array (move?)
 
     ArrayRingBuffer() = default;

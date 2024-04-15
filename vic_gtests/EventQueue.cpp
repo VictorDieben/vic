@@ -23,14 +23,12 @@ TEST(TestEventQueue, Startup)
 
     EventListener<MyEvent> listener(queue, //
                                     [&](const MyEvent& event) {
-                                        std::cout << "tadaaa: " << event.mText << std::endl; //
                                         EXPECT_EQ(val, 0);
                                         val++;
                                     });
 
     EventListener<MyOtherEvent> otherListener(queue, //
                                               [&](const MyOtherEvent& event) {
-                                                  std::cout << "tadaaa: " << event.mOtherText << std::endl; //
                                                   EXPECT_EQ(val, 1);
                                                   val++;
                                               });

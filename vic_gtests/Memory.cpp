@@ -67,13 +67,19 @@ TEST(Memory, intrusive_ref)
         EXPECT_EQ(intrusivePtr.count(), 2);
     }
 
+    EXPECT_EQ(destructorCalls, 0); // copy destructor should not delete underlying data
+
+    EXPECT_FALSE(intrusivePtr.empty());
+    EXPECT_EQ(intrusivePtr.count(), 1);
+    EXPECT_TRUE(intrusivePtr);
+
     auto moved = std::move(intrusivePtr);
     EXPECT_TRUE(intrusivePtr.empty());
     EXPECT_EQ(intrusivePtr.count(), 0);
+    EXPECT_FALSE(intrusivePtr);
     EXPECT_FALSE(moved.empty());
     EXPECT_EQ(moved.count(), 1);
     EXPECT_TRUE(moved);
-    EXPECT_FALSE(intrusivePtr);
 
     moved.clear();
     EXPECT_TRUE(moved.empty());
@@ -287,36 +293,37 @@ TEST(Memory, ArrayRingBuffer)
     // test with a separate push and pop thread
     constexpr std::size_t n = 1000000;
 
-    std::thread pushThread([&]() {
-        // push n items into buffer, with increasing value of a
-        for(int i = 0; i < n; ++i)
-            while(!buffer.TryPush({i, 0.}))
-                std::this_thread::yield(); // yield, because the thread cannot continue right now
-    });
-
     int previous = -1;
     int count = 0;
-    std::thread popThread([&]() {
-        // pop items, check that the value always increases
-        while(true)
-        {
-            const auto item = buffer.Pop();
-            if(item == std::nullopt)
-            {
-                std::this_thread::yield();
-                continue;
-            }
-            if(item.value().a <= previous)
-                break; // count will not be correct
-            count++;
-            previous = item.value().a;
-            if(previous == n - 1)
-                break; // done
-        }
-    });
 
-    pushThread.join();
-    popThread.join();
+    {
+        std::jthread pushThread([&]() {
+            // push n items into buffer, with increasing value of a
+            for(int i = 0; i < n; ++i)
+                while(!buffer.TryPush({i, 0.}))
+                    std::this_thread::yield(); // yield, because the thread cannot continue right now
+        });
+
+        std::jthread popThread([&]() {
+            // pop items, check that the value always increases
+            while(true)
+            {
+                const auto item = buffer.Pop();
+                if(item == std::nullopt)
+                {
+                    std::this_thread::yield();
+                    continue;
+                }
+                if(item.value().a <= previous)
+                    break; // count will not be correct
+                count++;
+                previous = item.value().a;
+                if(previous == n - 1)
+                    break; // done
+            }
+        });
+    }
+
     EXPECT_EQ(buffer.Size(), 0);
     EXPECT_EQ(previous, n - 1);
     EXPECT_EQ(count, n);
@@ -442,12 +449,12 @@ TEST(Memory, UnorderedFlatSet)
     vic::memory::UnorderedFlatSet<uint32_t> unorderedFlatSet;
 
     auto trueOrFalse = std::bind(std::uniform_int_distribution<>(0, 3), std::default_random_engine()); // bias towards inserting
-    auto randomInt = std::bind(std::uniform_int_distribution<>(0, 1000000), std::default_random_engine());
+    auto randomInt = std::bind(std::uniform_int_distribution<>(0, 100), std::default_random_engine());
+    auto randomIndex = std::bind(std::uniform_int_distribution<>(0, 100000000), std::default_random_engine());
 
     for(std::size_t i = 0; i < 1000; ++i)
     {
-        const bool insertOrRemove = trueOrFalse();
-        if(insertOrRemove) // insert
+        if(stdSet.empty() || (bool)trueOrFalse()) // insert
         {
             const uint32_t value = randomInt();
             stdSet.insert(value);
@@ -456,10 +463,8 @@ TEST(Memory, UnorderedFlatSet)
         }
         else // remove
         {
-            if(stdSet.empty())
-                continue;
             // grab a random value from the set
-            const std::size_t index = randomInt() % stdSet.size();
+            const std::size_t index = randomIndex() % stdSet.size();
             const uint32_t removeValue = *std::next(stdSet.begin(), index);
 
             stdSet.erase(removeValue);

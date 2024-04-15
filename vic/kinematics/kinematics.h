@@ -28,7 +28,7 @@ public:
 
     constexpr Screw() = default;
     constexpr Screw(const T a, const T b, const T c, const T d, const T e, const T f)
-        : mVector(std::array<T, 6>{a, b, c, d, e, f})
+        : mVector(a, b, c, d, e, f)
     { }
     constexpr Screw(const Vector6<DataType>& vec)
         : mVector(vec)
@@ -47,7 +47,7 @@ public:
     Vector3<DataType> GetAngular() const { return Extract<Vector3<DataType>, 0, 0>(mVector); }
     Vector3<DataType> GetLinear() const { return Extract<Vector3<DataType>, 3, 0>(mVector); }
 
-private:
+    // note: no longer private, I need access to the memory itself
     Vector6<DataType> mVector{};
 };
 

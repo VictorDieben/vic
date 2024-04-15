@@ -52,13 +52,13 @@ TEST(Units, MixTypes)
     Length<double> d1{2.};
     Length<int> i1{2};
 
-    auto sum = d1 + i1;
-    // static_assert(std::is_same_v<decltype(sum), Length<double>>);
+    Length sum = d1 + i1;
+    static_assert(std::is_same_v<decltype(sum.Get()), double>);
 
-    Force<double> force = Mass<double>{} * Acceleration<double>{};
-    Density<double> density = Mass<double>{} / Volume<double>{};
-    MassFlow<double> massflow = Mass<double>{} / Time<double>{};
-    Frequency<double> freq = Unitless<double>{} / Time<double>{};
+    Force<double> force = Mass<double>{1} * Acceleration<double>{1};
+    Density<double> density = Mass<double>{1} / Volume<double>{1};
+    MassFlow<double> massflow = Mass<double>{1} / Time<double>{1};
+    Frequency<double> freq = Unitless<double>{1} / Time<double>{1};
 
     // s = 0.5 * a * t^2
     Length<double> distance = Unitless<double>{0.5} * Acceleration<double>{3.} * Time<double>{2.} * Time<double>{2.};

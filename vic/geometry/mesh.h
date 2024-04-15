@@ -783,7 +783,7 @@ vic::mesh::Mesh<T> BevelEdges(const vic::mesh::TriMesh<T>& mesh, const T distanc
             return 1;
         else if(std::get<2>(tri) == vertexId)
             return 2;
-        std::cout << "Problem!" << std::endl; // todo: turn last "else if" into "else", once algorithm is stable
+        // std::cout << "Problem!" << std::endl; // todo: turn last "else if" into "else", once algorithm is stable
         return -1;
     };
 

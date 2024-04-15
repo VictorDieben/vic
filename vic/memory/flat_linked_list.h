@@ -77,12 +77,13 @@ public:
         else
         {
             mData.push_back(Node{mData.size(), mFirstIndex, data});
-            std::size_t newIndex = mData.size() - 1;
+            const std::size_t newIndex = mData.size() - 1;
             mData.at(mFirstIndex).previous = newIndex;
             mFilled++;
             mFirstIndex = newIndex;
         }
     }
+
     void PushBack(T data)
     {
         if(mFilled == 0)

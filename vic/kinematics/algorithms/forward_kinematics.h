@@ -35,7 +35,7 @@ std::vector<Transformation<T>> ForwardKinematics(ForwardRobot<T>& robot, //
     exponentials.resize(nJoints);
     result.resize(nJoints);
 
-    for(auto& joint : robot)
+    for(const auto& joint : robot)
     {
         const auto id = joint.Id();
         const auto parentId = joint.Parent();
@@ -63,7 +63,7 @@ std::vector<Transformation<T>> ForwardKinematics2(const ForwardRobot<T>& robot, 
     std::vector<Transformation<T>> result{};
     result.resize(nJoints);
 
-    for(auto& joint : robot)
+    for(const auto& joint : robot)
     {
         const auto id = joint.Id();
         const auto parentId = joint.Parent();
@@ -84,7 +84,7 @@ std::vector<Transformation<T>> ForwardKinematics2(const ForwardRobot<T>& robot, 
 template <typename T>
 Matrix4<T> Bracket6(const std::array<T, 6>& vec)
 {
-    const Matrix4<T> vec_tilde({0, -vec[2], vec[1], vec[3], vec[2], 0, -vec[0], vec[4], -vec[1], vec[0], 0, vec[5], 0, 0, 0, 0});
+    const Matrix4<T> vec_tilde(0, -vec[2], vec[1], vec[3], vec[2], 0, -vec[0], vec[4], -vec[1], vec[0], 0, vec[5], 0, 0, 0, 0);
     return vec_tilde;
 }
 

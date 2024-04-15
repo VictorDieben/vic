@@ -18,8 +18,8 @@ public:
     using DataType = T;
 
     constexpr Transformation() = default;
-    Transformation(const Rotation<T>& rotation, //
-                   const Translation<T>& translation)
+    constexpr Transformation(const Rotation<T>& rotation, //
+                             const Translation<T>& translation)
     {
         Assign<0, 0>(mMatrix, rotation.ToMatrix());
         Assign<0, 3>(mMatrix, translation.ToMatrix());
@@ -43,8 +43,8 @@ public:
     }
 
     // not const ref, other types of transformations might not have them in memory
-    Rotation<T> GetRotation() const { return Rotation{Extract<Matrix3<T>, 0, 0>(mMatrix)}; }
-    Translation<T> GetTranslation() const { return Translation{Extract<Vector3<T>, 0, 3>(mMatrix)}; }
+    constexpr Rotation<T> GetRotation() const { return Rotation{Extract<Matrix3<T>, 0, 0>(mMatrix)}; }
+    constexpr Translation<T> GetTranslation() const { return Translation{Extract<Vector3<T>, 0, 3>(mMatrix)}; }
     constexpr Matrix4<T> ToMatrix() const { return mMatrix; }
 
     Transformation<T> Inverse() const
