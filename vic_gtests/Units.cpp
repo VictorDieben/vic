@@ -21,7 +21,12 @@ TEST(Units, HappyFlow)
     EXPECT_EQ((a3.Get()), 3.);
 
     Volume v6 = a3 * l2;
-    EXPECT_EQ((double)v6, 6.);
+    EXPECT_EQ(v6.Get(), 6.);
+
+    using TInt = Length<int>;
+    using TDouble = TInt::template SameType<double>;
+
+    TDouble doubleLength{1.};
 }
 
 TEST(Units, Nested)
@@ -45,7 +50,7 @@ TEST(Units, Multiplication)
 TEST(Units, Division)
 {
     auto length = Area{5.} / Length{2.};
-    EXPECT_DOUBLE_EQ((double)length, 2.5);
+    EXPECT_DOUBLE_EQ(length.Get(), 2.5);
     static_assert(std::is_convertible_v<decltype(length), Length<double>>);
 
     auto halfArea = Area{5.} / 2.;
@@ -58,13 +63,19 @@ TEST(Units, Division)
     const Length divisor = area / len;
     const Area remainder = area % len; // Area{5} - (Length{2} * Lenght{2}) = Area{1};
 
-    EXPECT_EQ((int)divisor, 1);
+    EXPECT_EQ(remainder.Get(), 1);
 }
 
 TEST(Units, Sqrt)
 {
     Length l2 = std::sqrt(Area{4});
-    EXPECT_EQ((int)l2, 2);
+    EXPECT_EQ(l2.Get(), 2);
+}
+
+TEST(Units, Cbrt)
+{
+    Length length = std::cbrt(Volume{8});
+    EXPECT_EQ(length.Get(), 2);
 }
 
 TEST(Units, Addition)
@@ -74,7 +85,7 @@ TEST(Units, Addition)
     static_assert(std::is_convertible_v<decltype(length), Length<double>>);
 
     Area area = Area{2.} + 2.;
-    EXPECT_DOUBLE_EQ((double)area, 4.);
+    EXPECT_DOUBLE_EQ(area.Get(), 4.);
     static_assert(std::is_convertible_v<decltype(area), Area<double>>);
 }
 

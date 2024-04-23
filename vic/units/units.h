@@ -17,53 +17,36 @@ namespace units
 
 // todo: compiler flags to turn BPI off, e.g. make Length<double> just a synonym for double
 
-template <typename T1, typename T2>
-constexpr auto Multiply(const T1 first, const T2 second);
-
-template <typename T1, typename T2>
-constexpr auto Devide(const T1 first, const T2 second);
-
-template <typename T1, typename T2>
-constexpr auto Add(const T1 first, const T2 second);
-
-template <typename T1, typename T2>
-constexpr auto Subtract(const T1 first, const T2 second);
-
 template <typename T>
 concept ConceptBPI = requires(T bpi) {
     T::Mass; //
     T::Length; //
     T::Time; //
-    // typename(template T)::SameType<double>; //
+    typename T::template SameType<double>; // Get the BPI with a different representation
 };
-
-template <typename T, int mass, int length, int time>
-struct BPI;
-
-template <typename T, typename TBPI>
-using SameBPIType = BPI<T, TBPI::Mass, TBPI::Length, TBPI::Time>;
-
-template <typename T1, typename T2>
-static constexpr bool BPICompatible = (T1::Mass == T2::Mass) && (T1::Length == T2::Length) && (T1::Time == T2::Time);
 
 // wrapper for buckingham pi
 template <typename T, int mass, int length, int time>
+// requires(Numeric<T>) NOTE: no clue why this does not work, temporarily solved with static assert
 struct BPI
 {
 public:
+    static_assert(Numeric<T> && "Incompatible data type"); // todo: should be removed if we allow vic::Rational, or something like complex numbers
+    static_assert(!ConceptBPI<T> && "BPI should not be nested!");
+
     constexpr static int Mass = mass;
     constexpr static int Length = length;
     constexpr static int Time = time;
 
     using DataType = T;
 
-    using ThisType = BPI<T, mass, length, time>; // bit silly, but avoids clutter
+    // using ThisType = BPI<T, mass, length, time>; // bit silly, but avoids clutter
 
-    //template <typename T2>
-    //using SameType = BPI<T2, mass, length, time>; // same type, different representation
+    template <typename T2>
+    using SameType = BPI<T2, mass, length, time>; // same type, different representation
 
-    constexpr BPI() = default;
-    constexpr BPI(T val)
+    explicit constexpr BPI() = default;
+    constexpr BPI(const T val)
         : mValue(val)
     { }
 
@@ -72,27 +55,36 @@ public:
     //
     //
     //
-    constexpr BPI(const BPI& other) noexcept // copy constructor
-    {
-        mValue = other.mValue;
-    }
 
-    constexpr BPI(const BPI&& other) noexcept // move constructor
-    {
-        mValue = other.mValue;
-    }
+    constexpr BPI(const BPI& other) noexcept { mValue = other.mValue; }
+    constexpr BPI(const BPI&& other) noexcept { mValue = other.mValue; }
 
-    constexpr BPI& operator=(const BPI& other) noexcept // copy assignment
-    {
-        mValue = other.mValue;
-        return *this = BPI(other);
-    }
-
-    constexpr BPI& operator=(const BPI&& other) noexcept // move assignment
+    constexpr BPI& operator=(const BPI& other) noexcept
     {
         mValue = other.mValue;
         return *this;
     }
+
+    constexpr BPI& operator=(const BPI&& other) noexcept
+    {
+        mValue = other.mValue;
+        return *this;
+    }
+
+    //
+
+    //constexpr BPI<T, mass, length, time>(const T& other) noexcept { mValue = other; }
+    //constexpr BPI<T, mass, length, time>(const T&& other) noexcept { mValue = other; }
+    //constexpr BPI<T, mass, length, time>& operator=(const T& other) noexcept
+    //{
+    //    mValue = other;
+    //    return *this;
+    //}
+    //constexpr BPI<T, mass, length, time>& operator=(const T&& other) noexcept
+    //{
+    //    mValue = other;
+    //    return *this;
+    //}
 
     //
     //
@@ -104,11 +96,14 @@ public:
     }
 
     constexpr T Get() const { return mValue; }
-    explicit constexpr operator T() const { return mValue; }
+    // explicit constexpr operator T() const { return mValue; }
 
 protected:
     T mValue{};
 };
+
+template <typename T1, typename T2>
+static constexpr bool BPICompatible = (T1::Mass == T2::Mass) && (T1::Length == T2::Length) && (T1::Time == T2::Time);
 
 //
 
@@ -119,14 +114,20 @@ template <typename T1, typename T2>
 constexpr auto Add(const T1 first, const T2 second)
 {
     if constexpr(Numeric<T1>)
-        return Add(SameBPIType<T1, T2>{first}, second);
+    {
+        using TNumeric = T2::template SameType<T1>;
+        return Add(TNumeric{first}, second);
+    }
     else if constexpr(Numeric<T2>)
-        return Add(first, SameBPIType<T2, T1>{second});
+    {
+        using TNumeric = T1::template SameType<T2>;
+        return Add(first, TNumeric{second});
+    }
     else
     {
         static_assert(BPICompatible<T1, T2>); // cannot add e.g. distance to volume
         using TRet = decltype(typename T1::DataType{} + typename T2::DataType{});
-        return SameBPIType<TRet, T1>(first.Get() + second.Get());
+        return T1::template SameType<TRet>(first.Get() + second.Get());
     }
 }
 
@@ -175,14 +176,20 @@ template <typename T1, typename T2>
 constexpr auto Subtract(const T1 first, const T2 second)
 {
     if constexpr(Numeric<T1>)
-        return Subtract(SameBPIType<T1, T2>{first}, second);
+    {
+        using TNumeric = T2::template SameType<T1>;
+        return Subtract(TNumeric{first}, second);
+    }
     else if constexpr(Numeric<T2>)
-        return Subtract(first, SameBPIType<T2, T1>{second});
+    {
+        using TNumeric = T1::template SameType<T2>;
+        return Subtract(first, TNumeric{second});
+    }
     else
     {
         static_assert(BPICompatible<T1, T2>);
         using TRet = decltype(typename T1::DataType{} + typename T2::DataType{});
-        return SameBPIType<TRet, T1>(first.Get() - second.Get());
+        return T1::template SameType<TRet>(first.Get() - second.Get());
     }
 }
 
@@ -418,6 +425,23 @@ constexpr auto sqrt(const T bpi) noexcept
     constexpr const int mass = T::Mass / 2;
     constexpr const int length = T::Length / 2;
     constexpr const int time = T::Time / 2;
-    return vic::units::BPI<TRet, mass, length, time>(::std::sqrt((TRet)bpi));
+    return vic::units::BPI<TRet, mass, length, time>(::std::sqrt(bpi.Get()));
 }
+
+// overload for cbrt (cubic root)
+template <typename T>
+    requires ConceptBPI<T>
+constexpr auto cbrt(const T bpi) noexcept
+{
+    // make sure that taking the cubic root makes sense.
+    // e.g. you cannot take the cubic root of an area
+    static_assert((T::Mass % 3 == 0) && (T::Length % 3 == 0) && (T::Time % 3 == 0));
+
+    using TRet = typename T::DataType;
+    constexpr const int mass = T::Mass / 3;
+    constexpr const int length = T::Length / 3;
+    constexpr const int time = T::Time / 3;
+    return vic::units::BPI<TRet, mass, length, time>(::std::cbrt(bpi.Get()));
+}
+
 } // namespace std
