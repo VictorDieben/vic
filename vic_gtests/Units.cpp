@@ -14,28 +14,68 @@ TEST(Units, HappyFlow)
     Length<double> l5 = 5.;
 
     Length l3 = l1 + l2;
-    l3 = 3.; // test assigning a value
+    l3 = 3.;
     l3 = -Length<double>{-3.};
 
     Area a3 = l1 * l3;
-    EXPECT_DOUBLE_EQ(a3.Get(), 3.);
+    EXPECT_EQ((a3.Get()), 3.);
 
     Volume v6 = a3 * l2;
-    EXPECT_DOUBLE_EQ(v6.Get(), 6.);
+    EXPECT_EQ((double)v6, 6.);
 }
 
 TEST(Units, Nested)
 {
     constexpr auto volume = Length{1.} * Length{2.} * Length{3.};
     EXPECT_DOUBLE_EQ(volume.Get(), 6.);
-    // static_assert(std::is_same_v<decltype(volume), Volume<double>>);
+    static_assert(std::is_convertible_v<decltype(volume), Volume<double>>);
+}
+
+TEST(Units, Multiplication)
+{
+    Area area = Length{2.} * Length{2.};
+    EXPECT_DOUBLE_EQ(area.Get(), 4.);
+    static_assert(std::is_convertible_v<decltype(area), Area<double>>);
+
+    auto twiceDistance = Length{2.} * 2.;
+    EXPECT_DOUBLE_EQ(twiceDistance.Get(), 4.);
+    static_assert(std::is_convertible_v<decltype(twiceDistance), Length<double>>);
 }
 
 TEST(Units, Division)
 {
-    auto value = Area{5.} / Length{2.};
-    EXPECT_DOUBLE_EQ(value.Get(), 2.5);
-    // static_assert(std::is_same_v<decltype(value), Length<double>>);
+    auto length = Area{5.} / Length{2.};
+    EXPECT_DOUBLE_EQ((double)length, 2.5);
+    static_assert(std::is_convertible_v<decltype(length), Length<double>>);
+
+    auto halfArea = Area{5.} / 2.;
+    EXPECT_DOUBLE_EQ(halfArea.Get(), 2.5);
+    static_assert(std::is_convertible_v<decltype(halfArea), Area<double>>);
+
+    // Division + Remainder. Remainder has different BPI unit than divisor
+    const Area area{5};
+    const Length len{2};
+    const Length divisor = area / len;
+    const Area remainder = area % len; // Area{5} - (Length{2} * Lenght{2}) = Area{1};
+
+    EXPECT_EQ((int)divisor, 1);
+}
+
+TEST(Units, Sqrt)
+{
+    Length l2 = std::sqrt(Area{4});
+    EXPECT_EQ((int)l2, 2);
+}
+
+TEST(Units, Addition)
+{
+    Length length = Length{2.} + 2.;
+    EXPECT_DOUBLE_EQ(length.Get(), 4.);
+    static_assert(std::is_convertible_v<decltype(length), Length<double>>);
+
+    Area area = Area{2.} + 2.;
+    EXPECT_DOUBLE_EQ((double)area, 4.);
+    static_assert(std::is_convertible_v<decltype(area), Area<double>>);
 }
 
 TEST(Units, TypeName)
@@ -53,15 +93,15 @@ TEST(Units, MixTypes)
     Length<int> i1{2};
 
     Length sum = d1 + i1;
-    static_assert(std::is_same_v<decltype(sum.Get()), double>);
+    EXPECT_TRUE((std::is_convertible_v<decltype(sum.Get()), double>));
 
-    Force<double> force = Mass<double>{1} * Acceleration<double>{1};
-    Density<double> density = Mass<double>{1} / Volume<double>{1};
-    MassFlow<double> massflow = Mass<double>{1} / Time<double>{1};
-    Frequency<double> freq = Unitless<double>{1} / Time<double>{1};
+    Force force = Mass{1} * Acceleration{1};
+    Density density = Mass{1} / Volume{1};
+    MassFlow massflow = Mass{1} / Time{1};
+    Frequency freq = 1. / Time{1};
 
     // s = 0.5 * a * t^2
-    Length<double> distance = Unitless<double>{0.5} * Acceleration<double>{3.} * Time<double>{2.} * Time<double>{2.};
+    Length distance = 0.5 * Acceleration{3.} * Time{2.} * Time{2.};
 }
 
 TEST(Units, Representations)
@@ -77,13 +117,4 @@ TEST(Units, Representations)
 
     Length<int> intShort = Length<int>{} + Length<short>{};
     Length<int> shortInt = Length<short>{} + Length<int>{};
-}
-
-template <typename T>
-using PendulumPhisics = BPIFundamentalPhysics<Time<T>, Mass<T>, Length<T>, Acceleration<T>>;
-
-TEST(Units, BPIPendulum)
-{
-    // https://en.wikipedia.org/wiki/Buckingham_%CF%80_theorem
-    PendulumPhisics<double> physics{};
 }

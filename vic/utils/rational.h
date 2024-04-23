@@ -29,8 +29,8 @@ concept ConceptRational = requires(T& rational) {
 template <typename T, Numerator num, Denominator denom>
 struct Rational;
 
-template <typename T1, typename T2>
-constexpr auto Add(const T1 first, const T2 second);
+//template <typename T1, typename T2>
+//constexpr auto Add(const T1 first, const T2 second);
 
 template <typename T>
     requires ConceptRational<T>

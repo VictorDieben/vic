@@ -1,6 +1,9 @@
 #pragma once
 
+#include "vic/utils/concepts.h"
+#include <cmath>
 #include <format>
+#include <utility>
 
 namespace vic
 {
@@ -12,6 +15,37 @@ namespace units
 // 2: Units: difference between m/cm/mm/um/etc.
 // 3: todo: Ok Jork, je hebt me omgepraat, Differential Geometry types (vector / covector etc.)
 
+// todo: compiler flags to turn BPI off, e.g. make Length<double> just a synonym for double
+
+template <typename T1, typename T2>
+constexpr auto Multiply(const T1 first, const T2 second);
+
+template <typename T1, typename T2>
+constexpr auto Devide(const T1 first, const T2 second);
+
+template <typename T1, typename T2>
+constexpr auto Add(const T1 first, const T2 second);
+
+template <typename T1, typename T2>
+constexpr auto Subtract(const T1 first, const T2 second);
+
+template <typename T>
+concept ConceptBPI = requires(T bpi) {
+    T::Mass; //
+    T::Length; //
+    T::Time; //
+    // typename(template T)::SameType<double>; //
+};
+
+template <typename T, int mass, int length, int time>
+struct BPI;
+
+template <typename T, typename TBPI>
+using SameBPIType = BPI<T, TBPI::Mass, TBPI::Length, TBPI::Time>;
+
+template <typename T1, typename T2>
+static constexpr bool BPICompatible = (T1::Mass == T2::Mass) && (T1::Length == T2::Length) && (T1::Time == T2::Time);
+
 // wrapper for buckingham pi
 template <typename T, int mass, int length, int time>
 struct BPI
@@ -21,53 +55,56 @@ public:
     constexpr static int Length = length;
     constexpr static int Time = time;
 
+    using DataType = T;
+
     using ThisType = BPI<T, mass, length, time>; // bit silly, but avoids clutter
 
-    template <typename T2>
-    using SameType = BPI<T2, mass, length, time>; // same type, different representation
+    //template <typename T2>
+    //using SameType = BPI<T2, mass, length, time>; // same type, different representation
 
     constexpr BPI() = default;
     constexpr BPI(T val)
         : mValue(val)
     { }
 
+    constexpr ~BPI() = default;
+
+    //
+    //
+    //
+    constexpr BPI(const BPI& other) noexcept // copy constructor
+    {
+        mValue = other.mValue;
+    }
+
+    constexpr BPI(const BPI&& other) noexcept // move constructor
+    {
+        mValue = other.mValue;
+    }
+
+    constexpr BPI& operator=(const BPI& other) noexcept // copy assignment
+    {
+        mValue = other.mValue;
+        return *this = BPI(other);
+    }
+
+    constexpr BPI& operator=(const BPI&& other) noexcept // move assignment
+    {
+        mValue = other.mValue;
+        return *this;
+    }
+
+    //
+    //
+    //
+
     constexpr static auto TypeName()
     {
         return std::format("BPI<{}, {}, {}>", Mass, Length, Time); //
     }
 
-    // operator T() const { return mValue; } // todo: decide if we want this
     constexpr T Get() const { return mValue; }
-
-    template <typename T2>
-    constexpr auto operator+(SameType<T2> other)
-    {
-        using TRet = decltype(T{} + T2{});
-        return BPI<TRet, mass, length, time>{mValue + other.Get()};
-    }
-    template <typename T2>
-    constexpr auto operator-(SameType<T2> other)
-    {
-        using TRet = decltype(T{} - T2{});
-        return BPI<TRet, mass, length, time>{mValue - other.Get()};
-    }
-    constexpr auto operator-() { return BPI<T, mass, length, time>{-mValue}; }
-
-    template <typename T2, int massOther, int lengthOther, int timeOther>
-    constexpr auto operator*(BPI<T2, massOther, lengthOther, timeOther> other)
-    {
-        using TRet = decltype(T{} * T2{});
-        return BPI<TRet, mass + massOther, length + lengthOther, time + timeOther>{mValue * other.Get()};
-    }
-
-    template <typename T2, int massOther, int lengthOther, int timeOther>
-    constexpr auto operator/(BPI<T2, massOther, lengthOther, timeOther> other)
-    {
-        using TRet = decltype(T{} / T2{});
-        return BPI<TRet, mass - massOther, length - lengthOther, time - timeOther>{mValue / other.Get()};
-    }
-
-    // TODO: square/square root needs to be specialized for BPI. make members?
+    explicit constexpr operator T() const { return mValue; }
 
 protected:
     T mValue{};
@@ -75,8 +112,189 @@ protected:
 
 //
 
+template <typename T1, typename T2>
+    requires(ConceptBPI<T1> && ConceptBPI<T2>) || //
+            (ConceptBPI<T1> && Numeric<T2>) || //
+            (Numeric<T1> && ConceptBPI<T2>)
+constexpr auto Add(const T1 first, const T2 second)
+{
+    if constexpr(Numeric<T1>)
+        return Add(SameBPIType<T1, T2>{first}, second);
+    else if constexpr(Numeric<T2>)
+        return Add(first, SameBPIType<T2, T1>{second});
+    else
+    {
+        static_assert(BPICompatible<T1, T2>); // cannot add e.g. distance to volume
+        using TRet = decltype(typename T1::DataType{} + typename T2::DataType{});
+        return SameBPIType<TRet, T1>(first.Get() + second.Get());
+    }
+}
+
+template <typename T1, typename T2>
+    requires(ConceptBPI<T1> && ConceptBPI<T2>) || //
+            (ConceptBPI<T1> && Numeric<T2>) || //
+            (Numeric<T1> && ConceptBPI<T2>)
+constexpr auto operator+(const T1 lhs, const T2 rhs)
+{
+    return Add(lhs, rhs);
+}
+
+template <typename T>
+    requires ConceptBPI<T>
+constexpr auto operator+(const T& item)
+{
+    return item;
+}
+
+//
+// -
+//
+
+template <typename T>
+    requires ConceptBPI<T>
+constexpr auto Negative(const T& item)
+{
+    return T{-item.Get()};
+}
+
+template <typename T>
+    requires ConceptBPI<T>
+constexpr auto operator-(const T& item)
+{
+    return Negative(item);
+}
+
+//
+//
+//
+
+template <typename T1, typename T2>
+    requires(ConceptBPI<T1> && ConceptBPI<T2>) || //
+            (ConceptBPI<T1> && Numeric<T2>) || //
+            (Numeric<T1> && ConceptBPI<T2>)
+constexpr auto Subtract(const T1 first, const T2 second)
+{
+    if constexpr(Numeric<T1>)
+        return Subtract(SameBPIType<T1, T2>{first}, second);
+    else if constexpr(Numeric<T2>)
+        return Subtract(first, SameBPIType<T2, T1>{second});
+    else
+    {
+        static_assert(BPICompatible<T1, T2>);
+        using TRet = decltype(typename T1::DataType{} + typename T2::DataType{});
+        return SameBPIType<TRet, T1>(first.Get() - second.Get());
+    }
+}
+
+template <typename T1, typename T2>
+    requires(ConceptBPI<T1> && ConceptBPI<T2>) || //
+            (ConceptBPI<T1> && Numeric<T2>) || //
+            (Numeric<T1> && ConceptBPI<T2>)
+constexpr auto operator-(const T1 lhs, const T2 rhs)
+{
+    return Subtract(lhs, rhs);
+}
+
+//
+//  /
+//
+
+//
 template <typename T>
 using Unitless = BPI<T, 0, 0, 0>;
+
+template <typename T1, typename T2>
+    requires(ConceptBPI<T1> && ConceptBPI<T2>) || //
+            (ConceptBPI<T1> && Numeric<T2>) || //
+            (Numeric<T1> && ConceptBPI<T2>)
+constexpr auto Division(const T1 first, const T2 second)
+{
+    if constexpr(Numeric<T1>)
+        return Division(Unitless{first}, second);
+    else if constexpr(Numeric<T2>)
+        return Division(first, Unitless{second});
+    else
+    {
+        using TRet = decltype(typename T1::DataType{} / typename T2::DataType{});
+        constexpr const int ResultMass = T1::Mass - T2::Mass;
+        constexpr const int ResultLength = T1::Length - T2::Length;
+        constexpr const int ResultTime = T1::Time - T2::Time;
+        return BPI<TRet, ResultMass, ResultLength, ResultTime>(first.Get() / second.Get());
+    }
+}
+template <typename T1, typename T2>
+    requires(ConceptBPI<T1> && ConceptBPI<T2>) || //
+            (ConceptBPI<T1> && Numeric<T2>) || //
+            (Numeric<T1> && ConceptBPI<T2>)
+constexpr auto operator/(const T1 lhs, const T2 rhs)
+{
+    return Division(lhs, rhs);
+}
+
+//
+// *
+//
+
+template <typename T1, typename T2>
+    requires(ConceptBPI<T1> && ConceptBPI<T2>) || //
+            (ConceptBPI<T1> && Numeric<T2>) || //
+            (Numeric<T1> && ConceptBPI<T2>)
+constexpr auto Multiplication(const T1 first, const T2 second)
+{
+    if constexpr(Numeric<T1>)
+        return Multiplication(Unitless{first}, second); // T2{second.Get() * first};
+    else if constexpr(Numeric<T2>)
+        return Multiplication(first, Unitless{second});
+    else
+    {
+        using TRet = decltype(typename T1::DataType{} * typename T2::DataType{});
+        //using TRet = decltype(std::declvar<T1::DataType>() * std::declvar<T2::DataType>());
+        constexpr const int ResultMass = T1::Mass + T2::Mass;
+        constexpr const int ResultLength = T1::Length + T2::Length;
+        constexpr const int ResultTime = T1::Time + T2::Time;
+        return BPI<TRet, ResultMass, ResultLength, ResultTime>(first.Get() * second.Get());
+    }
+}
+template <typename T1, typename T2>
+    requires(ConceptBPI<T1> && ConceptBPI<T2>) || //
+            (ConceptBPI<T1> && Numeric<T2>) || //
+            (Numeric<T1> && ConceptBPI<T2>)
+constexpr auto operator*(const T1 lhs, const T2 rhs)
+{
+    return Multiplication(lhs, rhs);
+}
+
+//
+// %
+//
+
+template <typename T1, typename T2>
+    requires(ConceptBPI<T1> && ConceptBPI<T2>) || //
+            (ConceptBPI<T1> && Numeric<T2>) || //
+            (Numeric<T1> && ConceptBPI<T2>)
+constexpr auto Remainder(const T1 first, const T2 second)
+{
+    if constexpr(Numeric<T1>)
+        return Remainder(Unitless{first}, second); // T2{second.Get() * first};
+    else if constexpr(Numeric<T2>)
+        return Remainder(first, Unitless{second});
+    else
+    {
+        using TRet = decltype((typename T1::DataType{}) % (typename T2::DataType{}));
+        constexpr const int ResultMass = T1::Mass;
+        constexpr const int ResultLength = T1::Length;
+        constexpr const int ResultTime = T1::Time;
+        return BPI<TRet, ResultMass, ResultLength, ResultTime>(first.Get() % second.Get());
+    }
+}
+template <typename T1, typename T2>
+    requires(ConceptBPI<T1> && ConceptBPI<T2>) || //
+            (ConceptBPI<T1> && Numeric<T2>) || //
+            (Numeric<T1> && ConceptBPI<T2>)
+constexpr auto operator%(const T1 lhs, const T2 rhs)
+{
+    return Remainder(lhs, rhs);
+}
 
 // geometric
 
@@ -174,23 +392,32 @@ using Power = BPI<T, 1, 2, -3>;
 // example:
 // https://www.youtube.com/watch?v=bI-FS7aZJpY
 
-// TODO:
-// This struct is only needed to determine the types of variables.
-// I'm not really sure how this should be used in practice,
-// as you do not know the types of the variables in equations until compilation
-template <typename T, typename... Ts>
-struct BPIFundamentalPhysics
-{
-public:
-private:
-};
-
-//
-//
-//
-
 // todo: Implement this:
 // https://www.win.tue.nl/~lflorack/Extensions/2WAH0CourseNotes.pdf
 
 } // namespace units
 } // namespace vic
+
+//
+// Some operators from std need to be specialized for BPI units
+//
+
+namespace std
+{
+
+// overload for sqrt
+template <typename T>
+    requires ConceptBPI<T>
+constexpr auto sqrt(const T bpi) noexcept
+{
+    // make sure that taking the square root makes sense.
+    // e.g. you cannot take the square root of a volume
+    static_assert((T::Mass % 2 == 0) && (T::Length % 2 == 0) && (T::Time % 2 == 0));
+
+    using TRet = typename T::DataType;
+    constexpr const int mass = T::Mass / 2;
+    constexpr const int length = T::Length / 2;
+    constexpr const int time = T::Time / 2;
+    return vic::units::BPI<TRet, mass, length, time>(::std::sqrt((TRet)bpi));
+}
+} // namespace std
