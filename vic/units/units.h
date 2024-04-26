@@ -13,21 +13,22 @@ namespace units
 // This file will contain templates that offer type checking at several levels of abstractions:
 // 1: Buckingham pi; avoid adding length to time or mass etc. No units included.
 // 2: Units: difference between m/cm/mm/um/etc.
-// 3: todo: Ok Jork, je hebt me omgepraat, Differential Geometry types (vector / covector etc.)
+// 3: Rationals: allows us to count in steps of say, 3/7.
+// 4: todo: Ok Jork, je hebt me omgepraat, Differential Geometry types (vector / covector etc.)
 
 // todo: compiler flags to turn BPI off, e.g. make Length<double> just a synonym for double
 
 template <typename T>
 concept ConceptBPI = requires(T bpi) {
-    T::Mass; //
-    T::Length; //
-    T::Time; //
+    T::Mass;
+    T::Length;
+    T::Time;
     typename T::template SameType<double>; // Get the BPI with a different representation
 };
 
 // wrapper for buckingham pi
 template <typename T, int mass, int length, int time>
-// requires(Numeric<T>) NOTE: no clue why this does not work, temporarily solved with static assert
+// requires(Numeric<T>) NOTE: no clue why this does not work, might be msvc bug, temporarily solved with static assert
 struct BPI
 {
 public:
@@ -40,8 +41,6 @@ public:
 
     using DataType = T;
 
-    // using ThisType = BPI<T, mass, length, time>; // bit silly, but avoids clutter
-
     template <typename T2>
     using SameType = BPI<T2, mass, length, time>; // same type, different representation
 
@@ -51,10 +50,6 @@ public:
     { }
 
     constexpr ~BPI() = default;
-
-    //
-    //
-    //
 
     constexpr BPI(const BPI& other) noexcept { mValue = other.mValue; }
     constexpr BPI(const BPI&& other) noexcept { mValue = other.mValue; }
@@ -71,8 +66,6 @@ public:
         return *this;
     }
 
-    //
-
     //constexpr BPI<T, mass, length, time>(const T& other) noexcept { mValue = other; }
     //constexpr BPI<T, mass, length, time>(const T&& other) noexcept { mValue = other; }
     //constexpr BPI<T, mass, length, time>& operator=(const T& other) noexcept
@@ -85,10 +78,6 @@ public:
     //    mValue = other;
     //    return *this;
     //}
-
-    //
-    //
-    //
 
     constexpr static auto TypeName()
     {
@@ -188,7 +177,7 @@ constexpr auto Subtract(const T1 first, const T2 second)
     else
     {
         static_assert(BPICompatible<T1, T2>);
-        using TRet = decltype(typename T1::DataType{} + typename T2::DataType{});
+        using TRet = decltype(typename T1::DataType{} - typename T2::DataType{});
         return T1::template SameType<TRet>(first.Get() - second.Get());
     }
 }
@@ -206,7 +195,6 @@ constexpr auto operator-(const T1 lhs, const T2 rhs)
 //  /
 //
 
-//
 template <typename T>
 using Unitless = BPI<T, 0, 0, 0>;
 
@@ -282,7 +270,7 @@ template <typename T1, typename T2>
 constexpr auto Remainder(const T1 first, const T2 second)
 {
     if constexpr(Numeric<T1>)
-        return Remainder(Unitless{first}, second); // T2{second.Get() * first};
+        return Remainder(Unitless{first}, second);
     else if constexpr(Numeric<T2>)
         return Remainder(first, Unitless{second});
     else
@@ -425,7 +413,7 @@ constexpr auto sqrt(const T bpi) noexcept
     constexpr const int mass = T::Mass / 2;
     constexpr const int length = T::Length / 2;
     constexpr const int time = T::Time / 2;
-    return vic::units::BPI<TRet, mass, length, time>(::std::sqrt(bpi.Get()));
+    return vic::units::BPI<TRet, mass, length, time>((TRet)::std::sqrt(bpi.Get()));
 }
 
 // overload for cbrt (cubic root)
@@ -441,7 +429,7 @@ constexpr auto cbrt(const T bpi) noexcept
     constexpr const int mass = T::Mass / 3;
     constexpr const int length = T::Length / 3;
     constexpr const int time = T::Time / 3;
-    return vic::units::BPI<TRet, mass, length, time>(::std::cbrt(bpi.Get()));
+    return vic::units::BPI<TRet, mass, length, time>((TRet)::std::cbrt(bpi.Get()));
 }
 
 } // namespace std

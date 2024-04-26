@@ -740,7 +740,7 @@ vic::mesh::Mesh<T> BevelEdges(const vic::mesh::TriMesh<T>& mesh, const T distanc
 
     const auto uniqueEdges = UniqueEdges(mesh);
 
-    using OptionalIndex = std::optional<std::size_t>;
+    using OptionalIndex = std::optional<MeshIndex>;
     std::vector<std::pair<OptionalIndex, OptionalIndex>> trisUsingEdges;
     trisUsingEdges.resize(uniqueEdges.size());
 
@@ -791,8 +791,8 @@ vic::mesh::Mesh<T> BevelEdges(const vic::mesh::TriMesh<T>& mesh, const T distanc
     for(std::size_t i = 0; i < uniqueEdges.size(); ++i)
     {
         const auto& [e1, e2] = uniqueEdges.at(i);
-        const auto triIndex1 = trisUsingEdges.at(i).first.value(); // we previously verified existance
-        const auto triIndex2 = trisUsingEdges.at(i).second.value();
+        const MeshIndex triIndex1 = trisUsingEdges.at(i).first.value(); // we previously verified existance
+        const MeshIndex triIndex2 = trisUsingEdges.at(i).second.value();
 
         const MeshIndex idx1 = (3 * triIndex1) + vertexIndex(originalTris.at(triIndex1), e1);
         const MeshIndex idx2 = (3 * triIndex1) + vertexIndex(originalTris.at(triIndex1), e2);
@@ -803,12 +803,12 @@ vic::mesh::Mesh<T> BevelEdges(const vic::mesh::TriMesh<T>& mesh, const T distanc
         beveled.quads.push_back(Quad{idx1, idx2, idx3, idx4});
 
         // add root corner tri
-        const auto rootCornerid = beveled.vertices.size();
+        const auto rootCornerid = (MeshIndex)beveled.vertices.size();
         beveled.vertices.push_back(originalVertices.at(e1));
         beveled.tris.push_back(Tri{rootCornerid, idx1, idx4});
 
         // add tip corner tri
-        const auto tipCornerid = beveled.vertices.size();
+        const auto tipCornerid = (MeshIndex)beveled.vertices.size();
         beveled.vertices.push_back(originalVertices.at(e2));
         beveled.tris.push_back(Tri{tipCornerid, idx3, idx2});
     }
