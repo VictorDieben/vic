@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cassert>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -69,8 +70,16 @@ struct Bitmap
     Resolution Width() const { return mX; }
     Resolution Height() const { return mY; }
 
-    const Color3& GetColor(const Resolution x, const Resolution y) const { return mData[y + (mX * y)]; }
-    void SetColor(const Resolution x, const Resolution y, const Color3& color) { mData[y + (mX * y)] = color; }
+    const Color3& GetColor(const Resolution x, const Resolution y) const
+    {
+        assert(x < mX && y < mY);
+        return mData[x + (mX * y)];
+    }
+    void SetColor(const Resolution x, const Resolution y, const Color3& color)
+    {
+        assert(x < mX && y < mY);
+        mData[x + (mX * y)] = color;
+    }
 
 private:
     Resolution mX;
@@ -83,6 +92,10 @@ inline bool IsBMP(const std::vector<char>& data)
 {
     if(data[0] != 'B' || data[1] != 'M')
         return false;
+
+    // todo: verify file size
+
+    // todo: verify that bit depth is valid for bmp
 
     return true;
 }
@@ -133,21 +146,21 @@ enum class ESaveStatus
     ERROR
 };
 
-static constexpr std::array<unsigned char, 14> BmpFileHeaderTemplate{'B', 'M', 0, 0, 0, 0, 0, 0, 0, 0, 54, 0, 0, 0};
-
-inline constexpr std::array<unsigned char, 14> GetBMPFileHeader(const Resolution nx, //
-                                                                const Resolution ny,
-                                                                const int padding)
+inline constexpr auto GetBMPFileHeader(const Resolution nx, //
+                                       const Resolution ny,
+                                       const int padding)
 {
-    const int headerSize = 14;
-    const int informationheaderSize = 40;
+    constexpr const int headerSize = 14;
+    constexpr const int informationheaderSize = 40;
 
     const int filesize = headerSize + informationheaderSize + (3 * (int)(nx * ny)) + padding;
-    auto header = BmpFileHeaderTemplate;
-    header[2] = (unsigned char)(filesize);
-    header[3] = (unsigned char)(filesize >> 8);
-    header[4] = (unsigned char)(filesize >> 16);
-    header[5] = (unsigned char)(filesize >> 24);
+    std::array<uchar, headerSize> header{};
+    header[0] = 'B';
+    header[1] = 'M';
+    header[2] = (uchar)(filesize);
+    header[3] = (uchar)(filesize >> 8);
+    header[4] = (uchar)(filesize >> 16);
+    header[5] = (uchar)(filesize >> 24);
     // optional
     header[6] = 0; // Reserved; actual value depends on the application that creates the image, if created manually can be 0
     header[7] = 0;
@@ -160,18 +173,24 @@ inline constexpr std::array<unsigned char, 14> GetBMPFileHeader(const Resolution
     return header;
 }
 
-static constexpr std::array<unsigned char, 40> BmpInfoHeaderTemplate{40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 24, 0};
-inline constexpr std::array<unsigned char, 40> GetBMPInfoHeader(const int nx, const int ny, const int bitsPerChannel)
+inline constexpr auto GetBMPInfoHeader(const int nx, //
+                                       const int ny,
+                                       const int bitsPerChannel)
 {
-    auto info = BmpInfoHeaderTemplate;
-    info[4] = (unsigned char)(nx);
-    info[5] = (unsigned char)(nx >> 8);
-    info[6] = (unsigned char)(nx >> 16);
-    info[7] = (unsigned char)(nx >> 24);
-    info[8] = (unsigned char)(ny);
-    info[9] = (unsigned char)(ny >> 8);
-    info[10] = (unsigned char)(ny >> 16);
-    info[11] = (unsigned char)(ny >> 24);
+    constexpr const int informationheaderSize = 40;
+
+    std::array<uchar, informationheaderSize> info{};
+    info[0] = informationheaderSize;
+    info[4] = (uchar)(nx);
+    info[5] = (uchar)(nx >> 8);
+    info[6] = (uchar)(nx >> 16);
+    info[7] = (uchar)(nx >> 24);
+    info[8] = (uchar)(ny);
+    info[9] = (uchar)(ny >> 8);
+    info[10] = (uchar)(ny >> 16);
+    info[11] = (uchar)(ny >> 24);
+
+    info[12] = 1; // planes (?)
 
     info[14] = bitsPerChannel; // bits per channel
 
@@ -187,11 +206,12 @@ inline ESaveStatus SaveBMP(const std::filesystem::path& path, const Bitmap& imag
     try
     {
         const int paddingSize = BMPRowPadding(image.Width());
+        const int bitsPerPixel = 24;
 
         const auto header = GetBMPFileHeader(image.Width(), image.Height(), paddingSize);
         output.write(reinterpret_cast<const char*>(&header), header.size());
 
-        const auto info = GetBMPInfoHeader(image.Width(), image.Height(), 24);
+        const auto info = GetBMPInfoHeader(image.Width(), image.Height(), bitsPerPixel);
         output.write(reinterpret_cast<const char*>(&info), info.size());
 
         const uchar padding[3] = {0, 0, 0};
@@ -201,11 +221,7 @@ inline ESaveStatus SaveBMP(const std::filesystem::path& path, const Bitmap& imag
             for(std::size_t i = 0; i < image.Width(); ++i)
             {
                 const auto& col = image.GetColor(i, j);
-                const bool f = ((i / 10) % 2) != ((j / 10) % 2);
-                const uchar r = f * 255;
-                const uchar g = f * 255;
-                const uchar b = f * 255;
-                const uchar color[] = {b, g, r};
+                const uchar color[] = {col[2], col[1], col[0]};
                 output.write(reinterpret_cast<const char*>(&color), 3);
             }
             // padding

@@ -35,9 +35,9 @@ TEST(Images, SaveLoadBMP)
         {
             const bool f = ((i / 10) % 2) != ((j / 10) % 2);
 
-            Color3 color{uchar(std::round(255. * f)), //
-                         uchar(std::round(255. * f)),
-                         uchar(std::round(255. * f))};
+            Color3 color{uchar(255 * f), //
+                         uchar(255 * f),
+                         uchar(255 * f)};
 
             bitmap.SetColor(i, j, color);
         }
@@ -46,7 +46,7 @@ TEST(Images, SaveLoadBMP)
     const std::filesystem::path path = "SaveLoadBMP.bmp";
     EXPECT_EQ(SaveBMP(path, bitmap), ESaveStatus::OK);
 
-    std::optional<Bitmap> optionalBitmap = LoadBMP(path);
+    const std::optional<Bitmap> optionalBitmap = LoadBMP(path);
     ASSERT_TRUE(optionalBitmap);
 
     ASSERT_TRUE(ImagesEqual(bitmap, *optionalBitmap));
