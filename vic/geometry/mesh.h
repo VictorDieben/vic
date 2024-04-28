@@ -744,7 +744,7 @@ vic::mesh::Mesh<T> BevelEdges(const vic::mesh::TriMesh<T>& mesh, const T distanc
     std::vector<std::pair<OptionalIndex, OptionalIndex>> trisUsingEdges;
     trisUsingEdges.resize(uniqueEdges.size());
 
-    for(std::size_t i = 0; i < originalTris.size(); ++i)
+    for(MeshIndex i = 0; i < originalTris.size(); ++i)
     {
         const auto& tri = originalTris.at(i);
         const auto edges = Edges(tri);

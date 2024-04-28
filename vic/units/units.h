@@ -92,6 +92,7 @@ protected:
 };
 
 template <typename T1, typename T2>
+    requires ConceptBPI<T1> && ConceptBPI<T2>
 static constexpr bool BPICompatible = (T1::Mass == T2::Mass) && (T1::Length == T2::Length) && (T1::Time == T2::Time);
 
 //
@@ -115,7 +116,7 @@ constexpr auto Add(const T1 first, const T2 second)
     else
     {
         static_assert(BPICompatible<T1, T2>); // cannot add e.g. distance to volume
-        using TRet = decltype(typename T1::DataType{} + typename T2::DataType{});
+        using TRet = decltype(std::declval<typename T1::DataType>() + std::declval<typename T2::DataType>());
         return T1::template SameType<TRet>(first.Get() + second.Get());
     }
 }
@@ -177,7 +178,7 @@ constexpr auto Subtract(const T1 first, const T2 second)
     else
     {
         static_assert(BPICompatible<T1, T2>);
-        using TRet = decltype(typename T1::DataType{} - typename T2::DataType{});
+        using TRet = decltype(std::declval<typename T1::DataType>() - std::declval<typename T2::DataType>());
         return T1::template SameType<TRet>(first.Get() - second.Get());
     }
 }
@@ -210,7 +211,7 @@ constexpr auto Division(const T1 first, const T2 second)
         return Division(first, Unitless{second});
     else
     {
-        using TRet = decltype(typename T1::DataType{} / typename T2::DataType{});
+        using TRet = decltype(std::declval<typename T1::DataType>() / std::declval<typename T2::DataType>());
         constexpr const int ResultMass = T1::Mass - T2::Mass;
         constexpr const int ResultLength = T1::Length - T2::Length;
         constexpr const int ResultTime = T1::Time - T2::Time;
@@ -242,8 +243,7 @@ constexpr auto Multiplication(const T1 first, const T2 second)
         return Multiplication(first, Unitless{second});
     else
     {
-        using TRet = decltype(typename T1::DataType{} * typename T2::DataType{});
-        //using TRet = decltype(std::declvar<T1::DataType>() * std::declvar<T2::DataType>());
+        using TRet = decltype(std::declval<typename T1::DataType>() * std::declval<typename T2::DataType>());
         constexpr const int ResultMass = T1::Mass + T2::Mass;
         constexpr const int ResultLength = T1::Length + T2::Length;
         constexpr const int ResultTime = T1::Time + T2::Time;
@@ -275,7 +275,7 @@ constexpr auto Remainder(const T1 first, const T2 second)
         return Remainder(first, Unitless{second});
     else
     {
-        using TRet = decltype((typename T1::DataType{}) % (typename T2::DataType{}));
+        using TRet = decltype(std::declval<typename T1::DataType>() % std::declval<typename T2::DataType>());
         constexpr const int ResultMass = T1::Mass;
         constexpr const int ResultLength = T1::Length;
         constexpr const int ResultTime = T1::Time;
@@ -389,6 +389,9 @@ using Power = BPI<T, 1, 2, -3>;
 
 // todo: Implement this:
 // https://www.win.tue.nl/~lflorack/Extensions/2WAH0CourseNotes.pdf
+
+// geometric algebra intro:
+// https://www.youtube.com/watch?v=60z_hpEAtD8
 
 } // namespace units
 } // namespace vic

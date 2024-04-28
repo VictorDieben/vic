@@ -74,7 +74,7 @@ constexpr T Max(const T& val1, const T& val2)
 
 // wrapper for sqrt, so that it can be overloaded for BPI types, and a constexpr version can be added
 template <typename T>
-constexpr T Sqrt(const T& val)
+constexpr auto Sqrt(const T& val)
 {
     return std::sqrt(val);
 }

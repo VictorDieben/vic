@@ -12,6 +12,8 @@ struct StaticError
 {
     TEnum code;
     std::string message;
+
+    operator TEnum() const noexcept { return code; }
 };
 
 } // namespace vic

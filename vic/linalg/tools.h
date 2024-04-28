@@ -113,6 +113,25 @@ constexpr auto Norm(const T& vec)
     return ::vic::Sqrt(sum);
 }
 
+// overflow safe way to compute length of vector
+template <typename T>
+    requires ConceptVector<T>
+constexpr auto Hypot(const T& vec)
+{
+    assert(vec.GetRows() > 1);
+    if constexpr(ConceptVector2<T>)
+        return std::hypot(vec.Get(0), vec.Get(1));
+    else if constexpr(ConceptVector3<T>)
+        return std::hypot(vec.Get(0), vec.Get(1), vec.Get(2));
+    else
+    {
+        typename T::DataType hypot = vec.Get(0);
+        for(MatrixSize i = 1; i < vec.GetRows(); ++i)
+            hypot = std::hypot(hypot, vec.Get(i));
+        return hypot;
+    }
+}
+
 template <typename TVec>
     requires ConceptVector<TVec>
 constexpr auto Normalize(const TVec& vec)
@@ -130,7 +149,8 @@ template <typename TVec1, typename TVec2>
     requires ConceptVector<TVec1> && ConceptVector<TVec2>
 constexpr auto Cross(const TVec1& vec1, const TVec2& vec2)
 {
-    using TRet = decltype((typename TVec1::DataType{}) * (typename TVec2::DataType{}));
+    using TRet = decltype(std::declval<typename TVec1::DataType>() * std::declval<typename TVec2::DataType>());
+
     assert(vec1.GetRows() == 3 && vec2.GetRows() == 3);
     const TRet ax = vec1.Get(0), ay = vec1.Get(1), az = vec1.Get(2);
     const TRet bx = vec2.Get(0), by = vec2.Get(1), bz = vec2.Get(2);
@@ -148,7 +168,7 @@ template <typename TMat1, typename TMat2>
 constexpr auto Dot(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetRows() == mat2.GetRows() && mat1.GetColumns() == mat2.GetColumns());
-    using TRet = decltype((typename TMat1::DataType{}) * (typename TMat2::DataType{}));
+    using TRet = decltype(std::declval<typename TMat1::DataType>() * std::declval<typename TMat2::DataType>());
     TRet val{0};
     for(Row i = 0; i < mat1.GetRows(); ++i)
         for(Col j = 0; j < mat1.GetColumns(); ++j)

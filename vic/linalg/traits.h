@@ -126,6 +126,15 @@ concept ConceptAssignable = ConceptMatrix<T> && requires(T mat) {
 template <typename T>
 concept ConceptVector = ConceptMatrix<T> && requires(T mat) { requires(T::GetColumns() == 1); };
 
+template <typename T>
+concept ConceptVector2 = ConceptMatrix<T> && requires(T mat) { requires(T::GetRows() == 2 && T::GetColumns() == 1); };
+
+template <typename T>
+concept ConceptVector3 = ConceptMatrix<T> && requires(T mat) { requires(T::GetRows() == 3 && T::GetColumns() == 1); };
+
+template <typename T>
+concept ConceptVector4 = ConceptMatrix<T> && requires(T mat) { requires(T::GetRows() == 4 && T::GetColumns() == 1); };
+
 template <typename TMat>
 struct is_square
 {

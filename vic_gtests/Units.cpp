@@ -129,3 +129,5 @@ TEST(Units, Representations)
     Length<int> intShort = Length<int>{} + Length<short>{};
     Length<int> shortInt = Length<short>{} + Length<int>{};
 }
+
+// todo: verify linear algebra axioms

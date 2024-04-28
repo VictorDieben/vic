@@ -7,48 +7,49 @@
 #include <cstdio>
 #include <cstdlib>
 
-namespace vic
-{
-namespace image
-{
-//
-//bool ImagesEqual(const Image& image1, const Image& image2)
-//{
-//    if(image1.Width() != image2.Width() || //
-//       image1.Height() != image2.Height())
-//        return false;
-//
-//    for(std::size_t j = 0; j < image1.Height(); ++j)
-//        for(std::size_t i = 0; i < image1.Width(); ++i)
-//            if(image1.Get(i, j) != image2.Get(i, j))
-//                return false;
-//    return true;
-//}
-//
-//TEST(TestImages, SaveLoadBMP)
-//{
-//    Image image{300, 200};
-//    for(std::size_t j = 0; j < image.Height(); ++j)
-//    {
-//        for(std::size_t i = 0; i < image.Width(); ++i)
-//        {
-//            double r = double(i) / (image.Width() - 1.);
-//            double g = double(j) / (image.Height() - 1.);
-//            double b = 0.;
-//            Color color{uchar(std::round(255. * r)), //
-//                        uchar(std::round(255. * g)),
-//                        uchar(std::round(255. * b)),
-//                        255};
-//            image.Set(i, j, color);
-//        }
-//    }
-//
-//    const std::string path = "artifacts/SaveLoadBMP.bmp";
-//    SaveBMP(path, image);
-//    Image loadedImage = LoadBMP<Image>(path);
-//
-//    ASSERT_TRUE(ImagesEqual(image, loadedImage));
-//}
+using namespace vic::image;
 
-} // namespace image
-} // namespace vic
+template <typename TImage1, typename TImage2>
+    requires ConceptImage<TImage1> && ConceptImage<TImage2>
+bool ImagesEqual(const TImage1& image1, const TImage2& image2)
+{
+    if(image1.Width() != image2.Width() || //
+       image1.Height() != image2.Height())
+        return false;
+
+    for(std::size_t j = 0; j < image1.Height(); ++j)
+        for(std::size_t i = 0; i < image1.Width(); ++i)
+            if(image1.GetColor(i, j) != image2.GetColor(i, j))
+                return false;
+
+    return true;
+}
+
+TEST(Images, SaveLoadBMP)
+{
+    Bitmap bitmap(123, 123);
+
+    for(std::size_t j = 0; j < bitmap.Height(); ++j)
+    {
+        for(std::size_t i = 0; i < bitmap.Width(); ++i)
+        {
+            const bool f = ((i / 10) % 2) != ((j / 10) % 2);
+
+            Color3 color{uchar(std::round(255. * f)), //
+                         uchar(std::round(255. * f)),
+                         uchar(std::round(255. * f))};
+
+            bitmap.SetColor(i, j, color);
+        }
+    }
+
+    const std::filesystem::path path = "SaveLoadBMP.bmp";
+    EXPECT_EQ(SaveBMP(path, bitmap), ESaveStatus::OK);
+
+    std::optional<Bitmap> optionalBitmap = LoadBMP(path);
+    ASSERT_TRUE(optionalBitmap);
+
+    ASSERT_TRUE(ImagesEqual(bitmap, *optionalBitmap));
+
+    // todo: cleanup file?
+}
