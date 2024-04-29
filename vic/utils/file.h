@@ -26,16 +26,16 @@ using FileData = std::vector<char>;
 using ReadFileError = ::vic::StaticError<ReadFileErrorCode>;
 using ReadFileResult = std::expected<FileData, ReadFileError>;
 
-inline ReadFileResult FileToCharVec(const std::filesystem::path& filePath)
+inline ReadFileResult FileToCharVec(const std::filesystem::path& path)
 {
-    if(!std::filesystem::is_regular_file(filePath))
+    if(!std::filesystem::is_regular_file(path))
         return std::unexpected{ReadFileError{ReadFileErrorCode::NotRegularFile, //
-                                             std::format("file \'{}\' is not a regular file!", filePath.generic_string())}};
+                                             std::format("file \'{}\' is not a regular file!", path.generic_string())}};
 
-    std::ifstream file{filePath, std::ios::ate | std::ios::binary};
+    std::ifstream file{path, std::ios::ate | std::ios::binary};
     if(!file.is_open())
         return std::unexpected{ReadFileError{ReadFileErrorCode::FailedToOpen, //
-                                             std::format("failed to open file: {}", filePath.generic_string())}};
+                                             "failed to open file: " + path.generic_string()}};
 
     try
     {
@@ -48,12 +48,13 @@ inline ReadFileResult FileToCharVec(const std::filesystem::path& filePath)
     catch(...)
     {
         return std::unexpected{ReadFileError{ReadFileErrorCode::FailedToRead, //
-                                             "failed to read file: " + filePath.generic_string()}};
+                                             "failed to read file: " + path.generic_string()}};
     }
 }
 
 enum class SaveFileErrorCode
 {
+    FailedToOpen,
     Other
 };
 
@@ -66,6 +67,8 @@ inline SaveFileResult CharVecToFile(const std::filesystem::path& path, //
     try
     {
         std::ofstream output(path, std::ios::out | std::ios::binary);
+        if(!output.is_open())
+            return std::unexpected{SaveFileError{SaveFileErrorCode::FailedToOpen, "failed to open file: " + path.generic_string()}};
         output.write((const char*)&data[0], data.size());
     }
     catch(...)

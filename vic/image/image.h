@@ -112,10 +112,9 @@ inline std::optional<Bitmap> LoadBMP(const std::filesystem::path& path)
     if(!IsBMP(data))
         return std::nullopt;
 
+    const int filesize = *(int*)&data[2];
     const int width = *(int*)&data[18];
     const int height = *(int*)&data[22];
-
-    const int filesize = *(int*)&data[2];
 
     const int paddingSize = BMPRowPadding(width);
 

@@ -6,7 +6,8 @@
 #include "vic/linalg/matrices/zeros.h"
 #include "vic/linalg/traits.h"
 
-#include <vic/utils.h>
+#include "vic/utils.h"
+#include "vic/utils/templates_numeric.h"
 
 namespace vic
 {
@@ -48,7 +49,7 @@ constexpr auto MatmulTriDiagVector(const TMat& mat, const TVec& vec)
     assert(mat.GetColumns() == vec.GetRows());
     assert(vec.GetColumns() == 1u);
 
-    using TValue = decltype(typename TMat::DataType() * typename TVec::DataType());
+    using TValue = vic::templates::multiplication_t<typename TMat::DataType, typename TVec::DataType>;
     using TShape = MatmulResultShape<typename TMat::ShapeType, typename TVec::ShapeType>;
 
     Matrix<TValue, TShape> result{mat.GetRows(), 1};
@@ -87,7 +88,7 @@ constexpr auto MatmulDiagonalVector(const TMat1& mat1, const TMat2& mat2)
     assert(mat1.GetColumns() == mat2.GetRows());
     assert(mat2.GetColumns() == 1u);
 
-    using TValue = decltype(typename TMat1::DataType() * typename TMat2::DataType());
+    using TValue = vic::templates::multiplication_t<typename TMat1::DataType, typename TMat2::DataType>;
     using TShape = MatmulResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>;
 
     Matrix<TValue, TShape> result{mat1.GetRows(), mat2.GetColumns()};
@@ -102,7 +103,7 @@ template <typename TMat1, typename TMat2>
 constexpr auto MatmulDiagonal(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetColumns() == mat2.GetRows());
-    using TValue = decltype(typename TMat1::DataType() * typename TMat2::DataType());
+    using TValue = vic::templates::multiplication_t<typename TMat1::DataType, typename TMat2::DataType>;
     using TShape = MatmulResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>;
 
     Diagonal<TValue, TShape> result{mat1.GetRows(), mat2.GetColumns()};
@@ -119,7 +120,7 @@ constexpr auto MatmulRowStack(const TMat1& mat1, const TMat2& mat2)
     // todo: if mat2 is a vector, perform the two sub-multiplications separately,
     // if mat2 is a matrix, construct a new stack matrix as the answer?
     assert(mat1.GetColumns() == mat2.GetRows());
-    using TValue = decltype(typename TMat1::DataType() * typename TMat2::DataType());
+    using TValue = vic::templates::multiplication_t<typename TMat1::DataType, typename TMat2::DataType>;
 
     const auto res1 = Matmul(mat1.mMat1, mat2);
     const auto res2 = Matmul(mat1.mMat2, mat2);
@@ -135,7 +136,7 @@ constexpr auto MatmulColStack(const TMat& mat, const TVec& vec)
     // todo: if mat2 is a vector, perform the two sub-multiplications separately,
     // if mat2 is a matrix, construct a new stack matrix as the answer?
     assert(mat.GetColumns() == vec.GetRows());
-    using TValue = decltype(typename TMat::DataType() * typename TVec::DataType());
+    using TValue = vic::templates::multiplication_t<typename TMat::DataType, typename TVec::DataType>;
 
     // todo: some kind of Split() or Extract() function
 
@@ -161,7 +162,7 @@ template <typename TMat1, typename TMat2>
 constexpr auto MatmulFull(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetColumns() == mat2.GetRows());
-    using TValue = decltype(typename TMat1::DataType() * typename TMat2::DataType());
+    using TValue = vic::templates::multiplication_t<typename TMat1::DataType, typename TMat2::DataType>;
     using shape = MatmulResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>;
 
     Matrix<TValue, shape> result{mat1.GetRows(), mat2.GetColumns()};
@@ -188,7 +189,7 @@ template <typename TMat, typename TValue>
     requires ConceptMatrix<TMat>
 constexpr auto MatmulConstant(const TMat& mat, const TValue& value)
 {
-    using TResType = decltype(typename TMat::DataType() * TValue());
+    using TResType = vic::templates::multiplication_t<typename TMat::DataType, TValue>;
     using TResShape = typename TMat::ShapeType;
 
     if constexpr(ConceptZeros<TMat>)

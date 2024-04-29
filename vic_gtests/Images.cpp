@@ -29,11 +29,13 @@ TEST(Images, SaveLoadBMP)
 {
     Bitmap bitmap(123, 123);
 
+    const std::size_t squareSize = 10;
+
     for(std::size_t j = 0; j < bitmap.Height(); ++j)
     {
         for(std::size_t i = 0; i < bitmap.Width(); ++i)
         {
-            const bool f = ((i / 10) % 2) != ((j / 10) % 2);
+            const bool f = ((i / squareSize) % 2) == ((j / squareSize) % 2);
 
             Color3 color{uchar(255 * f), //
                          uchar(255 * f),
@@ -44,11 +46,10 @@ TEST(Images, SaveLoadBMP)
     }
 
     const std::filesystem::path path = "SaveLoadBMP.bmp";
-    EXPECT_EQ(SaveBMP(path, bitmap), ESaveStatus::OK);
+    ASSERT_EQ(SaveBMP(path, bitmap), ESaveStatus::OK);
 
     const std::optional<Bitmap> optionalBitmap = LoadBMP(path);
     ASSERT_TRUE(optionalBitmap);
-
     ASSERT_TRUE(ImagesEqual(bitmap, *optionalBitmap));
 
     // todo: cleanup file?

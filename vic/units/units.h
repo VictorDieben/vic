@@ -1,6 +1,8 @@
 #pragma once
 
 #include "vic/utils/concepts.h"
+#include "vic/utils/templates_numeric.h"
+
 #include <cmath>
 #include <format>
 #include <utility>
@@ -116,7 +118,8 @@ constexpr auto Add(const T1 first, const T2 second)
     else
     {
         static_assert(BPICompatible<T1, T2>); // cannot add e.g. distance to volume
-        using TRet = decltype(std::declval<typename T1::DataType>() + std::declval<typename T2::DataType>());
+
+        using TRet = vic::templates::addition_t<typename T1::DataType, typename T2::DataType>;
         return T1::template SameType<TRet>(first.Get() + second.Get());
     }
 }
@@ -178,7 +181,7 @@ constexpr auto Subtract(const T1 first, const T2 second)
     else
     {
         static_assert(BPICompatible<T1, T2>);
-        using TRet = decltype(std::declval<typename T1::DataType>() - std::declval<typename T2::DataType>());
+        using TRet = vic::templates::subtraction_t<typename T1::DataType, typename T2::DataType>;
         return T1::template SameType<TRet>(first.Get() - second.Get());
     }
 }
@@ -211,7 +214,7 @@ constexpr auto Division(const T1 first, const T2 second)
         return Division(first, Unitless{second});
     else
     {
-        using TRet = decltype(std::declval<typename T1::DataType>() / std::declval<typename T2::DataType>());
+        using TRet = vic::templates::division_t<typename T1::DataType, typename T2::DataType>;
         constexpr const int ResultMass = T1::Mass - T2::Mass;
         constexpr const int ResultLength = T1::Length - T2::Length;
         constexpr const int ResultTime = T1::Time - T2::Time;
@@ -243,7 +246,7 @@ constexpr auto Multiplication(const T1 first, const T2 second)
         return Multiplication(first, Unitless{second});
     else
     {
-        using TRet = decltype(std::declval<typename T1::DataType>() * std::declval<typename T2::DataType>());
+        using TRet = vic::templates::multiplication_t<typename T1::DataType, typename T2::DataType>;
         constexpr const int ResultMass = T1::Mass + T2::Mass;
         constexpr const int ResultLength = T1::Length + T2::Length;
         constexpr const int ResultTime = T1::Time + T2::Time;
@@ -275,7 +278,7 @@ constexpr auto Remainder(const T1 first, const T2 second)
         return Remainder(first, Unitless{second});
     else
     {
-        using TRet = decltype(std::declval<typename T1::DataType>() % std::declval<typename T2::DataType>());
+        using TRet = vic::templates::remainder_t<typename T1::DataType, typename T2::DataType>;
         constexpr const int ResultMass = T1::Mass;
         constexpr const int ResultLength = T1::Length;
         constexpr const int ResultTime = T1::Time;
