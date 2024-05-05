@@ -17,8 +17,8 @@ bool ImagesEqual(const TImage1& image1, const TImage2& image2)
        image1.Height() != image2.Height())
         return false;
 
-    for(std::size_t j = 0; j < image1.Height(); ++j)
-        for(std::size_t i = 0; i < image1.Width(); ++i)
+    for(Resolution j = 0; j < image1.Height(); ++j)
+        for(Resolution i = 0; i < image1.Width(); ++i)
             if(image1.GetColor(i, j) != image2.GetColor(i, j))
                 return false;
 
@@ -29,11 +29,11 @@ TEST(Images, SaveLoadBMP)
 {
     Bitmap bitmap(123, 123);
 
-    const std::size_t squareSize = 10;
+    const Resolution squareSize = 10;
 
-    for(std::size_t j = 0; j < bitmap.Height(); ++j)
+    for(Resolution j = 0; j < bitmap.Height(); ++j)
     {
-        for(std::size_t i = 0; i < bitmap.Width(); ++i)
+        for(Resolution i = 0; i < bitmap.Width(); ++i)
         {
             const bool f = ((i / squareSize) % 2) == ((j / squareSize) % 2);
 

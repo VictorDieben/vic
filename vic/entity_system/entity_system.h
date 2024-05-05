@@ -520,7 +520,9 @@ public:
         return algorithms::Iterate<T>(*this, iterable.begin(), iterable.end());
     }
 
-    //
+    // todo: for two and three dimensional iterate,
+    // we need to enable structured binding for the return type like so:
+    // https://dominikberner.ch/structured-bindings/
 
     template <typename T1, typename T2, typename TIter>
     auto Iterate2d(const TIter begin, const TIter end)

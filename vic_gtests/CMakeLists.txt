@@ -41,7 +41,8 @@ ADD_EXECUTABLE(VicTest
     "linalg/Views.cpp"
     "test_emulator.cpp" 
     "Graph2.cpp" 
-    "Math.cpp")
+    "Math.cpp" 
+    "Serialize.cpp")
  
 TARGET_LINK_LIBRARIES(VicTest  
 PRIVATE

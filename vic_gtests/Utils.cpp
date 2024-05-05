@@ -2,8 +2,10 @@
 #include "gtest/gtest.h"
 
 #include "test_base.h"
+
 #include "vic/utils.h"
 #include "vic/utils/algorithms.h"
+#include "vic/utils/as_tuple.h"
 #include "vic/utils/counted.h"
 #include "vic/utils/crc32.h"
 #include "vic/utils/decimal.h"
@@ -14,7 +16,6 @@
 #include "vic/utils/permutations.h"
 #include "vic/utils/ranges.h"
 #include "vic/utils/rational.h"
-#include "vic/utils/serialize.h"
 #include "vic/utils/statemachine.h"
 #include "vic/utils/string.h"
 #include "vic/utils/timing.h"
@@ -23,6 +24,8 @@
 #include "vic/utils/unique.h"
 
 #include "vic/memory/constexpr_map.h"
+
+#include "vic/serialize/serialize.h"
 
 #include <numeric>
 #include <random>
@@ -953,4 +956,29 @@ TEST(Utils, Rational)
     EXPECT_EQ(Deci(10), Milli(1000));
 
     // less than
+}
+
+TEST(Utils, AsTuple)
+{
+    struct MyStruct
+    {
+        int a;
+        float b;
+        double c;
+        std::string d;
+    };
+
+    EXPECT_EQ(4, vic::count_members<MyStruct>());
+
+    MyStruct myStruct{1, 2.f, 3., "hi"};
+
+    auto tup = vic::as_tuple(myStruct);
+    auto& [a, b, c, d] = tup;
+    EXPECT_EQ(a, 1);
+    EXPECT_EQ(b, 2.f);
+    EXPECT_EQ(c, 3.);
+    EXPECT_EQ(d, "hi");
+
+    a = 2;
+    EXPECT_EQ(myStruct.a, 2);
 }

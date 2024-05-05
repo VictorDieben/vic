@@ -47,4 +47,16 @@ concept ConceptSameKey = ConceptMap<TMap1> && ConceptMap<TMap2> && requires(TMap
 template <class T>
 concept Numeric = std::is_arithmetic_v<std::decay_t<T>>; // todo: replace with arithmetic type once in standard
 
+template <class T>
+concept ConceptFundamental = std::is_fundamental_v<std::decay_t<T>>; // todo: replace with arithmetic type once in standard
+
+template <class T>
+concept ConceptPointer = std::is_pointer_v<T>;
+
+template <class T>
+concept ConceptReference = std::is_reference_v<T>;
+
+template <class T>
+concept ConceptAggregate = std::is_aggregate_v<T>;
+
 } // namespace vic
