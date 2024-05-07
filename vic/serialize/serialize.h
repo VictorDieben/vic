@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <expected>
 #include <span>
+#include <type_traits>
 
 #include "vic/utils/as_tuple.h"
 #include "vic/utils/concepts.h"
@@ -105,6 +106,8 @@ constexpr SerializeStatus SerializeOne(std::span<std::byte>& buffer, const T& it
                           item.end();
                       })
     {
+        using InnerType = typename std::iterator_traits<decltype(item.begin())>::value_type;
+
         const auto size = (DefaultContainerSizeType)std::distance(item.begin(), item.end());
         auto serializeSize = Serialize(buffer, size);
         if(!serializeSize)
@@ -112,15 +115,29 @@ constexpr SerializeStatus SerializeOne(std::span<std::byte>& buffer, const T& it
 
         std::span<std::byte> loopBuffer = serializeSize.value();
 
-        // todo: if the inner T is trivial, and the range is contiguous, we can copy the entire range in one go.
+        if constexpr(requires {
+                         std::contiguous_iterator<decltype(item.begin())>;
+                         std::is_trivial<InnerType>;
+                     })
+        {
+            // copy whole range at once
+            const auto byteSize = size * sizeof(InnerType);
+            if(loopBuffer.size() < byteSize)
+                return std::unexpected{StatusCode::OutOfRange};
+            std::memcpy(&loopBuffer.front(), &item.at(0), byteSize);
+            return buffer.subspan(byteSize);
+        }
+        else
+        {
+            // copy each individually
+            for(const auto& subItem : item)
+                if(auto result = Serialize(loopBuffer, subItem))
+                    loopBuffer = result.value();
+                else
+                    return result;
 
-        for(const auto& subItem : item)
-            if(auto result = Serialize(loopBuffer, subItem))
-                loopBuffer = result.value();
-            else
-                return result;
-
-        return loopBuffer;
+            return loopBuffer;
+        }
     }
     else if constexpr(ConceptAggregate<T>)
     {
@@ -130,7 +147,7 @@ constexpr SerializeStatus SerializeOne(std::span<std::byte>& buffer, const T& it
         SerializeStatus status = buffer;
 
         auto res = std::apply(
-            [](auto... component) {
+            [&](auto... component) {
                 if(!status)
                     return; // todo: early return in fold expressions
 
@@ -178,21 +195,38 @@ constexpr DeserializeStatus DeserializeOne(const std::span<const std::byte>& buf
                           item.at(0);
                       })
     {
+        using InnerType = typename std::iterator_traits<decltype(item.begin())>::value_type;
         DefaultContainerSizeType s;
         auto res = Deserialize(buffer, s);
         if(!res)
             return res;
-
-        std::span<const std::byte> loopBuffer = res.value();
+        std::span<const std::byte> newBuffer = res.value();
         item.resize(s);
-        for(DefaultContainerSizeType i = 0; i < s; ++i)
+        if(s == 0)
+            return newBuffer;
+
+        if constexpr(requires {
+                         std::contiguous_iterator<decltype(item.begin())>;
+                         std::is_trivial<InnerType>;
+                     })
         {
-            if(auto res = Deserialize(loopBuffer, item.at(i)))
-                loopBuffer = res.value();
-            else
-                return res;
+            const auto byteSize = s * sizeof(InnerType);
+            if(newBuffer.size() < byteSize)
+                return std::unexpected{StatusCode::OutOfRange};
+            std::memcpy(&item.at(0), &newBuffer.front(), byteSize);
+            return buffer.subspan(byteSize);
         }
-        return loopBuffer;
+        else // items in list arn't trivial, or list is not contiguous
+        {
+            for(DefaultContainerSizeType i = 0; i < s; ++i)
+            {
+                if(auto res = Deserialize(newBuffer, item.at(i)))
+                    newBuffer = res.value();
+                else
+                    return res;
+            }
+            return newBuffer;
+        }
     }
     else if constexpr(ConceptAggregate<T>)
     {

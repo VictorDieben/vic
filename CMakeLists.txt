@@ -14,6 +14,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_subdirectory ("vic")
 
+
+enable_testing()
+
 # Testing 
 if (NOT DEFINED VIC_NO_TESTS)
 	add_subdirectory ("vic_gtests")

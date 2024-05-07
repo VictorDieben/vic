@@ -6,80 +6,68 @@
 
 #include "vic/serialize/serialize.h"
 
+#include "SerializeHelpers.h"
+
 using namespace vic::serialize;
 
 // define some types for serialization/deserialization
 
-enum class MyEnum : int
-{
-    First,
-    Second
-};
-
-struct MyStruct
-{
-    std::string name;
-    int age;
-};
-bool operator==(const MyStruct& a, const MyStruct& b) { return (a.name == b.name) && (a.age == b.age); }
-
-struct MyOtherStruct
-{
-    int a;
-    double b;
-};
-bool operator==(const MyOtherStruct& a, const MyOtherStruct& b) { return (a.a == b.a) && (a.b == b.b); }
-
-struct MyNestedStruct
-{
-    MyStruct m1;
-    MyOtherStruct m2;
-};
-
-template <typename T>
-const auto serializeDeserialize = [](const T& item) -> bool {
-    std::vector<std::byte> buffer(1024); // one KiB
-    auto span = std::span<std::byte>{buffer};
-    if(!Serialize(span, item))
-        return false;
-    T newItem;
-    if(!Deserialize(std::span<const std::byte>{buffer}, newItem))
-        return false;
-    return item == newItem;
-};
-
 TEST(Serialize, Vector)
 {
-    EXPECT_TRUE(serializeDeserialize<std::vector<int>>({}));
-    EXPECT_TRUE(serializeDeserialize<std::vector<int>>({1, 2, 3, 4, 5, 6}));
+    EXPECT_TRUE(SerializeDeserialize(std::vector<int>{}));
+    EXPECT_TRUE(SerializeDeserialize(std::vector<int>{1, 2, 3, 4, 5, 6}));
+
+    // todo: check non-trivially copyable inner type
+    static_assert(!std::is_trivially_copyable_v<std::string>);
+    static_assert(!std::is_trivial_v<std::string>);
+    EXPECT_TRUE(SerializeDeserialize(std::vector<std::string>{"abc", "def"}));
 }
 
 TEST(Serialize, String)
 {
-    EXPECT_TRUE(serializeDeserialize<std::string>(""));
-    EXPECT_TRUE(serializeDeserialize<std::string>("Hello World!"));
-    EXPECT_TRUE(serializeDeserialize<std::string>("`1234567890-+abcdefghijklmnopqrstuvwxyz ,./\n\t[]{}"));
+    EXPECT_TRUE(SerializeDeserialize(std::string{""}));
+    EXPECT_TRUE(SerializeDeserialize(std::string{"Hello World!"}));
+    EXPECT_TRUE(SerializeDeserialize(std::string{"`1234567890-+abcdefghijklmnopqrstuvwxyz ,./\n\t[]{}"}));
 }
 
 TEST(Serialize, Map)
 {
     //std::map<char, int> myMap{{{'a', 1}, {'b', 2}}};
-    //EXPECT_TRUE(serializeDeserialize<decltype(myMap)>(myMap));
+    //EXPECT_TRUE(SerializeDeserialize<decltype(myMap)>(myMap));
 }
 
 TEST(Serialize, Set)
 {
     //std::set<int> mySet{1, 2, 4, 8};
-    //EXPECT_TRUE(serializeDeserialize<decltype(mySet)>(mySet));
+    //EXPECT_TRUE(SerializeDeserialize<decltype(mySet)>(mySet));
+}
+
+TEST(Serialize, Optional)
+{
+    std::optional<int> optInt = std::nullopt;
+    EXPECT_TRUE(SerializeDeserialize(optInt));
+
+    std::optional<int> optInt2 = 1;
+    EXPECT_TRUE(SerializeDeserialize(optInt2));
+}
+
+TEST(Serialize, Variant)
+{
+    //std::set<int> mySet{1, 2, 4, 8};
+    //EXPECT_TRUE(SerializeDeserialize<decltype(mySet)>(mySet));
+}
+
+TEST(Serialize, Expected)
+{
+    //std::set<int> mySet{1, 2, 4, 8};
+    //EXPECT_TRUE(SerializeDeserialize<decltype(mySet)>(mySet));
 }
 
 TEST(Serialize, Custom)
 {
-    MyOtherStruct s{1, 2};
-    EXPECT_TRUE(serializeDeserialize<MyOtherStruct>(s)); //
+    EXPECT_TRUE(SerializeDeserialize(MyOtherStruct{1, 2}));
 
-    //MyStruct s1{"name", 1};
-    //EXPECT_TRUE(serializeDeserialize<MyStruct>(s1)); //
+    // EXPECT_TRUE(SerializeDeserialize(MyStruct{"name", 1}));
 }
 
 TEST(Serialize, Many)

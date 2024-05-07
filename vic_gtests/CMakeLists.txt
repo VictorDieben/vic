@@ -42,7 +42,7 @@ ADD_EXECUTABLE(VicTest
     "test_emulator.cpp" 
     "Graph2.cpp" 
     "Math.cpp" 
-    "Serialize.cpp")
+    "Serialize.cpp" "SerializeHelpers.h")
  
 TARGET_LINK_LIBRARIES(VicTest  
 PRIVATE
