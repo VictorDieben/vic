@@ -86,8 +86,7 @@ template <typename T>
 constexpr SerializeStatus SerializeOne(std::span<std::byte>& buffer, const T& item)
 {
     // check that we support this data type
-    static_assert(!ConceptPointer<T> && //
-                  !ConceptReference<T>);
+    static_assert(!ConceptPointer<T>);
 
     if constexpr(std::is_trivial_v<T>) // todo: or something like is_trivial<T>
     {
@@ -142,21 +141,12 @@ constexpr SerializeStatus SerializeOne(std::span<std::byte>& buffer, const T& it
     else if constexpr(ConceptAggregate<T>)
     {
         const auto tup = vic::as_tuple(item);
-        // std::span<std::byte> loopBuffer = buffer;
 
-        SerializeStatus status = buffer;
+        // make a wrapper lambda, to pre-apply buffer as an argument
+        auto f = [&](auto... xs) { return Serialize(buffer, xs...); };
+        auto res = std::apply(f, tup);
 
-        auto res = std::apply(
-            [&](auto... component) {
-                if(!status)
-                    return; // todo: early return in fold expressions
-
-                auto newStatus = Serialize(status.value(), component);
-                status = newStatus;
-            },
-            tup);
-
-        return status;
+        return res;
     }
 
     return std::unexpected{StatusCode::Unsupported};
@@ -191,46 +181,72 @@ constexpr DeserializeStatus DeserializeOne(const std::span<const std::byte>& buf
     else if constexpr(requires {
                           item.begin();
                           item.end();
-                          item.resize(0);
-                          item.at(0);
                       })
     {
         using InnerType = typename std::iterator_traits<decltype(item.begin())>::value_type;
         DefaultContainerSizeType s;
         auto res = Deserialize(buffer, s);
-        if(!res)
+        if(!res || s == 0)
             return res;
         std::span<const std::byte> newBuffer = res.value();
-        item.resize(s);
-        if(s == 0)
-            return newBuffer;
 
         if constexpr(requires {
                          std::contiguous_iterator<decltype(item.begin())>;
                          std::is_trivial<InnerType>;
                      })
         {
+            // entire data range can be copied at once
             const auto byteSize = s * sizeof(InnerType);
             if(newBuffer.size() < byteSize)
                 return std::unexpected{StatusCode::OutOfRange};
             std::memcpy(&item.at(0), &newBuffer.front(), byteSize);
             return buffer.subspan(byteSize);
         }
-        else // items in list arn't trivial, or list is not contiguous
+        else
         {
-            for(DefaultContainerSizeType i = 0; i < s; ++i)
+            if constexpr(requires {
+                             item.resize(0);
+                             item.at(0);
+                         })
             {
-                if(auto res = Deserialize(newBuffer, item.at(i)))
-                    newBuffer = res.value();
-                else
-                    return res;
+                // items in list arn't trivial, or list is not contiguous
+                item.resize(s);
+                for(DefaultContainerSizeType i = 0; i < s; ++i)
+                {
+                    if(auto res = Deserialize(newBuffer, item.at(i)))
+                        newBuffer = res.value();
+                    else
+                        return res;
+                }
+                return newBuffer;
             }
-            return newBuffer;
+            else if constexpr(requires {
+                                  typename T::key_type;
+                                  typename T::mapped_type;
+                                  typename T::value_type;
+                                  item.insert(std::declval<typename T::value_type>());
+                              })
+            {
+                // map-like
+            }
+            else if constexpr(requires {
+                                  typename T::key_type;
+                                  typename T::value_type;
+                                  item.insert(std::declval<typename T::key_type>());
+                              })
+            {
+                // set-like
+            }
         }
     }
     else if constexpr(ConceptAggregate<T>)
     {
-        // todo
+        const auto tup = vic::as_tuple(item);
+
+        auto f = [&](auto&... xs) { return Deserialize(buffer, xs...); };
+        auto res = std::apply(f, tup);
+
+        return res;
     }
 
     return std::unexpected{StatusCode::Unsupported};

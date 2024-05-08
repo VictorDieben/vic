@@ -10,8 +10,6 @@
 
 using namespace vic::serialize;
 
-// define some types for serialization/deserialization
-
 TEST(Serialize, Vector)
 {
     EXPECT_TRUE(SerializeDeserialize(std::vector<int>{}));
@@ -65,9 +63,8 @@ TEST(Serialize, Expected)
 
 TEST(Serialize, Custom)
 {
-    EXPECT_TRUE(SerializeDeserialize(MyOtherStruct{1, 2}));
-
-    // EXPECT_TRUE(SerializeDeserialize(MyStruct{"name", 1}));
+    EXPECT_TRUE(SerializeDeserialize(MyOtherStruct{1, 2})); // <- will be copied in 1 go
+    EXPECT_TRUE(SerializeDeserialize(MyStruct{"name", 1})); // <- agregage
 }
 
 TEST(Serialize, Many)
