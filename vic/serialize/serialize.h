@@ -78,6 +78,15 @@ private:
     std::span<std::byte>& mBuffer;
 };
 
+template <typename T>
+concept ConceptDataTrivial = std::contiguous_iterator<typename T::iterator> && //
+                             std::is_trivially_copyable_v<typename std::iterator_traits<typename T::iterator>::value_type> && //
+                             requires(T& item) {
+                                 item.begin();
+                                 item.end();
+                                 item.data();
+                             };
+
 // forward declare serialize
 template <typename T, typename... Ts>
 constexpr SerializeStatus Serialize(std::span<std::byte>& buffer, const T& item, const Ts&... rest);
@@ -108,23 +117,21 @@ constexpr SerializeStatus SerializeOne(std::span<std::byte>& buffer, const T& it
         using InnerType = typename std::iterator_traits<decltype(item.begin())>::value_type;
 
         const auto size = (DefaultContainerSizeType)std::distance(item.begin(), item.end());
-        auto serializeSize = Serialize(buffer, size);
-        if(!serializeSize)
-            return serializeSize;
 
-        std::span<std::byte> loopBuffer = serializeSize.value();
+        auto newBuffer = Serialize(buffer, size);
+        if(!newBuffer || size == 0)
+            return newBuffer;
 
-        if constexpr(requires {
-                         std::contiguous_iterator<decltype(item.begin())>;
-                         std::is_trivial<InnerType>;
-                     })
+        std::span<std::byte> loopBuffer = newBuffer.value();
+
+        if constexpr(ConceptDataTrivial<T>)
         {
             // copy whole range at once
             const auto byteSize = size * sizeof(InnerType);
             if(loopBuffer.size() < byteSize)
                 return std::unexpected{StatusCode::OutOfRange};
-            std::memcpy(&loopBuffer.front(), &item.at(0), byteSize);
-            return buffer.subspan(byteSize);
+            std::memcpy(&loopBuffer.front(), item.data(), byteSize);
+            return loopBuffer.subspan(byteSize);
         }
         else
         {
@@ -134,7 +141,6 @@ constexpr SerializeStatus SerializeOne(std::span<std::byte>& buffer, const T& it
                     loopBuffer = result.value();
                 else
                     return result;
-
             return loopBuffer;
         }
     }
@@ -183,24 +189,22 @@ constexpr DeserializeStatus DeserializeOne(const std::span<const std::byte>& buf
                           item.end();
                       })
     {
-        using InnerType = typename std::iterator_traits<decltype(item.begin())>::value_type;
+        using InnerType = typename std::iterator_traits<typename T::iterator>::value_type;
         DefaultContainerSizeType s;
         auto res = Deserialize(buffer, s);
         if(!res || s == 0)
             return res;
         std::span<const std::byte> newBuffer = res.value();
 
-        if constexpr(requires {
-                         std::contiguous_iterator<decltype(item.begin())>;
-                         std::is_trivial<InnerType>;
-                     })
+        if constexpr(ConceptDataTrivial<T>)
         {
             // entire data range can be copied at once
             const auto byteSize = s * sizeof(InnerType);
             if(newBuffer.size() < byteSize)
                 return std::unexpected{StatusCode::OutOfRange};
-            std::memcpy(&item.at(0), &newBuffer.front(), byteSize);
-            return buffer.subspan(byteSize);
+            item.resize(s);
+            std::memcpy(item.data(), &newBuffer.front(), byteSize);
+            return newBuffer.subspan(byteSize);
         }
         else
         {
