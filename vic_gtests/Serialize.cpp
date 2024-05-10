@@ -109,9 +109,9 @@ TEST(Serialize, Many)
     // MyEnum nd;
 
     auto span = std::span<std::byte>{buffer};
-    EXPECT_TRUE(Serialize(span, a, b, c));
+    EXPECT_TRUE(SerializeMany(span, a, b, c));
 
-    EXPECT_TRUE(Deserialize(std::span<const std::byte>{buffer}, na, nb, nc));
+    EXPECT_TRUE(DeserializeMany(std::span<const std::byte>{buffer}, na, nb, nc));
 
     EXPECT_EQ(a, na);
     EXPECT_EQ(b, nb);
