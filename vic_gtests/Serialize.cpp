@@ -70,6 +70,7 @@ TEST(Serialize, Optional)
 TEST(Serialize, Variant)
 {
     using MyVariant = std::variant<int, float>;
+    static_assert(vic::ConceptVariant<MyVariant>);
     MyVariant myVariant = 1;
     EXPECT_TRUE(SerializeDeserialize(myVariant));
 
@@ -79,14 +80,18 @@ TEST(Serialize, Variant)
 
 TEST(Serialize, Expected)
 {
-    //std::set<int> mySet{1, 2, 4, 8};
-    //EXPECT_TRUE(SerializeDeserialize<decltype(mySet)>(mySet));
+    using MyExpected = std::expected<int, std::string>; //
+    static_assert(vic::serialize::ConceptExpected<MyExpected>);
+    MyExpected e1 = 1;
+    EXPECT_TRUE(SerializeDeserialize(e1));
+    MyExpected e2 = std::unexpected{"error"};
+    EXPECT_TRUE(SerializeDeserialize(e2));
 }
 
 TEST(Serialize, Custom)
 {
     EXPECT_TRUE(SerializeDeserialize(MyOtherStruct{1, 2})); // <- will be copied in 1 go
-    // EXPECT_TRUE(SerializeDeserialize(MyStruct{"name", 1})); // <- agregage
+    EXPECT_TRUE(SerializeDeserialize(MyStruct{"name", 1})); // <- agregage
 }
 
 TEST(Serialize, Many)

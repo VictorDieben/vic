@@ -6,12 +6,6 @@ namespace vic
 {
 // helpers for std::variant
 
-template <class... Ts>
-struct overload : Ts...
-{
-    using Ts::operator()...;
-};
-
 template <typename T>
 concept ConceptVariant = requires(T& item) {
     {

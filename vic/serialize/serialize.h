@@ -32,6 +32,19 @@ concept ConceptSerializer = requires(T obj) {
 };
 
 template <typename T>
+concept ConceptExpected = requires(T obj) {
+    typename T::value_type;
+    typename T::error_type;
+    typename T::unexpected_type;
+    {
+        obj.value()
+    } -> std::convertible_to<typename T::value_type>;
+    {
+        obj.error()
+    } -> std::convertible_to<typename T::error_type>;
+};
+
+template <typename T>
 constexpr uint64_t ByteSize()
 {
     return sizeof(T); // todo: for vectors / strings etc we need to return the size of the actual serialization
@@ -174,6 +187,20 @@ constexpr SerializeStatus SerializeOne(std::span<std::byte>& buffer, const T& it
             },
             item);
     }
+    else if constexpr(ConceptExpected<T>)
+    {
+        const bool hasValue = item.has_value();
+        auto res = Serialize(buffer, hasValue);
+        if(!res)
+            return res;
+        std::span<std::byte> newBuffer = res.value();
+
+        // then serialize this type
+        if(hasValue)
+            return Serialize(newBuffer, item.value());
+        else
+            return Serialize(newBuffer, item.error());
+    }
 
     return std::unexpected{StatusCode::Unsupported};
 }
@@ -289,6 +316,25 @@ constexpr DeserializeStatus DeserializeOne(const std::span<const std::byte>& buf
                 return DeserializeOne(res.value(), subItem); //
             },
             item);
+    }
+    else if constexpr(ConceptExpected<T>)
+    {
+        bool hasValue;
+        auto res = Deserialize(buffer, hasValue);
+        if(!res)
+            return res;
+        std::span<const std::byte> newBuffer = res.value();
+
+        if(hasValue)
+        {
+            item = typename T::value_type{};
+            return Deserialize(newBuffer, item.value());
+        }
+        else
+        {
+            item = std::unexpected{typename T::error_type{}};
+            return Deserialize(newBuffer, item.error());
+        }
     }
 
     return std::unexpected{StatusCode::Unsupported};
