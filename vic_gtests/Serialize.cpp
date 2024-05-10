@@ -69,8 +69,12 @@ TEST(Serialize, Optional)
 
 TEST(Serialize, Variant)
 {
-    //std::set<int> mySet{1, 2, 4, 8};
-    //EXPECT_TRUE(SerializeDeserialize<decltype(mySet)>(mySet));
+    using MyVariant = std::variant<int, float>;
+    MyVariant myVariant = 1;
+    EXPECT_TRUE(SerializeDeserialize(myVariant));
+
+    MyVariant myVariant2 = 2.f;
+    EXPECT_TRUE(SerializeDeserialize(myVariant2));
 }
 
 TEST(Serialize, Expected)

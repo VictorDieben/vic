@@ -8,6 +8,7 @@
 
 #include "vic/utils/as_tuple.h"
 #include "vic/utils/concepts.h"
+#include "vic/utils/variant.h"
 
 namespace vic
 {
@@ -21,6 +22,8 @@ namespace serialize
 // mostly unpacking of pod-structs
 
 using DefaultContainerSizeType = uint32_t; // i don't think a serialization should ever need more than 2^32 items
+
+using DefaultVariantIndexType = uint16_t; // 65000 variants should be enough
 
 template <typename T>
 concept ConceptSerializer = requires(T obj) {
@@ -154,6 +157,23 @@ constexpr SerializeStatus SerializeOne(std::span<std::byte>& buffer, const T& it
 
         return res;
     }
+    else if constexpr(ConceptVariant<T>)
+    {
+        // first encode which type is contained in the variant
+        constexpr auto alternatives = std::variant_size_v<T>;
+        const auto index = (DefaultVariantIndexType)item.index();
+        auto res = Serialize(buffer, index);
+        if(!res)
+            return res;
+        std::span<std::byte> newBuffer = res.value();
+
+        // then serialize this type
+        return std::visit(
+            [&](auto& subItem) {
+                return Serialize(newBuffer, subItem); //
+            },
+            item);
+    }
 
     return std::unexpected{StatusCode::Unsupported};
 }
@@ -175,7 +195,8 @@ template <typename T, typename... Ts>
 constexpr DeserializeStatus Deserialize(const std::span<const std::byte>& buffer, T& item, Ts&... rest);
 
 template <typename T>
-constexpr DeserializeStatus DeserializeOne(const std::span<const std::byte>& buffer, T& item)
+constexpr DeserializeStatus DeserializeOne(const std::span<const std::byte>& buffer, //
+                                           T& item)
 {
     if constexpr(std::is_trivial_v<T>)
     {
@@ -251,6 +272,23 @@ constexpr DeserializeStatus DeserializeOne(const std::span<const std::byte>& buf
         auto res = std::apply(f, tup);
 
         return res;
+    }
+    else if constexpr(ConceptVariant<T>)
+    {
+        DefaultVariantIndexType idx;
+        auto res = DeserializeOne(buffer, idx);
+        if(!res)
+            return res;
+        if(idx >= std::variant_size_v<T>)
+            return std::unexpected{StatusCode::Error}; // invalid type index
+
+        AssignNthType(item, idx); // set variant to n-th index type
+
+        return std::visit(
+            [&](auto& subItem) -> DeserializeStatus {
+                return DeserializeOne(res.value(), subItem); //
+            },
+            item);
     }
 
     return std::unexpected{StatusCode::Unsupported};
