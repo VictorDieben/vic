@@ -54,11 +54,11 @@ TEST(Serialize, DataTrivial)
 
 TEST(Serialize, Set)
 {
-    std::set<int> mySet{};
-    EXPECT_TRUE(SerializeDeserialize(mySet));
+    EXPECT_TRUE(SerializeDeserialize(std::set<int>{}));
 
-    std::set<int> mySet2{1, 2, 4, 8};
-    EXPECT_TRUE(SerializeDeserialize(mySet2));
+    EXPECT_TRUE(SerializeDeserialize(std::set<int>{1, 2, 4, 8}));
+
+    EXPECT_TRUE(SerializeDeserialize(std::set<std::string>{"abc", "def", "ghi"}));
 }
 
 TEST(Serialize, Optional)
@@ -78,8 +78,14 @@ TEST(Serialize, Pair)
     static_assert(vic::tuple_like<std::pair<const char, const int>>);
     static_assert(vic::tuple_like<const std::pair<char, int>>);
 
-    EXPECT_TRUE(SerializeDeserialize(std::pair{'a', 1})); //
-    EXPECT_TRUE(SerializeDeserialize(std::pair{std::string{"abc"}, std::string{"def"}})); //
+    EXPECT_TRUE(SerializeDeserialize(std::pair{'a', 1}));
+    EXPECT_TRUE(SerializeDeserialize(std::pair{std::string{"abc"}, std::string{"def"}}));
+}
+
+TEST(Serialize, Tuple)
+{
+    EXPECT_TRUE(SerializeDeserialize(std::tuple{'a', 1, 1.}));
+    EXPECT_TRUE(SerializeDeserialize(std::tuple{std::string{"abc"}, std::string{"def"}, std::string{"ghi"}}));
 }
 
 TEST(Serialize, Variant)
@@ -95,7 +101,7 @@ TEST(Serialize, Variant)
 
 TEST(Serialize, Expected)
 {
-    using MyExpected = std::expected<int, std::string>; //
+    using MyExpected = std::expected<int, std::string>;
     static_assert(vic::serialize::ConceptExpected<MyExpected>);
     MyExpected e1 = 1;
     EXPECT_TRUE(SerializeDeserialize(e1));
@@ -109,6 +115,11 @@ TEST(Serialize, Custom)
     EXPECT_TRUE(SerializeDeserialize(MyStruct{"name", 1})); // <- agregage
 }
 
+TEST(Serialize, Enum)
+{
+    EXPECT_TRUE(SerializeDeserialize(MyEnum::First)); //
+}
+
 TEST(Serialize, Many)
 {
     std::vector<std::byte> buffer(1024); // one KiB
@@ -116,20 +127,20 @@ TEST(Serialize, Many)
     const int a = 1;
     const float b = 2.f;
     const double c = 3.;
-    // const MyEnum d{MyEnum::Second};
+    const MyEnum d{MyEnum::Second};
 
     int na;
     float nb;
     double nc;
-    // MyEnum nd;
+    MyEnum nd;
 
     auto span = std::span<std::byte>{buffer};
-    EXPECT_TRUE(SerializeMany(span, a, b, c));
+    EXPECT_TRUE(SerializeMany(span, a, b, c, d));
 
-    EXPECT_TRUE(DeserializeMany(std::span<const std::byte>{buffer}, na, nb, nc));
+    EXPECT_TRUE(DeserializeMany(std::span<const std::byte>{buffer}, na, nb, nc, nd));
 
     EXPECT_EQ(a, na);
     EXPECT_EQ(b, nb);
     EXPECT_EQ(c, nc);
-    // EXPECT_EQ(d, nd);
+    EXPECT_EQ(d, nd);
 }

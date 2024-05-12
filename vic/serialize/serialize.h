@@ -243,33 +243,25 @@ constexpr SerializeStatus Serialize(std::span<std::byte>& buffer, const T& item)
     static_assert(!ConceptPointer<T>);
 
     if constexpr(std::is_trivial_v<T>)
-    {
         return SerializeTrivial(buffer, item);
-    }
+
     else if constexpr(ConceptRange<T>)
-    {
         return SerializeRange(buffer, item);
-    }
+
     else if constexpr(ConceptVariant<T>)
-    {
         return SerializeVariant(buffer, item);
-    }
+
     else if constexpr(ConceptExpected<T>)
-    {
         return SerializeExpected(buffer, item);
-    }
+
     else if constexpr(ConceptOptional<T>)
-    {
         return SerializeOptional(buffer, item);
-    }
+
     else if constexpr(vic::tuple_like<T>)
-    {
         return SerializeTupleLike(buffer, item);
-    }
+
     else if constexpr(ConceptAggregate<T>)
-    {
         return SerializeAgregate(buffer, item);
-    }
 
     return std::unexpected{StatusCode::Unsupported};
 }
@@ -401,19 +393,16 @@ constexpr DeserializeStatus DeserializeRange(const std::span<const std::byte>& b
     else if constexpr(ConceptMap<T>)
     {
         // map-like
+        using KeyValue = std::pair<typename T::key_type, typename T::mapped_type>; // manually remove const-ness of key
         for(DefaultContainerSizeType i = 0; i < s; ++i)
         {
-            using KeyValue = std::pair<typename T::key_type, typename T::mapped_type>; // manually remove const-ness of key
             KeyValue kv;
-            if(auto res = Deserialize(newBuffer, kv))
-            {
+            if(res = Deserialize(res.value(), kv))
                 item.insert(kv);
-                newBuffer = res.value();
-            }
             else
-                return res;
+                return res; // error
         }
-        return newBuffer;
+        return res;
     }
     else if constexpr(ConceptSet<T>)
     {
@@ -421,15 +410,12 @@ constexpr DeserializeStatus DeserializeRange(const std::span<const std::byte>& b
         for(DefaultContainerSizeType i = 0; i < s; ++i)
         {
             typename T::value_type v;
-            if(auto res = Deserialize(newBuffer, v))
-            {
+            if(res = Deserialize(res.value(), v))
                 item.insert(v);
-                newBuffer = res.value();
-            }
             else
-                return res;
+                return res; // error
         }
-        return newBuffer;
+        return res;
     }
     else if constexpr(ConceptRange<T> && requires { item.resize({}); })
     {
@@ -437,12 +423,14 @@ constexpr DeserializeStatus DeserializeRange(const std::span<const std::byte>& b
         item.resize(s);
         for(DefaultContainerSizeType i = 0; i < s; ++i)
         {
-            if(auto res = Deserialize(newBuffer, item.at(i)))
-                newBuffer = res.value();
+            if(res = Deserialize(res.value(), item.at(i)))
+            {
+                // success
+            }
             else
-                return res;
+                return res; // error
         }
-        return newBuffer;
+        return res;
     }
 
     return std::unexpected{StatusCode::Unsupported};
@@ -481,9 +469,8 @@ constexpr DeserializeStatus Deserialize(const std::span<const std::byte>& buffer
         return DeserializeOptional(buffer, item);
 
     else if constexpr(vic::tuple_like<T>)
-    {
         return DeserializeTupleLike(buffer, item);
-    }
+
     else if constexpr(ConceptAggregate<T>)
         return DeserializeAgregate(buffer, item);
 
