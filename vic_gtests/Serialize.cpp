@@ -54,8 +54,11 @@ TEST(Serialize, DataTrivial)
 
 TEST(Serialize, Set)
 {
-    //std::set<int> mySet{1, 2, 4, 8};
-    //EXPECT_TRUE(SerializeDeserialize<decltype(mySet)>(mySet));
+    std::set<int> mySet{};
+    EXPECT_TRUE(SerializeDeserialize(mySet));
+
+    std::set<int> mySet2{1, 2, 4, 8};
+    EXPECT_TRUE(SerializeDeserialize(mySet2));
 }
 
 TEST(Serialize, Optional)
@@ -65,6 +68,18 @@ TEST(Serialize, Optional)
 
     std::optional<int> optInt2 = 1;
     EXPECT_TRUE(SerializeDeserialize(optInt2));
+}
+
+TEST(Serialize, Pair)
+{
+    static_assert(vic::tuple_like<std::pair<char, int>>);
+    static_assert(vic::tuple_like<std::pair<const char, int>>);
+    static_assert(vic::tuple_like<std::pair<char, const int>>);
+    static_assert(vic::tuple_like<std::pair<const char, const int>>);
+    static_assert(vic::tuple_like<const std::pair<char, int>>);
+
+    EXPECT_TRUE(SerializeDeserialize(std::pair{'a', 1})); //
+    EXPECT_TRUE(SerializeDeserialize(std::pair{std::string{"abc"}, std::string{"def"}})); //
 }
 
 TEST(Serialize, Variant)

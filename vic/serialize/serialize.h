@@ -25,12 +25,6 @@ using DefaultContainerSizeType = uint32_t; // i don't think a serialization shou
 
 using DefaultVariantIndexType = uint16_t; // 65000 variants should be enough
 
-//template <typename T>
-//concept ConceptSerializer = requires(T obj) {
-//    obj.serialize();
-//    obj.deserialize();
-//};
-
 template <typename T>
 concept ConceptTrivial = std::is_trivial_v<T>;
 
@@ -38,6 +32,22 @@ template <typename T>
 concept ConceptRange = requires(T obj) {
     obj.begin();
     obj.end();
+};
+
+template <typename T>
+concept ConceptSet = ConceptRange<T> && requires(T obj) {
+    // todo
+    typename T::key_type;
+    typename T::value_type;
+    obj.insert(std::declval<typename T::key_type>());
+};
+
+template <typename T>
+concept ConceptMap = ConceptRange<T> && requires(T obj) {
+    typename T::key_type;
+    typename T::mapped_type;
+    typename T::value_type;
+    obj.insert(std::declval<typename T::value_type>());
 };
 
 template <typename T>
@@ -54,17 +64,15 @@ concept ConceptExpected = requires(T obj) {
 };
 
 template <typename T>
-constexpr uint64_t ByteSize()
-{
-    return sizeof(T); // todo: for vectors / strings etc we need to return the size of the actual serialization
-}
-
-template <typename T>
-uint64_t ByteSize(const T& item)
-{
-    // todo: for vectors / strings etc we need to return the size of the actual serialization
-    return sizeof(T);
-}
+concept ConceptOptional = requires(T obj) {
+    typename T::value_type;
+    {
+        obj.value()
+    } -> std::convertible_to<typename T::value_type>;
+    {
+        obj.has_value()
+    } -> std::convertible_to<bool>;
+};
 
 enum class StatusCode
 {
@@ -76,30 +84,6 @@ enum class StatusCode
 
 using SerializeStatus = std::expected<std::span<std::byte>, StatusCode>;
 using DeserializeStatus = std::expected<std::span<const std::byte>, StatusCode>;
-
-template <typename T>
-struct Serializer
-{
-    Serializer(std::span<std::byte>& buffer)
-        : mBuffer(buffer)
-    { }
-
-    static constexpr bool FixedSize = true;
-    // static constexpr std::uint64_t size =
-
-    SerializeStatus Serialize()
-    {
-        return SerializeStatus{}; //
-    }
-
-    SerializeStatus Deserialize()
-    {
-        return SerializeStatus{}; //
-    }
-
-private:
-    std::span<std::byte>& mBuffer;
-};
 
 template <typename T>
 concept ConceptDataTrivial = std::contiguous_iterator<typename T::iterator> && //
@@ -142,16 +126,19 @@ constexpr SerializeStatus SerializeTrivial(std::span<std::byte>& buffer, const T
 }
 
 template <typename T>
+    requires tuple_like<T>
+constexpr SerializeStatus SerializeTupleLike(std::span<std::byte>& buffer, const T& item)
+{
+    auto f = [&](auto... xs) { return SerializeMany(buffer, xs...); };
+    return std::apply(f, item);
+}
+
+template <typename T>
     requires ConceptAggregate<T>
 constexpr SerializeStatus SerializeAgregate(std::span<std::byte>& buffer, const T& item)
 {
     const auto tup = vic::as_tuple(item);
-
-    // make a wrapper lambda, to pre-apply buffer as an argument
-    auto f = [&](auto... xs) { return SerializeMany(buffer, xs...); };
-    auto res = std::apply(f, tup);
-
-    return res;
+    return SerializeTupleLike(buffer, tup);
 }
 
 template <typename T>
@@ -184,11 +171,69 @@ constexpr SerializeStatus SerializeExpected(std::span<std::byte>& buffer, const 
         return res;
     std::span<std::byte> newBuffer = res.value();
 
-    // serialize either value or error
     if(hasValue)
         return Serialize(newBuffer, item.value());
     else
         return Serialize(newBuffer, item.error());
+}
+
+template <typename T>
+    requires ConceptOptional<T>
+constexpr SerializeStatus SerializeOptional(std::span<std::byte>& buffer, const T& item)
+{
+    const bool hasValue = item.has_value();
+    auto res = Serialize(buffer, hasValue);
+    if(!res || !hasValue)
+        return res;
+    std::span<std::byte> newBuffer = res.value();
+
+    return Serialize(newBuffer, item.value());
+}
+
+template <typename T>
+    requires ConceptDataTrivial<T>
+constexpr SerializeStatus SerializeDataTrivial(std::span<std::byte>& buffer, const T& item)
+{
+    // copy whole range at once
+    using InnerType = typename std::iterator_traits<decltype(item.begin())>::value_type;
+    const auto size = (DefaultContainerSizeType)std::distance(item.begin(), item.end());
+    auto res = Serialize(buffer, size);
+    if(!res || size == 0)
+        return res;
+    std::span<std::byte> newBuffer = res.value();
+    const auto byteSize = size * sizeof(InnerType);
+    if(newBuffer.size() < byteSize)
+        return std::unexpected{StatusCode::OutOfRange};
+    std::memcpy(&newBuffer.front(), item.data(), byteSize);
+    return newBuffer.subspan(byteSize);
+}
+
+template <typename T>
+    requires ConceptRange<T>
+constexpr SerializeStatus SerializeRange(std::span<std::byte>& buffer, const T& item)
+{
+    using InnerType = typename std::iterator_traits<typename T::iterator>::value_type;
+
+    if constexpr(ConceptDataTrivial<T>)
+    {
+        return SerializeDataTrivial(buffer, item);
+    }
+    else
+    {
+        const auto size = (DefaultContainerSizeType)std::distance(item.begin(), item.end());
+
+        auto res = Serialize(buffer, size);
+        if(!res || size == 0)
+            return res;
+        std::span<std::byte> loopBuffer = res.value();
+
+        for(const auto& subItem : item)
+            if(auto result = Serialize(loopBuffer, subItem))
+                loopBuffer = result.value();
+            else
+                return result;
+        return loopBuffer;
+    }
 }
 
 template <typename T>
@@ -203,39 +248,7 @@ constexpr SerializeStatus Serialize(std::span<std::byte>& buffer, const T& item)
     }
     else if constexpr(ConceptRange<T>)
     {
-        using InnerType = typename std::iterator_traits<decltype(item.begin())>::value_type;
-
-        const auto size = (DefaultContainerSizeType)std::distance(item.begin(), item.end());
-
-        auto newBuffer = Serialize(buffer, size);
-        if(!newBuffer || size == 0)
-            return newBuffer;
-
-        std::span<std::byte> loopBuffer = newBuffer.value();
-
-        if constexpr(ConceptDataTrivial<T>)
-        {
-            // copy whole range at once
-            const auto byteSize = size * sizeof(InnerType);
-            if(loopBuffer.size() < byteSize)
-                return std::unexpected{StatusCode::OutOfRange};
-            std::memcpy(&loopBuffer.front(), item.data(), byteSize);
-            return loopBuffer.subspan(byteSize);
-        }
-        else
-        {
-            // copy each individually
-            for(const auto& subItem : item)
-                if(auto result = Serialize(loopBuffer, subItem))
-                    loopBuffer = result.value();
-                else
-                    return result;
-            return loopBuffer;
-        }
-    }
-    else if constexpr(ConceptAggregate<T>)
-    {
-        return SerializeAgregate(buffer, item);
+        return SerializeRange(buffer, item);
     }
     else if constexpr(ConceptVariant<T>)
     {
@@ -244,6 +257,18 @@ constexpr SerializeStatus Serialize(std::span<std::byte>& buffer, const T& item)
     else if constexpr(ConceptExpected<T>)
     {
         return SerializeExpected(buffer, item);
+    }
+    else if constexpr(ConceptOptional<T>)
+    {
+        return SerializeOptional(buffer, item);
+    }
+    else if constexpr(vic::tuple_like<T>)
+    {
+        return SerializeTupleLike(buffer, item);
+    }
+    else if constexpr(ConceptAggregate<T>)
+    {
+        return SerializeAgregate(buffer, item);
     }
 
     return std::unexpected{StatusCode::Unsupported};
@@ -281,15 +306,19 @@ constexpr DeserializeStatus DeserializeTrivial(const std::span<const std::byte>&
 }
 
 template <typename T>
+    requires tuple_like<T>
+constexpr DeserializeStatus DeserializeTupleLike(const std::span<const std::byte>& buffer, T& item)
+{
+    auto f = [&](auto&... xs) { return DeserializeMany(buffer, xs...); };
+    return std::apply(f, item);
+}
+
+template <typename T>
     requires ConceptAggregate<T>
 constexpr DeserializeStatus DeserializeAgregate(const std::span<const std::byte>& buffer, T& item)
 {
     const auto tup = vic::as_tuple(item);
-
-    auto f = [&](auto&... xs) { return DeserializeMany(buffer, xs...); };
-    auto res = std::apply(f, tup);
-
-    return res;
+    return DeserializeTupleLike(buffer, tup);
 }
 
 template <typename T>
@@ -369,24 +398,40 @@ constexpr DeserializeStatus DeserializeRange(const std::span<const std::byte>& b
     {
         return DeserializeDataTrivial(buffer, item);
     }
-    else if constexpr(requires {
-                          typename T::key_type;
-                          typename T::mapped_type;
-                          typename T::value_type;
-                          item.insert(std::declval<typename T::value_type>());
-                      })
+    else if constexpr(ConceptMap<T>)
     {
         // map-like
+        for(DefaultContainerSizeType i = 0; i < s; ++i)
+        {
+            using KeyValue = std::pair<typename T::key_type, typename T::mapped_type>; // manually remove const-ness of key
+            KeyValue kv;
+            if(auto res = Deserialize(newBuffer, kv))
+            {
+                item.insert(kv);
+                newBuffer = res.value();
+            }
+            else
+                return res;
+        }
+        return newBuffer;
     }
-    else if constexpr(requires {
-                          typename T::key_type;
-                          typename T::value_type;
-                          item.insert(std::declval<typename T::key_type>());
-                      })
+    else if constexpr(ConceptSet<T>)
     {
         // set-like
+        for(DefaultContainerSizeType i = 0; i < s; ++i)
+        {
+            typename T::value_type v;
+            if(auto res = Deserialize(newBuffer, v))
+            {
+                item.insert(v);
+                newBuffer = res.value();
+            }
+            else
+                return res;
+        }
+        return newBuffer;
     }
-    else if constexpr(ConceptRange<T>)
+    else if constexpr(ConceptRange<T> && requires { item.resize({}); })
     {
         // items in list arn't trivial, or list is not contiguous
         item.resize(s);
@@ -404,6 +449,20 @@ constexpr DeserializeStatus DeserializeRange(const std::span<const std::byte>& b
 }
 
 template <typename T>
+    requires ConceptOptional<T>
+constexpr DeserializeStatus DeserializeOptional(const std::span<const std::byte>& buffer, T& item)
+{
+    bool hasValue;
+    auto res = Deserialize(buffer, hasValue);
+    if(!res || !hasValue)
+        return res;
+    std::span<const std::byte> newBuffer = res.value();
+
+    item = typename T::value_type{}; // initialize
+    return Deserialize(newBuffer, *item);
+}
+
+template <typename T>
 constexpr DeserializeStatus Deserialize(const std::span<const std::byte>& buffer, T& item)
 {
     if constexpr(ConceptTrivial<T>)
@@ -412,14 +471,21 @@ constexpr DeserializeStatus Deserialize(const std::span<const std::byte>& buffer
     else if constexpr(ConceptRange<T>)
         return DeserializeRange(buffer, item);
 
-    else if constexpr(ConceptAggregate<T>)
-        return DeserializeAgregate(buffer, item);
-
     else if constexpr(ConceptVariant<T>)
         return DeserializeVariant(buffer, item);
 
     else if constexpr(ConceptExpected<T>)
         return DeserializeExpected(buffer, item);
+
+    else if constexpr(ConceptOptional<T>)
+        return DeserializeOptional(buffer, item);
+
+    else if constexpr(vic::tuple_like<T>)
+    {
+        return DeserializeTupleLike(buffer, item);
+    }
+    else if constexpr(ConceptAggregate<T>)
+        return DeserializeAgregate(buffer, item);
 
     return std::unexpected{StatusCode::Unsupported};
 }
