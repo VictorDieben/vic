@@ -10,6 +10,21 @@
 
 using namespace vic::serialize;
 
+TEST(Serialize, Array)
+{
+    // trivial:
+    EXPECT_TRUE(SerializeDeserialize(std::array<int, 0>{}));
+    EXPECT_TRUE(SerializeDeserialize(std::array<int, 6>{1, 2, 3, 4, 5, 6}));
+
+    // non-trivial
+    static_assert(!ConceptResizeableRange<std::array<int, 2>>);
+    static_assert(!ConceptResizeableRange<std::array<std::string, 2>>);
+    static_assert(ConceptResizeableRange<std::string>);
+    static_assert(ConceptResizeableRange<std::vector<int>>);
+
+    EXPECT_TRUE(SerializeDeserialize(std::array<std::string, 2>{"abc", "def"}));
+}
+
 TEST(Serialize, Vector)
 {
     EXPECT_TRUE(SerializeDeserialize(std::vector<int>{}));

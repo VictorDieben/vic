@@ -84,4 +84,13 @@ concept tuple_like = is_tuple_like_v<std::remove_cvref_t<T>>;
 template <typename T>
 concept pair_like = tuple_like<T> && std::tuple_size_v<std::remove_cvref_t<T>> == 2;
 
+// Check if a certain expression is constexpr, e.g.:
+// if constexpr (is_constexpr([]{ MyClass::SomeFunction(); }))
+template <class Lambda, int = (Lambda{}(), 0)>
+constexpr bool is_constexpr(Lambda)
+{
+    return true;
+}
+constexpr bool is_constexpr(...) { return false; }
+
 } // namespace vic
