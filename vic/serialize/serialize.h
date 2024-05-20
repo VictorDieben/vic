@@ -92,8 +92,21 @@ enum class StatusCode
     Ok,
     Error, // generic
     OutOfRange, // not enough bytes left over to perform conversion
-    Unsupported // T is not yet supported for serialization
+    Unsupported // T is not (yet?) supported for serialization
 };
+
+//struct SerializeRange
+//{
+//
+//    using iterator = typename std::vector<std::byte>::iterator; // todo: make this work with arrays too
+//
+//    iterator begin;
+//    iterator head;
+//    iterator end;
+//
+//    //template <typename TContainer>
+//    // SerializeRange
+//};
 
 using SerializeStatus = std::expected<std::span<std::byte>, StatusCode>;
 using DeserializeStatus = std::expected<std::span<const std::byte>, StatusCode>;

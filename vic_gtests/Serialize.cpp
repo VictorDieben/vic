@@ -159,3 +159,24 @@ TEST(Serialize, Many)
     EXPECT_EQ(c, nc);
     EXPECT_EQ(d, nd);
 }
+
+TEST(Serialize, Size)
+{
+    std::vector<std::byte> buffer(1024); // one KiB
+
+    const auto msg = std::string{"abcdefghij"};
+    const std::size_t resultSize = 4 + msg.size(); // 4 bytes to encode length, then a byte for each character
+    auto span = std::span<std::byte>{buffer};
+    auto res = Serialize(span, msg);
+
+    // verify that the number of serialized bytes is correct
+    std::byte* front = &(*span.begin());
+    std::byte* head = &(*res.value().begin());
+    EXPECT_EQ(std::distance(front, head), resultSize);
+
+    // check that message can still be deserialized
+    std::string deserialized;
+    const auto resultBuffer = std::span<const std::byte>{buffer}.subspan(0, resultSize);
+    EXPECT_TRUE(DeserializeMany(resultBuffer, deserialized));
+    EXPECT_EQ(msg, deserialized);
+}
