@@ -35,17 +35,14 @@ struct MyNestedStruct
 template <typename T>
 bool SerializeDeserialize(const T& item)
 {
-    std::vector<std::byte> buffer(1024); // 1 KiB
-    auto span = std::span<std::byte>{buffer};
-    const auto res = vic::serialize::Serialize(span, item);
+    std::vector<std::byte> buffer;
+    buffer.reserve(1024); // one KiB
+
+    const auto res = vic::serialize::Serialize(std::back_insert_iterator(buffer), item);
     if(!res)
         return false;
 
-    // todo: this is a hack. we should not be comparing pointer values to determine the size.
-    // maybe rewrite the serializer so that it uses iterators, then it would be valid.
-    std::byte* front = &(*span.begin());
-    std::byte* head = &(*res.value().begin());
-    const auto trimmed = std::span<const std::byte>{front, (std::size_t)std::distance(front, head)};
+    const auto trimmed = std::span<const std::byte>{buffer.begin(), buffer.size()};
 
     T newItem;
     if(!vic::serialize::Deserialize(trimmed, newItem))

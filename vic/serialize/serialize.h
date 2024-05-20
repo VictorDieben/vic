@@ -108,7 +108,10 @@ enum class StatusCode
 //    // SerializeRange
 //};
 
-using SerializeStatus = std::expected<std::span<std::byte>, StatusCode>;
+template <typename TInsertionIterator>
+    requires std::output_iterator<std::remove_reference_t<TInsertionIterator>, std::byte>
+using SerializeStatus = std::expected<TInsertionIterator, StatusCode>;
+
 using DeserializeStatus = std::expected<std::span<const std::byte>, StatusCode>;
 
 template <typename T>
@@ -122,13 +125,13 @@ concept ConceptDataTrivial = std::contiguous_iterator<typename T::iterator> && /
                              };
 
 // forward declare serialize
-template <typename T>
-constexpr SerializeStatus Serialize(std::span<std::byte>& buffer, const T& item);
+template <typename T, typename TIter>
+constexpr SerializeStatus<TIter> Serialize(TIter insertionIterator, const T& item);
 
-template <typename T, typename... Ts>
-constexpr SerializeStatus SerializeMany(std::span<std::byte>& buffer, const T& item, const Ts&... rest)
+template <typename T, typename TIter, typename... Ts>
+constexpr SerializeStatus<TIter> SerializeMany(TIter insertionIterator, const T& item, const Ts&... rest)
 {
-    auto res = Serialize(buffer, item);
+    auto res = Serialize(insertionIterator, item);
     if(!res)
         return res; // error, return
 
@@ -138,167 +141,156 @@ constexpr SerializeStatus SerializeMany(std::span<std::byte>& buffer, const T& i
         return res; // done
 }
 
-template <typename T>
+template <typename T, typename TIter>
     requires ConceptTrivial<T>
-constexpr SerializeStatus SerializeTrivial(std::span<std::byte>& buffer, const T& item)
+constexpr SerializeStatus<TIter> SerializeTrivial(TIter insertionIterator, const T& item)
 {
-    if(buffer.size() < sizeof(T))
-        return std::unexpected{StatusCode::OutOfRange};
-
+    // todo: to span of bytes instead?
     const std::byte* begin = reinterpret_cast<const std::byte*>(std::addressof(item));
     const std::byte* end = begin + sizeof(T);
-    std::copy(begin, end, buffer.begin());
-
-    return buffer.subspan(sizeof(T));
+    return std::copy(begin, end, insertionIterator);
 }
 
-template <typename T>
+template <typename T, typename TIter>
     requires tuple_like<T>
-constexpr SerializeStatus SerializeTupleLike(std::span<std::byte>& buffer, const T& item)
+constexpr SerializeStatus<TIter> SerializeTupleLike(TIter insertionIterator, const T& item)
 {
-    auto f = [&](auto... xs) { return SerializeMany(buffer, xs...); };
+    auto f = [&](auto... xs) { return SerializeMany(insertionIterator, xs...); };
     return std::apply(f, item);
 }
 
-template <typename T>
+template <typename T, typename TIter>
     requires ConceptAggregate<T>
-constexpr SerializeStatus SerializeAgregate(std::span<std::byte>& buffer, const T& item)
+constexpr SerializeStatus<TIter> SerializeAgregate(TIter insertionIterator, const T& item)
 {
     const auto tup = vic::as_tuple(item);
-    return SerializeTupleLike(buffer, tup);
+    return SerializeTupleLike(insertionIterator, tup);
 }
 
-template <typename T>
+template <typename T, typename TIter>
     requires ConceptVariant<T>
-constexpr SerializeStatus SerializeVariant(std::span<std::byte>& buffer, const T& item)
+constexpr SerializeStatus<TIter> SerializeVariant(TIter insertionIterator, const T& item)
 {
     // first encode which type is contained in the variant
     constexpr auto alternatives = std::variant_size_v<T>;
     const auto index = (DefaultVariantIndexType)item.index();
-    auto res = Serialize(buffer, index);
+    auto res = Serialize(insertionIterator, index);
     if(!res)
         return res;
-    std::span<std::byte> newBuffer = res.value();
 
     // then serialize this type
     return std::visit(
         [&](auto& subItem) {
-            return Serialize(newBuffer, subItem); //
+            return Serialize(res.value(), subItem); //
         },
         item);
 }
 
-template <typename T>
+template <typename T, typename TIter>
     requires ConceptExpected<T>
-constexpr SerializeStatus SerializeExpected(std::span<std::byte>& buffer, const T& item)
+constexpr SerializeStatus<TIter> SerializeExpected(TIter insertionIterator, const T& item)
 {
     const bool hasValue = item.has_value();
-    auto res = Serialize(buffer, hasValue);
+    auto res = Serialize(insertionIterator, hasValue);
     if(!res)
-        return res;
-    std::span<std::byte> newBuffer = res.value();
+        return res; // error
 
     if(hasValue)
-        return Serialize(newBuffer, item.value());
+        return Serialize(res.value(), item.value());
     else
-        return Serialize(newBuffer, item.error());
+        return Serialize(res.value(), item.error());
 }
 
-template <typename T>
+template <typename T, typename TIter>
     requires ConceptOptional<T>
-constexpr SerializeStatus SerializeOptional(std::span<std::byte>& buffer, const T& item)
+constexpr SerializeStatus<TIter> SerializeOptional(TIter insertionIterator, const T& item)
 {
     const bool hasValue = item.has_value();
-    auto res = Serialize(buffer, hasValue);
+    auto res = Serialize(insertionIterator, hasValue);
     if(!res || !hasValue)
         return res;
-    std::span<std::byte> newBuffer = res.value();
 
-    return Serialize(newBuffer, item.value());
+    return Serialize(res.value(), item.value());
 }
 
-template <typename T>
+template <typename T, typename TIter>
     requires ConceptDataTrivial<T>
-constexpr SerializeStatus SerializeDataTrivial(std::span<std::byte>& buffer, const T& item)
+constexpr SerializeStatus<TIter> SerializeDataTrivial(TIter insertionIterator, const T& item)
 {
     // copy whole range at once
-    using InnerType = typename std::iterator_traits<decltype(item.begin())>::value_type;
-    const auto size = (DefaultContainerSizeType)std::distance(item.begin(), item.end());
-    auto res = Serialize(buffer, size);
+    const auto size = (DefaultContainerSizeType)item.size();
+    auto res = Serialize(insertionIterator, size);
     if(!res || size == 0)
         return res;
-    std::span<std::byte> newBuffer = res.value();
-    const auto byteSize = size * sizeof(InnerType);
-    if(newBuffer.size() < byteSize)
-        return std::unexpected{StatusCode::OutOfRange};
-    std::memcpy(&newBuffer.front(), item.data(), byteSize);
-    return newBuffer.subspan(byteSize);
+
+    using ValueType = typename std::iterator_traits<typename T::iterator>::value_type;
+
+    const std::byte* begin = reinterpret_cast<const std::byte*>(item.data());
+    const std::byte* end = begin + (size * sizeof(ValueType));
+    return std::copy(begin, end, res.value());
 }
 
-template <typename T>
+template <typename T, typename TIter>
     requires ConceptRange<T>
-constexpr SerializeStatus SerializeFixedRange(std::span<std::byte>& buffer, const T& item)
+constexpr SerializeStatus<TIter> SerializeFixedRange(TIter insertionIterator, const T& item)
 {
-    SerializeStatus res = buffer;
+    SerializeStatus<TIter> res = insertionIterator;
     for(const auto& subItem : item)
         if(res = Serialize(res.value(), subItem); !res)
             return res; // error, do not continue
     return res;
 }
 
-template <typename T>
+template <typename T, typename TIter>
     requires ConceptRange<T>
-constexpr SerializeStatus SerializeRange(std::span<std::byte>& buffer, const T& item)
+constexpr SerializeStatus<TIter> SerializeRange(TIter insertionIterator, const T& item)
 {
     using InnerType = typename std::iterator_traits<typename T::iterator>::value_type;
 
     if constexpr(ConceptDataTrivial<T>)
-        return SerializeDataTrivial(buffer, item);
+        return SerializeDataTrivial(insertionIterator, item);
 
     if constexpr(!ConceptResizeableRange<T>)
-        return SerializeFixedRange(buffer, item);
+        return SerializeFixedRange(insertionIterator, item);
 
-    const auto size = (DefaultContainerSizeType)std::distance(item.begin(), item.end());
+    const auto size = (DefaultContainerSizeType)item.size();
 
-    auto res = Serialize(buffer, size);
+    auto res = Serialize(insertionIterator, size);
     if(!res || size == 0)
         return res;
-    std::span<std::byte> loopBuffer = res.value();
 
     for(const auto& subItem : item)
-        if(auto result = Serialize(loopBuffer, subItem))
-            loopBuffer = result.value();
-        else
-            return result;
-    return loopBuffer;
+        if(res = Serialize(res.value(), subItem); !res)
+            return res;
+    return res;
 }
 
-template <typename T>
-constexpr SerializeStatus Serialize(std::span<std::byte>& buffer, const T& item)
+template <typename T, typename TIter>
+constexpr SerializeStatus<TIter> Serialize(TIter insertionIterator, const T& item)
 {
     // check that we support this data type
     static_assert(!ConceptPointer<T>);
 
     if constexpr(std::is_trivial_v<T>)
-        return SerializeTrivial(buffer, item);
+        return SerializeTrivial(insertionIterator, item);
 
     else if constexpr(ConceptRange<T>)
-        return SerializeRange(buffer, item);
+        return SerializeRange(insertionIterator, item);
 
     else if constexpr(ConceptVariant<T>)
-        return SerializeVariant(buffer, item);
+        return SerializeVariant(insertionIterator, item);
 
     else if constexpr(ConceptExpected<T>)
-        return SerializeExpected(buffer, item);
+        return SerializeExpected(insertionIterator, item);
 
     else if constexpr(ConceptOptional<T>)
-        return SerializeOptional(buffer, item);
+        return SerializeOptional(insertionIterator, item);
 
     else if constexpr(vic::tuple_like<T>)
-        return SerializeTupleLike(buffer, item);
+        return SerializeTupleLike(insertionIterator, item);
 
     else if constexpr(ConceptAggregate<T>)
-        return SerializeAgregate(buffer, item);
+        return SerializeAgregate(insertionIterator, item);
 
     return std::unexpected{StatusCode::Unsupported};
 }
