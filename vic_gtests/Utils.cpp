@@ -966,19 +966,43 @@ TEST(Utils, AsTuple)
         float b;
         double c;
         std::string d;
+        std::array<int, 3> e;
+        std::vector<double> f;
     };
 
     EXPECT_EQ(4, vic::count_members<MyStruct>());
 
-    MyStruct myStruct{1, 2.f, 3., "hi"};
+    MyStruct myStruct{1, 2.f, 3., "hi", {1, 2, 3}, {.1, .2, .3}};
 
     auto tup = vic::as_tuple(myStruct);
-    auto& [a, b, c, d] = tup;
+    auto& [a, b, c, d, e, f] = tup;
     EXPECT_EQ(a, 1);
     EXPECT_EQ(b, 2.f);
     EXPECT_EQ(c, 3.);
     EXPECT_EQ(d, "hi");
+    EXPECT_EQ(e, (std::array<int, 3>{1, 2, 3}));
+    EXPECT_EQ(f, (std::vector<double>{.1, .2, .3}));
 
     a = 2;
     EXPECT_EQ(myStruct.a, 2);
+
+    using Pair = std::pair<std::string, std::string>;
+    Pair p1{{}, {}};
+    EXPECT_EQ(2, vic::count_members<Pair>());
+
+    using Tuple3 = std::tuple<std::string, std::string, std::string>;
+    EXPECT_EQ(3, vic::count_members<Tuple3>());
+
+    using Tuple4 = std::tuple<std::string, std::string, std::string, std::string>;
+    EXPECT_EQ(4, vic::count_members<Tuple4>());
+
+    struct Struct5
+    {
+        int a;
+        int b;
+        int c;
+        int d;
+        int e;
+    };
+    EXPECT_EQ(5, vic::count_members<Struct5>());
 }

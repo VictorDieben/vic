@@ -21,7 +21,6 @@ struct any_type
 // Count the number of members in an aggregate by (ab-)using
 // aggregate initialization
 template <typename T>
-    requires ConceptAggregate<T>
 consteval std::size_t count_members(auto... members)
 {
     if constexpr(!requires { T{members...}; })
@@ -31,7 +30,6 @@ consteval std::size_t count_members(auto... members)
 }
 
 template <typename T>
-    requires ConceptAggregate<T>
 constexpr auto as_tuple(T& data)
 {
     constexpr std::size_t fieldCount = count_members<T>();

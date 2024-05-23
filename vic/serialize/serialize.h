@@ -85,6 +85,7 @@ concept ConceptOptional = requires(T obj) {
     {
         obj.has_value()
     } -> std::convertible_to<bool>;
+    obj.reset();
 };
 
 enum class StatusCode
@@ -155,7 +156,7 @@ template <typename T, typename TIter>
     requires tuple_like<T>
 constexpr SerializeStatus<TIter> SerializeTupleLike(TIter insertionIterator, const T& item)
 {
-    auto f = [&](auto... xs) { return SerializeMany(insertionIterator, xs...); };
+    auto f = [&](auto... xs) -> SerializeStatus<TIter> { return SerializeMany(insertionIterator, xs...); };
     return std::apply(f, item);
 }
 
@@ -179,7 +180,7 @@ constexpr SerializeStatus<TIter> SerializeVariant(TIter insertionIterator, const
         return res;
 
     // then serialize this type
-    return std::visit(
+    return std::visit<SerializeStatus<TIter>>(
         [&](auto& subItem) {
             return Serialize(res.value(), subItem); //
         },
@@ -271,6 +272,9 @@ constexpr SerializeStatus<TIter> Serialize(TIter insertionIterator, const T& ite
     // check that we support this data type
     static_assert(!ConceptPointer<T>);
 
+    //if constexpr(std::same_as<T, void>)
+    //    return insertionIterator;
+
     if constexpr(std::is_trivial_v<T>)
         return SerializeTrivial(insertionIterator, item);
 
@@ -280,14 +284,14 @@ constexpr SerializeStatus<TIter> Serialize(TIter insertionIterator, const T& ite
     else if constexpr(ConceptVariant<T>)
         return SerializeVariant(insertionIterator, item);
 
-    else if constexpr(ConceptExpected<T>)
-        return SerializeExpected(insertionIterator, item);
-
-    else if constexpr(ConceptOptional<T>)
-        return SerializeOptional(insertionIterator, item);
-
     else if constexpr(vic::tuple_like<T>)
         return SerializeTupleLike(insertionIterator, item);
+
+    else if constexpr(ConceptOptional<T>)
+        return SerializeOptional(insertionIterator, item); // check before expected
+
+    else if constexpr(ConceptExpected<T>)
+        return SerializeExpected(insertionIterator, item);
 
     else if constexpr(ConceptAggregate<T>)
         return SerializeAgregate(insertionIterator, item);
@@ -330,7 +334,7 @@ template <typename T>
     requires tuple_like<T>
 constexpr DeserializeStatus DeserializeTupleLike(const std::span<const std::byte>& buffer, T& item)
 {
-    auto f = [&](auto&... xs) { return DeserializeMany(buffer, xs...); };
+    auto f = [&](auto&... xs) -> DeserializeStatus { return DeserializeMany(buffer, xs...); };
     return std::apply(f, item);
 }
 
@@ -455,6 +459,8 @@ constexpr DeserializeStatus DeserializeFixedSize(const std::span<const std::byte
     if constexpr(ConceptTrivial<T>)
         return DeserializeTrivial(buffer, item);
 
+    // same as vector serialization, but skips sending the size, as it should be fixed
+
     DeserializeStatus res = buffer;
     for(DefaultContainerSizeType i = 0; i < item.size(); ++i)
         if(res = Deserialize(res.value(), item[i]); !res)
@@ -525,11 +531,11 @@ constexpr DeserializeStatus Deserialize(const std::span<const std::byte>& buffer
     else if constexpr(ConceptVariant<T>)
         return DeserializeVariant(buffer, item);
 
-    else if constexpr(ConceptExpected<T>)
-        return DeserializeExpected(buffer, item);
-
     else if constexpr(ConceptOptional<T>)
         return DeserializeOptional(buffer, item);
+
+    else if constexpr(ConceptExpected<T>)
+        return DeserializeExpected(buffer, item);
 
     else if constexpr(vic::tuple_like<T>) // should probably be checked before ConceptAgregate, and after ConceptTrivial
         return DeserializeTupleLike(buffer, item);

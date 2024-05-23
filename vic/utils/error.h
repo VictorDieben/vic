@@ -22,6 +22,9 @@ struct StaticError
         stream << "error<" << code << "; " << message << ">" << std::endl;
         return stream;
     }
+
+    bool operator==(StaticError& other) { return (code == other.code) && (message == other.message); }
+    bool operator!=(StaticError& other) { return !this->operator==(other); }
 };
 
 } // namespace vic

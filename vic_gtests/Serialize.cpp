@@ -5,6 +5,7 @@
 #include "test_base.h"
 
 #include "vic/serialize/serialize.h"
+#include "vic/utils/as_tuple.h"
 
 #include "SerializeHelpers.h"
 
@@ -13,8 +14,8 @@ using namespace vic::serialize;
 TEST(Serialize, Array)
 {
     // trivial:
-    EXPECT_TRUE(SerializeDeserialize(std::array<int, 0>{}));
-    EXPECT_TRUE(SerializeDeserialize(std::array<int, 6>{1, 2, 3, 4, 5, 6}));
+    EXPECT_TRUE(RoundtripEquals(std::array<int, 0>{}));
+    EXPECT_TRUE(RoundtripEquals(std::array<int, 6>{1, 2, 3, 4, 5, 6}));
 
     // non-trivial
     static_assert(!ConceptResizeableRange<std::array<int, 2>>);
@@ -22,26 +23,26 @@ TEST(Serialize, Array)
     static_assert(ConceptResizeableRange<std::string>);
     static_assert(ConceptResizeableRange<std::vector<int>>);
 
-    EXPECT_TRUE(SerializeDeserialize(std::array<std::string, 2>{"abc", "def"}));
+    EXPECT_TRUE(RoundtripEquals(std::array<std::string, 2>{"abc", "def"}));
 }
 
 TEST(Serialize, Vector)
 {
-    EXPECT_TRUE(SerializeDeserialize(std::vector<int>{}));
-    EXPECT_TRUE(SerializeDeserialize(std::vector<int>{1, 2, 3, 4, 5, 6}));
+    EXPECT_TRUE(RoundtripEquals(std::vector<int>{}));
+    EXPECT_TRUE(RoundtripEquals(std::vector<int>{1, 2, 3, 4, 5, 6}));
 
     // Check non-trivially copyable inner type
     static_assert(!std::is_trivially_copyable_v<std::string>);
     static_assert(!std::is_trivial_v<std::string>);
-    EXPECT_TRUE(SerializeDeserialize(std::vector<std::string>{"abc", "def"}));
+    EXPECT_TRUE(RoundtripEquals(std::vector<std::string>{"abc", "def"}));
 }
 
-//TEST(Serialize, String)
-//{
-//    EXPECT_TRUE(SerializeDeserialize(std::string{""}));
-//    EXPECT_TRUE(SerializeDeserialize(std::string{"Hello World!"}));
-//    EXPECT_TRUE(SerializeDeserialize(std::string{"`1234567890-+abcdefghijklmnopqrstuvwxyz ,./\n\t[]{}"}));
-//}
+TEST(Serialize, String)
+{
+    EXPECT_TRUE(RoundtripEquals(std::string{""}));
+    EXPECT_TRUE(RoundtripEquals(std::string{"Hello World!"}));
+    EXPECT_TRUE(RoundtripEquals(std::string{"`1234567890-+abcdefghijklmnopqrstuvwxyz ,./\n\t[]{}"}));
+}
 
 TEST(Serialize, Map)
 {
@@ -51,9 +52,9 @@ TEST(Serialize, Map)
 
     static_assert(!ConceptDataTrivial<std::map<char, int>>);
 
-    EXPECT_TRUE(SerializeDeserialize(std::map<char, int>{{{'a', 1}, {'b', 2}}}));
-    EXPECT_TRUE(SerializeDeserialize(std::map<int, MyStruct>{{{1, MyStruct{"name1", 1}}, //
-                                                              {2, MyStruct{"name2", 2}}}}));
+    EXPECT_TRUE(RoundtripEquals(std::map<char, int>{{{'a', 1}, {'b', 2}}}));
+    EXPECT_TRUE(RoundtripEquals(std::map<int, MyStruct>{{{1, MyStruct{"name1", 1}}, //
+                                                         {2, MyStruct{"name2", 2}}}}));
 }
 
 TEST(Serialize, DataTrivial)
@@ -69,20 +70,20 @@ TEST(Serialize, DataTrivial)
 
 TEST(Serialize, Set)
 {
-    EXPECT_TRUE(SerializeDeserialize(std::set<int>{}));
+    EXPECT_TRUE(RoundtripEquals(std::set<int>{}));
 
-    EXPECT_TRUE(SerializeDeserialize(std::set<int>{1, 2, 4, 8}));
+    EXPECT_TRUE(RoundtripEquals(std::set<int>{1, 2, 4, 8}));
 
-    EXPECT_TRUE(SerializeDeserialize(std::set<std::string>{"abc", "def", "ghi"}));
+    EXPECT_TRUE(RoundtripEquals(std::set<std::string>{"abc", "def", "ghi"}));
 }
 
 TEST(Serialize, Optional)
 {
     std::optional<int> optInt = std::nullopt;
-    EXPECT_TRUE(SerializeDeserialize(optInt));
+    EXPECT_TRUE(RoundtripEquals(optInt));
 
     std::optional<int> optInt2 = 1;
-    EXPECT_TRUE(SerializeDeserialize(optInt2));
+    EXPECT_TRUE(RoundtripEquals(optInt2));
 }
 
 TEST(Serialize, Pair)
@@ -93,14 +94,16 @@ TEST(Serialize, Pair)
     static_assert(vic::tuple_like<std::pair<const char, const int>>);
     static_assert(vic::tuple_like<const std::pair<char, int>>);
 
-    EXPECT_TRUE(SerializeDeserialize(std::pair{'a', 1}));
-    EXPECT_TRUE(SerializeDeserialize(std::pair{std::string{"abc"}, std::string{"def"}}));
+    EXPECT_TRUE(RoundtripEquals(std::pair{'a', 1}));
+    EXPECT_TRUE(RoundtripEquals(std::pair{std::string{"abc"}, std::string{"def"}}));
 }
 
 TEST(Serialize, Tuple)
 {
-    EXPECT_TRUE(SerializeDeserialize(std::tuple{'a', 1, 1.}));
-    EXPECT_TRUE(SerializeDeserialize(std::tuple{std::string{"abc"}, std::string{"def"}, std::string{"ghi"}}));
+    // EXPECT_TRUE(SerializeDeserialize(std::tuple{}));
+
+    EXPECT_TRUE(RoundtripEquals(std::tuple{'a', 1, 1.}));
+    EXPECT_TRUE(RoundtripEquals(std::tuple{std::string{"abc"}, std::string{"def"}, std::string{"ghi"}}));
 }
 
 TEST(Serialize, Variant)
@@ -108,31 +111,54 @@ TEST(Serialize, Variant)
     using MyVariant = std::variant<int, float>;
     static_assert(vic::ConceptVariant<MyVariant>);
     MyVariant myVariant = 1;
-    EXPECT_TRUE(SerializeDeserialize(myVariant));
+    EXPECT_TRUE(RoundtripEquals(myVariant));
 
     MyVariant myVariant2 = 2.f;
-    EXPECT_TRUE(SerializeDeserialize(myVariant2));
+    EXPECT_TRUE(RoundtripEquals(myVariant2));
 }
 
 TEST(Serialize, Expected)
 {
+    using namespace chat;
+
     using MyExpected = std::expected<int, std::string>;
     static_assert(vic::serialize::ConceptExpected<MyExpected>);
+
+    static_assert(!std::is_trivial_v<MyExpected>);
+    static_assert(!vic::ConceptVariant<MyExpected>);
+    static_assert(!vic::ConceptAggregate<MyExpected>);
+    static_assert(!vic::serialize::ConceptRange<MyExpected>);
+    static_assert(!vic::serialize::ConceptOptional<MyExpected>);
+    static_assert(!vic::tuple_like<MyExpected>);
+
     MyExpected e1 = 1;
-    EXPECT_TRUE(SerializeDeserialize(e1));
+    EXPECT_TRUE(RoundtripEquals(e1));
     MyExpected e2 = std::unexpected{"error"};
-    EXPECT_TRUE(SerializeDeserialize(e2));
+    EXPECT_TRUE(RoundtripEquals(e2));
+
+    // ChatConnectReply
+    EXPECT_TRUE(vic::ConceptAggregate<chat::ChatConnectReply>);
+    EXPECT_EQ(vic::count_members<chat::ChatConnectReply>(), 1);
+
+    ChatConnectReply e3{ChatConnectReply::Value{"SomeName", 12345}};
+
+    const auto tup = vic::as_tuple(e3);
+
+    std::vector<std::byte> buffer;
+    // const auto res = vic::serialize::SerializeAgregate(std::back_insert_iterator(buffer), e3);
+    // const auto e3Reply = SerializeDeserialize(e3);
+    int a = 12;
 }
 
 TEST(Serialize, Custom)
 {
-    EXPECT_TRUE(SerializeDeserialize(MyOtherStruct{1, 2})); // <- will be copied in 1 go
-    EXPECT_TRUE(SerializeDeserialize(MyStruct{"name", 1})); // <- agregage
+    EXPECT_TRUE(RoundtripEquals(MyOtherStruct{1, 2})); // <- will be copied in 1 go
+    EXPECT_TRUE(RoundtripEquals(MyStruct{"name", 1})); // <- agregage
 }
 
 TEST(Serialize, Enum)
 {
-    EXPECT_TRUE(SerializeDeserialize(MyEnum::First)); //
+    EXPECT_TRUE(RoundtripEquals(MyEnum::First)); //
 }
 
 TEST(Serialize, Many)
@@ -179,4 +205,14 @@ TEST(Serialize, Size)
     const auto resultBuffer = std::span<const std::byte>{buffer}.subspan(0, resultSize);
     EXPECT_TRUE(DeserializeMany(resultBuffer, deserialized));
     EXPECT_EQ(msg, deserialized);
+}
+
+TEST(Serialize, UseCase)
+{
+    using namespace chat;
+
+    //const ChatRpc rpc{1, ChatConnect{"MyName"}};
+    //const auto rpcRoundtrip = SerializeDeserialize(rpc);
+
+    //EXPECT_EQ(rpc, rpcRoundtrip);
 }
