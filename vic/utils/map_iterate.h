@@ -62,10 +62,10 @@ auto Overlap(TMap1& map1, TMap2& map2)
     const auto intersection = ranges::views::set_intersection(keys1, keys2);
 
     const auto zipView = std::views::zip(intersection, //
-                                         intersection | std::views::transform([&map1, it1 = map1.begin()](const auto& key) {
+                                         intersection | std::views::transform([&map1, it1 = map1.begin()](const auto& key) mutable {
                                              return &map1[key]; //
                                          }),
-                                         intersection | std::views::transform([&map2, it2 = map2.begin()](const auto& key) {
+                                         intersection | std::views::transform([&map2, it2 = map2.begin()](const auto& key) mutable {
                                              return &map2[key]; //
                                          }));
 

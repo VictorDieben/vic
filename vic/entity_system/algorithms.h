@@ -4,10 +4,11 @@
 #include <algorithm>
 #include <cassert>
 #include <ranges>
+#include <stdexcept>
 #include <tuple>
 #include <vector>
-#include <stdexcept>
-	
+
+#include <concepts>
 
 namespace vic
 {

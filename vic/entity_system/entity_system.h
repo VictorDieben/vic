@@ -598,6 +598,7 @@ public:
     }
 
     template <typename TFunctor>
+        requires std::invocable<TFunctor, EntityId>
     void ForeachEntity(TFunctor functor)
     {
         const auto minimum = Minimum();

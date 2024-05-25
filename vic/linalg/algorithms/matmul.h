@@ -81,7 +81,7 @@ constexpr auto MatmulTriDiagVector(const TMat& mat, const TVec& vec)
 
 template <typename TMat1, typename TMat2>
     requires ConceptMatrix<TMat1> && ConceptVector<TMat2>
-constexpr auto MatmulDiagonalVector(const TMat1& mat1, const TMat2& mat2)
+constexpr ConceptMatrix auto MatmulDiagonalVector(const TMat1& mat1, const TMat2& mat2)
 {
     // multiplication between square diagonal and vector
     assert(mat1.GetRows() == mat1.GetColumns());
@@ -100,7 +100,7 @@ constexpr auto MatmulDiagonalVector(const TMat1& mat1, const TMat2& mat2)
 
 template <typename TMat1, typename TMat2>
     requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
-constexpr auto MatmulDiagonal(const TMat1& mat1, const TMat2& mat2)
+constexpr ConceptMatrix auto MatmulDiagonal(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetColumns() == mat2.GetRows());
     using TValue = vic::templates::multiplication_t<typename TMat1::DataType, typename TMat2::DataType>;
@@ -115,7 +115,7 @@ constexpr auto MatmulDiagonal(const TMat1& mat1, const TMat2& mat2)
 
 template <typename TMat1, typename TMat2>
     requires ConceptRowStack<TMat1> && ConceptVector<TMat2>
-constexpr auto MatmulRowStack(const TMat1& mat1, const TMat2& mat2)
+constexpr ConceptMatrix auto MatmulRowStack(const TMat1& mat1, const TMat2& mat2)
 {
     // todo: if mat2 is a vector, perform the two sub-multiplications separately,
     // if mat2 is a matrix, construct a new stack matrix as the answer?
@@ -131,7 +131,7 @@ constexpr auto MatmulRowStack(const TMat1& mat1, const TMat2& mat2)
 
 template <typename TMat, typename TVec>
     requires ConceptColStack<TMat> && ConceptVector<TVec>
-constexpr auto MatmulColStack(const TMat& mat, const TVec& vec)
+constexpr ConceptMatrix auto MatmulColStack(const TMat& mat, const TVec& vec)
 {
     // todo: if mat2 is a vector, perform the two sub-multiplications separately,
     // if mat2 is a matrix, construct a new stack matrix as the answer?
@@ -159,7 +159,7 @@ constexpr auto MatmulColStack(const TMat& mat, const TVec& vec)
 
 template <typename TMat1, typename TMat2>
     requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
-constexpr auto MatmulFull(const TMat1& mat1, const TMat2& mat2)
+constexpr ConceptMatrix auto MatmulFull(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetColumns() == mat2.GetRows());
     using TValue = vic::templates::multiplication_t<typename TMat1::DataType, typename TMat2::DataType>;
@@ -187,7 +187,7 @@ constexpr auto MatmulFull(const TMat1& mat1, const TMat2& mat2)
 
 template <typename TMat, typename TValue>
     requires ConceptMatrix<TMat>
-constexpr auto MatmulConstant(const TMat& mat, const TValue& value)
+constexpr ConceptMatrix auto MatmulConstant(const TMat& mat, const TValue& value)
 {
     using TResType = vic::templates::multiplication_t<typename TMat::DataType, TValue>;
     using TResShape = typename TMat::ShapeType;
@@ -216,7 +216,7 @@ constexpr auto MatmulConstant(const TMat& mat, const TValue& value)
 // selector for the most efficient type of matrix multiplication
 template <typename TMat1, typename TMat2>
     requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
-constexpr auto MatmulMatrix(const TMat1& mat1, const TMat2& mat2)
+constexpr ConceptMatrix auto MatmulMatrix(const TMat1& mat1, const TMat2& mat2)
 {
     constexpr auto distribution = MatmulDistribution(TMat1::Distribution, TMat2::Distribution);
     if constexpr(ConceptZeros<TMat1> || ConceptZeros<TMat2>)
@@ -248,7 +248,7 @@ constexpr auto MatmulMatrix(const TMat1& mat1, const TMat2& mat2)
         return MatmulFull(mat1, mat2);
 }
 
-// selector for the correct type of matrix multiplication
+// selector for the correct type of multiplication
 template <typename TMat1, typename TMat2>
 constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2)
 {
@@ -267,7 +267,6 @@ constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2)
 template <typename TMat1, typename TMat2, typename... Types>
 constexpr auto Matmul(const TMat1& mat1, const TMat2& mat2, const Types... others)
 {
-    // todo: use fold expression
     return Matmul(Matmul(mat1, mat2), others...);
 }
 

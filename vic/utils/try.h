@@ -10,6 +10,7 @@ namespace vic
 
 // wrapper for Try catch when we are not interested in failure
 template <typename TLambda>
+    requires std::invocable<TLambda>
 void Try(TLambda lambda)
 {
     try
@@ -21,6 +22,7 @@ void Try(TLambda lambda)
 }
 
 template <typename TLambda, typename TDuration, typename TPollingRate>
+    requires std::invocable<TLambda>
 bool Deadline(TLambda lambda, TDuration timeout, TPollingRate pollingRate)
 {
     // todo: constrain TLambda to a lambda that returns a bool and has no parameters
@@ -42,6 +44,7 @@ bool Deadline(TLambda lambda, TDuration timeout, TPollingRate pollingRate)
 }
 
 template <typename TLambda, typename TDuration>
+    requires std::invocable<TLambda>
 bool Deadline(TLambda lambda, TDuration timeout)
 {
     return Deadline(lambda, timeout, std::chrono::milliseconds(10));

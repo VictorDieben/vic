@@ -12,6 +12,7 @@ namespace vic
 // Finally class, useful for RAII enforced cleanup.
 // Should generally only be used when working with c code.
 template <typename TFunctor>
+    requires std::invocable<TFunctor>
 class Finally
 {
 public:
@@ -199,61 +200,6 @@ constexpr std::vector<T> Linspace(const T start, const T end, const std::size_t 
     Linspace(std::begin(result), std::end(result), start, end);
     return result;
 }
-
-// todo: look at the following link and fix this:
-// https://committhis.github.io/2020/10/14/zip-iterator.html
-template <typename T1, typename T2>
-class Zip
-{
-public:
-    Zip(const T1& range1, const T2& range2)
-        : mRange1(range1)
-        , mRange2(range2)
-    { }
-
-    struct ZipIterator
-    {
-        using iterator_category = std::random_access_iterator_tag;
-        using difference_type = std::ptrdiff_t;
-        using value_type = std::pair<typename T1::value_type, typename T2::value_type>;
-        using pointer = value_type*;
-        using reference = value_type&;
-
-        ZipIterator() = default;
-
-        //reference operator*()
-        //{
-        //    auto val = value_type{}; //
-        //    return val;
-        //}
-        //pointer operator->()
-        //{
-        //    return &mValue; //
-        //}
-        ZipIterator& operator++()
-        {
-            //mValue += mStride;
-            return *this;
-        }
-        ZipIterator operator++(int)
-        {
-            ZipIterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-        friend bool operator==(const ZipIterator& a, const ZipIterator& b) { return true; };
-        friend bool operator!=(const ZipIterator& a, const ZipIterator& b) { return !operator==(a, b); };
-
-    private:
-    };
-
-    ZipIterator begin() { return {}; }
-    ZipIterator end() { return {}; }
-
-private:
-    const T1& mRange1;
-    const T2& mRange2;
-};
 
 // allows us to write:
 // for (const auto& val : Range(0, 10))

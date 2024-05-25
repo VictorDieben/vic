@@ -73,10 +73,26 @@ TEST(Linalg, Inverse3x3)
     const auto sol = Matmul(inverseSolution, mat3x3);
     EXPECT_TRUE(IsEqual(sol, Identity3d{}));
 
-    Matrix33d inv3x3 = Inverse3x3(mat3x3);
+    static constexpr Matrix33d inv3x3 = Inverse3x3(mat3x3);
 
     EXPECT_TRUE(IsEqual(inv3x3, inverseSolution));
 
-    const auto tmp = Matmul(mat3x3, inv3x3);
+    static constexpr auto tmp = Matmul(mat3x3, inv3x3);
     EXPECT_TRUE(IsEqual(tmp, Identity3d{}));
+}
+
+TEST(Linalg, Inverse4x4)
+{
+    static constexpr Identity4d identity4{};
+
+    static constexpr auto inverseIdentity = Inverse4x4(identity4);
+    EXPECT_TRUE(IsEqual(identity4, inverseIdentity));
+
+    static constexpr Matrix44d mat4x4{1, 2, 3, 4, 0, 6, 7, 8, 0, 0, 11, 12, 0, 0, 0, 16};
+    static constexpr auto inverseMat4x4 = Inverse4x4(mat4x4);
+    EXPECT_TRUE(IsEqual(identity4, Matmul(mat4x4, inverseMat4x4)));
+
+    static constexpr Matrix44d mat4x4_2{1, 0, 0, 0, 5, 6, 0, 0, 9, 10, 11, 0, 13, 14, 15, 16};
+    static constexpr auto inverseMat4x4_2 = Inverse4x4(mat4x4_2);
+    EXPECT_TRUE(IsEqual(identity4, Matmul(mat4x4_2, inverseMat4x4_2)));
 }

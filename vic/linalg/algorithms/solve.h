@@ -127,7 +127,7 @@ auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const doubl
 
 template <typename TMatrix, typename TVector>
     requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
-constexpr auto SolveUpperTriangular(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
+constexpr ConceptVector auto SolveUpperTriangular(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
 {
     // Solve the system A * x = b; assuming A is upper triangular.
     // if the matrix is not, the function treats it as if it is.
@@ -155,7 +155,7 @@ constexpr auto SolveUpperTriangular(const TMatrix& matrix, const TVector& vector
 
 template <typename TMatrix, typename TVector>
     requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
-constexpr auto SolveLowerTriangular(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
+constexpr ConceptVector auto SolveLowerTriangular(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
 {
     assert(matrix.GetRows() == matrix.GetColumns() && matrix.GetColumns() == vector.GetRows());
     using TResultShape = SolveResultShape<TMatrix, TVector>;
@@ -179,7 +179,7 @@ constexpr auto SolveLowerTriangular(const TMatrix& matrix, const TVector& vector
 
 template <typename TMatrix, typename TVector>
     requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
-constexpr auto SolveDiagonal(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
+constexpr ConceptVector auto SolveDiagonal(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
 {
     // Solve as if matrix is diagonal, even if it is actually not
 
@@ -202,7 +202,7 @@ constexpr auto SolveDiagonal(const TMatrix& matrix, const TVector& vector, const
 
 template <typename TMatrix, typename TVector>
     requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
-constexpr auto SolveThomasAlgorithm(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
+constexpr ConceptVector auto SolveThomasAlgorithm(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
 {
     // Solve using Thomas algorithm (for tri-diagonal matrices)
 
@@ -250,7 +250,7 @@ constexpr auto SolveThomasAlgorithm(const TMatrix& matrix, const TVector& vector
 
 template <typename TMatrix, typename TVector>
     requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
-constexpr auto Solve3x3(const TMatrix& matrix, const TVector& vector)
+constexpr ConceptVector auto Solve3x3(const TMatrix& matrix, const TVector& vector)
 {
     assert(matrix.GetRows() == 3 && matrix.GetColumns() == 3 && vector.GetRows() == 3);
 
@@ -260,11 +260,11 @@ constexpr auto Solve3x3(const TMatrix& matrix, const TVector& vector)
 
 template <typename TMatrix, typename TVector>
     requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
-constexpr auto Solve4x4(const TMatrix& matrix, const TVector& vector)
+constexpr ConceptVector auto Solve4x4(const TMatrix& matrix, const TVector& vector)
 {
     assert(matrix.GetRows() == 4 && matrix.GetColumns() == 4 && vector.GetRows() == 4);
 
-    const auto inverse = Inverse3x3(matrix);
+    const auto inverse = Inverse4x4(matrix);
     return Matmul(inverse, vector);
 }
 

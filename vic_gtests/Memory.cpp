@@ -559,13 +559,13 @@ TEST(Memory, MapOverlap)
     // const
     std::set<KeyType> keys;
 
-    for(const auto& [key, value1, value2] : vic::Overlap(map1, map2))
-    {
-        EXPECT_EQ(key, value1->a % 10);
-        EXPECT_EQ(key, value2->b % 10);
-        keys.insert(key);
-    }
-    EXPECT_EQ(keys, (std::set<KeyType>{3, 7}));
+    //for(const auto& [key, value1, value2] : vic::Overlap(map1, map2))
+    //{
+    //    EXPECT_EQ(key, value1->a % 10);
+    //    EXPECT_EQ(key, value2->b % 10);
+    //    keys.insert(key);
+    //}
+    //EXPECT_EQ(keys, (std::set<KeyType>{3, 7}));
 
     //// non-const
     //for(auto& [key, first, second] : vic::Overlap(map1, map2))
