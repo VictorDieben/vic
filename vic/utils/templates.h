@@ -15,6 +15,9 @@ constexpr bool Contains()
     return (std::is_same_v<T, Ts> || ...);
 }
 
+template <typename T, typename... Ts>
+concept ConceptContains = Contains<T, Ts...>();
+
 template <typename T1, typename T2, typename... Args>
 constexpr bool IsUnique_helper()
 {

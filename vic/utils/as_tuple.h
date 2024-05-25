@@ -86,6 +86,57 @@ constexpr auto as_tuple(T& data)
         auto& [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10] = data;
         return std::tie(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10);
     }
+    else if constexpr(fieldCount == 11)
+    {
+        auto& [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11] = data;
+        return std::tie(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11);
+    }
+    else if constexpr(fieldCount == 12)
+    {
+        auto& [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12] = data;
+        return std::tie(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12);
+    }
+    else if constexpr(fieldCount == 13)
+    {
+        auto& [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13] = data;
+        return std::tie(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13);
+    }
+    else if constexpr(fieldCount == 14)
+    {
+        auto& [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14] = data;
+        return std::tie(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14);
+    }
+
+    else if constexpr(fieldCount == 15)
+    {
+        auto& [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15] = data;
+        return std::tie(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15);
+    }
+    else if constexpr(fieldCount == 16)
+    {
+        auto& [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16] = data;
+        return std::tie(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16);
+    }
+    else if constexpr(fieldCount == 17)
+    {
+        auto& [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17] = data;
+        return std::tie(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17);
+    }
+    else if constexpr(fieldCount == 18)
+    {
+        auto& [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18] = data;
+        return std::tie(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18);
+    }
+    else if constexpr(fieldCount == 19)
+    {
+        auto& [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19] = data;
+        return std::tie(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19);
+    }
+    else if constexpr(fieldCount == 20)
+    {
+        auto& [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20] = data;
+        return std::tie(m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20);
+    }
     else
     {
         static_assert(fieldCount != fieldCount, "Too many fields for as_tuple(...)! add more if statements!");

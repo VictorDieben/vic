@@ -537,7 +537,7 @@ TEST(Memory, FlatLinkedList)
 
 TEST(Memory, MapOverlap)
 {
-    // using KeyType = uint32_t;
+    using KeyType = int;
     struct A
     {
         int a;
@@ -547,24 +547,25 @@ TEST(Memory, MapOverlap)
         int b;
     };
 
-    std::map<int, A> map1{{{1, {1}}, //
-                           {3, {3}},
-                           {5, {5}},
-                           {7, {7}}}};
-    std::map<int, B> map2{{{2, {2}}, //
-                           {3, {3}},
-                           {4, {4}},
-                           {7, {7}}}};
+    std::map<KeyType, A> map1{{{1, {11}}, //
+                               {3, {13}},
+                               {5, {15}},
+                               {7, {17}}}};
+    std::map<KeyType, B> map2{{{2, {22}}, //
+                               {3, {23}},
+                               {4, {24}},
+                               {7, {27}}}};
 
-    //// const
-    //std::set<KeyType> keys;
-    //for(const auto& [key, first, second] : vic::Overlap(map1, map2))
-    //{
-    //    EXPECT_EQ(key, first.a);
-    //    EXPECT_EQ(key, second.b);
-    //    keys.insert(key);
-    //}
-    // EXPECT_EQ(keys, (std::set<KeyType>{3, 7}));
+    // const
+    std::set<KeyType> keys;
+
+    for(const auto& [key, value1, value2] : vic::Overlap(map1, map2))
+    {
+        EXPECT_EQ(key, value1->a % 10);
+        EXPECT_EQ(key, value2->b % 10);
+        keys.insert(key);
+    }
+    EXPECT_EQ(keys, (std::set<KeyType>{3, 7}));
 
     //// non-const
     //for(auto& [key, first, second] : vic::Overlap(map1, map2))

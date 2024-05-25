@@ -279,6 +279,7 @@ public:
     using Handle = EntityHandle<ECS<TComponents...>>;
 
     ECS() = default;
+    ~ECS() = default;
 
     // disable move and copy, because we will pass the ecs adress along with handles etc.
     ECS(const ECS&) = delete;
@@ -314,51 +315,51 @@ public:
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     void Add(EntityId id, auto&&... args)
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         ComponentSystem<T>::Add(id, std::forward<decltype(args)>(args)...);
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     void Set(EntityId id, const T& component)
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         ComponentSystem<T>::Set(id, component);
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     T& Get(EntityId id)
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::Get(id);
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     const T& Get(EntityId id) const
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::Get(id);
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     T* TryGet(EntityId id)
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::TryGet(id);
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     const T* TryGet(EntityId id) const
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::TryGet(id);
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     bool Has(EntityId id) const
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::Has(id);
     }
 
@@ -368,17 +369,17 @@ public:
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     bool Remove(EntityId id)
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::Remove(id);
     }
 
     template <typename T, typename TIter>
+        requires templates::ConceptContains<T, TComponents...>
     bool RemoveRange(const TIter begin, const TIter end)
     {
         assert(std::is_sorted(begin, end));
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
 
         // todo: optimize, [begin; end> is sorted
         bool res = true;
@@ -388,60 +389,60 @@ public:
     }
 
     template <typename T, typename TIterable>
+        requires templates::ConceptContains<T, TComponents...>
     bool RemoveRange(const TIterable& iterable)
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return RemoveRange<T>(iterable.begin(), iterable.end());
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     std::size_t Size() const
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::Size();
     }
 
     // todo: remove list of entities
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     auto begin()
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::begin();
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     auto end()
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::end();
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     auto begin() const
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::begin();
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     auto end() const
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::end();
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     auto cbegin() const
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::cbegin();
     }
 
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     auto cend() const
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return ComponentSystem<T>::cend();
     }
 
@@ -457,26 +458,26 @@ public:
 
     // todo: Filter with buffer arguments
     template <typename T>
+        requires templates::ConceptContains<T, TComponents...>
     auto Filter()
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return algorithms::Filter<T>(*this);
     }
 
     template <typename T1, typename T2>
+        requires templates::ConceptContains<T1, TComponents...> && //
+                 templates::ConceptContains<T2, TComponents...>
     auto Filter()
     {
-        static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
-        static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
         return algorithms::Filter<T1, T2>(*this);
     }
 
     template <typename T1, typename T2, typename T3>
+        requires templates::ConceptContains<T1, TComponents...> && //
+                 templates::ConceptContains<T2, TComponents...> && //
+                 templates::ConceptContains<T3, TComponents...>
     auto Filter()
     {
-        static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
-        static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
-        static_assert(templates::Contains<T3, TComponents...>(), "Unknown component T3");
         return algorithms::Filter<T1, T2, T3>(*this);
     }
 
@@ -492,31 +493,31 @@ public:
     // Iterate 1d
 
     template <typename T, typename TIter>
+        requires templates::ConceptContains<T, TComponents...>
     auto Iterate(const TIter begin, const TIter end)
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return algorithms::Iterate<T>(*this, begin, end);
     }
 
     template <typename T, typename TIterable>
+        requires templates::ConceptContains<T, TComponents...>
     auto Iterate(const TIterable& iterable)
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return algorithms::Iterate<T>(*this, iterable.begin(), iterable.end());
     }
 
     template <typename T, typename TIter>
+        requires templates::ConceptContains<T, TComponents...>
     auto Iterate(const TIter begin, const TIter end) const
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         const auto& thisRef = *this;
         return algorithms::Iterate<T>(thisRef, begin, end);
     }
 
     template <typename T, typename TIterable>
+        requires templates::ConceptContains<T, TComponents...>
     auto Iterate(const TIterable& iterable) const
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         return algorithms::Iterate<T>(*this, iterable.begin(), iterable.end());
     }
 
@@ -525,47 +526,47 @@ public:
     // https://dominikberner.ch/structured-bindings/
 
     template <typename T1, typename T2, typename TIter>
+        requires templates::ConceptContains<T1, TComponents...> && //
+                 templates::ConceptContains<T2, TComponents...>
     auto Iterate2d(const TIter begin, const TIter end)
     {
-        static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
-        static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
         return algorithms::Iterate2d<T1, T2>(*this, begin, end);
     }
 
     template <typename T1, typename T2, typename TIterable>
+        requires templates::ConceptContains<T1, TComponents...> && //
+                 templates::ConceptContains<T2, TComponents...>
     auto Iterate2d(const TIterable& iterable)
     {
-        static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
-        static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
         return algorithms::Iterate2d<T1, T2>(*this, iterable.begin(), iterable.end());
     }
 
     //
 
     template <typename T1, typename T2, typename T3, typename TIter>
+        requires templates::ConceptContains<T1, TComponents...> && //
+                 templates::ConceptContains<T2, TComponents...> && //
+                 templates::ConceptContains<T3, TComponents...>
     auto Iterate3d(const TIter begin, const TIter end)
     {
-        static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
-        static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
-        static_assert(templates::Contains<T3, TComponents...>(), "Unknown component T3");
         return algorithms::Iterate3d<T1, T2, T3>(*this, begin, end);
     }
 
     template <typename T1, typename T2, typename T3, typename TIterable>
+        requires templates::ConceptContains<T1, TComponents...> && //
+                 templates::ConceptContains<T2, TComponents...> && //
+                 templates::ConceptContains<T3, TComponents...>
     auto Iterate3d(const TIterable& iterable)
     {
-        static_assert(templates::Contains<T1, TComponents...>(), "Unknown component T1");
-        static_assert(templates::Contains<T2, TComponents...>(), "Unknown component T2");
-        static_assert(templates::Contains<T3, TComponents...>(), "Unknown component T3");
         return algorithms::Iterate3d<T1, T2, T3>(*this, iterable.begin(), iterable.end());
     }
 
     //
 
     template <typename T, typename TIter>
+        requires templates::ConceptContains<T, TComponents...>
     auto Insert(TIter begin, TIter end)
     {
-        static_assert(templates::Contains<T, TComponents...>(), "Unknown component T");
         ComponentSystem<T>::Insert(begin, end);
     }
 
@@ -576,11 +577,9 @@ public:
         EntityId newCounter{1};
         for(EntityId i = Minimum(); i <= Maximum(); ++i)
         {
-            if(HasAny(i))
-            {
-                (ComponentSystem<TComponents>::Relabel(i, newCounter), ...);
+            auto relabeled = (ComponentSystem<TComponents>::Relabel(i, newCounter) || ...);
+            if(relabeled)
                 newCounter++;
-            }
         }
         mEntityCounter = newCounter;
     }

@@ -7,6 +7,7 @@ enable_testing()
 
 include (GoogleTest)
 
+find_package(range-v3 CONFIG REQUIRED)
 
 ADD_EXECUTABLE(VicTest 
     "EntitySystem.cpp"
@@ -51,5 +52,13 @@ PRIVATE
     Vic
 )
 
+add_library(range_v3 INTERFACE IMPORTED)
+
+#set_target_properties(range_v3 PROPERTIES 
+#    INTERFACE_INCLUDE_DIRECTORIES <path_to_range_v3>/include)
+
+target_link_libraries(VicTest PUBLIC range_v3)
+
+# target_link_libraries(VicTest PRIVATE range-v3::meta range-v3::concepts range-v3::range-v3)
 
 gtest_discover_tests(VicTest)
