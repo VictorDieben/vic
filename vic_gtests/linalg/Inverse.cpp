@@ -57,7 +57,7 @@ TEST(Linalg, InverseRandom)
 
 TEST(Linalg, Inverse2x2)
 {
-    static constexpr Matrix22d mat2x2{1, 2, 3, 4}; //
+    static constexpr Matrix22d mat2x2{1, 2, 3, 4};
     static constexpr Matrix22d inv2x2 = Inverse2x2(mat2x2);
 
     EXPECT_TRUE(IsEqual(Matmul(mat2x2, inv2x2), Identity2d{}));
@@ -65,7 +65,7 @@ TEST(Linalg, Inverse2x2)
 
 TEST(Linalg, Inverse3x3)
 {
-    static constexpr Matrix33d mat3x3{1, 2, -1, 2, 1, 2, -1, 2, 1}; //
+    static constexpr Matrix33d mat3x3{1, 2, -1, 2, 1, 2, -1, 2, 1};
 
     static constexpr double invdet = -1. / 16.;
     static constexpr Matrix33d inverseSolution{-3. * invdet, -4. * invdet, 5. * invdet, -4. * invdet, 0, -4. * invdet, 5. * invdet, -4. * invdet, -3. * invdet};

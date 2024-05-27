@@ -43,8 +43,8 @@ template <typename TShape>
 using TransposeResultShape = Shape<TShape::cols, TShape::rows>;
 
 template <typename TMatrix>
-requires ConceptMatrix<TMatrix>
-constexpr auto Transpose(const TMatrix& matrix)
+    requires ConceptMatrix<TMatrix>
+constexpr ConceptMatrix auto Transpose(const TMatrix& matrix)
 {
     using ResultDataType = typename TMatrix::DataType;
     using ResultShape = TransposeResultShape<typename TMatrix::ShapeType>;

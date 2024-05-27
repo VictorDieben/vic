@@ -155,7 +155,7 @@ public:
     {
         auto it = mComponents.find(id);
 #ifdef _DEBUG
-        if(it == mComponents.end())
+        if(it == std::end(mComponents))
             throw std::runtime_error(std::string("Entity ") + std::to_string(id) + " has no " + typeid(T).name());
 #endif
         return it->second;
@@ -165,7 +165,7 @@ public:
     {
         auto it = mComponents.find(id);
 #ifdef _DEBUG
-        if(it == mComponents.end())
+        if(it == std::end(mComponents))
             throw std::runtime_error(std::string("Entity ") + std::to_string(id) + " has no " + typeid(T).name());
 #endif
         return it->second;
@@ -174,7 +174,7 @@ public:
     T* TryGet(const EntityId id)
     {
         auto it = mComponents.find(id);
-        if(it == mComponents.end())
+        if(it == std::end(mComponents))
             return nullptr;
         else
             return &(it->second);
@@ -183,18 +183,18 @@ public:
     const T* TryGet(const EntityId id) const
     {
         auto it = mComponents.find(id);
-        if(it == mComponents.end())
+        if(it == std::end(mComponents))
             return nullptr;
         else
             return &(it->second);
     }
 
-    bool Has(const EntityId id) const { return mComponents.find(id) != mComponents.end(); }
+    bool Has(const EntityId id) const { return mComponents.find(id) != std::end(mComponents); }
 
     bool Remove(const EntityId id)
     {
         auto it = mComponents.find(id);
-        if(it == mComponents.end())
+        if(it == std::end(mComponents))
             return false;
         mComponents.erase(it);
         return true;
@@ -202,20 +202,20 @@ public:
 
     std::size_t Size() const { return mComponents.size(); }
 
-    iterator begin() { return mComponents.begin(); }
-    iterator end() { return mComponents.end(); }
+    iterator begin() { return std::begin(mComponents); }
+    iterator end() { return std::end(mComponents); }
 
-    const_iterator begin() const { return mComponents.begin(); }
-    const_iterator end() const { return mComponents.end(); }
+    const_iterator begin() const { return std::begin(mComponents); }
+    const_iterator end() const { return std::end(mComponents); }
 
-    const_iterator cbegin() const { return mComponents.cbegin(); }
-    const_iterator cend() const { return mComponents.cend(); }
+    const_iterator cbegin() const { return std::cbegin(mComponents); }
+    const_iterator cend() const { return std::cend(mComponents); }
 
-    iterator lower_bound(const EntityId id) { return std::lower_bound(mComponents.begin(), mComponents.end(), id, FindLowerBound); }
-    const_iterator lower_bound(const EntityId id) const { return std::lower_bound(mComponents.begin(), mComponents.end(), id, FindLowerBound); }
+    iterator lower_bound(const EntityId id) { return std::lower_bound(std::begin(mComponents), std::end(mComponents), id, FindLowerBound); }
+    const_iterator lower_bound(const EntityId id) const { return std::lower_bound(std::begin(mComponents), std::end(mComponents), id, FindLowerBound); }
 
-    iterator lower_bound_with_hint(const EntityId id, iterator hint) { return std::lower_bound(hint, mComponents.end(), id, FindLowerBound); }
-    iterator lower_bound_with_hint(const EntityId id, iterator hint) const { return std::lower_bound(hint, mComponents.cend(), id, FindLowerBound); }
+    iterator lower_bound_with_hint(const EntityId id, iterator hint) { return std::lower_bound(hint, std::end(mComponents), id, FindLowerBound); }
+    iterator lower_bound_with_hint(const EntityId id, iterator hint) const { return std::lower_bound(hint, std::cend(mComponents), id, FindLowerBound); }
 
     template <typename TIter>
     void Insert(TIter begin, TIter end)
@@ -246,11 +246,11 @@ public:
             return true; // no need to do anything when relabeling to the same label
 
         auto it1 = mComponents.find(from);
-        if(it1 == mComponents.end())
+        if(it1 == std::end(mComponents))
             return false; // item to relabel cannot be found
 
         auto it2 = mComponents.find(to);
-        if(it2 != mComponents.end())
+        if(it2 != std::end(mComponents))
             return false; // cannot relabel to an existing name
 
         // todo: this can be optimized for sorted lists (flat map), if we know that the order will not change
@@ -392,7 +392,7 @@ public:
         requires templates::ConceptContains<T, TComponents...>
     bool RemoveRange(const TIterable& iterable)
     {
-        return RemoveRange<T>(iterable.begin(), iterable.end());
+        return RemoveRange<T>(std::begin(iterable), std::end(iterable));
     }
 
     template <typename T>
@@ -503,7 +503,7 @@ public:
         requires templates::ConceptContains<T, TComponents...>
     auto Iterate(const TIterable& iterable)
     {
-        return algorithms::Iterate<T>(*this, iterable.begin(), iterable.end());
+        return algorithms::Iterate<T>(*this, std::begin(iterable), std::end(iterable));
     }
 
     template <typename T, typename TIter>
@@ -518,7 +518,7 @@ public:
         requires templates::ConceptContains<T, TComponents...>
     auto Iterate(const TIterable& iterable) const
     {
-        return algorithms::Iterate<T>(*this, iterable.begin(), iterable.end());
+        return algorithms::Iterate<T>(*this, std::begin(iterable), std::end(iterable));
     }
 
     // todo: for two and three dimensional iterate,
@@ -538,7 +538,7 @@ public:
                  templates::ConceptContains<T2, TComponents...>
     auto Iterate2d(const TIterable& iterable)
     {
-        return algorithms::Iterate2d<T1, T2>(*this, iterable.begin(), iterable.end());
+        return algorithms::Iterate2d<T1, T2>(*this, std::begin(iterable), std::end(iterable));
     }
 
     //
@@ -558,7 +558,7 @@ public:
                  templates::ConceptContains<T3, TComponents...>
     auto Iterate3d(const TIterable& iterable)
     {
-        return algorithms::Iterate3d<T1, T2, T3>(*this, iterable.begin(), iterable.end());
+        return algorithms::Iterate3d<T1, T2, T3>(*this, std::begin(iterable), std::end(iterable));
     }
 
     //

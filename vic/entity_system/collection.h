@@ -30,11 +30,11 @@ public:
         return result;
     }
 
-    auto begin() { return mItems.begin(); }
-    auto end() { return mItems.end(); }
+    auto begin() { return std::begin(mItems); }
+    auto end() { return std::end(mItems); }
 
-    auto begin() const { return mItems.cbegin(); }
-    auto end() const { return mItems.cend(); }
+    auto begin() const { return std::cbegin(mItems); }
+    auto end() const { return std::cend(mItems); }
 
     auto Insert(const EntityId id) { return mItems.insert(id); }
     auto Remove(const EntityId id) { return mItems.erase(id); }
@@ -46,8 +46,7 @@ private:
 };
 
 template <typename T>
-concept ConceptCollection = requires(T component)
-{
+concept ConceptCollection = requires(T component) {
     T::TempIsCollection == true;
     component.Verify(int{}); // todo: verify that the argument is an ecs
 };

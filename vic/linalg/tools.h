@@ -147,7 +147,7 @@ constexpr auto Normalize(const TVec& vec)
 // 3d cross product
 template <typename TVec1, typename TVec2>
     requires ConceptVector<TVec1> && ConceptVector<TVec2>
-constexpr auto Cross(const TVec1& vec1, const TVec2& vec2)
+constexpr ConceptVector3 auto Cross(const TVec1& vec1, const TVec2& vec2)
 {
     using TRet = decltype(std::declval<typename TVec1::DataType>() * std::declval<typename TVec2::DataType>());
 

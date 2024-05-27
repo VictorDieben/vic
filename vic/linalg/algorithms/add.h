@@ -69,8 +69,8 @@ template <typename TShape1, typename TShape2>
 using AddResultShape = Shape<Min(TShape1::rows, TShape2::rows), Min(TShape1::cols, TShape2::cols)>;
 
 template <typename TMat1, typename TMat2>
-    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> // note: _not_ diagonal, this way you can add the diagonal of two non-diagonal matrices
-constexpr auto AddDiagonal(const TMat1& mat1, const TMat2& mat2)
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2> // note: _not_ ConceptDiagonalMatrix, this way you can add the diagonal of two non-diagonal matrices
+constexpr ConceptMatrix auto AddDiagonal(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetRows() == mat2.GetRows() && mat1.GetColumns() == mat2.GetColumns());
     using TValue = decltype(typename TMat1::DataType() * typename TMat2::DataType());
@@ -85,7 +85,7 @@ constexpr auto AddDiagonal(const TMat1& mat1, const TMat2& mat2)
 }
 
 template <typename TMat1, typename TMat2>
-constexpr auto AddFull(const TMat1& mat1, const TMat2& mat2)
+constexpr ConceptMatrix auto AddFull(const TMat1& mat1, const TMat2& mat2)
 {
     assert(mat1.GetRows() == mat2.GetRows() && mat1.GetColumns() == mat2.GetColumns());
     using TValue = decltype(typename TMat1::DataType() * typename TMat2::DataType());
@@ -99,7 +99,7 @@ constexpr auto AddFull(const TMat1& mat1, const TMat2& mat2)
 }
 
 template <typename TMat, typename TValue>
-constexpr auto AddConstant(const TMat& mat, const TValue& value)
+constexpr ConceptMatrix auto AddConstant(const TMat& mat, const TValue& value)
 {
     // todo: specialize for different matrix types
     using TRes = decltype(typename TMat::DataType() + TValue{});
@@ -112,7 +112,7 @@ constexpr auto AddConstant(const TMat& mat, const TValue& value)
 
 template <typename TMat1, typename TMat2>
     requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
-constexpr auto AddMatrix(const TMat1& mat1, const TMat2& mat2)
+constexpr ConceptMatrix auto AddMatrix(const TMat1& mat1, const TMat2& mat2)
 {
     constexpr auto distribution = AdditionDistribution(TMat1::Distribution, TMat2::Distribution);
 

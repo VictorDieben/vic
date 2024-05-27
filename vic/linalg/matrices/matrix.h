@@ -50,7 +50,7 @@ struct MatrixConst : public MatrixBaseSelector<TShape>
     {
         assert(i < MatrixBase::GetRows());
         static_assert(MatrixBase::GetColumns() == 1);
-        return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
+        return mData[i];
     }
     constexpr T& At(const Row i, const Col j)
     {
@@ -61,7 +61,7 @@ struct MatrixConst : public MatrixBaseSelector<TShape>
     {
         assert(i < MatrixBase::GetRows());
         static_assert(MatrixBase::GetColumns() == 1);
-        return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
+        return mData[i];
     }
 
     constexpr T* data() { return mData.data(); }
@@ -123,7 +123,7 @@ struct MatrixColConst : public MatrixBaseSelector<TShape>
     {
         assert(i < MatrixBase::GetRows());
         static_assert(MatrixBase::GetColumns() == 1);
-        return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
+        return mData[i];
     }
     constexpr T& At(const Row i, const Col j)
     {
@@ -134,7 +134,7 @@ struct MatrixColConst : public MatrixBaseSelector<TShape>
     {
         assert(i < MatrixBase::GetRows());
         static_assert(MatrixBase::GetColumns() == 1);
-        return mData[RowMayorRowColToIndex<TShape::cols>(i, 0)];
+        return mData[i];
     }
 
     constexpr T* data() { return mData.data(); }
@@ -249,7 +249,7 @@ using Vector6d = VectorN<double, 6>;
 
 template <typename TMat>
     requires ConceptMatrix<TMat>
-constexpr auto ToFull(const TMat& mat)
+constexpr ConceptMatrix auto ToFull(const TMat& mat)
 {
     Matrix<typename TMat::DataType, typename TMat::ShapeType> res{mat.GetRows(), mat.GetColumns()};
 

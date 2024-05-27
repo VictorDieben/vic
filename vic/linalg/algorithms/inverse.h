@@ -17,7 +17,7 @@ using InverseResultShape = SquareShape<TShape>;
 
 template <typename TMat>
     requires ConceptMatrix<TMat>
-constexpr auto InverseDiagonal(const TMat& matrix)
+constexpr ConceptMatrix auto InverseDiagonal(const TMat& matrix)
 {
     assert(matrix.GetRows() == matrix.GetColumns());
 
@@ -32,7 +32,7 @@ constexpr auto InverseDiagonal(const TMat& matrix)
 
 template <typename TMat>
     requires ConceptMatrix<TMat>
-constexpr auto InverseHotellingBodewig(const TMat& A, const double eps = 1E-12)
+constexpr ConceptMatrix auto InverseHotellingBodewig(const TMat& A, const double eps = 1E-12)
 {
     // Hotelling-Bodewig algorithm: V_n+1 = V_n * (2*I - A*V_n)
     assert(A.GetRows() == A.GetColumns());
@@ -70,7 +70,7 @@ constexpr auto InverseHotellingBodewig(const TMat& A, const double eps = 1E-12)
 
 template <typename TMatrix>
     requires ConceptMatrix<TMatrix>
-constexpr auto Adjugate2x2(const TMatrix& matrix)
+constexpr ConceptMatrix auto Adjugate2x2(const TMatrix& matrix)
 {
     assert(matrix.GetRows() == 2 && matrix.GetColumns() == 2);
     const auto a = matrix.Get(0, 0);
@@ -85,29 +85,9 @@ constexpr auto Adjugate2x2(const TMatrix& matrix)
     return TRes{d, -b, -c, a};
 }
 
-//template <typename TMatrix>
-//    requires ConceptMatrix<TMatrix>
-//constexpr auto Adjugate3x3(const TMatrix& matrix)
-//{
-//    assert(matrix.GetRows() == 3 && matrix.GetColumns() == 3);
-//    const auto a = matrix.Get(0, 0);
-//    const auto b = matrix.Get(0, 1);
-//    const auto c = matrix.Get(0, 2);
-//
-//    const auto d = matrix.Get(1, 0);
-//    const auto e = matrix.Get(1, 1);
-//    const auto f = matrix.Get(1, 2);
-//
-//    const auto g = matrix.Get(2, 0);
-//    const auto h = matrix.Get(2, 1);
-//    const auto i = matrix.Get(2, 2);
-//
-//    // todo
-//}
-
 template <typename TMatrix>
     requires ConceptMatrix<TMatrix>
-constexpr auto Inverse2x2(const TMatrix& matrix)
+constexpr ConceptMatrix auto Inverse2x2(const TMatrix& matrix)
 {
     using DataType = typename TMatrix::DataType;
 
@@ -131,7 +111,7 @@ constexpr auto Inverse2x2(const TMatrix& matrix)
 
 template <typename TMatrix>
     requires ConceptMatrix<TMatrix>
-constexpr auto Inverse3x3(const TMatrix& matrix)
+constexpr ConceptMatrix auto Inverse3x3(const TMatrix& matrix)
 {
     // based on:
     // https://en.wikipedia.org/wiki/Invertible_matrix
@@ -189,7 +169,7 @@ constexpr auto Inverse3x3(const TMatrix& matrix)
 
 template <typename TMatrix>
     requires ConceptMatrix<TMatrix>
-constexpr auto Inverse4x4(const TMatrix& matrix)
+constexpr ConceptMatrix auto Inverse4x4(const TMatrix& matrix)
 {
     // todo: this will break with a 4x4 identity matrix
     // const auto [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p] = *matrix.data();

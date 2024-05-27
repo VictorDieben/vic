@@ -14,27 +14,17 @@ namespace vic
 namespace linalg
 {
 
-//template <typename TMatrix>
-//requires ConceptMatrix<TMatrix>
-//struct SymmetricPositiveDefinate : public TMatrix
-//{
-//    constexpr static bool TempIsSymmetric = true;
-//    constexpr static bool TempIsPositiveDefinite = true;
-//};
-
 // todo: make both A.T * A and A * A.T
 template <typename TMatrix>
-requires ConceptMatrix<TMatrix>
-constexpr auto GramMatrix(const TMatrix& A)
+    requires ConceptMatrix<TMatrix>
+constexpr ConceptMatrix auto GramMatrix(const TMatrix& A)
 {
     const auto At = Transpose(A);
-    const auto AtA = Matmul(At, A);
-
-    return AtA;
+    return Matmul(At, A);
 }
 
 template <typename TMatrix, typename TVector>
-requires ConceptMatrix<TMatrix> && ConceptMatrix<TVector>
+    requires ConceptMatrix<TMatrix> && ConceptMatrix<TVector>
 constexpr auto LeastSquares(const TMatrix& A, const TVector& b)
 {
     // todo: what if b is not a vector, but a list of n-dimensional measurements?

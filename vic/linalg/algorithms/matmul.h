@@ -93,7 +93,7 @@ constexpr ConceptMatrix auto MatmulDiagonalVector(const TMat1& mat1, const TMat2
 
     Matrix<TValue, TShape> result{mat1.GetRows(), mat2.GetColumns()};
     for(MatrixSize i = 0; i < Min(result.GetRows(), result.GetColumns()); ++i)
-        result.At(i, 0) = mat1.Get(i, i) * mat2.Get(i, 0);
+        result.At(i, 0) = mat1.Get(i, i) * mat2.Get(i);
 
     return result;
 }

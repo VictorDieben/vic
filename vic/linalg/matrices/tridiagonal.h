@@ -69,8 +69,8 @@ public:
     constexpr const auto& C() const { return mC; }
 
 private:
-    static constexpr MatrixSize mDiagonalSize = TShape::rows;
-    static constexpr MatrixSize mOffDiagonalSize = TShape::rows - 1;
+    static constexpr MatrixSize mDiagonalSize = std::min(TShape::rows, TShape::cols);
+    static constexpr MatrixSize mOffDiagonalSize = mDiagonalSize - 1;
 
     std::array<T, mOffDiagonalSize> mA{};
     std::array<T, mDiagonalSize> mB{};
@@ -165,7 +165,7 @@ template <typename T>
 using TriDiagonal6 = TriDiagonalN<T, 6>;
 
 template <typename TMat>
-requires ConceptMatrix<TMat>
+    requires ConceptMatrix<TMat>
 constexpr auto ToTriDiagonal(const TMat& mat)
 {
     TriDiagonal<typename TMat::DataType, typename TMat::ShapeType> res{mat.GetRows(), mat.GetColumns()};

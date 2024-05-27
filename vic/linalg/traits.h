@@ -64,7 +64,6 @@ template <typename T>
 concept ConceptSparse = ConceptMatrix<T> && requires(T mat) {
     typename T::KeyType;
     T::Distribution == EDistribution::Sparse;
-    // todo: check that T::Distribution is Sparse
     mat.Prune();
     mat.begin(); // todo: const iters, verify type
     mat.end();
@@ -124,7 +123,11 @@ concept ConceptAssignable = ConceptMatrix<T> && requires(T mat) {
 };
 
 template <typename T>
-concept ConceptVector = ConceptMatrix<T> && requires(T mat) { requires(T::GetColumns() == 1); };
+concept ConceptVector = ConceptMatrix<T> && requires(T mat) {
+    requires(T::GetColumns() == 1);
+    mat.At(MatrixSize{});
+    mat.Get(MatrixSize{});
+};
 
 template <typename T>
 concept ConceptVector2 = ConceptMatrix<T> && requires(T mat) { requires(T::GetRows() == 2 && T::GetColumns() == 1); };

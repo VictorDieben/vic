@@ -76,7 +76,7 @@ auto SolveConjugateGradient(const TMatrix& A, const TVector& b, const double eps
 
 template <typename TMatrix, typename TVector>
     requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
-auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
+ConceptVector auto SolveJacobiMethod(const TMatrix& matrix, const TVector& vector, const double eps = 1E-12)
 {
     assert(matrix.GetRows() == matrix.GetColumns());
     // TODO: verify that matrix is diagonally dominant / positive definite
@@ -271,7 +271,7 @@ constexpr ConceptVector auto Solve4x4(const TMatrix& matrix, const TVector& vect
 // Selector for Inverse algorithm
 template <typename TMatrix, typename TVector>
     requires ConceptMatrix<TMatrix> && ConceptVector<TVector>
-constexpr auto Solve(const TMatrix& matrix, const TVector& vector)
+constexpr ConceptVector auto Solve(const TMatrix& matrix, const TVector& vector)
 {
     return SolveJacobiMethod(matrix, vector); // todo: select
 }

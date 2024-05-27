@@ -59,7 +59,7 @@ struct MatrixBaseRowConst
     }
 
     constexpr static Row GetRows() { return TShape::rows; }
-    Col GetColumns() const { return mColumns; }
+    constexpr Col GetColumns() const { return mColumns; }
 
 protected:
     Col mColumns{0};
@@ -76,7 +76,7 @@ struct MatrixBaseColConst
         VerifyShape<TShape>(rows, cols);
     }
 
-    Row GetRows() const { return mRows; }
+    constexpr Row GetRows() const { return mRows; }
     constexpr static Col GetColumns() { return TShape::cols; }
 
 protected:
@@ -93,8 +93,8 @@ struct MatrixBaseDynamic
         , mColumns(cols)
     { }
 
-    Row GetRows() const { return mRows; }
-    Col GetColumns() const { return mColumns; }
+    constexpr Row GetRows() const { return mRows; }
+    constexpr Col GetColumns() const { return mColumns; }
 
 protected:
     Row mRows{0};

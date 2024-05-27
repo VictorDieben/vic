@@ -27,7 +27,7 @@ constexpr auto Cofactor3x3(const TMatrix& matrix)
 
 template <typename TMatrix>
     requires ConceptMatrix<TMatrix>
-constexpr auto Adjugate2x2(const TMatrix& matrix)
+constexpr ConceptMatrix auto Adjugate2x2(const TMatrix& matrix)
 {
     assert(matrix.GetRows() == 2 && matrix.GetColumns() == 2);
     const auto a = matrix.Get(0, 0);
@@ -35,16 +35,14 @@ constexpr auto Adjugate2x2(const TMatrix& matrix)
     const auto c = matrix.Get(1, 0);
     const auto d = matrix.Get(1, 1);
 
-    using ResultType = typename TMat::DataType;
-    using ResultShape = Shape<2, 2>;
-    using TRes = Matrix<typename TMat::DataType, ResultShape>;
+    using TRes = Matrix<typename TMat::DataType, Shape<2, 2>>;
 
     return TRes{d, -b, -c, a};
 }
 
 template <typename TMatrix>
     requires ConceptMatrix<TMatrix>
-constexpr auto Adjugate3x3(const TMatrix& matrix)
+constexpr ConceptMatrix auto Adjugate3x3(const TMatrix& matrix)
 {
     assert(matrix.GetRows() == 3 && matrix.GetColumns() == 3);
     const auto a = matrix.Get(0, 0);
@@ -58,6 +56,10 @@ constexpr auto Adjugate3x3(const TMatrix& matrix)
     const auto g = matrix.Get(2, 0);
     const auto h = matrix.Get(2, 1);
     const auto i = matrix.Get(2, 2);
+
+    using TRes = Matrix<typename TMat::DataType, Shape<3, 3>>;
+
+    return TRes{}; // todo
 }
 
 template <typename TMat>

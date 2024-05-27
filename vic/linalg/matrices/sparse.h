@@ -26,11 +26,11 @@ public:
     using KeyType = std::pair<Row, Col>;
     using MatrixBaseType = MatrixBaseSelector<TShape>;
 
-    MatrixSparse(const Row rows, const Col cols)
+    constexpr MatrixSparse(const Row rows, const Col cols)
         : MatrixBaseType(rows, cols)
     { }
 
-    T Get(const Row i, const Col j) const
+    constexpr T Get(const Row i, const Col j) const
     {
         assert(((i < this->GetRows()) && (j < this->GetColumns())));
 
@@ -76,7 +76,7 @@ template <typename T, Row rows, Col cols>
 using SparseMxN = Sparse<T, Shape<rows, cols>>;
 
 template <typename TMat>
-requires ConceptMatrix<TMat>
+    requires ConceptMatrix<TMat>
 constexpr auto ToSparse(const TMat& mat)
 {
     Sparse<typename TMat::DataType, typename TMat::ShapeType> res{mat.GetRows(), mat.GetColumns()};
