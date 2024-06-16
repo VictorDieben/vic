@@ -37,6 +37,7 @@ struct EntityHandle
     operator bool() const { return (mId != 0) && (mSystem != nullptr); }
 
     template <typename TComponent, typename... Args>
+    // requires  SystemType::template ContainsComponent<TComponent>()
     EntityHandle<T> Add(Args&&... args)
     {
         static_assert(SystemType::template ContainsComponent<TComponent>(), "Unknown component T");
@@ -141,7 +142,8 @@ public:
         // auto res = mComponents.emplace(std::pair(id, std::move(T{std::forward<decltype(args)>(args)...})));
         // return res.first->second;
 
-        auto res = mComponents.emplace(id, T{std::forward<decltype(args)>(args)...});
+        auto res = mComponents.try_emplace(id, std::forward<decltype(args)>(args)...);
+        // auto res = mComponents.emplace(id, T{std::forward<decltype(args)>(args)...});
         return res.first->second;
     }
 
@@ -260,8 +262,8 @@ public:
         return true;
     }
 
-    EntityId Minimum() const { return mComponents.size() == 0 ? std::numeric_limits<EntityId>::max() : mComponents.begin()->first; }
-    EntityId Maximum() const { return mComponents.size() == 0 ? std::numeric_limits<EntityId>::min() : std::prev(mComponents.end())->first; }
+    EntityId Minimum() const { return mComponents.empty() ? std::numeric_limits<EntityId>::max() : mComponents.begin()->first; }
+    EntityId Maximum() const { return mComponents.empty() ? std::numeric_limits<EntityId>::min() : std::prev(mComponents.end())->first; }
 
     auto& Data() { return mComponents; };
     const auto& Data() const { return mComponents; };
@@ -270,11 +272,10 @@ public:
 using ComponentIndexType = int;
 
 template <typename... TComponents>
+    requires templates::ConceptUnique<TComponents...>
 class ECS : public ComponentSystem<TComponents>...
 {
 public:
-    static_assert(templates::IsUnique<TComponents...>(), "Component list is not Unique!");
-
     // todo: better way to define EntityHandle(decltype(*this))
     using Handle = EntityHandle<ECS<TComponents...>>;
 
@@ -294,7 +295,7 @@ public:
         return newEntity;
     }
 
-    Handle GetEntity(EntityId id)
+    Handle GetEntity(const EntityId id)
     {
         // note: there is no way for us to know if id actually exists.
         // No list of valid ids is stored anywhere.
@@ -309,7 +310,7 @@ public:
         return EntityHandle(id, this);
     }
 
-    void RemoveEntity(EntityId id)
+    void RemoveEntity(const EntityId id)
     {
         (ComponentSystem<TComponents>::Remove(id), ...); //
     }
@@ -622,6 +623,7 @@ private:
 };
 
 template <typename TEcs, typename... TComponents>
+    requires templates::ConceptUnique<TComponents...>
 class System
 {
 public:

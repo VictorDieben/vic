@@ -43,16 +43,19 @@ constexpr bool IsUnique()
         return true;
 }
 
+template <typename... Ts>
+concept ConceptUnique = IsUnique<Ts...>();
+
 //
 //
 //
 
-template <typename T1, typename T2, typename... Ts>
+template <typename T, typename... Ts>
 struct to_unique_helper
 {
-    using tuple_type = std::conditional_t<IsUnique<T1, T2, Ts...>(), //
-                                          std::tuple<T1, T2, Ts...>,
-                                          double>; // todo
+    using tuple_type = std::conditional_t<IsUnique<T, Ts...>(), //
+                                          std::tuple<T, Ts...>,
+                                          typename to_unique_helper<Ts...>::tuple_type>;
 
     // std::conditional_t<Contains<T1, T2, Ts...>() typename to_unique_helper<Ts...>::tuple_type>;
 };
@@ -87,7 +90,19 @@ constexpr int GetIndex()
         }
     }
 }
+//
+//
+//
 
+template <int N, typename... Ts>
+using NthTypeOf = typename std::tuple_element<N, std::tuple<Ts...>>::type;
+
+template <typename... Ts>
+using FirstType = NthTypeOf<0, Ts...>;
+template <typename... Ts>
+using SecondType = NthTypeOf<1, Ts...>;
+template <typename... Ts>
+using ThirdType = NthTypeOf<2, Ts...>;
 //
 //
 //

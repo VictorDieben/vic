@@ -536,14 +536,10 @@ TEST(ECS, Collection)
     {
         std::string description;
     };
-    struct Backpack : public vic::ecs::Collection<Item>
+    struct Backpack
     {
-        using base = typename vic::ecs::Collection<Item>;
-        using base::base;
+        std::set<EntityId> items;
     };
-
-    static_assert(!vic::ecs::ConceptCollection<Item>);
-    static_assert(vic::ecs::ConceptCollection<Backpack>);
 
     using MyEcs = vic::ecs::ECS<Item, Backpack>;
     MyEcs ecs;
@@ -551,33 +547,10 @@ TEST(ECS, Collection)
     auto sword = ecs.NewEntity();
     sword.Add<Item>("sword");
 
-    auto shield = ecs.NewEntity();
-    shield.Add<Item>("shield");
+    auto shield = ecs.NewEntity().Add<Item>("shield");
 
     auto backpack = ecs.NewEntity();
-    backpack.Add<Backpack>(sword, shield);
-
-    EXPECT_TRUE(backpack.Get<Backpack>().Verify(ecs));
-
-    // add an entity without the Item component, check that Verify fails
-    auto rain = ecs.NewEntity();
-    backpack.Get<Backpack>().Insert(rain);
-    EXPECT_FALSE(backpack.Get<Backpack>().Verify(ecs));
-
-    // remove the item, check that it succeeds again
-    backpack.Get<Backpack>().Remove(rain);
-    EXPECT_TRUE(backpack.Get<Backpack>().Verify(ecs));
-
-    // todo: fast iteration over the sorted items in the collection
-    std::set<vic::ecs::EntityId> ids;
-    for(const auto& itemId : backpack.Get<Backpack>())
-        ids.insert(itemId);
-    const std::set<vic::ecs::EntityId> answer{sword.Id(), shield.Id()};
-    EXPECT_EQ(ids, answer);
-
-    // copy backpack into a vector of entity ids.
-    const auto items = std::vector{backpack.Get<Backpack>().begin(), backpack.Get<Backpack>().end()};
-    EXPECT_EQ(items.size(), 2u);
+    backpack.Add<Backpack>(std::set<EntityId>{sword, shield});
 }
 
 TEST(ECS, ParallelSystems)

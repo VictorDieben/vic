@@ -40,24 +40,25 @@ ADD_EXECUTABLE(VicTest
     "linalg/Traits.cpp"
     "linalg/Transpose.cpp"
     "linalg/Views.cpp"
-    "test_emulator.cpp" 
+    "Emulation.cpp" 
     "Graph2.cpp" 
     "Math.cpp" 
     "Serialize.cpp" "SerializeHelpers.h")
  
+add_library(range_v3 INTERFACE IMPORTED)
+
 TARGET_LINK_LIBRARIES(VicTest  
 PRIVATE
     GTest::gtest 
     GTest::gtest_main
     Vic
+    range_v3
 )
 
-add_library(range_v3 INTERFACE IMPORTED)
 
 #set_target_properties(range_v3 PROPERTIES 
 #    INTERFACE_INCLUDE_DIRECTORIES <path_to_range_v3>/include)
-
-target_link_libraries(VicTest PUBLIC range_v3)
+ 
 
 # target_link_libraries(VicTest PRIVATE range-v3::meta range-v3::concepts range-v3::range-v3)
 
