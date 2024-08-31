@@ -83,7 +83,6 @@ concept ConceptTriDiagonal = ConceptMatrix<T> && requires(T mat) {
     mat.C();
 };
 
-// TODO: implement, check that GetRows() and GetColumns() are constexpr
 template <typename T>
 concept ConceptConstexprMatrix = ConceptMatrix<T> && ConceptConstexprRows<T> && ConceptConstexprColumns<T>;
 

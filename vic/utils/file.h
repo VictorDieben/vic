@@ -22,11 +22,17 @@ enum class ReadFileErrorCode
     Other
 };
 
-using FileData = std::vector<char>;
-using ReadFileError = ::vic::StaticError<ReadFileErrorCode>;
-using ReadFileResult = std::expected<FileData, ReadFileError>;
+template <typename T>
+using FileData = std::vector<T>;
 
-inline ReadFileResult FileToCharVec(const std::filesystem::path& path)
+using ReadFileError = ::vic::StaticError<ReadFileErrorCode>;
+
+template <typename T>
+using ReadFileResult = std::expected<FileData<T>, ReadFileError>;
+
+template <typename T>
+// requires sizeof(T) == 1
+ReadFileResult<T> FileToVec(const std::filesystem::path& path)
 {
     if(!std::filesystem::is_regular_file(path))
         return std::unexpected{ReadFileError{ReadFileErrorCode::NotRegularFile, //
@@ -39,10 +45,10 @@ inline ReadFileResult FileToCharVec(const std::filesystem::path& path)
 
     try
     {
-        const auto fileSize = static_cast<std::size_t>(file.tellg());
-        std::vector<char> result(fileSize);
+        const auto fileSize = std::filesystem::file_size(path);
+        std::vector<T> result(fileSize);
         file.seekg(0);
-        file.read(result.data(), fileSize);
+        file.read(reinterpret_cast<char*>(result.data()), fileSize);
         return result; // no need to call close, done by ifstream destructor
     }
     catch(...)
@@ -50,6 +56,16 @@ inline ReadFileResult FileToCharVec(const std::filesystem::path& path)
         return std::unexpected{ReadFileError{ReadFileErrorCode::FailedToRead, //
                                              "failed to read file: " + path.generic_string()}};
     }
+}
+
+inline ReadFileResult<char> FileToCharVec(const std::filesystem::path& path)
+{
+    return FileToVec<char>(path); //
+}
+
+inline ReadFileResult<std::byte> FileToByteVec(const std::filesystem::path& path)
+{
+    return FileToVec<std::byte>(path); //
 }
 
 enum class SaveFileErrorCode
@@ -62,7 +78,7 @@ using SaveFileError = ::vic::StaticError<SaveFileErrorCode>;
 using SaveFileResult = std::expected<void, SaveFileError>;
 
 inline SaveFileResult CharVecToFile(const std::filesystem::path& path, //
-                                    const FileData& data)
+                                    const FileData<char>& data)
 {
     try
     {

@@ -3,6 +3,7 @@
 #include "vic/linalg/matrices/identity.h"
 //
 #include "vic/linalg/algorithms/add.h"
+#include "vic/linalg/algorithms/determinant.h"
 #include "vic/linalg/algorithms/matmul.h"
 
 #include "vic/utils.h"
@@ -265,6 +266,14 @@ constexpr bool IsOrthogonal(const TMat& mat, const double eps = 1e-10)
     return IsEqual(tmp, identity, eps);
 }
 
+// Verify that a matrix is special orthogonal (e.g. A.T*A == I && det(mat) == +1)
+template <typename TMat>
+    requires ConceptMatrix<TMat>
+constexpr bool IsSpecialOrthogonal(const TMat& mat, const double eps = 1e-10)
+{
+    return IsOrthogonal(mat, eps) && (std::abs(Determinant(mat) - 1.) < eps);
+}
+
 template <typename TMat>
     requires ConceptMatrix<TMat>
 constexpr auto Negative(const TMat& mat)
@@ -422,6 +431,20 @@ constexpr TResult To(const TInput& mat)
                 res.At(i, j) = (typename TResult::DataType)mat.Get(i, j);
         return res;
     }
+}
+
+template <typename T>
+constexpr auto Unpack(const linalg::Matrix3<T>& mat)
+{
+    return std::tuple(mat.Get(0, 0),
+                      mat.Get(0, 1),
+                      mat.Get(0, 2), //
+                      mat.Get(1, 0),
+                      mat.Get(1, 1),
+                      mat.Get(1, 2), //
+                      mat.Get(2, 0),
+                      mat.Get(2, 1),
+                      mat.Get(2, 2));
 }
 
 } // namespace vic

@@ -98,7 +98,7 @@ template <typename T1, typename T2, typename T3, typename TSystem, typename TRes
 auto Filter(TSystem& system, std::vector<TResult>& result)
 {
     result.clear();
-    const auto functor = [&](EntityId id, T1& first, T2& second, T3& third) {
+    const auto functor = [&](const EntityId id, T1& first, T2& second, T3& third) {
         result.push_back(TResult{id, &first, &second, &third}); //
     };
     FilterForeach<T1, T2, T3>(system, functor);
@@ -109,7 +109,7 @@ template <typename T1, typename T2, typename TSystem, typename TResult>
 auto Filter(TSystem& system, std::vector<TResult>& result)
 {
     result.clear();
-    const auto functor = [&](EntityId id, T1& first, T2& second) {
+    const auto functor = [&](const EntityId id, T1& first, T2& second) {
         result.push_back(TResult{id, &first, &second}); //
     };
     FilterForeach<T1, T2>(system, functor);
@@ -120,7 +120,7 @@ template <typename T, typename TSystem, typename TResult>
 auto Filter(TSystem& system, std::vector<TResult>& result)
 {
     result.clear();
-    const auto functor = [&](EntityId id, T& first) {
+    const auto functor = [&](const EntityId id, T& first) {
         result.push_back(TResult{id, &first}); //
     };
     FilterForeach<T>(system, functor);
@@ -301,6 +301,31 @@ auto Iterate3d(TEcs& ecs, const TIter begin, const TIter end)
         result.push_back({id, t1Ptr, t2Ptr, t3Ptr});
     }
     return result;
+}
+
+template <typename TEcs>
+std::vector<EntityId> ConstructEntityList(const TEcs& ecs)
+{
+    std::vector<EntityId> all;
+    std::vector<EntityId> buffer;
+
+    ecs.ForeachComponentType([&]<typename T>() {
+        buffer.clear();
+        for(auto it = ecs.cbegin<T>(); it != ecs.cend<T>(); ++it)
+            buffer.push_back(it->first);
+
+        const auto currentSize = all.size();
+
+        all.reserve(all.size() + buffer.size());
+        std::copy(buffer.begin(), buffer.end(), std::back_inserter(all));
+
+        std::inplace_merge(all.begin(), all.begin() + currentSize, all.end());
+
+        const auto it = std::unique(all.begin(), all.end());
+        all.erase(it, all.end());
+    });
+
+    return all;
 }
 
 } // namespace algorithms

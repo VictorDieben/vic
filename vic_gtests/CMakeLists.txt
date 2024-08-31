@@ -43,7 +43,7 @@ ADD_EXECUTABLE(VicTest
     "Emulation.cpp" 
     "Graph2.cpp" 
     "Math.cpp" 
-    "Serialize.cpp" "SerializeHelpers.h")
+    "Serialize.cpp" "SerializeHelpers.h" "Sound.cpp" "Quaternion.cpp")
  
 add_library(range_v3 INTERFACE IMPORTED)
 

@@ -1,6 +1,8 @@
 #pragma once
 
+#include "vic/geometry/algorithms/aabb_tools.h"
 #include "vic/geometry/geometry.h"
+
 #include "vic/utils.h"
 
 #include <map>
@@ -18,76 +20,6 @@ namespace geom
 
 template <typename T, std::size_t dims>
 using BBox = AABB<T, dims>;
-
-// calculate the overlap of two intervals.
-// min > max, if the two intervals do not overlap
-template <typename T>
-constexpr Interval<T> Overlap(const Interval<T>& interval1, const Interval<T>& interval2)
-{
-    return Interval<T>{Max(interval1.min, interval2.min), Min(interval1.max, interval2.max)};
-}
-
-template <typename T>
-constexpr bool Overlaps(const Interval<T>& interval1, const Interval<T>& interval2)
-{
-    return (interval1.min <= interval2.max) && (interval2.min <= interval1.max);
-}
-
-template <typename T, std::size_t dims>
-constexpr bool Overlaps(const BBox<T, dims>& bbox1, const BBox<T, dims>& bbox2)
-{
-    for(std::size_t i = 0; i < dims; ++i)
-        if(!Overlaps(bbox1.intervals.at(i), bbox2.intervals.at(i)))
-            return false;
-    return true;
-}
-
-// return if interval 2 is completely enveloped by interval 1
-template <typename T>
-constexpr bool Includes(const Interval<T>& interval1, const Interval<T>& interval2)
-{
-    return (interval1.min <= interval2.min) && (interval1.max >= interval2.max);
-}
-
-// return if BBox 2 is completely enveloped by BBox 1
-template <typename T, std::size_t dims>
-constexpr bool Includes(const BBox<T, dims>& bbox1, const BBox<T, dims>& bbox2)
-{
-    for(std::size_t i = 0; i < dims; ++i)
-        if(!Includes(bbox1.intervals.at(i), bbox2.intervals.at(i)))
-            return false;
-    return true;
-}
-
-template <typename T>
-constexpr Interval<T> Combine(const Interval<T>& interval1, const Interval<T>& interval2)
-{
-    return Interval<T>{Min(interval1.min, interval2.min), Max(interval1.max, interval2.max)};
-}
-
-template <typename T, std::size_t dims>
-constexpr BBox<T, dims> Combine(const BBox<T, dims>& bbox1, const BBox<T, dims>& bbox2)
-{
-    BBox<T, dims> bbox{};
-    for(std::size_t i = 0; i < dims; ++i)
-        bbox.intervals[i] = Combine(bbox1.intervals.at(i), bbox2.intervals.at(i));
-    return bbox;
-}
-
-template <typename T>
-constexpr T Volume(const Interval<T>& interval)
-{
-    return interval.max - interval.min;
-}
-
-template <typename T, std::size_t dims>
-constexpr T Volume(const BBox<T, dims>& bbox)
-{
-    T volume{1.};
-    for(std::size_t i = 0; i < dims; ++i)
-        volume *= Volume(bbox.intervals[i]);
-    return volume;
-}
 
 // http://delab.csd.auth.gr/papers/TRSurveyRtree03_mnpt.pdf
 // http://www-db.deis.unibo.it/courses/SI-LS/papers/Gut84.pdf

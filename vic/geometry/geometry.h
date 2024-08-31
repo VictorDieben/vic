@@ -8,13 +8,11 @@ namespace vic
 namespace geom
 {
 
-// TODO: use definitions from linalg.h?
+template <typename T, std::size_t dims>
+using Point = vic::linalg::VectorN<T, dims>;
 
 template <typename T, std::size_t dims>
-using Point = vic::linalg::MatrixMxN<T, dims, 1>;
-
-template <typename T, std::size_t dims>
-using Direction = vic::linalg::MatrixMxN<T, dims, 1>;
+using Direction = vic::linalg::VectorN<T, dims>;
 
 template <typename T, std::size_t dims>
 struct Line // pos + (dir * x)
@@ -91,7 +89,7 @@ using Line3d = Line<double, 3>;
 template <typename T, std::size_t dims>
 struct Plane // ax + by + cz = d
 {
-    vic::linalg::MatrixMxN<T, dims + 1, 1> abcd;
+    vic::linalg::VectorN<T, dims + 1> abcd;
 };
 
 template <typename T>
