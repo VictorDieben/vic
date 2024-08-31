@@ -433,6 +433,7 @@ constexpr TResult To(const TInput& mat)
     }
 }
 
+// todo: make a template for unpacking constexpr sized matrices
 template <typename T>
 constexpr auto Unpack(const linalg::Matrix3<T>& mat)
 {
@@ -445,6 +446,24 @@ constexpr auto Unpack(const linalg::Matrix3<T>& mat)
                       mat.Get(2, 0),
                       mat.Get(2, 1),
                       mat.Get(2, 2));
+}
+
+template <typename T>
+constexpr auto Unpack(const linalg::Vector2<T>& vec)
+{
+    return std::tuple(vec.Get(0), vec.Get(1));
+}
+
+template <typename T>
+constexpr auto Unpack(const linalg::Vector3<T>& vec)
+{
+    return std::tuple(vec.Get(0), vec.Get(1), vec.Get(2));
+}
+
+template <typename T>
+constexpr auto Unpack(const linalg::Vector4<T>& vec)
+{
+    return std::tuple(vec.Get(0), vec.Get(1), vec.Get(2), vec.Get(3));
 }
 
 } // namespace vic

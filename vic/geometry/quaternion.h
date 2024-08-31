@@ -6,70 +6,108 @@
 namespace vic
 {
 
-// 3b1b: https://www.youtube.com/watch?v=d4EgbgTm0Bg
+// 3b1b: https://www[2]outube.com/watch?v=d4EgbgTm0Bg
 
 // todo: decide if this should be a linalg::Vector4<T>
+//template <typename T>
+//struct Quaternion
+//{
+//    T w;
+//    T x;
+//    T y;
+//    T z;
+//};
+
+//template <typename T>
+//using Quaternion = vic::linalg::Vector4<T>;
+
 template <typename T>
-struct Quaternion
+struct Quaternion : public vic::linalg::Vector4<T>
 {
-    T w;
-    T x;
-    T y;
-    T z;
+    using Base = vic::linalg::Vector4<T>;
+    using Base::Base;
+    T w() const { return Base::Get(0); }
+    T x() const { return Base::Get(1); }
+    T y() const { return Base::Get(2); }
+    T z() const { return Base::Get(3); }
+    //
+    T& w() { return Base::At(0); }
+    T& x() { return Base::At(1); }
+    T& y() { return Base::At(2); }
+    T& z() { return Base::At(3); }
 };
 
+constexpr Quaternion<double> IdentityQuaternion{1., 0., 0., 0.};
+constexpr Quaternion<double> zeroQuaternion{0., 0., 0., 0.};
+
+constexpr Quaternion<double> rotate_x_180{0., 1., 0., 0.};
+constexpr Quaternion<double> rotate_y_180{0., 0., 1., 0.};
+constexpr Quaternion<double> rotate_z_180{0., 0., 0., 1.};
+
 template <typename T>
-constexpr bool IsEqual(const Quaternion<T>& q1, //
-                       const Quaternion<T>& q2,
-                       const T eps = 1e-10)
+constexpr Quaternion<T> Add(const Quaternion<T>& a, const Quaternion<T>& b)
 {
-    return (std::abs(q1.w - q2.w) < eps) && //
-           (std::abs(q1.x - q2.x) < eps) && //
-           (std::abs(q1.y - q2.y) < eps) && //
-           (std::abs(q1.z - q2.z) < eps);
+    // https://www.mathworks.com/help/aeroblks/quaternionmultiplication.html
+    return Quaternion<T>{a[0] + b[0], a[1] + b[1], a[2] + b[2], a[3] + b[3]};
 }
 
 template <typename T>
-constexpr Quaternion<T> Normalize(const Quaternion<T>& quat)
+constexpr Quaternion<T> Multiply(const Quaternion<T>& q, const T& s)
 {
-    const T inv = T{1.} / std::sqrt((quat.w * quat.w) + //
-                                    (quat.x * quat.x) + //
-                                    (quat.y * quat.y) + //
-                                    (quat.z * quat.z));
-    return Quaternion<T>{quat.w * inv, //
-                         quat.x * inv,
-                         quat.y * inv,
-                         quat.z * inv};
-}
-
-template <typename T>
-constexpr Quaternion<T> Inverse(const Quaternion<T>& quat)
-{
-    // https://www.mathworks.com/help/aeroblks/quaternioninverse.html
-    const T inv = T{1.} / std::sqrt((quat.w * quat.w) + //
-                                    (quat.x * quat.x) + //
-                                    (quat.y * quat.y) + //
-                                    (quat.z * quat.z));
-    return Quaternion<T>{quat.w * inv, //
-                         -quat.x * inv,
-                         -quat.y * inv,
-                         -quat.z * inv};
+    // https://www.mathworks.com/help/aeroblks/quaternionmultiplication.html
+    return Quaternion<T>{q[0] * s, q[1] * s, q[2] * s, q[3] * s};
 }
 
 template <typename T>
 constexpr Quaternion<T> Multiply(const Quaternion<T>& a, const Quaternion<T>& b)
 {
     // https://www.mathworks.com/help/aeroblks/quaternionmultiplication.html
-    return Quaternion<T>{(a.w * b.w) - (a.x * b.x) - (a.y * b.y) - (a.z * b.z), //
-                         (a.w * b.x) + (a.x * b.w) - (a.y * b.z) + (a.z * b.y), //
-                         (a.w * b.y) + (a.x * b.z) + (a.y * b.w) - (a.z * b.x), //
-                         (a.w * b.z) - (a.x * b.y) + (a.y * b.x) + (a.z * b.w)};
+    return Quaternion<T>{(a[0] * b[0]) - (a[1] * b[1]) - (a[2] * b[2]) - (a[3] * b[3]), //
+                         (a[0] * b[1]) + (a[1] * b[0]) - (a[2] * b[3]) + (a[3] * b[2]), //
+                         (a[0] * b[2]) + (a[1] * b[3]) + (a[2] * b[0]) - (a[3] * b[1]), //
+                         (a[0] * b[3]) - (a[1] * b[2]) + (a[2] * b[1]) + (a[3] * b[0])};
+}
+
+template <typename T>
+constexpr T Norm(const Quaternion<T>& quat)
+{
+    return std::sqrt((quat[0] * quat[0]) + //
+                     (quat[1] * quat[1]) + //
+                     (quat[2] * quat[2]) + //
+                     (quat[3] * quat[3]));
+}
+
+template <typename T>
+constexpr Quaternion<T> Normalize(const Quaternion<T>& quat)
+{
+    const T inv = T{1.} / Norm(quat);
+    return Quaternion<T>{quat[0] * inv, //
+                         quat[1] * inv,
+                         quat[2] * inv,
+                         quat[3] * inv};
+}
+
+template <typename T>
+constexpr Quaternion<T> Inverse(const Quaternion<T>& quat)
+{
+    // https://www.mathworks.com/help/aeroblks/quaternioninverse.html
+    const T inv = T{1.} / Norm(quat);
+    return Quaternion<T>{quat[0] * inv, //
+                         -quat[1] * inv,
+                         -quat[2] * inv,
+                         -quat[3] * inv};
+}
+
+template <typename T>
+constexpr Quaternion<T> Conjugate(const Quaternion<T>& quat)
+{
+    return Quaternion<T>{quat[0], -quat[1], -quat[2], -quat[3]};
 }
 
 template <typename T>
 constexpr linalg::Matrix3<T> ToRotationMatrix(const Quaternion<T>& quat)
 {
-    auto& [q0, q1, q2, q3] = quat;
+    const auto [q0, q1, q2, q3] = Unpack(quat);
 
     //  First row
     const auto r00 = 2 * ((q0 * q0) + (q1 * q1)) - 1;
@@ -92,7 +130,7 @@ constexpr linalg::Matrix3<T> ToRotationMatrix(const Quaternion<T>& quat)
 template <typename T>
 constexpr Quaternion<T> ToQuaternion(const linalg::Matrix3<T>& mat)
 {
-    assert(IsSpecialOrthogonal(mat));
+    // assert(IsSpecialOrthogonal(mat));
 
     const auto trace = Trace(mat);
 
@@ -134,5 +172,16 @@ constexpr Quaternion<T> ToQuaternion(const linalg::Matrix3<T>& mat)
         }
     }
 }
+
+//template <typename T>
+//constexpr bool IsEqual(const Quaternion<T>& q1, //
+//                       const Quaternion<T>& q2,
+//                       const T eps = 1e-10)
+//{
+//    return (std::abs(q1[0] - q2[0]) < eps) && //
+//           (std::abs(q1[1] - q2[1]) < eps) && //
+//           (std::abs(q1[2] - q2[2]) < eps) && //
+//           (std::abs(q1[3] - q2[3]) < eps);
+//}
 
 } // namespace vic

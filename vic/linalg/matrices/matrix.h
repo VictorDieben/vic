@@ -64,6 +64,19 @@ struct MatrixConst : public MatrixBaseSelector<TShape>
         return mData[i];
     }
 
+    constexpr T& operator[](const Row i)
+    {
+        assert(i < MatrixBase::GetRows());
+        static_assert(MatrixBase::GetColumns() == 1);
+        return mData[i];
+    }
+    constexpr const T& operator[](const Row i) const
+    {
+        assert(i < MatrixBase::GetRows());
+        static_assert(MatrixBase::GetColumns() == 1);
+        return mData[i];
+    }
+
     constexpr T* data() { return mData.data(); }
 
 private:
