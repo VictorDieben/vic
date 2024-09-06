@@ -387,8 +387,8 @@ TEST(Linalg, Indices)
 //    // debug:   matmuls/sec
 //    for(const auto i : Range(1000))
 //    {
-//        const Matrix<double, 4, 4> mat1{{r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g)}};
-//        const Matrix<double, 4, 4> mat2{{r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g)}};
+//        const Matrix<double, 4, 4> mat1{r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g)};
+//        const Matrix<double, 4, 4> mat2{r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g), r(g)};
 //
 //        for(const auto j : Range(iters))
 //        {

@@ -94,10 +94,10 @@ TEST(Linalg, LeastSquares)
 
 TEST(Linalg, LeastSquaresSimple)
 {
-    auto b = Vector3<double>{{6., 0., 0.}};
-    auto mat = Matrix<double, Shape<3, 2>>{{0., 1., 1., 1., 2., 1.}};
+    auto b = Vector3<double>{6., 0., 0.};
+    auto mat = Matrix<double, Shape<3, 2>>{0., 1., 1., 1., 2., 1.};
 
     const auto xHat = LeastSquares(mat, b);
 
-    EXPECT_TRUE(IsEqual(xHat, Vector2<double>{{-3., 5.}}, 1e-10));
+    EXPECT_TRUE(IsEqual(xHat, Vector2<double>{-3., 5.}, 1e-10));
 }

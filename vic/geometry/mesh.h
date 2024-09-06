@@ -490,7 +490,7 @@ TriMesh<T> Revolve(const EdgeMesh<T>& mesh, //
                    const std::size_t n,
                    const bool close) // determines if a vertex is added at the bottom and top (only for open curves)
 {
-    static constexpr Vertex<T> zAxis{{0, 0, 1}};
+    static constexpr Vertex<T> zAxis{0, 0, 1};
 
     const MeshIndex stepSize = (MeshIndex)mesh.vertices.size();
 

@@ -55,10 +55,10 @@ TEST(Simulations, ToPolygon)
 TEST(Simulations, SurafaceArea)
 {
     Mesh mesh{};
-    mesh.AddVertex(Mesh::Vertex{{0, 0}});
-    mesh.AddVertex(Mesh::Vertex{{1, 0}});
-    mesh.AddVertex(Mesh::Vertex{{1, 1}});
-    mesh.AddVertex(Mesh::Vertex{{0, 1}});
+    mesh.AddVertex(Mesh::Vertex{0, 0});
+    mesh.AddVertex(Mesh::Vertex{1, 0});
+    mesh.AddVertex(Mesh::Vertex{1, 1});
+    mesh.AddVertex(Mesh::Vertex{0, 1});
     mesh.AddEdge(0, 1);
     mesh.AddEdge(1, 2);
     mesh.AddEdge(2, 3);

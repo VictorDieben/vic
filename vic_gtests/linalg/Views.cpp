@@ -113,14 +113,14 @@ using namespace vic::linalg;
 //
 //    // TODO: find out why the decltype is needed
 //    ExpectMatrixEqual(ViewUpperTriangle<decltype(mat)>{mat}, //
-//                      Matrix<double, 2, 2>{{1, 2, 0, 4}});
+//                      Matrix<double, 2, 2>{1, 2, 0, 4});
 //
 //    ExpectMatrixEqual(ViewStrictUpperTriangle<decltype(mat)>{mat}, //
-//                      Matrix<double, 2, 2>{{0, 2, 0, 0}});
+//                      Matrix<double, 2, 2>{0, 2, 0, 0});
 //
 //    ExpectMatrixEqual(ViewLowerTriangle<decltype(mat)>{mat}, //
-//                      Matrix<double, 2, 2>{{1, 0, 3, 4}});
+//                      Matrix<double, 2, 2>{1, 0, 3, 4});
 //
 //    ExpectMatrixEqual(ViewStrictLowerTriangle<decltype(mat)>{mat}, //
-//                      Matrix<double, 2, 2>{{0, 0, 3, 0}});
+//                      Matrix<double, 2, 2>{0, 0, 3, 0});
 //}

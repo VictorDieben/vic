@@ -11,7 +11,7 @@ TEST(Linalg, JacobiSimple)
 {
     constexpr std::size_t n = 3;
     const auto A = ToDiagonal(std::array{4., 5., 6.});
-    Vector3<double> b{{1., 2., 3.}};
+    Vector3<double> b{1., 2., 3.};
 
     const auto ans = SolveJacobiMethod(A, b);
     const auto b2 = Matmul(A, ans);

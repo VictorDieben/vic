@@ -26,6 +26,15 @@ struct DiagonalConst : public MatrixBaseSelector<TShape>
 
     constexpr static bool TempIsDiagonal = true; // todo: find better solution
 
+    template <typename... Ts>
+        requires(TShape::rows == TShape::cols) && //
+                    (std::is_convertible_v<Ts, T> && ...) && //
+                    (sizeof...(Ts) == DiagSize)
+    constexpr DiagonalConst(Ts&&... data)
+        : MatrixBaseSelector<TShape>(sizeof...(Ts), sizeof...(Ts))
+        , mData({static_cast<T>(data)...})
+    { }
+
     constexpr DiagonalConst() = default;
     constexpr DiagonalConst(const Row rows, const Col cols)
         : MatrixBaseSelector<TShape>(TShape::rows, TShape::cols)

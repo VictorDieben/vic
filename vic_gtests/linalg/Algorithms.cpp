@@ -25,7 +25,7 @@
 //    // and eigenvector is the vector for which holds:
 //    // A x = lambda x
 //    // with x the eigen vector and lambda the eigenvalue
-//    const Matrix<double, 10, 10> matrix{Diagonal<double, 10, 10>{{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}}};
+//    const Matrix<double, 10, 10> matrix{Diagonal<double, 10, 10>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}};
 //    const auto res = PowerMethod(matrix, 1E-14);
 //
 //    const auto Ax = Matmul(matrix, res);
@@ -38,7 +38,7 @@
 //TEST(Linalg, PowerMethod2d)
 //{
 //
-//    constexpr Matrix<double, 2, 2> constexpPowerMethodMatrix{{1, 0, 0, 2}};
+//    constexpr Matrix<double, 2, 2> constexpPowerMethodMatrix{1, 0, 0, 2};
 //    const auto vec2x2 = PowerMethod(constexpPowerMethodMatrix);
 //    (void)vec2x2;
 //
@@ -51,7 +51,7 @@
 //
 //        // todo
 //
-//        const Matrix<double, 2, 2> mat{{a, b, c, d}};
+//        const Matrix<double, 2, 2> mat{a, b, c, d};
 //    };
 //
 //    // https://people.math.harvard.edu/~knill/teaching/math21b2004/exhibits/2dmatrices/index.html

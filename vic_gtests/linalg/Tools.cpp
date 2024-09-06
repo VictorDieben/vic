@@ -14,7 +14,7 @@ using namespace vic::linalg;
 
 TEST(Linalg, RowSplit)
 {
-    static constexpr const Vector4<double> vec4{{1, 2, 3, 4}};
+    static constexpr const Vector4<double> vec4{1, 2, 3, 4};
 
     // static constexpr const auto part1_part2 = RowSplit<2, 2>(vec4);
 

@@ -31,9 +31,10 @@ struct MatrixConst : public MatrixBaseSelector<TShape>
     constexpr MatrixConst(const Row rows, const Col cols)
         : MatrixBaseSelector<TShape>(rows, cols)
     { }
-    constexpr MatrixConst(const std::array<T, ArraySize>& data)
-        : mData(data)
-    { }
+    //constexpr MatrixConst(const std::array<T, ArraySize>& data)
+    //    : MatrixBaseSelector<TShape>(data.size(), data.size())
+    //    , mData(data)
+    //{ }
 
     template <typename... Ts>
         requires(std::is_convertible_v<Ts, T> && ...) && (sizeof...(Ts) == ArraySize)

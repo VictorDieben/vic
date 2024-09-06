@@ -139,12 +139,12 @@ TEST(Linalg, Multivariate)
 TEST(Linalg, MatmulSparse)
 {
     // todo: specialize Matmul for sparse*vec
-    Matrix2<double> mat{{0, 1, 2, 3}};
+    Matrix2<double> mat{0, 1, 2, 3};
     const auto sparse2x2 = ToSparse(mat);
 
     ExpectMatrixEqual(mat, sparse2x2);
 
-    const Vector2<double> vec{{5, 6}};
+    const Vector2<double> vec{5., 6.};
 
     const auto res1 = Matmul(mat, vec);
     const auto res2 = Matmul(sparse2x2, vec);

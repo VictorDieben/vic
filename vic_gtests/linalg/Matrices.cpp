@@ -58,6 +58,8 @@ TEST(Linalg, InitDiagonal)
     EXPECT_TRUE(ConceptDiagonal<decltype(mr3)>);
     EXPECT_TRUE(ConceptDiagonal<decltype(mc3)>);
     EXPECT_TRUE(ConceptDiagonal<decltype(md)>);
+
+    Diagonal3<double> diag3{1., 2., 3.};
 }
 
 TEST(Linalg, InitIdentity)
@@ -126,8 +128,8 @@ TEST(Linalg, InitRowStack)
     const auto rowStack2 = ToRowStack(mat33, zeros3d);
     EXPECT_TRUE(ConceptConstexprMatrix<decltype(rowStack2)>);
 
-    const auto rowstack = ToRowStack(Vector1<double>{{1.}}, Vector1<double>{{2.}});
-    EXPECT_TRUE(IsEqual(rowstack, Vector2<double>{{1., 2.}}));
+    const auto rowstack = ToRowStack(Vector1<double>{1.}, Vector1<double>{2.});
+    EXPECT_TRUE(IsEqual(rowstack, Vector2<double>{1., 2.}));
     EXPECT_DOUBLE_EQ(rowstack.Get(0, 0), 1.);
     EXPECT_DOUBLE_EQ(rowstack.Get(1, 0), 2.);
 }
@@ -147,8 +149,8 @@ TEST(Linalg, InitColStack)
     const auto dynamic = ToColStack(zeros3d, zeros3d);
     EXPECT_FALSE(ConceptConstexprMatrix<decltype(dynamic)>);
 
-    const auto colstack = ToColStack(Matrix1<double>{{1.}}, Matrix1<double>{{2.}});
-    EXPECT_TRUE(IsEqual(colstack, Matrix<double, Shape<1, 2>>{{1., 2.}}));
+    const auto colstack = ToColStack(Matrix1<double>{1.}, Matrix1<double>{2.});
+    EXPECT_TRUE(IsEqual(colstack, Matrix<double, Shape<1, 2>>{1., 2.}));
     EXPECT_DOUBLE_EQ(colstack.Get(0, 0), 1.);
     EXPECT_DOUBLE_EQ(colstack.Get(0, 1), 2.);
 }

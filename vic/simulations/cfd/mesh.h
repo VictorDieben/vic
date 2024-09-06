@@ -208,7 +208,7 @@ Mesh InitializeGridMesh(const std::size_t nx, const std::size_t ny)
     Mesh mesh{};
     for(const auto y : yarr)
         for(const auto x : xarr)
-            mesh.AddVertex(Mesh::Vertex{{x, y}});
+            mesh.AddVertex(Mesh::Vertex{x, y});
 
     const auto vertexIndex = [&](const std::size_t i, const std::size_t j) { return std::size_t(i + (j * nx)); };
 

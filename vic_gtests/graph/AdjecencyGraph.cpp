@@ -275,7 +275,7 @@ TEST(Graph, CartesianGraph)
 //            for(const TestVertexId& v3 : ids)
 //            {
 //                // create a tensor vertex [v1, v2, v3]
-//                const auto verts = std::vector<TestVertexId>{{v1, v2, v3}};
+//                const auto verts = std::vector<TestVertexId>{v1, v2, v3};
 //                TensorVertexType tvert{tensorgraph, verts};
 //
 //                // convert it to a tensor id
