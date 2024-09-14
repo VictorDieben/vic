@@ -32,31 +32,31 @@ TEST(Linalg, Matmul)
     constexpr const auto res1 = Matmul(Identity3<double>{}, Identity3<double>{});
     ExpectMatrixEqual(res1, Identity3<double>{});
 
-    constexpr const auto diag = Diagonal3<double>({1, 2, 3});
+    constexpr const auto diag = Diagonal3<double>{1, 2, 3};
     constexpr const auto res2 = Matmul(diag, Identity3<double>{});
     constexpr const auto res3 = Matmul(Identity3<double>{}, diag);
     ExpectMatrixEqual(res2, diag);
     ExpectMatrixEqual(res3, diag);
 
-    constexpr const auto mat1 = Matrix2<double>({1, 2, 3, 4});
-    constexpr const auto mat2 = Matrix2<double>({5, 6, 7, 8});
+    constexpr const auto mat1 = Matrix2<double>{1, 2, 3, 4};
+    constexpr const auto mat2 = Matrix2<double>{5, 6, 7, 8};
     constexpr const auto res4 = Matmul(mat1, mat2);
-    ExpectMatrixEqual(res4, Matrix2<double>({19, 22, 43, 50}));
+    ExpectMatrixEqual(res4, Matrix2<double>{19, 22, 43, 50});
 
     constexpr const auto diag1 = ToDiagonal(mat1);
     constexpr const auto diag2 = ToDiagonal(mat2);
     constexpr const auto res5 = Matmul(diag1, diag2);
-    ExpectMatrixEqual(res5, Matrix2<double>({5, 0, 0, 32}));
+    ExpectMatrixEqual(res5, Matrix2<double>{5, 0, 0, 32});
 
     constexpr const auto res6 = Matmul(diag1, mat2);
-    ExpectMatrixEqual(res6, Matrix2<double>({5, 6, 28, 32}));
+    ExpectMatrixEqual(res6, Matrix2<double>{5, 6, 28, 32});
     constexpr const auto res7 = Matmul(mat1, diag2);
-    ExpectMatrixEqual(res7, Matrix2<double>({5, 16, 15, 32}));
+    ExpectMatrixEqual(res7, Matrix2<double>{5, 16, 15, 32});
 
     constexpr const auto scalar1 = Matmul(mat1, 2.0);
-    ExpectMatrixEqual(scalar1, Matrix2<double>({2, 4, 6, 8}));
+    ExpectMatrixEqual(scalar1, Matrix2<double>{2, 4, 6, 8});
     constexpr const auto scalar2 = Matmul(3., mat2);
-    ExpectMatrixEqual(scalar2, Matrix2<double>({15, 18, 21, 24}));
+    ExpectMatrixEqual(scalar2, Matrix2<double>{15, 18, 21, 24});
 
     // verify DataTypes
     EXPECT_TRUE((std::is_same_v<double, decltype(Matmul(Matrix3<double>{}, Matrix3<double>{}))::DataType>));

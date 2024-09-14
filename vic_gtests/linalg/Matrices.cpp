@@ -186,3 +186,8 @@ TEST(Linalg, ConstMatrixConstructor)
 {
     constexpr Vector1<double> d1(1.); //
 }
+
+TEST(Linalg, Convert)
+{
+    // const Matrix2<double> mdouble{Matrix2<int>{}}; //
+}

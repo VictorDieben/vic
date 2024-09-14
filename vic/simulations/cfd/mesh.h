@@ -216,6 +216,7 @@ Mesh InitializeGridMesh(const std::size_t nx, const std::size_t ny)
     for(std::size_t i = 0; i < nx - 1; ++i)
         for(std::size_t j = 0; j < ny; ++j)
             mesh.AddEdge(vertexIndex(i, j), vertexIndex(i + 1, j));
+
     // construct vertical edges
     for(std::size_t i = 0; i < nx; ++i)
         for(std::size_t j = 0; j < ny - 1; ++j)

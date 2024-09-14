@@ -279,7 +279,7 @@ TriMesh<T> GenerateUVSphere(const T rad, //
             // calculate the scaling of x and y
             const auto scale = std::sqrt((rad * rad) - (z * z));
 
-            vertices.push_back(Vertex<T>({x * scale, y * scale, z}));
+            vertices.push_back(Vertex<T>{x * scale, y * scale, z});
         }
     }
     vertices.push_back(bottom);

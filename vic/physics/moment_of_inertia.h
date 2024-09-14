@@ -2,7 +2,7 @@
 
 #include <tuple>
 
-#inlude "vic/linalg/linalg.h"
+#include "vic/linalg/linalg.h"
 
 namespace vic
 {
@@ -10,13 +10,16 @@ namespace vic
 //using Mass = T;
 
 template <typename T>
-using CG = vic::linalg::Vector2<T>;
+using CG = ::vic::linalg::Vector2<T>;
 
 template <typename T>
-using MoIDiag = vic::linalg::Diagonal3<T>;
+using MoIDiag = ::vic::linalg::Diagonal3<T>;
 
 template <typename T>
-concept ConceptMoI = ConceptConstexprMatrix<T> && requires(T mat) {
+using MoI = ::vic::linalg::Matrix3<T>;
+
+template <typename T>
+concept ConceptMoI = ::vic::linalg::ConceptConstexprMatrix<T> && requires(T mat) {
     requires(T::GetRows() == 3 && T::GetColumns() == 3); //
 };
 
@@ -27,8 +30,8 @@ MoIDiag<T> MoICuboid(const T h, const T w, const T l, const T mass)
     const T h2 = h * h;
     const T w2 = w * w;
     const T l2 = l * l;
-    return MoIDiag<T>{oneTwelvth * mass * (w2 + d2), //
-                      oneTwelvth * mass * (d2 + h2),
+    return MoIDiag<T>{oneTwelvth * mass * (w2 + l2), //
+                      oneTwelvth * mass * (l2 + h2),
                       oneTwelvth * mass * (h2 + w2)}; //
 }
 
@@ -47,8 +50,11 @@ MoIDiag<T> MoISphereThinWalled(const T radius, const T mass)
 }
 
 template <typename T>
-MoIDiag<T> MoISphereThickWalled(const T r1, const T r2, const T mass)
+ConceptMoI auto MoISphereThickWalled(const T r1, //
+                                     const T r2,
+                                     const T mass)
 {
+    // note: manually computing all powers are probably not needed, the compiler can do this perfectly fine,
     const T r1_2 = r1 * r1;
     const T r1_3 = r1_2 * r1;
     const T r1_5 = r1_2 * r1_3;
@@ -63,7 +69,9 @@ MoIDiag<T> MoISphereThickWalled(const T r1, const T r2, const T mass)
 }
 
 template <typename T>
-MoIDiag<T> MoICylinder(const T radius, const T height, const T mass)
+ConceptMoI auto MoICylinder(const T radius, //
+                            const T height,
+                            const T mass)
 {
     const T r2 = radius * radius;
     const T Iz = .5 * mass * r2;
@@ -72,30 +80,59 @@ MoIDiag<T> MoICylinder(const T radius, const T height, const T mass)
 }
 
 template <typename T>
-MoIDiag<T> MoIThinWalledCylinder()
+ConceptMoI auto MoIThinWalledCylinder()
 {
-    return MoIDiag<T>{}; //
+    return MoIDiag<T>{}; // todo
 }
 
 template <typename T>
-MoIDiag<T> MoIThickWalledCylinder(const T RInner, const T ROuter, const T height, const T mass)
+ConceptMoI auto MoIThickWalledCylinder(const T RInner, //
+                                       const T ROuter,
+                                       const T height,
+                                       const T mass)
 {
     const T inner2 = RInner * RInner;
     const T outer2 = ROuter * ROuter;
     const T height2 = height * height;
-    Iz = .5 * mass * (inner2 + outer2);
 
-    Ix_y = (1. / 12.) * mass*;
-    return MoIDiag<T>{}; //
+    const T Iz = .5 * mass * (inner2 + outer2);
+    const T Ix_y = (1. / 12.) * mass * ((3. * (inner2 + outer2)) + (4. * height2));
+
+    return MoIDiag<T>{Ix_y, Ix_y, Iz}; //
+}
+
+template <typename T>
+ConceptMoI auto MoIEllipsoid(const T a, //
+                             const T b,
+                             const T c,
+                             const T mass)
+{
+    // a, b and c are the radii from the center in the x, y, z directions respectively
+    const T a2 = a * a;
+    const T b2 = b * b;
+    const T c2 = c * c;
+    return MoIDiag<T>{.2 * mass * (b2 + c2), //
+                      .2 * mass * (a2 + c2),
+                      .2 * mass * (a2 + b2)};
+}
+
+template <typename T>
+ConceptMoI auto ParallelAxisTheorem(const T mass, //
+                                    const ConceptMoI auto& moi,
+                                    const linalg::Vector3<T>& R)
+{
+    const auto inner = linalg::ElementWiseMultiply(R, R);
+    const auto diag = linalg::Diagonal3<T>{inner[0], inner[1], inner[2]};
+    return linalg::Add(moi, Matmul(mass, diag));
 }
 
 template <typename T>
 std::tuple<T, CG<T>, MoIDiag<T>> MoICombine(const T mass1,
                                             const CG<T>& cg1, //
-                                            const MoI<T>& moi1,
+                                            const ConceptMoI auto& moi1,
                                             const T mass2,
                                             const CG<T>& cg2,
-                                            const MoI<T>& moi2)
+                                            const ConceptMoI auto& moi2)
 {
     using namespace vic::linalg;
 

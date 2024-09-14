@@ -26,10 +26,10 @@ struct Quaternion : public vic::linalg::Vector4<T>
 {
     using Base = vic::linalg::Vector4<T>;
     using Base::Base;
-    T w() const { return Base::Get(0); }
-    T x() const { return Base::Get(1); }
-    T y() const { return Base::Get(2); }
-    T z() const { return Base::Get(3); }
+    const T& w() const { return Base::Get(0); }
+    const T& x() const { return Base::Get(1); }
+    const T& y() const { return Base::Get(2); }
+    const T& z() const { return Base::Get(3); }
     //
     T& w() { return Base::At(0); }
     T& x() { return Base::At(1); }
@@ -55,6 +55,13 @@ constexpr Quaternion<T> Add(const Quaternion<T>& a, const Quaternion<T>& b)
 {
     // https://www.mathworks.com/help/aeroblks/quaternionmultiplication.html
     return Quaternion<T>{a[0] + b[0], a[1] + b[1], a[2] + b[2], a[3] + b[3]};
+}
+
+template <typename T>
+constexpr Quaternion<T> Subtract(const Quaternion<T>& a, const Quaternion<T>& b)
+{
+    // a - b
+    return Add(a, Negation(b));
 }
 
 template <typename T>
@@ -132,7 +139,7 @@ constexpr Quaternion<T> Rotation(const T theta, const linalg::Vector3<T>& axis)
 }
 
 template <typename T>
-Quaternion<T> ToQuaternion(const linalg::Vector3<T>& vec)
+constexpr Quaternion<T> ToQuaternion(const linalg::Vector3<T>& vec)
 {
     return Quaternion<T>{0., vec[0], vec[1], vec[2]};
 }
@@ -149,16 +156,54 @@ constexpr linalg::Vector3<T> Apply(const linalg::Vector3<T>& vec, const Quaterni
 template <typename T>
 constexpr Quaternion<T> Exponent(const Quaternion<T>& quat)
 {
-    // e^q = e^(s + Iv) = e^s (cos(v) + I sin(v))
     const auto [w, x, y, z] = Unpack(quat);
+    const T a = std::sqrt((x * x) + (y * y) + (z * z));
+    const T sinAOverA = std::sin(a) / a;
+    return Quaternion<T>{std::cos(a), //
+                         x * sinAOverA,
+                         y * sinAOverA,
+                         z * sinAOverA};
+}
+
+template <typename T>
+constexpr Quaternion<T> ExponentApprox(const Quaternion<T>& quat)
+{
+    const auto [w, x, y, z] = Unpack(quat);
+    const T alpha = std::sqrt((x * x) + (y * y) + (z * z));
+    //const T a2 = a * a;
+    //const T a4 = a2 * a2;
+    //const T a6 = a4 * a2;
+    //const T cosApprox = 1. //
+    //                    - (a2 / 2.) //
+    //                    + (a4 / (4 * 3 * 2)) //
+    //                    - (a6 / (6 * 5 * 4 * 3 * 2));
+    //const T sinApprox = 1. //
+    //                    - (a2 / (3 * 2)) //
+    //                    + (a4 / (5 * 4 * 3 * 2)) //
+    //                    - (a6 / (7 * 6 * 5 * 4 * 3 * 2));
+
+    //return Quaternion<T>{cosApprox, //
+    //                     x * sinApprox,
+    //                     y * sinApprox,
+    //                     z * sinApprox};
+
     const T ea = std::exp(w);
-    const T sqrtV = std::sqrt((x * x) + (y * y) + (z * z));
-    const T cos_term = std::cos(sqrtV);
-    const T fsin = std::sin(sqrtV) / sqrtV;
-    return Quaternion<T>{ea * cos_term, //
-                         ea * x * fsin,
-                         ea * y * fsin,
-                         ea * z * fsin};
+    const T a2 = alpha * alpha;
+    const T a4 = a2 * a2;
+    const T a6 = a4 * a2;
+    const T cosApprox = 1. //
+                        - (a2 / 2.) //
+                        + (a4 / (4. * 3 * 2)) //
+                        - (a6 / (6. * 5 * 4 * 3 * 2));
+    const T sinApprox = 1. //
+                        - (a2 / (3. * 2)) //
+                        + (a4 / (5. * 4 * 3 * 2)) //
+                        - (a6 / (7. * 6 * 5 * 4 * 3 * 2));
+
+    return Quaternion<T>{ea * cosApprox, //
+                         ea * x * sinApprox,
+                         ea * y * sinApprox,
+                         ea * z * sinApprox};
 }
 
 template <typename T>

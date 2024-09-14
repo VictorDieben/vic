@@ -193,11 +193,36 @@ constexpr void Linspace(const T& begin,
 }
 
 template <typename T>
-constexpr std::vector<T> Linspace(const T start, const T end, const std::size_t n)
+constexpr std::vector<T> Linspace(const T start, //
+                                  const T end,
+                                  const std::size_t n)
 {
     std::vector<T> result{};
     result.resize(n);
     Linspace(std::begin(result), std::end(result), start, end);
+    return result;
+}
+
+//
+//
+//
+
+template <typename T>
+constexpr std::vector<T> Powspace(const T start, //
+                                  const T end,
+                                  const T pow,
+                                  const std::size_t n)
+{
+    const auto front = std::pow(start, 1. / (double)pow);
+    const auto back = std::pow(end, 1. / (double)pow);
+    const auto lin = Linspace(front, back, n);
+
+    std::vector<T> result{};
+    result.resize(n);
+
+    for(std::size_t i = 0; i < n; ++i)
+        result[i] = std::pow(lin[i], pow);
+
     return result;
 }
 

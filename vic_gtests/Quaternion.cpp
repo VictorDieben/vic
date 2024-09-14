@@ -4,7 +4,7 @@
 
 #include "gtest/gtest.h"
 
-#include "vic/geometry/quaternion.h"
+#include "vic/math/quaternion.h"
 
 #include "vic/linalg/algorithms/matmul.h"
 #include "vic/linalg/algorithms/transpose.h"
@@ -151,8 +151,37 @@ TEST(Quaternion, Properties)
     // todo: https://www.matec-conferences.org/articles/matecconf/pdf/2019/41/matecconf_cscc2019_01060.pdf
 }
 
+TEST(Quaternion, ExponentSmallAngle)
+{
+
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> rv(-1., 1.);
+
+    for(const auto pow : Powspace(1.e-6, .1, std::numbers::e, 20))
+    {
+        const double angle = pow;
+
+        auto qtemp = Normalize(Quaternion<double>{0., rv(g), rv(g), rv(g)});
+        auto quat = Multiply(qtemp, angle);
+
+        const auto q = Exponent(quat);
+        const auto qs = ExponentApprox(quat);
+
+        std::cout << std::format("{:.16e}: \te normal: {:.16e};\te approx: {:.16e};\tdiff: {:.16e}", angle, Norm(q) - 1., Norm(qs) - 1., Norm(Subtract(q, qs))) << std::endl;
+
+        EXPECT_LT(std::abs(Norm(q) - 1.), 1e-8);
+        EXPECT_LT(std::abs(Norm(qs) - 1.), 1e-8);
+
+        ASSERT_LT(Norm(Subtract(q, qs)), 1e-6) << "First failing angle: " << angle;
+    }
+
+    EXPECT_TRUE(false);
+}
+
 TEST(Quaternion, Exponent)
 {
+    using namespace vic::linalg;
+
     // full rotation
     const auto twoPi = 2. * std::numbers::pi;
     EXPECT_TRUE(IsEqual(IdentityQuaternion, //
@@ -162,5 +191,36 @@ TEST(Quaternion, Exponent)
     EXPECT_TRUE(IsEqual(IdentityQuaternion, //
                         Exponent(Quaternion<double>{0., 0., 0., twoPi})));
 
+    const auto res1 = Exponent(Multiply(Quaternion<double>{0., 0., 0., 1.}, 0.1 / 2.));
+    const auto res2 = ExponentApprox(Multiply(Quaternion<double>{0., 0., 0., 1.}, 0.1 / 2.));
+    const auto ans = Quaternion<double>{0.998750260394966, 0, 0, 0.0499791692706783};
+    EXPECT_TRUE(IsEqual(res1, ans));
+
     // todo: check other angles, make sure all of them are unit length
+    std::default_random_engine g;
+    std::uniform_real_distribution<double> rv(-1., 1.);
+
+    auto quat = Normalize(Quaternion<double>{0., rv(g), rv(g), rv(g)});
+    quat.w() = rv(g);
+
+    const auto exp = Exponent(quat);
+    const auto expInv = Exponent(Conjugate(quat));
+
+    EXPECT_DOUBLE_EQ(Norm(exp), 1.);
+    EXPECT_DOUBLE_EQ(Norm(expInv), 1.);
+
+    EXPECT_TRUE(IsEqual(IdentityQuaternion, Multiply(exp, expInv)));
+    EXPECT_TRUE(IsEqual(IdentityQuaternion, Multiply(expInv, exp)));
+
+    // make sure Exponent works with small angles
+    EXPECT_DOUBLE_EQ(Norm(Exponent(Quaternion<double>{0.0001, 1., 1., 1.})), 1.);
+    EXPECT_DOUBLE_EQ(Norm(Exponent(Quaternion<double>{1e-10, 1., 1., 1.})), 1.);
+    EXPECT_DOUBLE_EQ(Norm(Exponent(Quaternion<double>{1e-14, 1., 1., 1.})), 1.);
+
+    const auto small1 = Exponent(Quaternion<double>{1e-3, 1., 0., 0.});
+    const auto small2 = Exponent(Quaternion<double>{1e-6, 1., 0., 0.});
+
+    // const auto rotated = Apply(Vector3d{0, 1, 0}, small);
+
+    int bla = 1;
 }

@@ -18,7 +18,7 @@ TEST(Linalg, Transpose)
     constexpr DiagonalMxN<double, 2, 2> diagT = Transpose(diag);
     EXPECT_TRUE(IsEqual(diag, diagT));
 
-    constexpr MatrixMxN<double, 2, 2> mat = MatrixMxN<double, 2, 2>({1., 2., 3., 4.});
+    constexpr MatrixMxN<double, 2, 2> mat = MatrixMxN<double, 2, 2>{1., 2., 3., 4.};
     constexpr MatrixMxN<double, 2, 2> matT = Transpose(mat);
     EXPECT_TRUE(IsEqual(matT, MatrixMxN<double, 2, 2>({1., 3., 2., 4.})));
 
@@ -37,7 +37,7 @@ TEST(Linalg, Transpose)
 
 TEST(Linalg, TransposeInverseDiag)
 {
-    constexpr auto diag = DiagonalMxN<double, 3, 3>({1., 2., 3.});
+    constexpr auto diag = DiagonalMxN<double, 3, 3>{1., 2., 3.};
     constexpr DiagonalMxN<double, 3, 3> diagInv = InverseDiagonal(diag);
     EXPECT_TRUE(IsEqual(Matmul(diag, diagInv), Identity3<double>{}));
 }
