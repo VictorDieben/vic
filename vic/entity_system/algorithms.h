@@ -253,10 +253,10 @@ auto Iterate2d(TEcs& ecs, const TIter begin, const TIter end)
     {
         const EntityId id = *it;
 
-        hint1 = ecs.ComponentSystem<T1>::lower_bound_with_hint(id, hint1);
+        hint1 = ecs.template ComponentSystem<T1>::lower_bound_with_hint(id, hint1);
         T1* t1Ptr = (hint1 != it1End) && (hint1->first == id) ? &(hint1->second) : nullptr;
 
-        hint2 = ecs.ComponentSystem<T2>::lower_bound_with_hint(id, hint2);
+        hint2 = ecs.template ComponentSystem<T2>::lower_bound_with_hint(id, hint2);
         T2* t2Ptr = (hint2 != it2End) && (hint2->first == id) ? &(hint2->second) : nullptr;
 
         result.push_back({id, t1Ptr, t2Ptr});
@@ -289,13 +289,13 @@ auto Iterate3d(TEcs& ecs, const TIter begin, const TIter end)
     {
         const EntityId id = *it;
 
-        hint1 = ecs.ComponentSystem<T1>::lower_bound_with_hint(id, hint1);
+        hint1 = ecs.template ComponentSystem<T1>::lower_bound_with_hint(id, hint1);
         T1* t1Ptr = (hint1 != it1End) && (hint1->first == id) ? &(hint1->second) : nullptr;
 
-        hint2 = ecs.ComponentSystem<T2>::lower_bound_with_hint(id, hint2);
+        hint2 = ecs.template ComponentSystem<T2>::lower_bound_with_hint(id, hint2);
         T2* t2Ptr = (hint2 != it2End) && (hint2->first == id) ? &(hint2->second) : nullptr;
 
-        hint3 = ecs.ComponentSystem<T3>::lower_bound_with_hint(id, hint3);
+        hint3 = ecs.template ComponentSystem<T3>::lower_bound_with_hint(id, hint3);
         T3* t3Ptr = (hint3 != it3End) && (hint3->first == id) ? &(hint3->second) : nullptr;
 
         result.push_back({id, t1Ptr, t2Ptr, t3Ptr});

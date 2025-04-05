@@ -136,14 +136,10 @@ constexpr std::array<T, 4> RotToQuaternion(const Matrix3<T>& R)
     return wxyz;
 }
 
-/*!
- *    @brief  Transforms an arbirtary 6D vector to a valid rotation matrix.
- *            This represenation avoids discontinuities found in Euler or quaternons,  
- *            which facilitates network regression in machine learning applications.
-              See also: https://doi.org/10.48550/arXiv.1812.07035
- *    @param  Rep 6D representation of a rotation. 
- *    @return A valid rotation matrix
- */
+// Transforms an arbirtary 6D vector to a valid rotation matrix.
+// This represenation avoids discontinuities found in Euler or quaternons,
+// which facilitates network regression in machine learning applications.
+// See also: https://doi.org/10.48550/arXiv.1812.07035
 template <typename T>
 constexpr Matrix3<T> Vec6ToRot(const Vector6<T>& Rep)
 {
@@ -163,13 +159,8 @@ constexpr Matrix3<T> Vec6ToRot(const Vector6<T>& Rep)
     return X;
 }
 
-/*!
- *    @brief  Inverse mapping of Vec6ToRot(): rotation matrix to an arbirtary 6D representation vector.
-              See also: https://doi.org/10.48550/arXiv.1812.07035
- *    @param X a valid rotation matrix
- *    @return 6D representation of X. 
- *                Essentially, the last column is dropped.
- */
+// Inverse mapping of Vec6ToRot(): rotation matrix to an arbirtary 6D representation vector.
+// See also: https://doi.org/10.48550/arXiv.1812.07035
 template <typename T>
 constexpr Vector6<T> RotToVec6(const Matrix3<T>& X)
 {

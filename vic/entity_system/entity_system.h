@@ -1,7 +1,11 @@
 #pragma once
 
+// #define __cpp_lib_flat_map 202207L
+
 #include <algorithm>
 #include <cassert>
+// #include <flat_map>
+#include <format>
 #include <map>
 #include <ranges>
 #include <string>
@@ -158,7 +162,8 @@ public:
         auto it = mComponents.find(id);
 #ifdef _DEBUG
         if(it == std::end(mComponents))
-            throw std::runtime_error(std::string("Entity ") + std::to_string(id) + " has no " + typeid(T).name());
+            // throw std::runtime_error(std::string("Entity ") + std::to_string(id) + " has no " + typeid(T).name());
+            throw std::runtime_error(std::format("Entity {} has no {}", id, typeid(T).name()));
 #endif
         return it->second;
     }
@@ -616,7 +621,7 @@ public:
     }
 
     template <int index>
-    using NthType = decltype(std::get<index>(std::tuple<TComponents...>));
+    using NthType = decltype(std::get<index>(std::tuple<TComponents...>{}));
 
 private:
     EntityId mEntityCounter{1}; // reserve 0 for emtpy, not sure if I need that

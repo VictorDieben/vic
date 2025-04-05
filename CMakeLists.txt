@@ -28,3 +28,4 @@ if (NOT DEFINED VIC_NO_BENCHMARK)
     add_subdirectory ("vic_benchmark")
 endif()
 
+

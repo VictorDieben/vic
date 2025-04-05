@@ -138,14 +138,14 @@ public:
     template <typename TEvent, typename... TArgs>
     void EmplaceEvent(TArgs&&... args)
     {
-        static_assert(std::is_base_of_v<BaseEvent, TEvent>);
-        auto eventPair = EventPair(EventTypeId(TEvent), //
-                                   std::make_unique<TEvent>(std::forward<TArgs>...));
-        {
-            std::unique_lock eventLock(mEventMutex);
-            mEvents.push_back(std::move(eventPair));
-        }
-        mCv.notify_all();
+        //static_assert(std::is_base_of_v<BaseEvent, TEvent>);
+        //auto eventPair = EventPair(EventTypeId(TEvent), //
+        //                           std::make_unique<TEvent>(std::forward<TArgs>...));
+        //{
+        //    std::unique_lock eventLock(mEventMutex);
+        //    mEvents.push_back(std::move(eventPair));
+        //}
+        //mCv.notify_all();
     }
 
     void Run(const std::atomic<bool>& keepRunning);

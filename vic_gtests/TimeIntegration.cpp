@@ -30,7 +30,7 @@ TEST(TimeIntegration, Setup)
 
     eom::State state1 = ForwardEuler(state0, 0.1, derivativeFunctor, integrateFunctor);
 
-    const auto [state1_tr, dot1_tr] = Trapezoidal(state0, 0.1, derivativeFunctor, integrateFunctor);
+    const auto state1_tr = Trapezoidal(state0, 0.1, derivativeFunctor, integrateFunctor);
 
     const auto state1_rk4 = RungeKutta4(state0, 0.1, derivativeFunctor, integrateFunctor);
 
