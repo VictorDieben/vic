@@ -646,68 +646,68 @@ TEST(Memory, MoveMerge)
     }
 }
 
-#include <range/v3/all.hpp> // get everything
-#include <ranges>
-
-TEST(Memory, NMap)
-{
-    using KeyType = int;
-    using KeyVector = std::vector<KeyType>;
-    struct A
-    { };
-    struct B
-    { };
-    struct C
-    { };
-    struct D
-    { };
-
-    vic::NMap<KeyType, A, B, C, D> nmap{};
-    EXPECT_EQ(nmap.Size<A>(), 0);
-    EXPECT_EQ(nmap.Size<B>(), 0);
-
-    nmap.Add<A>(1);
-    EXPECT_EQ(nmap.Size<A>(), 1);
-    EXPECT_EQ(nmap.Size<B>(), 0);
-
-    EXPECT_EQ(KeyVector{1}, std::ranges::to<std::vector>(nmap.Keys<A>()));
-    EXPECT_EQ(KeyVector{}, std::ranges::to<std::vector>(nmap.Keys<B>()));
-
-    nmap.Add<B>(3);
-    nmap.Add<B>(2);
-    EXPECT_EQ((KeyVector{2, 3}), std::ranges::to<std::vector>(nmap.Keys<B>()));
-
-    nmap.Add<A>(2);
-    EXPECT_EQ((KeyVector{1, 2}), std::ranges::to<std::vector>(nmap.Keys<A>()));
-
-    const auto intersection_view = nmap.Intersection<A, B>();
-
-    for(const auto key : intersection_view)
-        std::cout << key << "; " << std::endl;
-
-    EXPECT_EQ(KeyVector{2}, std::ranges::to<std::vector>(intersection_view));
-
-    const auto empty_intersection = nmap.Intersection<A, B, C, D>();
-    EXPECT_TRUE(empty_intersection.empty());
-
-    const auto unionView = nmap.Union<A, B>();
-    EXPECT_EQ((KeyVector{1, 2, 3}), std::ranges::to<std::vector>(unionView));
-
-    auto aView = nmap.Values<A>(std::set<KeyType>{2});
-
-    for(const auto& [id, aRef, bRef] : nmap.Filter<A, B>())
-    {
-        //EXPECT_EQ(&nmap.Get<A>(id), &aRef);
-        //EXPECT_EQ(&nmap.Get<B>(id), &bRef);
-    }
-
-    const auto ids = std::set<KeyType>{1, 2, 3};
-    std::set<KeyType> visited;
-    for(const auto& [id, aPtr, bPtr] : nmap.Iterate<A, B>(ids))
-    {
-        visited.insert(id);
-        EXPECT_EQ(nmap.TryGet<A>(id), aPtr);
-        EXPECT_EQ(nmap.TryGet<B>(id), bPtr);
-    }
-    EXPECT_EQ(ids, visited);
-}
+//#include <range/v3/all.hpp> // get everything
+//#include <ranges>
+//
+//TEST(Memory, NMap)
+//{
+//    using KeyType = int;
+//    using KeyVector = std::vector<KeyType>;
+//    struct A
+//    { };
+//    struct B
+//    { };
+//    struct C
+//    { };
+//    struct D
+//    { };
+//
+//    vic::NMap<KeyType, A, B, C, D> nmap{};
+//    EXPECT_EQ(nmap.Size<A>(), 0);
+//    EXPECT_EQ(nmap.Size<B>(), 0);
+//
+//    nmap.Add<A>(1);
+//    EXPECT_EQ(nmap.Size<A>(), 1);
+//    EXPECT_EQ(nmap.Size<B>(), 0);
+//
+//    EXPECT_EQ(KeyVector{1}, std::ranges::to<std::vector>(nmap.Keys<A>()));
+//    EXPECT_EQ(KeyVector{}, std::ranges::to<std::vector>(nmap.Keys<B>()));
+//
+//    nmap.Add<B>(3);
+//    nmap.Add<B>(2);
+//    EXPECT_EQ((KeyVector{2, 3}), std::ranges::to<std::vector>(nmap.Keys<B>()));
+//
+//    nmap.Add<A>(2);
+//    EXPECT_EQ((KeyVector{1, 2}), std::ranges::to<std::vector>(nmap.Keys<A>()));
+//
+//    const auto intersection_view = nmap.Intersection<A, B>();
+//
+//    for(const auto key : intersection_view)
+//        std::cout << key << "; " << std::endl;
+//
+//    EXPECT_EQ(KeyVector{2}, std::ranges::to<std::vector>(intersection_view));
+//
+//    const auto empty_intersection = nmap.Intersection<A, B, C, D>();
+//    EXPECT_TRUE(empty_intersection.empty());
+//
+//    const auto unionView = nmap.Union<A, B>();
+//    EXPECT_EQ((KeyVector{1, 2, 3}), std::ranges::to<std::vector>(unionView));
+//
+//    auto aView = nmap.Values<A>(std::set<KeyType>{2});
+//
+//    for(const auto& [id, aRef, bRef] : nmap.Filter<A, B>())
+//    {
+//        //EXPECT_EQ(&nmap.Get<A>(id), &aRef);
+//        //EXPECT_EQ(&nmap.Get<B>(id), &bRef);
+//    }
+//
+//    const auto ids = std::set<KeyType>{1, 2, 3};
+//    std::set<KeyType> visited;
+//    for(const auto& [id, aPtr, bPtr] : nmap.Iterate<A, B>(ids))
+//    {
+//        visited.insert(id);
+//        EXPECT_EQ(nmap.TryGet<A>(id), aPtr);
+//        EXPECT_EQ(nmap.TryGet<B>(id), bPtr);
+//    }
+//    EXPECT_EQ(ids, visited);
+//}

@@ -140,7 +140,7 @@ TEST(Quaternion, Randomized)
         const auto ab_c = Multiply(Multiply(a, b), c);
         const auto a_bc = Multiply(a, Multiply(b, c));
 
-        const auto dist = Norm(Add(ab_c, Negation(a_bc)));
+        const auto dist = Norm(Add(ab_c, Negative(a_bc)));
 
         EXPECT_TRUE(dist < 1e-8);
     }

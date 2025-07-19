@@ -26,26 +26,30 @@ struct Quaternion : public vic::linalg::Vector4<T>
 {
     using Base = vic::linalg::Vector4<T>;
     using Base::Base;
-    const T& w() const { return Base::Get(0); }
-    const T& x() const { return Base::Get(1); }
-    const T& y() const { return Base::Get(2); }
-    const T& z() const { return Base::Get(3); }
+    T w() const { return Base::Get(0); }
+    T x() const { return Base::Get(1); }
+    T y() const { return Base::Get(2); }
+    T z() const { return Base::Get(3); }
     //
     T& w() { return Base::At(0); }
     T& x() { return Base::At(1); }
     T& y() { return Base::At(2); }
     T& z() { return Base::At(3); }
+
+    auto Identity() const { return Quaternion<T>(1., 0., 0., 0.); };
 };
 
-constexpr Quaternion<double> IdentityQuaternion{1., 0., 0., 0.};
-constexpr Quaternion<double> zeroQuaternion{0., 0., 0., 0.};
+using Quaterniond = Quaternion<double>;
 
-constexpr Quaternion<double> rotate_x_180{0., 1., 0., 0.};
-constexpr Quaternion<double> rotate_y_180{0., 0., 1., 0.};
-constexpr Quaternion<double> rotate_z_180{0., 0., 0., 1.};
+constexpr Quaterniond IdentityQuaternion{1., 0., 0., 0.};
+constexpr Quaterniond zeroQuaternion{0., 0., 0., 0.};
+
+constexpr Quaterniond rotate_x_180{0., 1., 0., 0.};
+constexpr Quaterniond rotate_y_180{0., 0., 1., 0.};
+constexpr Quaterniond rotate_z_180{0., 0., 0., 1.};
 
 template <typename T>
-constexpr Quaternion<T> Negation(const Quaternion<T>& q)
+constexpr Quaternion<T> Negative(const Quaternion<T>& q)
 {
     return Quaternion<T>{-q[0], -q[1], -q[2], -q[3]};
 }
@@ -61,11 +65,11 @@ template <typename T>
 constexpr Quaternion<T> Subtract(const Quaternion<T>& a, const Quaternion<T>& b)
 {
     // a - b
-    return Add(a, Negation(b));
+    return Add(a, Negative(b));
 }
 
 template <typename T>
-constexpr Quaternion<T> Multiply(const Quaternion<T>& q, const T& s)
+constexpr Quaternion<T> Multiply(const Quaternion<T>& q, const T s)
 {
     // https://www.mathworks.com/help/aeroblks/quaternionmultiplication.html
     return Quaternion<T>{q[0] * s, q[1] * s, q[2] * s, q[3] * s};
@@ -82,18 +86,26 @@ constexpr Quaternion<T> Multiply(const Quaternion<T>& a, const Quaternion<T>& b)
 }
 
 template <typename T>
+constexpr T NormSquared(const Quaternion<T>& quat)
+{
+    return (quat[0] * quat[0]) + //
+           (quat[1] * quat[1]) + //
+           (quat[2] * quat[2]) + //
+           (quat[3] * quat[3]);
+}
+
+template <typename T>
 constexpr T Norm(const Quaternion<T>& quat)
 {
-    return std::sqrt((quat[0] * quat[0]) + //
-                     (quat[1] * quat[1]) + //
-                     (quat[2] * quat[2]) + //
-                     (quat[3] * quat[3]));
+    return std::sqrt(NormSquared(quat));
 }
 
 template <typename T>
 constexpr Quaternion<T> Normalize(const Quaternion<T>& quat)
 {
-    const T inv = T{1.} / Norm(quat);
+    const T norm = Norm(quat);
+    assert(norm != 0.);
+    const T inv = T{1.} / norm;
     return Quaternion<T>{quat[0] * inv, //
                          quat[1] * inv,
                          quat[2] * inv,
@@ -130,6 +142,12 @@ constexpr Quaternion<T> Scalar(const Quaternion<T>& quat)
 }
 
 template <typename T>
+constexpr linalg::Vector3<T> ToVector3(const Quaternion<T>& quat)
+{
+    return linalg::Vector3<T>{quat[1], quat[2], quat[3]};
+}
+
+template <typename T>
 constexpr Quaternion<T> Rotation(const T theta, const linalg::Vector3<T>& axis)
 {
     const auto n = vic::linalg::Normalize(axis);
@@ -157,12 +175,20 @@ template <typename T>
 constexpr Quaternion<T> Exponent(const Quaternion<T>& quat)
 {
     const auto [w, x, y, z] = Unpack(quat);
-    const T a = std::sqrt((x * x) + (y * y) + (z * z));
-    const T sinAOverA = std::sin(a) / a;
-    return Quaternion<T>{std::cos(a), //
-                         x * sinAOverA,
-                         y * sinAOverA,
-                         z * sinAOverA};
+    const T a2 = (x * x) + (y * y) + (z * z);
+    if(a2 < 1e-12) // assume cos(a)==1 and sin(a)/a==1
+    {
+        return Quaternion<T>{1, x, y, z};
+    }
+    else
+    {
+        const T a = std::sqrt(a2);
+        const T sinAOverA = std::sin(a) / a;
+        return Quaternion<T>{std::cos(a), //
+                             x * sinAOverA,
+                             y * sinAOverA,
+                             z * sinAOverA};
+    }
 }
 
 template <typename T>

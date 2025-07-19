@@ -68,7 +68,7 @@ constexpr Matrix3<T> EulerAngles(const T alpha, const T beta, const T gamma)
 }
 
 template <typename T>
-constexpr Matrix3<T> Quaternion(const T w, const T x, const T y, const T z)
+constexpr Matrix3<T> QuaternionToMatrix(const T w, const T x, const T y, const T z)
 {
     Matrix<T, 3, 3> R;
     R.At(0, 0) = 2 * (w * w + x * x) - 1;
@@ -87,9 +87,9 @@ constexpr Matrix3<T> Quaternion(const T w, const T x, const T y, const T z)
 }
 
 template <typename T>
-constexpr Matrix3<T> Quaternion(const std::array<T, 4>& wxyz)
+constexpr Matrix3<T> QuaternionToMatrix(const std::array<T, 4>& wxyz)
 {
-    return Quaternion(wxyz[0], wxyz[1], wxyz[2], wxyz[3]);
+    return QuaternionToMatrix(wxyz[0], wxyz[1], wxyz[2], wxyz[3]);
 }
 
 template <typename T>

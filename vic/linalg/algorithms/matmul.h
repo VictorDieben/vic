@@ -44,7 +44,7 @@ template <typename TMat, typename TVec>
     requires ConceptTriDiagonal<TMat> && ConceptVector<TVec>
 constexpr auto MatmulTriDiagVector(const TMat& mat, const TVec& vec)
 {
-    // multiplication between square diagonal and vector
+    // multiplication between square tri-diagonal and vector
     assert(mat.GetRows() == mat.GetColumns());
     assert(mat.GetColumns() == vec.GetRows());
     assert(vec.GetColumns() == 1u);
