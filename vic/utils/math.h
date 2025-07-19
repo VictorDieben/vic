@@ -3,7 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <numeric>
-#include <ranges>
+// #include <ranges>
 
 namespace vic
 {
@@ -139,7 +139,7 @@ constexpr std::array<uint64_t, 32> CumulativeSize()
     return values;
 }
 
-template <typename TReturn, std::ranges::range TRange>
+template <typename TReturn, typename TRange>
 const TReturn SetAssingmentsToInteger(const TRange& range)
 {
     static constexpr auto possibilities = NumberOfPossibilities();
@@ -148,7 +148,7 @@ const TReturn SetAssingmentsToInteger(const TRange& range)
     return TReturn{};
 }
 
-template <std::ranges::range TRange, std::integral TInteger>
+template <typename TRange, std::integral TInteger>
 void IntegerToSetAssingment(const TInteger integer, TRange& range)
 {
     // todo

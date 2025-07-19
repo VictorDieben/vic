@@ -7,7 +7,7 @@ enable_testing()
 
 include (GoogleTest)
 
-find_package(range-v3 CONFIG REQUIRED)
+# find_package(range-v3 CONFIG REQUIRED)
 
 ADD_EXECUTABLE(VicTest 
     "EntitySystem.cpp"
@@ -43,16 +43,21 @@ ADD_EXECUTABLE(VicTest
     "Emulation.cpp" 
     "Graph2.cpp" 
     "Math.cpp" 
-    "Serialize.cpp" "SerializeHelpers.h" "Sound.cpp" "Quaternion.cpp" "Physics.cpp" "TimeIntegration.cpp")
+    "Serialize.cpp" 
+    "SerializeHelpers.h" 
+    "Sound.cpp" 
+    "Quaternion.cpp" 
+    "Physics.cpp" 
+    "TimeIntegration.cpp")
  
-add_library(range_v3 INTERFACE IMPORTED)
+# add_library(range_v3 INTERFACE IMPORTED)
 
 TARGET_LINK_LIBRARIES(VicTest  
 PRIVATE
     GTest::gtest 
     GTest::gtest_main
     Vic
-    range_v3
+    # range_v3
 )
 
 
