@@ -25,13 +25,13 @@ void FilterForeach(TSystem& system, TFunctor functor)
     using Type2 = std::remove_cv_t<T2>;
     using Type3 = std::remove_cv_t<T3>;
 
-    auto it1 = system.begin<Type1>();
-    auto it2 = system.begin<Type2>();
-    auto it3 = system.begin<Type3>();
+    auto it1 = system.template begin<Type1>();
+    auto it2 = system.template begin<Type2>();
+    auto it3 = system.template begin<Type3>();
 
-    const auto it1End = system.end<Type1>();
-    const auto it2End = system.end<Type2>();
-    const auto it3End = system.end<Type3>();
+    const auto it1End = system.template end<Type1>();
+    const auto it2End = system.template end<Type2>();
+    const auto it3End = system.template end<Type3>();
 
     while(it1 != it1End && it2 != it2End && it3 != it3End)
     {
@@ -60,10 +60,10 @@ void FilterForeach(TSystem& system, TFunctor functor)
     using Type1 = std::remove_cv_t<T1>;
     using Type2 = std::remove_cv_t<T2>;
 
-    auto it1 = system.begin<Type1>();
-    auto it2 = system.begin<Type2>();
-    const auto it1End = system.end<Type1>();
-    const auto it2End = system.end<Type2>();
+    auto it1 = system.template begin<Type1>();
+    auto it2 = system.template begin<Type2>();
+    const auto it1End = system.template end<Type1>();
+    const auto it2End = system.template end<Type2>();
 
     while(it1 != it1End && it2 != it2End)
     {
@@ -85,8 +85,8 @@ void FilterForeach(TSystem& system, TFunctor functor)
 {
     using Type1 = std::remove_cv_t<T>;
 
-    auto itBegin = system.begin<Type1>();
-    const auto itEnd = system.end<Type1>();
+    auto itBegin = system.template begin<Type1>();
+    const auto itEnd = system.template end<Type1>();
     for(auto it = itBegin; it != itEnd; ++it)
     {
         functor(it->first, it->second);
@@ -175,12 +175,12 @@ auto Iterate(TEcs& ecs, const TIter begin, const TIter end)
     if constexpr(std::contiguous_iterator<TIter>)
         result.reserve(std::distance(begin, end));
 
-    using iterType = decltype(ecs.begin<TComponent>());
+    using iterType = decltype(ecs.template begin<TComponent>());
 
-    iterType it = ecs.begin<TComponent>();
+    iterType it = ecs.template begin<TComponent>();
     TIter entityIt = begin;
 
-    while(it != ecs.end<TComponent>() && entityIt != end)
+    while(it != ecs.template end<TComponent>() && entityIt != end)
     {
         if(it->first < *entityIt)
             it = std::next(it);
@@ -209,12 +209,12 @@ auto Iterate(const TEcs& ecs, const TIter begin, const TIter end)
     if constexpr(std::contiguous_iterator<TIter>)
         result.reserve(std::distance(begin, end));
 
-    using iterType = decltype(ecs.begin<TComponent>());
+    using iterType = decltype(ecs.template begin<TComponent>());
 
-    iterType it = ecs.begin<TComponent>();
+    iterType it = ecs.template begin<TComponent>();
     TIter entityIt = begin;
 
-    while(it != ecs.end<TComponent>() && entityIt != end)
+    while(it != ecs.template end<TComponent>() && entityIt != end)
     {
         if(it->first < *entityIt)
             it = std::next(it);
@@ -245,10 +245,10 @@ auto Iterate2d(TEcs& ecs, const TIter begin, const TIter end)
     if constexpr(std::contiguous_iterator<TIter>)
         result.reserve(std::distance(begin, end));
 
-    auto hint1 = ecs.begin<T1>();
-    auto hint2 = ecs.begin<T2>();
-    const auto it1End = ecs.end<T1>();
-    const auto it2End = ecs.end<T2>();
+    auto hint1 = ecs.template begin<T1>();
+    auto hint2 = ecs.template begin<T2>();
+    const auto it1End = ecs.template end<T1>();
+    const auto it2End = ecs.template end<T2>();
     for(auto it = begin; it != end; ++it)
     {
         const EntityId id = *it;
@@ -279,12 +279,12 @@ auto Iterate3d(TEcs& ecs, const TIter begin, const TIter end)
     if constexpr(std::contiguous_iterator<TIter>)
         result.reserve(std::distance(begin, end));
 
-    auto hint1 = ecs.begin<T1>();
-    auto hint2 = ecs.begin<T2>();
-    auto hint3 = ecs.begin<T3>();
-    const auto it1End = ecs.end<T1>();
-    const auto it2End = ecs.end<T2>();
-    const auto it3End = ecs.end<T3>();
+    auto hint1 = ecs.template begin<T1>();
+    auto hint2 = ecs.template begin<T2>();
+    auto hint3 = ecs.template begin<T3>();
+    const auto it1End = ecs.template end<T1>();
+    const auto it2End = ecs.template end<T2>();
+    const auto it3End = ecs.template end<T3>();
     for(auto it = begin; it != end; ++it)
     {
         const EntityId id = *it;
@@ -311,7 +311,7 @@ std::vector<EntityId> ConstructEntityList(const TEcs& ecs)
 
     ecs.ForeachComponentType([&]<typename T>() {
         buffer.clear();
-        for(auto it = ecs.cbegin<T>(); it != ecs.cend<T>(); ++it)
+        for(auto it = ecs.template cbegin<T>(); it != ecs.template cend<T>(); ++it)
             buffer.push_back(it->first);
 
         const auto currentSize = all.size();

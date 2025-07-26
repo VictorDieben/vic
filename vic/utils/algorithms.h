@@ -96,8 +96,7 @@ auto flatten(TBegin begin, TEnd end)
         size += it->size();
 
     data.reserve(size);
-
-    std::size_t size = 0;
+ 
     for(auto it = begin; it != end; ++it)
         for(auto it2 = std::begin(*it); it2 != std::end(*it); ++it2)
             data.push_back(*it2);

@@ -46,7 +46,7 @@ struct EntityHandle
     {
         static_assert(SystemType::template ContainsComponent<TComponent>(), "Unknown component T");
         assert(mSystem && mId);
-        mSystem->Add<TComponent>(mId, std::forward<Args>(args)...);
+        mSystem->template Add<TComponent>(mId, std::forward<Args>(args)...);
         return *this; // return copy of self
     }
 
@@ -54,7 +54,7 @@ struct EntityHandle
     EntityHandle<T> Set(const TComponent& component)
     {
         assert(mSystem && mId);
-        mSystem->Set<TComponent>(mId, component);
+        mSystem->template Set<TComponent>(mId, component);
         return *this; // return copy of self
     }
 
@@ -62,35 +62,35 @@ struct EntityHandle
     T2& Get()
     {
         assert(mSystem && mId);
-        return mSystem->Get<T2>(mId);
+        return mSystem->template Get<T2>(mId);
     }
 
     template <typename T2>
     const T2& Get() const
     {
         assert(mSystem && mId);
-        return mSystem->Get<T2>(mId);
+        return mSystem->template Get<T2>(mId);
     }
 
     template <typename T2>
     T2* TryGet()
     {
         assert(mSystem && mId);
-        return mSystem->TryGet<T2>(mId);
+        return mSystem->template TryGet<T2>(mId);
     }
 
     template <typename T2>
     const T2* TryGet() const
     {
         assert(mSystem && mId);
-        return mSystem->TryGet<T2>(mId);
+        return mSystem->template TryGet<T2>(mId);
     }
 
     template <typename T2>
     bool Has() const
     {
         assert(mSystem && mId);
-        return mSystem->Has<T2>(mId);
+        return mSystem->template Has<T2>(mId);
     }
 
     bool HasAny() const
@@ -103,7 +103,7 @@ struct EntityHandle
     bool Remove()
     {
         assert(mSystem && mId);
-        return mSystem->Remove<T2>(mId);
+        return mSystem->template Remove<T2>(mId);
     }
 
 private:

@@ -3,6 +3,7 @@
 #include "vic/utils.h"
 #include <array>
 #include <vector>
+#include <cstdint>
 
 #include "definitions.h"
 
@@ -10,9 +11,9 @@ namespace std
 {
 // hash function overload
 template <>
-struct ::std::hash<uint64_t>
+struct ::std::hash<std::uint64_t>
 {
-    inline uint64_t operator()(const uint64_t& x) const noexcept { return static_cast<uint64_t>(x); }
+    inline std::uint64_t operator()(const std::uint64_t& x) const noexcept { return static_cast<std::uint64_t>(x); }
 };
 } // namespace std
 

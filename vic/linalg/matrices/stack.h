@@ -39,24 +39,22 @@ template <typename TShape1, typename TShape2>
 using ColStackResultShape = Shape<Min(TShape1::rows, TShape2::rows), GetColStackCols(TShape1::cols, TShape2::cols)>;
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 struct RowStackImpl : public MatrixBaseSelector<typename RowStackResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>>
 {
     using DataType = TMat1::DataType;
     using RowstackShape = typename RowStackResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>;
-    using MatrixBase = MatrixBaseSelector<RowstackShape>;
+    using MatrixBase = typename MatrixBaseSelector<RowstackShape>;
     constexpr static bool TempIsRowStack = true;
 
     constexpr static auto Ordering = EOrdering::Any;
-    constexpr static auto Distribution = EDistribution::Full; //
+    constexpr static auto Distribution = EDistribution::Full;
 
     constexpr RowStackImpl(const TMat1& mat1, const TMat2& mat2)
         : MatrixBase(mat1.GetRows() + mat2.GetRows(), Min(mat1.GetColumns(), mat2.GetColumns()))
         , mMat1(mat1)
         , mMat2(mat2)
-    {
-        //assert(mat1.GetColumns() == mat2.GetColumns());
-    }
+    { }
 
     constexpr DataType Get(const Row i, const Col j) const
     {
@@ -82,7 +80,7 @@ struct RowStackImpl : public MatrixBaseSelector<typename RowStackResultShape<typ
 };
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 struct ColStackImpl : public MatrixBaseSelector<typename ColStackResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>>
 {
     using DataType = TMat1::DataType;
@@ -126,14 +124,14 @@ template <typename TMat1, typename TMat2>
 using ColStack = detail::ColStackImpl<TMat1, TMat2>;
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto ToRowStack(const TMat1& mat1, const TMat2& mat2)
 {
     return RowStack<TMat1, TMat2>{mat1, mat2}; //
 }
 
 template <typename TMat1, typename TMat2>
-requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr auto ToColStack(const TMat1& mat1, const TMat2& mat2)
 {
     return ColStack<TMat1, TMat2>{mat1, mat2}; //
