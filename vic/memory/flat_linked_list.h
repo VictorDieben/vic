@@ -17,12 +17,12 @@ public:
 
     using value_t = T;
 
-    template <typename T>
+    template <typename T2>
     struct Node
     {
         Index previous;
         Index next;
-        T data;
+        T2 data;
     };
 
     using NodeType = Node<T>;

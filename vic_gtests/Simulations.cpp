@@ -1,5 +1,4 @@
-
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "vic/simulations/cfd/mesh.h"
 

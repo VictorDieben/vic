@@ -8,9 +8,7 @@ namespace vic
 
 template <typename T>
 concept ConceptVariant = requires(T& item) {
-    {
-        item.index()
-    } -> std::integral;
+    { item.index() } -> std::integral;
 };
 
 template <std::size_t N, typename TVariant, typename... Args>
@@ -24,7 +22,7 @@ void AssignNthTypeHelper(TVariant& variant, const std::size_t index, Args&&... a
     {
         using NthType = std::variant_alternative_t<N, TVariant>;
         if constexpr(requires { NthType(std::forward<Args>(args)...); }) // if T can be constructed from args
-            variant.emplace<NthType>(std::forward<Args>(args)...);
+            variant.template emplace<NthType>(std::forward<Args>(args)...);
         return;
     }
 

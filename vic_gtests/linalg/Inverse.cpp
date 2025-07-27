@@ -1,6 +1,6 @@
 
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "../test_base.h"
 
@@ -12,7 +12,7 @@ using namespace vic::linalg;
 
 TEST(Linalg, InverseDiagonal)
 {
-    constexpr auto diag1 = Diagonal3<double>({1, 2, 3});
+    constexpr auto diag1 = Diagonal3<double>(1, 2, 3);
     constexpr Diagonal3<double> diagInv1 = Inverse(diag1);
     EXPECT_TRUE(IsEqual(Matmul(diag1, diagInv1), Identity3<double>{}));
 }

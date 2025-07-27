@@ -1,5 +1,5 @@
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "vic/network/binary_conversion.h"
 

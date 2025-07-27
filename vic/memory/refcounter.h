@@ -18,7 +18,7 @@ class RefCounted
 {
 public:
     // nested class that stores object and ref count
-    template <typename T>
+    template <typename T2>
     class RefWrapper
     {
     public:
@@ -28,7 +28,7 @@ public:
         { }
 
     private:
-        T mData;
+        T2 mData;
         std::size_t mCount{0};
 
         void Add() { mCount++; }

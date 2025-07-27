@@ -9,23 +9,26 @@ namespace vic
 
 template <typename T>
 concept less_than_comparable = requires(T obj) {
-    {
-        obj < obj
-    } -> std::same_as<bool>;
+    { obj < obj } -> std::same_as<bool>;
 };
 
 template <typename T>
 concept equality_comparable = requires(T obj) {
-    {
-        obj == obj
-    } -> std::same_as<bool>;
-    {
-        obj != obj
-    } -> std::same_as<bool>;
+    { obj == obj } -> std::same_as<bool>;
+    { obj != obj } -> std::same_as<bool>;
+};
+
+template <typename TIterable>
+concept ConceptIterable = requires(TIterable x) {
+    // todo: do more than just check if these members exist
+    x.begin();
+    x.end();
+    x.cbegin();
+    x.cend();
 };
 
 template <typename T>
-concept ConceptMap = requires(T map) {
+concept ConceptMap = ConceptIterable<T> && requires(T map) {
     typename T::key_type;
     typename T::value_type;
 

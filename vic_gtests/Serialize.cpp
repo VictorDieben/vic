@@ -1,6 +1,6 @@
 #include <vector>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "test_base.h"
 

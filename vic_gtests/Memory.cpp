@@ -1,5 +1,5 @@
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "test_base.h"
 #include "vic/memory/flat_linked_list.h"
@@ -10,7 +10,7 @@
 #include "vic/memory/refcounter.h"
 #include "vic/memory/ring_buffer.h"
 
-#include "vic/utils/counted.h"
+// #include "vic/utils/counted.h"
 #include "vic/utils/map_iterate.h"
 #include "vic/utils/to_string.h"
 

@@ -30,13 +30,10 @@ concept ConceptBPI = requires(T bpi) {
 
 // wrapper for buckingham pi
 template <typename T, int mass, int length, int time>
-// requires(Numeric<T>) NOTE: no clue why this does not work, might be msvc bug, temporarily solved with static assert
+    requires(Numeric<T>) // NOTE: no clue why this does not work, might be msvc bug, temporarily solved with static assert
 struct BPI
 {
 public:
-    static_assert(Numeric<T> && "Incompatible data type"); // todo: should be removed if we allow vic::Rational, or something like complex numbers
-    static_assert(!ConceptBPI<T> && "BPI should not be nested!");
-
     constexpr static int Mass = mass;
     constexpr static int Length = length;
     constexpr static int Time = time;
@@ -46,40 +43,40 @@ public:
     template <typename T2>
     using SameType = BPI<T2, mass, length, time>; // same type, different representation
 
+    using ThisType = BPI<T, mass, length, time>;
+
     explicit constexpr BPI() = default;
-    constexpr BPI(const T val)
+    constexpr explicit BPI(T val)
         : mValue(val)
     { }
 
     constexpr ~BPI() = default;
 
-    constexpr BPI(const BPI& other) noexcept { mValue = other.mValue; }
-    constexpr BPI(const BPI&& other) noexcept { mValue = other.mValue; }
+    // constexpr BPI(ThisType& other) noexcept { mValue = other.mValue; }
+    constexpr BPI(const ThisType& other) noexcept { mValue = other.mValue; }
+    constexpr BPI(const ThisType&& other) noexcept { mValue = other.mValue; }
 
-    constexpr BPI& operator=(const BPI& other) noexcept
+    constexpr ThisType& operator=(const ThisType& other) noexcept
     {
         mValue = other.mValue;
         return *this;
     }
+    // constexpr ThisType& operator=(const T& other) noexcept
+    // {
+    //     mValue = other;
+    //     return *this;
+    // }
 
-    constexpr BPI& operator=(const BPI&& other) noexcept
+    constexpr ThisType& operator=(const ThisType&& other) noexcept
     {
         mValue = other.mValue;
         return *this;
     }
-
-    //constexpr BPI<T, mass, length, time>(const T& other) noexcept { mValue = other; }
-    //constexpr BPI<T, mass, length, time>(const T&& other) noexcept { mValue = other; }
-    //constexpr BPI<T, mass, length, time>& operator=(const T& other) noexcept
-    //{
-    //    mValue = other;
-    //    return *this;
-    //}
-    //constexpr BPI<T, mass, length, time>& operator=(const T&& other) noexcept
-    //{
-    //    mValue = other;
-    //    return *this;
-    //}
+    // constexpr ThisType& operator=(const T&& other) noexcept
+    // {
+    //     mValue = other;
+    //     return *this;
+    // }
 
     constexpr static auto TypeName()
     {
@@ -119,8 +116,9 @@ constexpr auto Add(const T1 first, const T2 second)
     {
         static_assert(BPICompatible<T1, T2>); // cannot add e.g. distance to volume
 
-        using TRet = vic::templates::addition_t<typename T1::DataType, typename T2::DataType>;
-        return T1::template SameType<TRet>(first.Get() + second.Get());
+        using TValue = vic::templates::addition_t<typename T1::DataType, typename T2::DataType>;
+        using TRet = T1::template SameType<TValue>;
+        return TRet{first.Get() + second.Get()};
     }
 }
 
@@ -408,7 +406,7 @@ namespace std
 
 // overload for sqrt
 template <typename T>
-    requires ConceptBPI<T>
+    requires vic::units::ConceptBPI<T>
 constexpr auto sqrt(const T bpi) noexcept
 {
     // make sure that taking the square root makes sense.
@@ -424,7 +422,7 @@ constexpr auto sqrt(const T bpi) noexcept
 
 // overload for cbrt (cubic root)
 template <typename T>
-    requires ConceptBPI<T>
+    requires vic::units::ConceptBPI<T>
 constexpr auto cbrt(const T bpi) noexcept
 {
     // make sure that taking the cubic root makes sense.

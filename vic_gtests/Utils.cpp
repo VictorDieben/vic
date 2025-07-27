@@ -1,12 +1,11 @@
-
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "test_base.h"
 
 #include "vic/utils.h"
+#include "vic/utils/Counted.h"
 #include "vic/utils/algorithms.h"
 #include "vic/utils/as_tuple.h"
-#include "vic/utils/counted.h"
 #include "vic/utils/crc32.h"
 #include "vic/utils/decimal.h"
 #include "vic/utils/heap.h"

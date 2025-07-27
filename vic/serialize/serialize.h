@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstring>
 #include <expected>
 #include <span>
 #include <type_traits>
@@ -68,23 +69,15 @@ concept ConceptExpected = requires(T obj) {
     typename T::value_type;
     typename T::error_type;
     typename T::unexpected_type;
-    {
-        obj.value()
-    } -> std::convertible_to<typename T::value_type>;
-    {
-        obj.error()
-    } -> std::convertible_to<typename T::error_type>;
+    { obj.value() } -> std::convertible_to<typename T::value_type>;
+    { obj.error() } -> std::convertible_to<typename T::error_type>;
 };
 
 template <typename T>
 concept ConceptOptional = requires(T obj) {
     typename T::value_type;
-    {
-        obj.value()
-    } -> std::convertible_to<typename T::value_type>;
-    {
-        obj.has_value()
-    } -> std::convertible_to<bool>;
+    { obj.value() } -> std::convertible_to<typename T::value_type>;
+    { obj.has_value() } -> std::convertible_to<bool>;
     obj.reset();
 };
 

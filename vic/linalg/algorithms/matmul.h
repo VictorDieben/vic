@@ -142,12 +142,12 @@ constexpr ConceptMatrix auto MatmulColStack(const TMat& mat, const TVec& vec)
 
     VectorN<TValue, decltype(mat.mMat1)::ShapeType::cols> vec1{mat.mMat1.GetRows(), 1};
     const Row mat1Rows = mat.mMat1.GetRows();
-    for(uint32_t i = 0; i < mat1Rows; ++i)
+    for(Row i = 0; i < mat1Rows; ++i)
         vec1.At(i, 0) = vec.Get(i, 0);
 
     VectorN<TValue, decltype(mat.mMat2)::ShapeType::cols> vec2{mat.mMat2.GetRows(), 1};
     const Row mat2Rows = mat.mMat2.GetRows();
-    for(uint32_t i = 0; i < mat2Rows; ++i)
+    for(Row i = 0; i < mat2Rows; ++i)
         vec2.At(i, 0) = vec.Get(mat1Rows + i, 0);
 
     const auto res1 = Matmul(mat.mMat1, vec1);
@@ -215,7 +215,7 @@ constexpr ConceptMatrix auto MatmulConstant(const TMat& mat, const TValue& value
 
 // selector for the most efficient type of matrix multiplication
 template <typename TMat1, typename TMat2>
-    requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
+    requires ConceptMatmulSuitable<TMat1, TMat2> // ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
 constexpr ConceptMatrix auto MatmulMatrix(const TMat1& mat1, const TMat2& mat2)
 {
     constexpr auto distribution = MatmulDistribution(TMat1::Distribution, TMat2::Distribution);

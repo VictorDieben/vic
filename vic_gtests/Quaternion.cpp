@@ -1,8 +1,9 @@
 
+#include <format>
 #include <numbers>
 #include <random>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "vic/math/quaternion.h"
 

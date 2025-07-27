@@ -38,3 +38,4 @@ vic/vic.vcxproj.user
 x64/
 .vs/
 packages/
+.vscode/

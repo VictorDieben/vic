@@ -40,11 +40,11 @@ using ColStackResultShape = Shape<Min(TShape1::rows, TShape2::rows), GetColStack
 
 template <typename TMat1, typename TMat2>
     requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
-struct RowStackImpl : public MatrixBaseSelector<typename RowStackResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>>
+struct RowStackImpl : public MatrixBaseSelector<RowStackResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>>
 {
     using DataType = TMat1::DataType;
-    using RowstackShape = typename RowStackResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>;
-    using MatrixBase = typename MatrixBaseSelector<RowstackShape>;
+    using RowstackShape = RowStackResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>;
+    using MatrixBase = MatrixBaseSelector<RowstackShape>;
     constexpr static bool TempIsRowStack = true;
 
     constexpr static auto Ordering = EOrdering::Any;
@@ -81,10 +81,10 @@ struct RowStackImpl : public MatrixBaseSelector<typename RowStackResultShape<typ
 
 template <typename TMat1, typename TMat2>
     requires ConceptMatrix<TMat1> && ConceptMatrix<TMat2>
-struct ColStackImpl : public MatrixBaseSelector<typename ColStackResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>>
+struct ColStackImpl : public MatrixBaseSelector<ColStackResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>>
 {
     using DataType = TMat1::DataType;
-    using ColstackShape = typename ColStackResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>;
+    using ColstackShape = ColStackResultShape<typename TMat1::ShapeType, typename TMat2::ShapeType>;
     using MatrixBase = MatrixBaseSelector<ColstackShape>;
     constexpr static bool TempIsColStack = true;
 

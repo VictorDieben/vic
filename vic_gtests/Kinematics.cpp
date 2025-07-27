@@ -1,5 +1,8 @@
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+#include <numbers>
+#include <optional>
+#include <random>
 
 #include "test_base.h"
 
@@ -14,10 +17,6 @@
 #include "vic/linalg/linalg.h"
 
 #include "vic/utils.h"
-
-#include <numbers>
-#include <optional>
-#include <random>
 
 using namespace vic;
 using namespace vic::kinematics;
@@ -219,8 +218,9 @@ TEST(Kinematics, CartesianRobot)
 
     robot.Update(); // <-- update iterator with new joints
 
-    const Matrix3<double> euler = EulerAngles(std::numbers::pi / 2., std::numbers::pi / 3., std::numbers::pi / 4.);
-    const std::vector<double> theta2{3., 2., 1., std::numbers::pi / 2., std::numbers::pi / 3., std::numbers::pi / 4.};
+    using std::numbers::pi;
+    const Matrix3<double> euler = EulerAngles(pi / 2., pi / 3., pi / 4.);
+    const std::vector<double> theta2{3., 2., 1., pi / 2., pi / 3., pi / 4.};
 
     const auto transforms2 = algorithms::ForwardKinematics2(robot, theta2);
     const auto rotation = transforms2.at(5u).GetRotation();

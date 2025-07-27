@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include "vic/linalg/linalg.h"
 #include "vic/utils/to_string.h"

@@ -1,9 +1,10 @@
+
+#include <gtest/gtest.h>
+#include <random>
+
 #include "../test_base.h"
-#include "gtest/gtest.h"
 
 #include "vic/linalg/linalg.h"
-
-#include <random>
 
 using namespace vic::linalg;
 

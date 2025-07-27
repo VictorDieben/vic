@@ -1,6 +1,7 @@
 
 #include "../test_base.h"
-#include "gtest/gtest.h"
+
+#include <gtest/gtest.h>
 
 using namespace vic::linalg;
 

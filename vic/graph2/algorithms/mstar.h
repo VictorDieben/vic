@@ -45,8 +45,8 @@ template <typename TGraph, typename TOutVertexIterator>
 class SubsetOutIterator
 {
 public:
-    using VertexIdType = typename TGraph::VertexIdType;
-    using EdgeIdType = typename TGraph::EdgeIdType;
+    using VertexIdType = TGraph::VertexIdType;
+    using EdgeIdType = TGraph::EdgeIdType;
 
     using Graph = TGraph;
 

@@ -111,14 +111,19 @@ concept ConceptColStack = ConceptMatrix<T> && requires(T mat) {
     T::TempIsColStack == true; // todo: remove this boolean, find better solution
 };
 
+template <typename TMat1, typename TMat2>
+concept ConceptMatmulSuitable = ConceptMatrix<TMat1> && ConceptMatrix<TMat2> && requires(TMat1 mat1, TMat2 mat2) {
+    TMat1::ShapeType::cols == TMat2::ShapeType::rows || //
+        TMat1::ShapeType::cols == UnknownSize || //
+        TMat2::ShapeType::rows == UnknownSize;
+};
+
 template <typename T>
 concept ConceptStack = ConceptColStack<T> || ConceptRowStack<T>;
 
 template <typename T>
 concept ConceptAssignable = ConceptMatrix<T> && requires(T mat) {
-    {
-        mat.At(Row{}, Col{}) = 1.
-    };
+    { mat.At(Row{}, Col{}) = 1. };
 };
 
 template <typename T>

@@ -12,8 +12,8 @@ template <typename TVertexId, typename TEdgeId>
 class Graph
 {
 public:
-    using VertexIdType = typename TVertexId;
-    using EdgeIdType = typename TEdgeId;
+    using VertexIdType = TVertexId;
+    using EdgeIdType = TEdgeId;
 
     using EdgeType = std::pair<VertexIdType, VertexIdType>;
 
