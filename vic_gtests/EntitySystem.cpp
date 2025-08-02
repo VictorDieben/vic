@@ -495,6 +495,31 @@ TEST(ECS, ChainAdds)
     EXPECT_TRUE(newEnt.Has<ComponentB>() && newEnt.Get<ComponentB>().otherVal == 2);
 }
 
+TEST(ECS, MoveOnly)
+{
+    struct MoveOnly
+    {
+        int ma, mb;
+        MoveOnly(int a, int b)
+            : ma(a)
+            , mb(b)
+        { }
+    };
+    using MoveOnlyUPtr = std::unique_ptr<MoveOnly>;
+    using Ecs = vic::ecs::ECS<MoveOnlyUPtr>;
+    using Handle = Ecs::Handle;
+
+    Ecs ecs;
+
+    Handle a = ecs.NewEntity().Add<MoveOnlyUPtr>(std::make_unique<MoveOnly>(1, 2));
+    EXPECT_EQ(a.Get<MoveOnlyUPtr>()->ma, 1);
+
+    auto ptr = std::make_unique<MoveOnly>(3, 4);
+    Handle b = ecs.NewEntity().Add<MoveOnlyUPtr>(std::move(ptr));
+    EXPECT_FALSE(ptr);
+    EXPECT_EQ(b.Get<MoveOnlyUPtr>()->ma, 3);
+}
+
 TEST(ECS, System)
 {
     struct ComponentA

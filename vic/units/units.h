@@ -67,11 +67,13 @@ public:
     //     return *this;
     // }
 
-    constexpr ThisType& operator=(const ThisType&& other) noexcept
-    {
-        mValue = other.mValue;
-        return *this;
-    }
+    // constexpr ThisType& operator=(const ThisType&& other) noexcept
+    // {
+    //     mValue = other.mValue;
+    //     return *this;
+    // }
+    constexpr ThisType& operator=(const ThisType&& other) noexcept = default;
+
     // constexpr ThisType& operator=(const T&& other) noexcept
     // {
     //     mValue = other;
