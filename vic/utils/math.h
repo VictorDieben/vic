@@ -158,6 +158,7 @@ void IntegerToSetAssingment(const TInteger integer, TRange& range)
 
 // NOTE: related to stirling number
 // I need  \Sum from k=1 to n S(n,k)
+// this might be the "Bell number"
 
 // stirling number of the second kind
 // n: number of elements

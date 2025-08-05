@@ -7,6 +7,8 @@
 #include <format>
 #include <utility>
 
+// todo: https://www.youtube.com/watch?v=sQcPte0JNmE
+
 namespace vic
 {
 namespace units

@@ -3,6 +3,7 @@
 
 #include "test_base.h"
 
+#include <vic/math/time_integration.h>
 #include <vic/physics/moment_of_inertia.h>
 
 using namespace vic;
@@ -28,19 +29,36 @@ TEST(Physics, MoICombine)
     const auto displacedCube = ParallelAxisTheorem(mass, cubeMoi, r);
 }
 
-struct Properties
+struct TestProperties
 {
     double gravity = 9.81;
 };
-struct State
+struct TestState
 {
     double x;
     double y;
 };
-struct StateDot
+struct TestStateDot
 {
     double dxdt;
     double dydt;
 };
 
-TEST(Physics, TimeIntegration) { }
+TEST(Physics, TimeIntegration)
+{
+    const TestProperties properties{};
+
+    const auto differentiate = [&properties](const TestState& State) -> TestStateDot {
+        return TestStateDot{}; //
+    };
+
+    const auto integrate = [&properties](const TestState& state, //
+                                         const TestStateDot& dot,
+                                         const double dt) -> TestState {
+        return TestState{0., 0.}; //
+    };
+
+    const TestState state0 = TestState{};
+
+    const TestState state1 = ForwardEuler(state0, 0.01, differentiate, integrate);
+}
