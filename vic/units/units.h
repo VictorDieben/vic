@@ -24,15 +24,15 @@ namespace units
 
 template <typename T>
 concept ConceptBPI = requires(T bpi) {
-    T::Mass;
-    T::Length;
-    T::Time;
+    { T::Mass } -> Numeric;
+    { T::Length } -> Numeric;
+    { T::Time } -> Numeric;
     typename T::template SameType<double>; // Get the BPI with a different representation
 };
 
 // wrapper for buckingham pi
 template <typename T, int mass, int length, int time>
-    requires(Numeric<T>) // NOTE: no clue why this does not work, might be msvc bug, temporarily solved with static assert
+    requires(Numeric<T>)
 struct BPI
 {
 public:
@@ -47,40 +47,18 @@ public:
 
     using ThisType = BPI<T, mass, length, time>;
 
-    explicit constexpr BPI() = default;
-    constexpr explicit BPI(T val)
+    constexpr BPI() = default;
+    constexpr BPI(const T val)
         : mValue(val)
     { }
 
     constexpr ~BPI() = default;
 
-    // constexpr BPI(ThisType& other) noexcept { mValue = other.mValue; }
-    constexpr BPI(const ThisType& other) noexcept { mValue = other.mValue; }
-    constexpr BPI(const ThisType&& other) noexcept { mValue = other.mValue; }
+    constexpr BPI(const BPI& other) noexcept = default;
+    constexpr BPI(BPI&& other) noexcept = default;
 
-    constexpr ThisType& operator=(const ThisType& other) noexcept
-    {
-        mValue = other.mValue;
-        return *this;
-    }
-    // constexpr ThisType& operator=(const T& other) noexcept
-    // {
-    //     mValue = other;
-    //     return *this;
-    // }
-
-    // constexpr ThisType& operator=(const ThisType&& other) noexcept
-    // {
-    //     mValue = other.mValue;
-    //     return *this;
-    // }
-    constexpr ThisType& operator=(const ThisType&& other) noexcept = default;
-
-    // constexpr ThisType& operator=(const T&& other) noexcept
-    // {
-    //     mValue = other;
-    //     return *this;
-    // }
+    constexpr BPI& operator=(const BPI& other) noexcept = default;
+    constexpr BPI& operator=(BPI&& other) noexcept = default;
 
     constexpr static auto TypeName()
     {

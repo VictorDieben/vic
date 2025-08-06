@@ -7,64 +7,72 @@
 
 using namespace vic::units;
 
-// TEST(Units, HappyFlow)
-// {
-//     Length l1{1.};
-//     auto l2 = Length{2.};
-//     Length<double> l5 = 5.;
+template <typename T, typename U>
+constexpr bool is_decayed_same_v = std::is_same_v<std::decay_t<T>, std::decay_t<U>>;
 
-//     Length l3 = l1 + l2;
-//     l3 = 3.;
-//     l3 = -Length<double>{-3.};
+TEST(Units, HappyFlow)
+{
+    Length l1{1.};
+    auto l2 = Length{2.};
+    Length l5 = 5.;
 
-//     Area a3 = l1 * l3;
-//     EXPECT_EQ((a3.Get()), 3.);
+    auto l3 = (l1 + l2); // todo: ideally i want to write Length l3 = ...; But gcc cannot deduce the type somehow
+    l3 = 3.;
+    l3 = -Length<double>{-3.};
 
-//     Volume v6 = a3 * l2;
-//     EXPECT_EQ(v6.Get(), 6.);
+    Area<double> a3 = l1 * l3;
+    EXPECT_EQ((a3.Get()), 3.);
 
-//     using TInt = Length<int>;
-//     using TDouble = TInt::template SameType<double>;
+    Volume<double> v6 = a3 * l2;
+    EXPECT_EQ(v6.Get(), 6.);
 
-//     TDouble doubleLength{1.};
-// }
+    using TInt = Length<int>;
+    using TDouble = TInt::template SameType<double>;
 
-// TEST(Units, Nested)
-// {
-//     constexpr auto volume = Length{1.} * Length{2.} * Length{3.};
-//     EXPECT_DOUBLE_EQ(volume.Get(), 6.);
-//     static_assert(std::is_same_v<decltype(volume), Volume<double>>);
-// }
+    TDouble doubleLength{1.};
+}
 
-// TEST(Units, Multiplication)
-// {
-//     Area area = Length(2.) * Length(2.);
-//     EXPECT_DOUBLE_EQ(area.Get(), 4.);
-//     static_assert(std::is_same_v<decltype(area), Area<double>>);
+TEST(Units, Nested)
+{
+    constexpr auto volume = Length{1.} * Length{2.} * Length{3.};
+    EXPECT_DOUBLE_EQ(volume.Get(), 6.);
+    static_assert(is_decayed_same_v<decltype(volume), Volume<double>>);
+}
 
-//     auto twiceDistance = Length{2.} * 2.;
-//     EXPECT_DOUBLE_EQ(twiceDistance.Get(), 4.);
-//     static_assert(std::is_same_v<decltype(twiceDistance), Length<double>>);
-// }
+TEST(Units, Multiplication)
+{
+    auto area = Length(2.) * Length(2.);
+    EXPECT_DOUBLE_EQ(area.Get(), 4.);
+    static_assert(is_decayed_same_v<decltype(area), Area<double>>);
 
-// TEST(Units, Division)
-// {
-//     auto length = Area{5.} / Length{2.};
-//     EXPECT_DOUBLE_EQ(length.Get(), 2.5);
-//     static_assert(std::is_same_v<decltype(length), Length<double>>);
+    auto twiceDistance = Length{2.} * 2.;
+    EXPECT_DOUBLE_EQ(twiceDistance.Get(), 4.);
+    static_assert(is_decayed_same_v<decltype(twiceDistance), Length<double>>);
+}
 
-//     auto halfArea = Area{5.} / 2.;
-//     EXPECT_DOUBLE_EQ(halfArea.Get(), 2.5);
-//     static_assert(std::is_same_v<decltype(halfArea), Area<double>>);
+TEST(Units, Division)
+{
+    auto length = Area{5.} / Length{2.};
+    EXPECT_DOUBLE_EQ(length.Get(), 2.5);
+    static_assert(is_decayed_same_v<decltype(length), Length<double>>);
 
-//     // Division + Remainder. Remainder has different BPI unit than divisor
-//     const Area area{5};
-//     const Length len{2};
-//     const Length divisor = area / len;
-//     const Area remainder = area % len; // Area{5} - (Length{2} * Lenght{2}) = Area{1};
+    auto halfArea = Area{5.} / 2.;
+    EXPECT_DOUBLE_EQ(halfArea.Get(), 2.5);
+    static_assert(is_decayed_same_v<decltype(halfArea), Area<double>>);
 
-//     EXPECT_EQ(remainder.Get(), 1);
-// }
+    // Division + Remainder. Remainder has different BPI unit than divisor
+    const Area<int> area{5};
+    const Length<int> len{2};
+
+    const auto divisor = area / len;
+    static_assert(is_decayed_same_v<decltype(divisor), Length<int>>);
+    EXPECT_EQ(divisor.Get(), 2);
+
+    const auto remainder = area % len; // Area{5} - (Length{2} * Lenght{2}) = Area{1};
+    static_assert(is_decayed_same_v<decltype(remainder), Area<int>>);
+
+    EXPECT_EQ(remainder.Get(), 1);
+}
 
 // TEST(Units, Sqrt)
 // {

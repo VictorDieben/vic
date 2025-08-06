@@ -13,10 +13,10 @@ namespace vic
 // Should generally only be used when working with c code.
 template <typename TFunctor>
     requires std::invocable<TFunctor>
-class Finally
+class [[nodiscard]] Finally
 {
 public:
-    Finally(TFunctor functor)
+    constexpr explicit Finally(TFunctor functor)
         : mFunctor(functor)
     { }
     ~Finally() { mFunctor(); }
@@ -32,16 +32,14 @@ private:
 
 // constexpr Abs
 template <typename T>
-constexpr T Abs(const T& val)
+constexpr T Abs(const T& val) noexcept
 {
-    if(val < T{0})
-        return -val;
-    return val;
+    return (val < T{0}) ? -val : val;
 }
 
 // Integer exponent
 template <typename TRet, typename TBase, typename TExp>
-constexpr TRet Power(const TBase base, const TExp exp)
+constexpr TRet Power(const TBase base, const TExp exp) noexcept
 {
     TRet ret{1};
     for(TExp i = 0; i < exp; ++i)
@@ -53,7 +51,7 @@ constexpr TRet Power(const TBase base, const TExp exp)
 
 // constexpr integer exponent
 template <std::size_t exp, typename TBase, typename TRet = TBase>
-constexpr TRet Pow(const TBase base)
+constexpr TRet Pow(const TBase base) noexcept
 {
     if constexpr(exp == 0)
         return 1;
@@ -62,13 +60,13 @@ constexpr TRet Pow(const TBase base)
 }
 
 template <typename T>
-constexpr T Min(const T& val1, const T& val2)
+constexpr T Min(const T& val1, const T& val2) noexcept
 {
     return val1 < val2 ? val1 : val2;
 }
 
 template <typename T>
-constexpr T Max(const T& val1, const T& val2)
+constexpr T Max(const T& val1, const T& val2) noexcept
 {
     return val1 > val2 ? val1 : val2;
 }
@@ -81,30 +79,29 @@ constexpr auto Sqrt(const T& val)
 }
 
 template <typename T>
-constexpr int Sign(const T val)
+constexpr int Sign(const T val) noexcept
 {
     return static_cast<int>(std::copysign(T{1}, val));
 }
 
 template <typename T>
-constexpr int Signum(const T val)
+constexpr int Signum(const T val) noexcept
 {
     return ((T{0} < val) - (val < T{0})); // todo: make overload for unsigned types
 }
 
-template <typename T>
-constexpr bool IsPowerOfTwo(const T val)
+constexpr bool IsPowerOfTwo(const std::integral auto val) noexcept
 {
-    return (val > T{}) && (!(val & (val - 1))); // check nonzero, and val bitwise and with val-1 should be 0
+    return (val > 0) && !(val & (val - 1)); // check nonzero, and val bitwise and with val-1 should be 0
 }
 
-constexpr auto NextPowerOf2(const std::unsigned_integral auto n)
+constexpr auto NextPowerOf2(const std::unsigned_integral auto n) noexcept
 {
     return std::bit_ceil(n); // round up to the next power of 2
 }
 
 template <typename T>
-constexpr std::pair<T, T> ModulusAndRemainder(const T i, const T divisor)
+constexpr std::pair<T, T> ModulusAndRemainder(const T i, const T divisor) noexcept
 {
     return std::pair<T, T>{i % divisor, i / divisor}; // returns modulus and remainder
 }
@@ -120,7 +117,8 @@ void ToBase(const TValue value, const TBase base, std::vector<TVec>& buffer)
     buffer.clear();
     while(val)
     {
-        buffer.emplace_back(static_cast<TVec>(TBase{val % base}));
+        const auto division = val % base;
+        buffer.emplace_back(static_cast<TVec>(division));
         val /= base;
     }
 }
