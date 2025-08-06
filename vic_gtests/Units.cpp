@@ -74,68 +74,75 @@ TEST(Units, Division)
     EXPECT_EQ(remainder.Get(), 1);
 }
 
-// TEST(Units, Sqrt)
-// {
-//     Length l2 = std::sqrt(Area(4));
-//     EXPECT_EQ(l2.Get(), 2);
-// }
+TEST(Units, Sqrt)
+{
+    Length<int> l2 = std::sqrt(Area(4));
+    EXPECT_EQ(l2.Get(), 2);
+}
 
-// TEST(Units, Cbrt)
-// {
-//     Length length = std::cbrt(Volume{8});
-//     EXPECT_EQ(length.Get(), 2);
-// }
+TEST(Units, Cbrt)
+{
+    Length<int> length = std::cbrt(Volume{8});
+    EXPECT_EQ(length.Get(), 2);
+}
 
-// TEST(Units, Addition)
-// {
-//     Length length = Length(2.) + 2.;
-//     EXPECT_DOUBLE_EQ(length.Get(), 4.);
-//     static_assert(std::is_same_v<decltype(length), Length<double>>);
+TEST(Units, Addition)
+{
+    Length<double> length = Length(2.) + 2.;
+    EXPECT_DOUBLE_EQ(length.Get(), 4.);
+    static_assert(is_decayed_same_v<decltype(length), Length<double>>);
 
-//     Area area = Area(2.) + 2.;
-//     EXPECT_DOUBLE_EQ(area.Get(), 4.);
-//     static_assert(std::is_same_v<decltype(area), Area<double>>);
-// }
+    Area<double> area = Area(2.) + 2.;
+    EXPECT_DOUBLE_EQ(area.Get(), 4.);
+    static_assert(is_decayed_same_v<decltype(area), Area<double>>);
+}
 
-// TEST(Units, TypeName)
-// {
-//     // constexpr auto name = Unitless<double>::TypeName(); // todo
-//     EXPECT_EQ(Length<double>::TypeName(), "BPI<0, 1, 0>");
-//     EXPECT_EQ(Area<double>::TypeName(), "BPI<0, 2, 0>");
-//     EXPECT_EQ(Volume<double>::TypeName(), "BPI<0, 3, 0>");
-// }
+TEST(Units, TypeName)
+{
+    // constexpr auto name = Unitless<double>::TypeName(); // todo
+    EXPECT_EQ(Length<double>::TypeName(), "BPI<0, 1, 0>");
+    EXPECT_EQ(Area<double>::TypeName(), "BPI<0, 2, 0>");
+    EXPECT_EQ(Volume<double>::TypeName(), "BPI<0, 3, 0>");
+}
 
-// TEST(Units, MixTypes)
-// {
-//     // test adding different primitive types
-//     Length<double> d1{2.};
-//     Length<int> i1{2};
+TEST(Units, MixTypes)
+{
+    // test adding different primitive types
+    Length<double> d1{2.};
+    Length<int> i1{2};
 
-//     Length sum = d1 + i1;
-//     EXPECT_TRUE((std::is_same_v<decltype(sum.Get()), double>));
+    Length<double> sum = d1 + i1;
+    EXPECT_TRUE((std::is_same_v<decltype(sum.Get()), double>));
 
-//     Force force = Mass{1} * Acceleration{1};
-//     Density density = Mass{1} / Volume{1};
-//     MassFlow massflow = Mass{1} / Time{1};
-//     Frequency freq = 1. / Time{1};
+    Force<int> force = Mass{1} * Acceleration{1};
+    Density<int> density = Mass{1} / Volume{1};
+    MassFlow<int> massflow = Mass{1} / Time{1};
+    Frequency<double> freq = 1. / Time{1};
 
-//     // s = 0.5 * a * t^2
-//     Length distance = 0.5 * Acceleration{3.} * Time{2.} * Time{2.};
-// }
+    // s = 0.5 * a * t^2
+    Length<double> distance = 0.5 * Acceleration{3.} * Time{2.} * Time{2.};
+}
 
-// TEST(Units, Representations)
-// {
-//     // + operator
-//     Length<int> intPlusInt = Length<int>{} + Length<int>{};
+TEST(Units, Representations)
+{
+    // + operator
+    Length<int> intPlusInt = Length<int>{} + Length<int>{};
 
-//     Length<double> intPlusDouble = Length<int>{} + Length<double>{};
-//     Length<double> doublePlusInt = Length<double>{} + Length<int>{};
+    Length<double> intPlusDouble = Length<int>{} + Length<double>{};
+    Length<double> doublePlusInt = Length<double>{} + Length<int>{};
 
-//     Length<long> longInt = Length<long>{} + Length<int>{};
-//     Length<long> intLong = Length<int>{} + Length<long>{};
+    Length<long> longInt = Length<long>{} + Length<int>{};
+    Length<long> intLong = Length<int>{} + Length<long>{};
 
-//     Length<int> intShort = Length<int>{} + Length<short>{};
-//     Length<int> shortInt = Length<short>{} + Length<int>{};
-// }
+    Length<int> intShort = Length<int>{} + Length<short>{};
+    Length<int> shortInt = Length<short>{} + Length<int>{};
+}
+
+TEST(Units, ShouldNotComile)
+{
+    // a bunch of statements that should not compile
+
+    // double freq = 1. / Time{1};
+}
 
 // // todo: verify linear algebra axioms

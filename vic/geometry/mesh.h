@@ -181,7 +181,8 @@ bool IsClosedContinuous(const vic::mesh::TriMesh<T>& mesh)
     return true;
 }
 
-// A mesh is closed if each vertex used in the list of edges is used once as a source, and once as a sink
+// A trimesh is closed if each vertex used in the list of edges is used once as a source, and once as a sink,
+// and each edge occurs in both directions
 template <typename T>
 bool IsClosed(const vic::mesh::EdgeMesh<T>& mesh)
 {
@@ -202,6 +203,21 @@ bool IsClosed(const vic::mesh::EdgeMesh<T>& mesh)
             return false;
 
     return true;
+}
+
+template <typename T>
+TriMesh<T> Invert(const TriMesh<T>& mesh)
+{
+    TriMesh<T> inverted;
+
+    inverted.tris.reserve(mesh.tris.size());
+
+    for(const auto& [a, b, c] : mesh.tris)
+        inverted.tris.push_back(Tri{a, c, b});
+
+    inverted.vertices = mesh.vertices;
+
+    return inverted;
 }
 
 template <typename T>
