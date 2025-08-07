@@ -6,7 +6,7 @@
 
 #include <array>
 #include <cmath>
-#include <numbers> // std::numbers
+#include <numbers>
 #include <optional>
 #include <tuple>
 #include <vector>
@@ -56,13 +56,13 @@ struct Mesh
     std::vector<Poly> polys;
 };
 
-inline std::array<Tri, 2> ToTris(const Quad& quad)
+constexpr inline std::array<Tri, 2> ToTris(const Quad& quad)
 {
     const auto [a, b, c, d] = quad;
     return std::array<Tri, 2>{Tri{a, b, d}, Tri{b, c, d}};
 }
 
-inline std::vector<Tri> ToTris(const Poly& poly)
+constexpr inline std::vector<Tri> ToTris(const Poly& poly)
 {
     // todo: this is the simplest algorithm i could come up with,
     // make a selector for the strategy, like reducing narrow tris or something
@@ -75,7 +75,7 @@ inline std::vector<Tri> ToTris(const Poly& poly)
 }
 
 template <typename T>
-TriMesh<T> ToTris(const Mesh<T>& mesh)
+constexpr TriMesh<T> ToTris(const Mesh<T>& mesh)
 {
     TriMesh<T> result;
     result.vertices = mesh.vertices;
@@ -96,7 +96,7 @@ TriMesh<T> ToTris(const Mesh<T>& mesh)
 }
 
 template <typename T>
-bool IsClosed(const vic::mesh::TriMesh<T>& mesh)
+constexpr bool IsClosed(const vic::mesh::TriMesh<T>& mesh)
 {
     // Use Euler-Poincare characteristic, to determine of the triangle mesh is a closed 2d manifold
 
@@ -129,7 +129,7 @@ bool IsClosed(const vic::mesh::TriMesh<T>& mesh)
 }
 
 template <typename T>
-bool IsClosedContinuous(const vic::mesh::TriMesh<T>& mesh)
+constexpr bool IsClosedContinuous(const vic::mesh::TriMesh<T>& mesh)
 {
     // verify that the mesh is closed, _and_ that each edge occurs once in either directions
     using namespace vic::mesh;
@@ -184,7 +184,7 @@ bool IsClosedContinuous(const vic::mesh::TriMesh<T>& mesh)
 // A trimesh is closed if each vertex used in the list of edges is used once as a source, and once as a sink,
 // and each edge occurs in both directions
 template <typename T>
-bool IsClosed(const vic::mesh::EdgeMesh<T>& mesh)
+constexpr bool IsClosed(const vic::mesh::EdgeMesh<T>& mesh)
 {
     std::vector<uint8_t> in;
     in.resize(mesh.vertices.size());
@@ -208,6 +208,7 @@ bool IsClosed(const vic::mesh::EdgeMesh<T>& mesh)
 template <typename T>
 TriMesh<T> Invert(const TriMesh<T>& mesh)
 {
+    // swap direction of each tri in mesh. Lets the normal point the other way
     TriMesh<T> inverted;
 
     inverted.tris.reserve(mesh.tris.size());
@@ -248,13 +249,13 @@ Mesh<T> GenerateQuadCube()
 }
 
 template <typename T>
-TriMesh<T> GenerateCube()
+constexpr TriMesh<T> GenerateCube()
 {
     return ToTris(GenerateQuadCube<T>());
 }
 
 template <typename T>
-TriMesh<T> GenerateCubeSphere(const T radius, const uint32_t subdivisions)
+constexpr TriMesh<T> GenerateCubeSphere(const T radius, const uint32_t subdivisions)
 {
     auto mesh = GenerateCube<T>();
 
@@ -271,9 +272,9 @@ TriMesh<T> GenerateCubeSphere(const T radius, const uint32_t subdivisions)
 }
 
 template <typename T>
-TriMesh<T> GenerateUVSphere(const T rad, //
-                            const MeshIndex nu,
-                            const MeshIndex nv)
+constexpr TriMesh<T> GenerateUVSphere(const T rad, //
+                                      const MeshIndex nu,
+                                      const MeshIndex nv)
 {
     // simple uv sphere mesh
     Vertex<T> top(0., 0., rad);
@@ -342,9 +343,9 @@ TriMesh<T> GenerateUVSphere(const T rad, //
 }
 
 template <typename T>
-TriMesh<T> GenerateCone(const T rad, //
-                        const T height,
-                        const MeshIndex n)
+constexpr TriMesh<T> GenerateCone(const T rad, //
+                                  const T height,
+                                  const MeshIndex n)
 {
     // simple uv sphere mesh
     const auto top = Vertex<T>((T)0., (T)height, (T)0.);
@@ -377,19 +378,19 @@ TriMesh<T> GenerateCone(const T rad, //
     return mesh;
 }
 
-inline std::array<Edge, 3> Edges(const Tri& tri)
+constexpr std::array<Edge, 3> Edges(const Tri& tri)
 {
     const auto& [v0, v1, v2] = tri;
     return std::array<Edge, 3>{Edge{v0, v1}, Edge{v1, v2}, Edge{v2, v0}};
 }
 
-inline std::array<Edge, 4> Edges(const Quad& quad)
+constexpr std::array<Edge, 4> Edges(const Quad& quad)
 {
     const auto& [v0, v1, v2, v3] = quad;
     return std::array<Edge, 4>{Edge{v0, v1}, Edge{v1, v2}, Edge{v2, v3}, Edge{v3, v0}};
 }
 
-inline std::vector<Edge> Edges(const Poly& poly)
+constexpr std::vector<Edge> Edges(const Poly& poly)
 {
     const auto size = poly.size();
     std::vector<Edge> edges;
@@ -401,7 +402,7 @@ inline std::vector<Edge> Edges(const Poly& poly)
 
 // make list of edges. An edge pointing between the same vertices but in different direction is considered another edge
 template <typename T>
-std::vector<std::pair<MeshIndex, MeshIndex>> Edges(const TriMesh<T>& mesh)
+constexpr std::vector<std::pair<MeshIndex, MeshIndex>> Edges(const TriMesh<T>& mesh)
 {
     std::vector<Edge> result;
     result.reserve(mesh.tris.size() * 3);
@@ -418,7 +419,7 @@ std::vector<std::pair<MeshIndex, MeshIndex>> Edges(const TriMesh<T>& mesh)
 
 // Make list of edges, edge a->b is the same as b->a
 template <typename T>
-std::vector<std::pair<MeshIndex, MeshIndex>> UniqueEdges(const TriMesh<T>& mesh)
+constexpr std::vector<std::pair<MeshIndex, MeshIndex>> UniqueEdges(const TriMesh<T>& mesh)
 {
     std::vector<std::pair<MeshIndex, MeshIndex>> result = Edges(mesh);
 
@@ -436,7 +437,7 @@ std::vector<std::pair<MeshIndex, MeshIndex>> UniqueEdges(const TriMesh<T>& mesh)
 }
 
 template <typename T>
-TriMesh<T> Subdivide(const TriMesh<T>& mesh)
+constexpr TriMesh<T> Subdivide(const TriMesh<T>& mesh)
 {
     using namespace vic::linalg;
 
@@ -485,7 +486,7 @@ TriMesh<T> Subdivide(const TriMesh<T>& mesh)
 }
 
 template <typename T>
-EdgeMesh<T> GenerateCircle(const T radius, const uint32_t n)
+constexpr EdgeMesh<T> GenerateCircle(const T radius, const uint32_t n)
 {
     EdgeMesh<T> result;
 
@@ -502,9 +503,9 @@ EdgeMesh<T> GenerateCircle(const T radius, const uint32_t n)
 }
 
 template <typename T>
-TriMesh<T> Revolve(const EdgeMesh<T>& mesh, //
-                   const std::size_t n,
-                   const bool close) // determines if a vertex is added at the bottom and top (only for open curves)
+constexpr TriMesh<T> Revolve(const EdgeMesh<T>& mesh, //
+                             const std::size_t n,
+                             const bool close) // determines if a vertex is added at the bottom and top (only for open curves)
 {
     static constexpr Vertex<T> zAxis{0, 0, 1};
 
@@ -540,8 +541,8 @@ TriMesh<T> Revolve(const EdgeMesh<T>& mesh, //
 }
 
 template <typename T>
-TriMesh<T> RevolveClosed(const EdgeMesh<T>& mesh, //
-                         const std::size_t n)
+constexpr TriMesh<T> RevolveClosed(const EdgeMesh<T>& mesh, //
+                                   const std::size_t n)
 {
     assert(mesh.vertices.size() > 2);
     TriMesh<T> result;
@@ -552,10 +553,10 @@ TriMesh<T> RevolveClosed(const EdgeMesh<T>& mesh, //
 }
 
 template <typename T>
-TriMesh<T> GenerateTorus(const T R, //
-                         const T r,
-                         const uint32_t nR,
-                         const uint32_t nr)
+constexpr TriMesh<T> GenerateTorus(const T R, //
+                                   const T r,
+                                   const uint32_t nR,
+                                   const uint32_t nr)
 {
     TriMesh<T> result;
 
@@ -570,7 +571,7 @@ TriMesh<T> GenerateTorus(const T R, //
 }
 
 template <typename T>
-std::vector<Normal<T>> GenerateTriNormals(const TriMesh<T>& mesh)
+constexpr std::vector<Normal<T>> GenerateTriNormals(const TriMesh<T>& mesh)
 {
     using namespace vic::linalg;
 
@@ -589,7 +590,7 @@ std::vector<Normal<T>> GenerateTriNormals(const TriMesh<T>& mesh)
 }
 
 template <typename T>
-std::vector<Normal<T>> GenerateVertexNormals(const TriMesh<T>& mesh, const std::vector<Normal<T>>& triNormals)
+constexpr std::vector<Normal<T>> GenerateVertexNormals(const TriMesh<T>& mesh, const std::vector<Normal<T>>& triNormals)
 {
     // Generate the vertex normals, based on the average of all the tri normals that use the vertex
     std::vector<Normal<T>> normals;
@@ -614,7 +615,7 @@ std::vector<Normal<T>> GenerateVertexNormals(const TriMesh<T>& mesh, const std::
 }
 
 template <typename T>
-std::tuple<T, T, T> ToSphericalCoordinates(const Vertex<T>& direction)
+constexpr std::tuple<T, T, T> ToSphericalCoordinates(const Vertex<T>& direction)
 {
     const T x = direction.Get(0, 0);
     const T y = direction.Get(1, 0);
@@ -628,7 +629,7 @@ std::tuple<T, T, T> ToSphericalCoordinates(const Vertex<T>& direction)
 }
 
 template <typename T>
-Vertex<T> FromSphericalCoordinates(const T radius, const T inclination, const T azimuth)
+constexpr Vertex<T> FromSphericalCoordinates(const T radius, const T inclination, const T azimuth)
 {
     const T sinInclination = std::sin(inclination);
 
