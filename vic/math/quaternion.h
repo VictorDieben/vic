@@ -69,10 +69,16 @@ constexpr Quaternion<T> Subtract(const Quaternion<T>& a, const Quaternion<T>& b)
 }
 
 template <typename T>
-constexpr Quaternion<T> Multiply(const Quaternion<T>& q, const T s)
+constexpr Quaternion<T> Multiply(const T s, const Quaternion<T>& q)
 {
     // https://www.mathworks.com/help/aeroblks/quaternionmultiplication.html
     return Quaternion<T>{q[0] * s, q[1] * s, q[2] * s, q[3] * s};
+}
+
+template <typename T>
+constexpr Quaternion<T> Multiply(const Quaternion<T>& q, const T s)
+{
+    return Multiply(s, q);
 }
 
 template <typename T>
