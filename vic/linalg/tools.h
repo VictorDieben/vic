@@ -145,6 +145,24 @@ constexpr auto Normalize(const TVec& vec)
     return res;
 }
 
+template <typename TVec>
+    requires ConceptVector<TVec>
+constexpr auto NormalizeSafe(const TVec& vec)
+{
+    using TRet = typename TVec::DataType;
+
+    const TRet norm = Norm(vec);
+    if(norm == 0.)
+        return TVec{vec.GetRows(), vec.GetColumns()};
+
+    TVec res{vec.GetRows(), vec.GetColumns()};
+    const auto oneOverNorm = (TRet)1. / norm;
+    for(MatrixSize i = 0; i < vec.GetRows(); ++i)
+        res.At(i) = vec.Get(i) * oneOverNorm;
+
+    return res;
+}
+
 // 3d cross product
 template <typename TVec1, typename TVec2>
     requires ConceptVector<TVec1> && ConceptVector<TVec2>

@@ -36,7 +36,7 @@ struct Quaternion : public vic::linalg::Vector4<T>
     T& y() { return Base::At(2); }
     T& z() { return Base::At(3); }
 
-    auto Identity() const { return Quaternion<T>(1., 0., 0., 0.); };
+    constexpr static auto Identity() { return Quaternion<T>(1., 0., 0., 0.); };
 };
 
 using Quaterniond = Quaternion<double>;
@@ -243,32 +243,53 @@ constexpr linalg::Matrix3<T> ToRotationMatrix(const Quaternion<T>& quat)
 {
     // https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm
 
+    //const auto [w, x, y, z] = Unpack(quat);
+
+    //const T x2 = x * x;
+    //const T y2 = y * y;
+    //const T z2 = z * z;
+    //const T xy = x * y;
+    //const T xz = x * z;
+    //const T yz = y * z;
+    //const T wx = w * x;
+    //const T wy = w * y;
+    //const T wz = w * z;
+
+    //const T r00 = 1.0 - 2.0 * (y2 + z2);
+    //const T r01 = 2.0 * (xy - wz);
+    //const T r02 = 2.0 * (xz + wy);
+
+    //const T r10 = 2.0 * (xy + wz);
+    //const T r11 = 1.0 - 2.0 * (x2 + z2);
+    //const T r12 = 2.0 * (yz + wx);
+
+    //const T r20 = 2.0f * (xz - wy);
+    //const T r21 = 2.0f * (yz + wx);
+    //const T r22 = 1.0f - 2.0f * (x2 + y2);
+
+    //return linalg::Matrix3<T>{r00, r01, r02, r10, r11, r12, r20, r21, r22};
+
+    // todo: find out if there is a mistake in the above code
+
     const auto [w, x, y, z] = Unpack(quat);
-
-    const T x2 = x * x;
-    const T y2 = y * y;
-    const T z2 = z * z;
-    const T xy = x * y;
-    const T xz = x * z;
-    const T yz = y * z;
-    const T wx = w * x;
-    const T wy = w * y;
-    const T wz = w * z;
-
-    const T r00 = 1.0 - 2.0 * (y2 + z2);
-    const T r01 = 2.0 * (xy - wz);
-    const T r02 = 2.0 * (xz + wy);
-
-    const T r10 = 2.0 * (xy + wz);
-    const T r11 = 1.0 - 2.0 * (x2 + z2);
-    const T r12 = 2.0 * (yz + wx);
-
-    const T r20 = 2.0f * (xz + wy);
-    const T r21 = 2.0f * (yz - wx);
-    const T r22 = 1.0f - 2.0f * (x2 + y2);
-
-    return linalg::Matrix3<T>{r00, r01, r02, r10, r11, r12, r20, r21, r22};
+    // clang-format off
+    return vic::linalg::Matrix3<T>{//
+        1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w), //
+        2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w), //
+        2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)};
+    // clang-format on
 }
+
+//inline vic::linalg::Matrix33d quat_to_rotmat(const vic::Quaterniond& quat)
+//{
+//    const auto [w, x, y, z] = Unpack(quat);
+//    // clang-format off
+//    return vic::linalg::Matrix33d{//
+//        1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w), //
+//        2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w), //
+//        2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)};
+//    // clang-format on
+//}
 
 template <typename T>
 constexpr Quaternion<T> ToQuaternion(const linalg::Matrix3<T>& mat)
