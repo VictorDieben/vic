@@ -2,6 +2,7 @@
 
 #include "vic/linalg/definitions.h"
 #include "vic/linalg/index.h"
+#include "vic/linalg/tools.h"
 #include "vic/linalg/traits.h"
 
 #include <cassert>
